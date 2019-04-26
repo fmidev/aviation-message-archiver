@@ -1,0 +1,11 @@
+##############################################
+#
+#  Testing
+#
+##############################################
+# START SNIPPET: test
+
+test:
+  value: aviation-message-archiver-service
+
+# END SNIPPET: test
