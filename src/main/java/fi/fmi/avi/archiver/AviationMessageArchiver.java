@@ -16,7 +16,6 @@ public class AviationMessageArchiver {
 
     public static void main(final String[] args) {
         SpringApplication.run(AviationMessageArchiver.class, args);
-        System.exit(0);
     }
 
     @Bean(destroyMethod = "destroy")
