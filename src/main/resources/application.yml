@@ -6,6 +6,29 @@
 # START SNIPPET: test
 
 test:
-  value: aviation-message-archiver-service
+  value: aviation-message-archiver
 
 # END SNIPPET: test
+
+##############################################
+#
+#  Directories used for storage
+#
+##############################################
+# START SNIPPET: dirs
+# all profiles
+
+polling:
+  delay: 3000
+
+file:
+  pattern: ^.*txt$
+
+dirs:
+  basedir: ${user.home}/.avi-message-archiver
+  destination:  ${dirs.basedir}/dst
+  sourcedirs: >
+    ${dirs.basedir}/src,
+    ${dirs.basedir}/src2
+
+# END SNIPPET: dirs
