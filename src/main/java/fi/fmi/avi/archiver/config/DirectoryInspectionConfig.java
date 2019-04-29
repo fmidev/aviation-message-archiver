@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
@@ -15,20 +17,22 @@ import org.springframework.integration.dsl.Pollers;
 import org.springframework.integration.dsl.SourcePollingChannelAdapterSpec;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.file.FileWritingMessageHandler;
-import org.springframework.integration.file.filters.RegexPatternFileListFilter;
 import org.springframework.integration.file.support.FileExistsMode;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+
+import fi.fmi.avi.archiver.initializing.FileInspectionInitializer;
+import fi.fmi.avi.archiver.initializing.SourceDirectoryInitializer;
 
 @Configuration
 @EnableIntegration
 public class DirectoryInspectionConfig {
 
-    public static final String INPUT_CHANNEL = "input";
-    public static final String MAIN_CHANNEL = "main";
-    public static final String ERROR_CHANNEL = "error";
-
     @Autowired
     private IntegrationFlowContext flowContext;
+
+    @Autowired
+    private FileTypeHolder fileTypeHolder;
 
     @Value("${dirs.destination}")
     private String destDir;
@@ -38,6 +42,21 @@ public class DirectoryInspectionConfig {
 
     @Value("${polling.delay}")
     private int pollingDelay;
+
+    @Bean
+    public MessageChannel inputChannel() {
+        return new PublishSubscribeChannel();
+    }
+
+    @Bean
+    public MessageChannel processingChannel() {
+        return new PublishSubscribeChannel();
+    }
+
+    @Bean
+    public MessageChannel errorChannel() {
+        return new DirectChannel();
+    }
 
     @Bean
     public MessageHandler destinationDirectory() {
@@ -62,29 +81,26 @@ public class DirectoryInspectionConfig {
 
     @Bean(destroyMethod = "dispose")
     public SourceDirectoryInitializer sourceDirectoryInitializer(@Value("${dirs.sourcedirs}") final Set<String> sourceDirs) {
-        return new SourceDirectoryInitializer(INPUT_CHANNEL, flowContext, sourceDirs, poller());
+        return new SourceDirectoryInitializer(inputChannel(), flowContext, sourceDirs, poller());
     }
 
-    @Bean
-    public IntegrationFlow fileInspector(@Value("${file.pattern}") final String filePattern) {
-        // TODO: Add file handling logic
-        return IntegrationFlows.from(INPUT_CHANNEL)//
-                .filter(new RegexPatternFileListFilter(filePattern))//
-                .channel(MAIN_CHANNEL)//
-                .get();
+    @Bean(destroyMethod = "dispose")
+    public FileInspectionInitializer fileInspectorInitializer() {
+        return new FileInspectionInitializer(flowContext, fileTypeHolder, inputChannel(), processingChannel());
     }
 
     @Bean
     public IntegrationFlow validFileMover() {
-        return IntegrationFlows.from(MAIN_CHANNEL)//
+        return IntegrationFlows.from(processingChannel())//
                 .handle(destinationDirectory())//
                 .get();
     }
 
     @Bean
     public IntegrationFlow invalidFileMover() {
-        return IntegrationFlows.from(ERROR_CHANNEL)//
+        return IntegrationFlows.from(errorChannel())//
                 .handle(errorDirectory())//
                 .get();
     }
+
 }

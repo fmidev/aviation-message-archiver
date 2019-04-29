@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.config;
+package fi.fmi.avi.archiver.initializing;
 
 import java.io.File;
 import java.util.Collections;
@@ -12,6 +12,7 @@ import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.SourcePollingChannelAdapterSpec;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.file.FileReadingMessageSource;
+import org.springframework.messaging.MessageChannel;
 
 public class SourceDirectoryInitializer {
     /**
@@ -24,9 +25,9 @@ public class SourceDirectoryInitializer {
 
     private final Consumer<SourcePollingChannelAdapterSpec> poller;
     private final Set<String> sourceDirs;
-    private final String channel;
+    private final MessageChannel channel;
 
-    public SourceDirectoryInitializer(final String channel, final IntegrationFlowContext flowContext, final Set<String> sourceDirs,
+    public SourceDirectoryInitializer(final MessageChannel channel, final IntegrationFlowContext flowContext, final Set<String> sourceDirs,
             final Consumer<SourcePollingChannelAdapterSpec> poller) {
         this.channel = channel;
         this.context = flowContext;

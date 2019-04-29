@@ -1,16 +1,11 @@
 ##############################################
 #
-#  Directories used for storage
+#  Directories where to read and write files
 #
 ##############################################
 # START SNIPPET: dirs
-# all profiles
-
 polling:
   delay: 3000
-
-file:
-  pattern: ^.*txt$
 
 dirs:
   basedir: ${user.home}/.avi-message-archiver
@@ -21,3 +16,18 @@ dirs:
     ${dirs.basedir}/src2
 
 # END SNIPPET: dirs
+
+##############################################
+#
+#  File type properties
+#
+##############################################
+# START SNIPPET: file
+file-type-initialization:
+  types:
+    - type: TAF
+      pattern: ^[A-Z]{4}_TAF_[0-9]{14}_[0-9]{1,2}.opm$
+    - type: SpecialTAF
+      pattern: ^[A-Z]{4}_SPECIALTAF_[0-9]{14}_[0-9]{1,2}.opm$
+
+# END SNIPPET: file
