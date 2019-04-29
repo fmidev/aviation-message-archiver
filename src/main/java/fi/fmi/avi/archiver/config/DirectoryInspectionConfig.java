@@ -25,6 +25,7 @@ public class DirectoryInspectionConfig {
 
     public static final String INPUT_CHANNEL = "input";
     public static final String MAIN_CHANNEL = "main";
+    public static final String ERROR_CHANNEL = "error";
 
     @Autowired
     private IntegrationFlowContext flowContext;
@@ -32,12 +33,23 @@ public class DirectoryInspectionConfig {
     @Value("${dirs.destination}")
     private String destDir;
 
+    @Value("${dirs.error}")
+    private String errorDir;
+
     @Value("${polling.delay}")
     private int pollingDelay;
 
     @Bean
     public MessageHandler destinationDirectory() {
         final FileWritingMessageHandler handler = new FileWritingMessageHandler(new File(destDir));
+        handler.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
+        handler.setExpectReply(false);
+        return handler;
+    }
+
+    @Bean
+    public MessageHandler errorDirectory() {
+        final FileWritingMessageHandler handler = new FileWritingMessageHandler(new File(errorDir));
         handler.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
         handler.setExpectReply(false);
         return handler;
@@ -66,6 +78,13 @@ public class DirectoryInspectionConfig {
     public IntegrationFlow validFileMover() {
         return IntegrationFlows.from(MAIN_CHANNEL)//
                 .handle(destinationDirectory())//
+                .get();
+    }
+
+    @Bean
+    public IntegrationFlow invalidFileMover() {
+        return IntegrationFlows.from(ERROR_CHANNEL)//
+                .handle(errorDirectory())//
                 .get();
     }
 }

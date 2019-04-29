@@ -27,6 +27,7 @@ file:
 dirs:
   basedir: ${user.home}/.avi-message-archiver
   destination:  ${dirs.basedir}/dst
+  error: ${dirs.basedir}/error
   sourcedirs: >
     ${dirs.basedir}/src,
     ${dirs.basedir}/src2
