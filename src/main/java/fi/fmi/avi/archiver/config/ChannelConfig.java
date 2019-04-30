@@ -22,12 +22,12 @@ public class ChannelConfig {
     }
 
     @Bean
-    public MessageChannel outputChannel() {
+    public MessageChannel archivedChannel() {
         return new DirectChannel();
     }
 
     @Bean
-    public MessageChannel errorChannel() {
+    public MessageChannel failedChannel() {
         return new DirectChannel();
     }
 }

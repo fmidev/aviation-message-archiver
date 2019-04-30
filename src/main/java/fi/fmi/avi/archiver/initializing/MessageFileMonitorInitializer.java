@@ -10,7 +10,7 @@ import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.file.filters.RegexPatternFileListFilter;
 import org.springframework.messaging.MessageChannel;
 
-public class FileInspectionInitializer {
+public class MessageFileMonitorInitializer {
 
     /**
      * Initializes filtering of the files based on the file names and regular expression patterns
@@ -24,7 +24,7 @@ public class FileInspectionInitializer {
     private final MessageChannel inputChannel;
     private final MessageChannel outputChannel;
 
-    public FileInspectionInitializer(final IntegrationFlowContext context, final AviFileTypeHolder aviFileTypeHolder, final MessageChannel inputChannel,
+    public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviFileTypeHolder aviFileTypeHolder, final MessageChannel inputChannel,
             final MessageChannel outputChannel) {
         this.context = context;
         this.registerations = new HashSet<>();

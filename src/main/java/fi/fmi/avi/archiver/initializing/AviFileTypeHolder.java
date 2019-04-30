@@ -1,7 +1,6 @@
 package fi.fmi.avi.archiver.initializing;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,7 +12,7 @@ import reactor.util.annotation.Nullable;
 @ConfigurationProperties(prefix = "file-type-initialization")
 public class AviFileTypeHolder {
 
-    private Set<AviFileTypeConfiguration> types = new HashSet<>();
+    private Set<AviFileTypeConfiguration> types = Collections.emptySet();
 
     public AviFileTypeHolder() {
     }

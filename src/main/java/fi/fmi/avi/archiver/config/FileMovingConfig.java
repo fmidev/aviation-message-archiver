@@ -25,13 +25,13 @@ public class FileMovingConfig {
     private String errorDir;
 
     @Autowired
-    private MessageChannel outputChannel;
+    private MessageChannel archivedChannel;
 
     @Autowired
-    private MessageChannel errorChannel;
+    private MessageChannel failedChannel;
 
     @Bean
-    public MessageHandler destinationDirectory() {
+    public MessageHandler archivedDirectory() {
         final FileWritingMessageHandler handler = new FileWritingMessageHandler(new File(destDir));
         handler.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
         handler.setExpectReply(false);
@@ -39,7 +39,7 @@ public class FileMovingConfig {
     }
 
     @Bean
-    public MessageHandler errorDirectory() {
+    public MessageHandler failedDirectory() {
         final FileWritingMessageHandler handler = new FileWritingMessageHandler(new File(errorDir));
         handler.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
         handler.setExpectReply(false);
@@ -47,16 +47,16 @@ public class FileMovingConfig {
     }
 
     @Bean
-    public IntegrationFlow validFileMover() {
-        return IntegrationFlows.from(outputChannel)//
-                .transform(p -> p.toString()).handle(destinationDirectory())//
+    public IntegrationFlow archivedFileMover() {
+        return IntegrationFlows.from(archivedChannel)//
+                .handle(archivedDirectory())//
                 .get();
     }
 
     @Bean
-    public IntegrationFlow invalidFileMover() {
-        return IntegrationFlows.from(errorChannel)//
-                .handle(errorDirectory())//
+    public IntegrationFlow failedFileMover() {
+        return IntegrationFlows.from(failedChannel)//
+                .handle(failedDirectory())//
                 .get();
     }
 }

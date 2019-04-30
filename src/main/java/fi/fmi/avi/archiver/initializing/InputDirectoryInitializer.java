@@ -14,7 +14,7 @@ import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.file.FileReadingMessageSource;
 import org.springframework.messaging.MessageChannel;
 
-public class SourceDirectoryInitializer {
+public class InputDirectoryInitializer {
     /**
      * Initializes the source directory listeners
      */
@@ -24,10 +24,10 @@ public class SourceDirectoryInitializer {
     private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registerations;
 
     private final Consumer<SourcePollingChannelAdapterSpec> poller;
-    private final Set<String> sourceDirs;
+    private final Set<File> sourceDirs;
     private final MessageChannel channel;
 
-    public SourceDirectoryInitializer(final MessageChannel channel, final IntegrationFlowContext flowContext, final Set<String> sourceDirs,
+    public InputDirectoryInitializer(final MessageChannel channel, final IntegrationFlowContext flowContext, final Set<File> sourceDirs,
             final Consumer<SourcePollingChannelAdapterSpec> poller) {
         this.channel = channel;
         this.context = flowContext;
@@ -41,7 +41,7 @@ public class SourceDirectoryInitializer {
         sourceDirs.stream()//
                 .map(sourceDir -> {
                     final FileReadingMessageSource sourceReader = new FileReadingMessageSource();
-                    sourceReader.setDirectory(new File(sourceDir));
+                    sourceReader.setDirectory(sourceDir);
                     return sourceReader;
                 }).map(source -> context.registration(IntegrationFlows.from(source, poller)//
                         .channel(channel)//

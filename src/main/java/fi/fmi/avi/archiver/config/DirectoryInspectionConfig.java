@@ -1,7 +1,9 @@
 package fi.fmi.avi.archiver.config;
 
+import java.io.File;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,8 +18,8 @@ import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.messaging.MessageChannel;
 
 import fi.fmi.avi.archiver.initializing.AviFileTypeHolder;
-import fi.fmi.avi.archiver.initializing.FileInspectionInitializer;
-import fi.fmi.avi.archiver.initializing.SourceDirectoryInitializer;
+import fi.fmi.avi.archiver.initializing.InputDirectoryInitializer;
+import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 
 @Configuration
 @EnableIntegration
@@ -36,34 +38,39 @@ public class DirectoryInspectionConfig {
     private MessageChannel processingChannel;
 
     @Autowired
-    private MessageChannel outputChannel;
-
-    @Autowired
-    private MessageChannel errorChannel;
+    private MessageChannel archivedChannel;
 
     @Value("${polling.delay}")
     private int pollingDelay;
 
+    @Value("${dirs.sourcedirs}")
+    private Set<String> sourceDirs;
+
     @Bean
-    Consumer<SourcePollingChannelAdapterSpec> poller() {
+    public Consumer<SourcePollingChannelAdapterSpec> poller() {
         return c -> c.poller(Pollers.fixedDelay(pollingDelay));
     }
 
-    @Bean(destroyMethod = "dispose")
-    public SourceDirectoryInitializer sourceDirectoryInitializer(@Value("${dirs.sourcedirs}") final Set<String> sourceDirs) {
-        return new SourceDirectoryInitializer(inputChannel, flowContext, sourceDirs, poller());
+    @Bean
+    public Set<File> sourceDirs() {
+        return sourceDirs.stream().map(File::new).collect(Collectors.toSet());
     }
 
     @Bean(destroyMethod = "dispose")
-    public FileInspectionInitializer fileInspectorInitializer() {
-        return new FileInspectionInitializer(flowContext, aviFileTypeHolder, inputChannel, processingChannel);
+    public InputDirectoryInitializer inputDirectoryInitializer() {
+        return new InputDirectoryInitializer(inputChannel, flowContext, sourceDirs(), poller());
+    }
+
+    @Bean(destroyMethod = "dispose")
+    public MessageFileMonitorInitializer messageFileMonitorInitializer() {
+        return new MessageFileMonitorInitializer(flowContext, aviFileTypeHolder, inputChannel, processingChannel);
     }
 
     @Bean
     public IntegrationFlow fileProcessor() {
         // TODO: Add file processing logic
         return IntegrationFlows.from(processingChannel)//
-                .channel(outputChannel)//
+                .channel(archivedChannel)//
                 .get();
     }
 
