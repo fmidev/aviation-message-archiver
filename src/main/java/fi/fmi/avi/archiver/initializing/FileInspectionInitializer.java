@@ -10,8 +10,6 @@ import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.file.filters.RegexPatternFileListFilter;
 import org.springframework.messaging.MessageChannel;
 
-import fi.fmi.avi.archiver.config.FileTypeHolder;
-
 public class FileInspectionInitializer {
 
     /**
@@ -22,22 +20,22 @@ public class FileInspectionInitializer {
 
     private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registerations;
 
-    private final FileTypeHolder fileTypeHolder;
+    private final AviFileTypeHolder aviFileTypeHolder;
     private final MessageChannel inputChannel;
     private final MessageChannel outputChannel;
 
-    public FileInspectionInitializer(final IntegrationFlowContext context, final FileTypeHolder fileTypeHolder, final MessageChannel inputChannel,
+    public FileInspectionInitializer(final IntegrationFlowContext context, final AviFileTypeHolder aviFileTypeHolder, final MessageChannel inputChannel,
             final MessageChannel outputChannel) {
         this.context = context;
         this.registerations = new HashSet<>();
-        this.fileTypeHolder = fileTypeHolder;
+        this.aviFileTypeHolder = aviFileTypeHolder;
         this.inputChannel = inputChannel;
         this.outputChannel = outputChannel;
     }
 
     @PostConstruct
     private void initializeFilePatternFlows() {
-        fileTypeHolder.getTypes().forEach(fileType -> {
+        aviFileTypeHolder.getTypes().forEach(fileType -> {
             registerations.add(context.registration(IntegrationFlows.from(inputChannel)//
                     .bridge()//
                     .filter(new RegexPatternFileListFilter(fileType.getPattern()))//

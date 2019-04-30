@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.config;
+package fi.fmi.avi.archiver.initializing;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -11,24 +11,39 @@ import reactor.util.annotation.Nullable;
 
 @Component
 @ConfigurationProperties(prefix = "file-type-initialization")
-public class FileTypeHolder {
+public class AviFileTypeHolder {
 
-    private Set<FileTypeConfiguration> types = new HashSet<>();
+    private Set<AviFileTypeConfiguration> types = new HashSet<>();
 
-    public Set<FileTypeConfiguration> getTypes() {
+    public AviFileTypeHolder() {
+    }
+
+    public AviFileTypeHolder(final Set<AviFileTypeConfiguration> types) {
+        this.types = Collections.unmodifiableSet(types);
+    }
+
+    public Set<AviFileTypeConfiguration> getTypes() {
         return Collections.unmodifiableSet(types);
     }
 
     @Nullable
-    public void setTypes(@Nullable final Set<FileTypeConfiguration> types) {
+    public void setTypes(@Nullable final Set<AviFileTypeConfiguration> types) {
         if (types != null) {
             this.types = Collections.unmodifiableSet(types);
         }
     }
 
-    public static class FileTypeConfiguration {
+    public static class AviFileTypeConfiguration {
         private String type;
         private String pattern;
+
+        public AviFileTypeConfiguration() {
+        }
+
+        public AviFileTypeConfiguration(final String type, final String pattern) {
+            this.type = type;
+            this.pattern = pattern;
+        }
 
         public String getType() {
             return type;

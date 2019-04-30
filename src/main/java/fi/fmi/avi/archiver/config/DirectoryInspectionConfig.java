@@ -15,6 +15,7 @@ import org.springframework.integration.dsl.SourcePollingChannelAdapterSpec;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.messaging.MessageChannel;
 
+import fi.fmi.avi.archiver.initializing.AviFileTypeHolder;
 import fi.fmi.avi.archiver.initializing.FileInspectionInitializer;
 import fi.fmi.avi.archiver.initializing.SourceDirectoryInitializer;
 
@@ -26,7 +27,7 @@ public class DirectoryInspectionConfig {
     private IntegrationFlowContext flowContext;
 
     @Autowired
-    private FileTypeHolder fileTypeHolder;
+    private AviFileTypeHolder aviFileTypeHolder;
 
     @Autowired
     private MessageChannel inputChannel;
@@ -55,7 +56,7 @@ public class DirectoryInspectionConfig {
 
     @Bean(destroyMethod = "dispose")
     public FileInspectionInitializer fileInspectorInitializer() {
-        return new FileInspectionInitializer(flowContext, fileTypeHolder, inputChannel, processingChannel);
+        return new FileInspectionInitializer(flowContext, aviFileTypeHolder, inputChannel, processingChannel);
     }
 
     @Bean
