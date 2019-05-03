@@ -1,45 +1,103 @@
 package fi.fmi.avi.archiver.initializing;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
 
+import org.springframework.integration.channel.PublishSubscribeChannel;
+import org.springframework.integration.core.GenericSelector;
 import org.springframework.integration.dsl.IntegrationFlows;
+import org.springframework.integration.dsl.SourcePollingChannelAdapterSpec;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
+import org.springframework.integration.file.FileReadingMessageSource;
+import org.springframework.integration.file.FileWritingMessageHandler;
 import org.springframework.integration.file.filters.RegexPatternFileListFilter;
+import org.springframework.integration.file.support.FileExistsMode;
+import org.springframework.integration.handler.LoggingHandler.Level;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 
 public class MessageFileMonitorInitializer {
 
+    private static final String PRODUCT_KEY = "product";
+    private static final String INPUT_CATEGORY = "input";
     /**
-     * Initializes filtering of the files based on the file names and regular expression patterns
+     * Initializes Message file source directory reading, filename filtering and archiving of the files
      */
 
     private final IntegrationFlowContext context;
 
     private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registerations;
 
-    private final AviFileTypeHolder aviFileTypeHolder;
-    private final MessageChannel inputChannel;
-    private final MessageChannel outputChannel;
+    private final AviationProductsHolder aviationProductsHolder;
+    private final MessageChannel processingChannel;
+    private final MessageChannel archivedChannel;
+    private final Consumer<SourcePollingChannelAdapterSpec> poller;
+    private final MessageChannel failedChannel;
 
-    public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviFileTypeHolder aviFileTypeHolder, final MessageChannel inputChannel,
-            final MessageChannel outputChannel) {
+    public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
+            final MessageChannel processingChannel, final MessageChannel archivedChannel, final MessageChannel failedChannel,
+            final Consumer<SourcePollingChannelAdapterSpec> poller) {
         this.context = context;
         this.registerations = new HashSet<>();
-        this.aviFileTypeHolder = aviFileTypeHolder;
-        this.inputChannel = inputChannel;
-        this.outputChannel = outputChannel;
+        this.aviationProductsHolder = aviationProductsHolder;
+        this.processingChannel = processingChannel;
+        this.archivedChannel = archivedChannel;
+        this.failedChannel = failedChannel;
+        this.poller = poller;
     }
 
     @PostConstruct
     private void initializeFilePatternFlows() {
-        aviFileTypeHolder.getTypes().forEach(fileType -> {
-            registerations.add(context.registration(IntegrationFlows.from(inputChannel)//
-                    .bridge()//
-                    .filter(new RegexPatternFileListFilter(fileType.getPattern()))//
-                    .channel(outputChannel)//
+
+        aviationProductsHolder.getProducts().forEach(product -> {
+            final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
+            sourceDirectory.setDirectory(product.getInputDir());
+
+            final FileWritingMessageHandler archivedDirectory = new FileWritingMessageHandler(product.getArchivedDir());
+            archivedDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
+            archivedDirectory.setExpectReply(false);
+
+            final FileWritingMessageHandler failedDirectory = new FileWritingMessageHandler(product.getFailedDir());
+            archivedDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
+            archivedDirectory.setExpectReply(false);
+
+            // Separate input channel needed in order to use multiple different
+            // filters for the same source directory
+            final PublishSubscribeChannel inputChannel = new PublishSubscribeChannel();
+
+            // Initialize source directory polling
+            registerations.add(context.registration(IntegrationFlows.from(sourceDirectory, poller)//
+                    .channel(inputChannel)//
+                    .get()//
+            ).register());
+
+            // Integration flow for file name filtering
+            product.getFiles().stream().map(fileConfig -> context.registration(IntegrationFlows.from(inputChannel)//
+                            .filter(new RegexPatternFileListFilter(fileConfig.getPattern()))//
+                            .enrichHeaders(s -> s.header(PRODUCT_KEY, product))//
+                            .log(Level.INFO, INPUT_CATEGORY)//
+                            .channel(processingChannel)//
+                            .get()//
+                    ).register()//
+
+            ).forEach(registerations::add);
+
+            // Initialize file moving flows
+            final GenericSelector<Message> productFilter = m -> Objects.equals(m.getHeaders().get(PRODUCT_KEY), product);
+
+            registerations.add(context.registration(IntegrationFlows.from(archivedChannel)//
+                    .filter(Message.class, productFilter)//
+                    .handle(archivedDirectory)//
+                    .get()//
+            ).register());
+
+            registerations.add(context.registration(IntegrationFlows.from(failedChannel)//
+                    .filter(Message.class, productFilter)//
+                    .handle(failedDirectory)//
                     .get()//
             ).register());
         });

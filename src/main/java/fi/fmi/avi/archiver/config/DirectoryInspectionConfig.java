@@ -1,9 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
-import java.io.File;
-import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,8 +14,7 @@ import org.springframework.integration.dsl.SourcePollingChannelAdapterSpec;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.messaging.MessageChannel;
 
-import fi.fmi.avi.archiver.initializing.AviFileTypeHolder;
-import fi.fmi.avi.archiver.initializing.InputDirectoryInitializer;
+import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 
 @Configuration
@@ -29,10 +25,7 @@ public class DirectoryInspectionConfig {
     private IntegrationFlowContext flowContext;
 
     @Autowired
-    private AviFileTypeHolder aviFileTypeHolder;
-
-    @Autowired
-    private MessageChannel inputChannel;
+    private AviationProductsHolder aviationProductsHolder;
 
     @Autowired
     private MessageChannel processingChannel;
@@ -40,30 +33,20 @@ public class DirectoryInspectionConfig {
     @Autowired
     private MessageChannel archivedChannel;
 
+    @Autowired
+    private MessageChannel failedChannel;
+
     @Value("${polling.delay}")
     private int pollingDelay;
-
-    @Value("${dirs.sourcedirs}")
-    private Set<String> sourceDirs;
 
     @Bean
     public Consumer<SourcePollingChannelAdapterSpec> poller() {
         return c -> c.poller(Pollers.fixedDelay(pollingDelay));
     }
 
-    @Bean
-    public Set<File> sourceDirs() {
-        return sourceDirs.stream().map(File::new).collect(Collectors.toSet());
-    }
-
-    @Bean(destroyMethod = "dispose")
-    public InputDirectoryInitializer inputDirectoryInitializer() {
-        return new InputDirectoryInitializer(inputChannel, flowContext, sourceDirs(), poller());
-    }
-
     @Bean(destroyMethod = "dispose")
     public MessageFileMonitorInitializer messageFileMonitorInitializer() {
-        return new MessageFileMonitorInitializer(flowContext, aviFileTypeHolder, inputChannel, processingChannel);
+        return new MessageFileMonitorInitializer(flowContext, aviationProductsHolder, processingChannel, archivedChannel, failedChannel, poller());
     }
 
     @Bean
