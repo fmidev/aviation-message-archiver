@@ -31,3 +31,28 @@ file-type-initialization:
       pattern: ^[A-Z]{4}_SPECIALTAF_[0-9]{14}_[0-9]{1,2}.opm$
 
 # END SNIPPET: file
+
+##############################################
+#
+#  Message parsing
+#
+##############################################
+# START SNIPPET: Message parsing
+message-parsing:
+  types:
+    TAF: -1
+    METAR: -1
+    SPECI: -1
+    SIGMET: -1
+    GAFOR: -1
+    AIRMET: -1
+    TROPICAL_CYCLONE_ADVISORY: -1
+    VOLCANIC_ASH_ADVISORY: -1
+    BULLETIN: -1
+    GENERIC: -1
+    LOW_WIND: -1
+    WX_WARNING: -1
+    SPECIAL_AIR_REPORT: -1
+    WXREP: -1
+    SPACE_WEATHER_ADVISORY: -1
+# END SNIPPET: Message parsing

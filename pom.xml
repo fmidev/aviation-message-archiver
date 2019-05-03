@@ -81,6 +81,22 @@
       <groupId>org.springframework.integration</groupId>
       <artifactId>spring-integration-file</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.inferred</groupId>
+      <artifactId>freebuilder</artifactId>
+      <version>2.3.0</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>fi.fmi.avi.converter</groupId>
+      <artifactId>fmi-avi-messageconverter</artifactId>
+      <version>3.6.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>fi.fmi.avi.converter</groupId>
+      <artifactId>fmi-avi-messageconverter-tac</artifactId>
+      <version>2.5.2-SNAPSHOT</version>
+    </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
