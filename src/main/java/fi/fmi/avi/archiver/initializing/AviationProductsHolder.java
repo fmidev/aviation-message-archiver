@@ -101,12 +101,13 @@ public class AviationProductsHolder {
                 return false;
             }
             final AviationProduct other = (AviationProduct) obj;
-            return Objects.equals(id, other.id);
+            return Objects.equals(id, other.id) && Objects.equals(inputDir, other.getInputDir()) && Objects.equals(archivedDir, other.getArchivedDir())
+                    && Objects.equals(failedDir, other.getFailedDir());
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(id);
+            return Objects.hash(id, inputDir, archivedDir, failedDir);
         }
     }
 
