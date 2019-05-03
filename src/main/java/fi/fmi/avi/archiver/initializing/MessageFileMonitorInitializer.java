@@ -3,14 +3,12 @@ package fi.fmi.avi.archiver.initializing;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
 
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.core.GenericSelector;
 import org.springframework.integration.dsl.IntegrationFlows;
-import org.springframework.integration.dsl.SourcePollingChannelAdapterSpec;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.file.FileReadingMessageSource;
 import org.springframework.integration.file.FileWritingMessageHandler;
@@ -35,19 +33,16 @@ public class MessageFileMonitorInitializer {
     private final AviationProductsHolder aviationProductsHolder;
     private final MessageChannel processingChannel;
     private final MessageChannel archivedChannel;
-    private final Consumer<SourcePollingChannelAdapterSpec> poller;
     private final MessageChannel failedChannel;
 
     public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
-            final MessageChannel processingChannel, final MessageChannel archivedChannel, final MessageChannel failedChannel,
-            final Consumer<SourcePollingChannelAdapterSpec> poller) {
+            final MessageChannel processingChannel, final MessageChannel archivedChannel, final MessageChannel failedChannel) {
         this.context = context;
         this.registerations = new HashSet<>();
         this.aviationProductsHolder = aviationProductsHolder;
         this.processingChannel = processingChannel;
         this.archivedChannel = archivedChannel;
         this.failedChannel = failedChannel;
-        this.poller = poller;
     }
 
     @PostConstruct
@@ -69,8 +64,8 @@ public class MessageFileMonitorInitializer {
             // filters for the same source directory
             final PublishSubscribeChannel inputChannel = new PublishSubscribeChannel();
 
-            // Initialize source directory polling
-            registerations.add(context.registration(IntegrationFlows.from(sourceDirectory, poller)//
+            // Initialize source directory polling. Uses poller bean
+            registerations.add(context.registration(IntegrationFlows.from(sourceDirectory)//
                     .channel(inputChannel)//
                     .get()//
             ).register());

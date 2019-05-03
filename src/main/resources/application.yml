@@ -5,7 +5,7 @@
 ##############################################
 # START SNIPPET: products
 polling:
-  delay: 300
+  delay: 500
 
 production-line-initialization:
   products:
