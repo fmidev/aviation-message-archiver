@@ -1,8 +1,5 @@
 package fi.fmi.avi.archiver.config;
 
-import java.util.Set;
-import java.util.function.Consumer;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -11,12 +8,12 @@ import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.Pollers;
-import org.springframework.integration.dsl.SourcePollingChannelAdapterSpec;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
+import org.springframework.integration.scheduling.PollerMetadata;
 import org.springframework.messaging.MessageChannel;
 
-import fi.fmi.avi.archiver.initializing.FileInspectionInitializer;
-import fi.fmi.avi.archiver.initializing.SourceDirectoryInitializer;
+import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 
 @Configuration
 @EnableIntegration
@@ -26,43 +23,32 @@ public class DirectoryInspectionConfig {
     private IntegrationFlowContext flowContext;
 
     @Autowired
-    private FileTypeHolder fileTypeHolder;
-
-    @Autowired
-    private MessageChannel inputChannel;
+    private AviationProductsHolder aviationProductsHolder;
 
     @Autowired
     private MessageChannel processingChannel;
 
     @Autowired
-    private MessageChannel outputChannel;
+    private MessageChannel archivedChannel;
 
     @Autowired
-    private MessageChannel errorChannel;
+    private MessageChannel failedChannel;
 
-    @Value("${polling.delay}")
-    private int pollingDelay;
-
-    @Bean
-    Consumer<SourcePollingChannelAdapterSpec> poller() {
-        return c -> c.poller(Pollers.fixedDelay(pollingDelay));
+    @Bean(name = PollerMetadata.DEFAULT_POLLER)
+    public PollerMetadata poller(@Value("${polling.delay}") final int pollingDelay) {
+        return Pollers.fixedDelay(pollingDelay).get();
     }
 
     @Bean(destroyMethod = "dispose")
-    public SourceDirectoryInitializer sourceDirectoryInitializer(@Value("${dirs.sourcedirs}") final Set<String> sourceDirs) {
-        return new SourceDirectoryInitializer(inputChannel, flowContext, sourceDirs, poller());
-    }
-
-    @Bean(destroyMethod = "dispose")
-    public FileInspectionInitializer fileInspectorInitializer() {
-        return new FileInspectionInitializer(flowContext, fileTypeHolder, inputChannel, processingChannel);
+    public MessageFileMonitorInitializer messageFileMonitorInitializer() {
+        return new MessageFileMonitorInitializer(flowContext, aviationProductsHolder, processingChannel, archivedChannel, failedChannel);
     }
 
     @Bean
     public IntegrationFlow fileProcessor() {
         // TODO: Add file processing logic
         return IntegrationFlows.from(processingChannel)//
-                .channel(outputChannel)//
+                .channel(archivedChannel)//
                 .get();
     }
 

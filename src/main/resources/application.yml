@@ -1,36 +1,30 @@
 ##############################################
 #
-#  Directories where to read and write files
+#  Product specific properties
 #
 ##############################################
-# START SNIPPET: dirs
+# START SNIPPET: products
 polling:
-  delay: 3000
+  delay: 500
 
-dirs:
-  basedir: ${user.home}/.avi-message-archiver
-  destination:  ${dirs.basedir}/dst
-  error: ${dirs.basedir}/error
-  sourcedirs: >
-    ${dirs.basedir}/src,
-    ${dirs.basedir}/src2
+production-line-initialization:
+  products:
+    - id: textFile
+      input-dir: ${user.home}/.avi-message-archiver/src
+      archived-dir: ${user.home}/.avi-message-archiver/dst
+      failed-dir: ${user.home}/.avi-message-archiver/failed
+      files:
+        - pattern: ^.*\.txt$
+        - pattern: ^.*\.txt2$
+    - id: anotherFile
+      input-dir: ${user.home}/.avi-message-archiver/src2
+      archived-dir: ${user.home}/.avi-message-archiver/dst2
+      failed-dir: ${user.home}/.avi-message-archiver/failed2
+      files:
+        - pattern: ^.*another$
 
-# END SNIPPET: dirs
+# END SNIPPET: products
 
-##############################################
-#
-#  File type properties
-#
-##############################################
-# START SNIPPET: file
-file-type-initialization:
-  types:
-    - type: TAF
-      pattern: ^[A-Z]{4}_TAF_[0-9]{14}_[0-9]{1,2}.opm$
-    - type: SpecialTAF
-      pattern: ^[A-Z]{4}_SPECIALTAF_[0-9]{14}_[0-9]{1,2}.opm$
-
-# END SNIPPET: file
 
 ##############################################
 #
