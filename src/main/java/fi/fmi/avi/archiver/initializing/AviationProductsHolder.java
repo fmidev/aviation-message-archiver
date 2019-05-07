@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Component;
 /**
  * Holder for Aviation products
  */
-
 @Component
 @ConfigurationProperties(prefix = "production-line-initialization")
 public class AviationProductsHolder {
@@ -36,7 +36,6 @@ public class AviationProductsHolder {
     /**
      * Aviation product
      */
-
     public static class AviationProduct {
         private String id;
         private File inputDir;
@@ -113,6 +112,7 @@ public class AviationProductsHolder {
 
     public static class FileConfig {
         private String pattern;
+        private Pattern compiledPattern;
 
         public FileConfig() {
         }
@@ -127,6 +127,13 @@ public class AviationProductsHolder {
 
         public void setPattern(final String pattern) {
             this.pattern = pattern;
+        }
+
+        public Pattern getCompiledPattern() {
+            if (compiledPattern == null) {
+                compiledPattern = Pattern.compile(pattern);
+            }
+            return compiledPattern;
         }
     }
 }

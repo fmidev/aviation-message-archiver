@@ -33,6 +33,7 @@ production-line-initialization:
 ##############################################
 # START SNIPPET: Message parsing
 message-parsing:
+  zone: UTC
   types:
     TAF: -1
     METAR: -1

@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
-import java.time.Clock;
+import java.time.ZoneId;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +23,9 @@ import fi.fmi.avi.model.GenericMeteorologicalBulletin;
 @Import(TACConverter.class)
 public class MessageParserConfig {
 
+    private ZoneId zone;
+
     private Map<AviationCodeListUser.MessageType, Integer> types;
-    @Autowired
-    private AviMessageSpecificConverter<String, GenericMeteorologicalBulletin> genericBulletinTACParser;
 
     public Map<AviationCodeListUser.MessageType, Integer> getTypes() {
         return types;
@@ -35,10 +35,15 @@ public class MessageParserConfig {
         this.types = types;
     }
 
-    // TODO Move this somewhere
-    @Bean
-    public Clock clock() {
-        return Clock.systemUTC();
+    @Autowired
+    private AviMessageSpecificConverter<String, GenericMeteorologicalBulletin> genericBulletinTACParser;
+
+    public ZoneId getZone() {
+        return zone;
+    }
+
+    public void setZone(final ZoneId zone) {
+        this.zone = zone;
     }
 
     @Bean
@@ -50,7 +55,7 @@ public class MessageParserConfig {
 
     @Bean
     public MessageParser messageParser() {
-        return new MessageParser(clock(), aviMessageConverter(), types);
+        return new MessageParser(zone, aviMessageConverter(), types);
     }
 
 }
