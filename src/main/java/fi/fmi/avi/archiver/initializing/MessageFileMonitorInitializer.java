@@ -50,7 +50,8 @@ public class MessageFileMonitorInitializer {
     private final MessageChannel archivedChannel;
     private final MessageChannel failedChannel;
 
-    public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder, final MessageChannel processingChannel, final MessageChannel archivedChannel, final MessageChannel failedChannel) {
+    public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
+            final MessageChannel processingChannel, final MessageChannel archivedChannel, final MessageChannel failedChannel) {
         this.context = context;
         this.registerations = new HashSet<>();
         this.aviationProductsHolder = aviationProductsHolder;

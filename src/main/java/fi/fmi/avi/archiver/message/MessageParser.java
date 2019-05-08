@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -29,11 +28,9 @@ import fi.fmi.avi.model.GenericMeteorologicalBulletin;
 import fi.fmi.avi.model.PartialDateTime;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
+import fi.fmi.avi.util.BulletinHeadingEncoder;
 
 public class MessageParser {
-
-    private static final String DELIMITER = " ";
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("ddHHmm");
 
     private final ZoneId zone;
 
@@ -47,45 +44,26 @@ public class MessageParser {
     }
 
     /**
-     * TODO This conversion should probably be provided by the converter library.
+     * Certain message types get their airport code from the bulletin heading and others from the message itself.
      *
      * @param bulletinHeading
      *         bulletin heading
+     * @param aviationWeatherMessage
+     *         aviation weather message
+     * @param messageType
+     *         message type
      *
-     * @return bulletin heading serialized into string
+     * @return airport icao code
      */
-    private static String serialize(final BulletinHeading bulletinHeading) {
-        requireNonNull(bulletinHeading, "bulletinHeading");
-        final PartialOrCompleteTimeInstant issueTime = bulletinHeading.getIssueTime();
-
-        final String time = issueTime.getCompleteTime()
-                .map(zonedDateTime -> zonedDateTime.format(DATE_TIME_FORMATTER))
-                .orElse(issueTime.getPartialTime()
-                        .map(partialTime -> String.format("%02d%02d%02d", partialTime.getDay().orElse(0), partialTime.getHour().orElse(0),
-                                partialTime.getMinute().orElse(0)))
-                        .orElse("000000"));
-
-        final StringBuilder sb = new StringBuilder();
-        sb.append(bulletinHeading.getDataTypeDesignatorsForTAC())//
-                .append(bulletinHeading.getGeographicalDesignator())//
-                .append(bulletinHeading.getBulletinNumber())//
-                .append(DELIMITER)//
-                .append(bulletinHeading.getLocationIndicator())//
-                .append(DELIMITER)//
-                .append(time);
-
-        if (bulletinHeading.getType() != BulletinHeading.Type.NORMAL && bulletinHeading.getBulletinAugmentationNumber().isPresent()) {
-            final String augmentationNumber = String.valueOf(Character.toChars('A' + bulletinHeading.getBulletinAugmentationNumber().get() - 1));
-            sb.append(DELIMITER)//
-                    .append(bulletinHeading.getType().getPrefix())//
-                    .append(augmentationNumber);
-        }
-        return sb.toString();
-    }
-
     private static String getAirportCode(final BulletinHeading bulletinHeading, final GenericAviationWeatherMessage aviationWeatherMessage,
             final AviationCodeListUser.MessageType messageType) {
         switch (messageType) {
+            case TAF:
+            case METAR:
+            case SPECI:
+            case LOW_WIND:
+            case GAFOR:
+                return aviationWeatherMessage.getTargetAerodrome().orElseThrow(() -> new IllegalStateException("No target aerodrome")).getDesignator();
             case SIGMET:
             case AIRMET:
             case TROPICAL_CYCLONE_ADVISORY:
@@ -94,14 +72,8 @@ public class MessageParser {
             case SPECIAL_AIR_REPORT:
             case WXREP:
             case SPACE_WEATHER_ADVISORY:
-                return bulletinHeading.getLocationIndicator();
-            case TAF:
-            case METAR:
-            case SPECI:
-            case LOW_WIND:
-            case GAFOR:
             default:
-                return aviationWeatherMessage.getTargetAerodrome().orElseThrow(() -> new IllegalStateException("No target aerodrome")).getDesignator();
+                return bulletinHeading.getLocationIndicator();
         }
     }
 
@@ -147,7 +119,7 @@ public class MessageParser {
                         }
 
                         return Message.builder()//
-                                .setHeading(serialize(bulletin.getHeading()))//
+                                .setHeading(BulletinHeadingEncoder.encode(bulletin.getHeading(), null))//
                                 .setIcaoAirportCode(airportCode)//
                                 .setMessage(message.getOriginalMessage())//
                                 .setMessageTime(issueInstant)//
