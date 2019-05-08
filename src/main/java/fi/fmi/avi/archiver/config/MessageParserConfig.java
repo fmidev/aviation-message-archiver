@@ -48,9 +48,9 @@ public class MessageParserConfig {
 
     @Bean
     public AviMessageConverter aviMessageConverter() {
-        final AviMessageConverter p = new AviMessageConverter();
-        p.setMessageSpecificConverter(TACConverter.TAC_TO_GENERIC_BULLETIN_POJO, genericBulletinTACParser);
-        return p;
+        final AviMessageConverter aviMessageConverter = new AviMessageConverter();
+        aviMessageConverter.setMessageSpecificConverter(TACConverter.TAC_TO_GENERIC_BULLETIN_POJO, genericBulletinTACParser);
+        return aviMessageConverter;
     }
 
     @Bean

@@ -24,6 +24,7 @@ import fi.fmi.avi.converter.ConversionResult;
 import fi.fmi.avi.converter.tac.conf.TACConverter;
 import fi.fmi.avi.model.AviationCodeListUser;
 import fi.fmi.avi.model.BulletinHeading;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.GenericMeteorologicalBulletin;
 import fi.fmi.avi.model.PartialDateTime;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
@@ -82,6 +83,28 @@ public class MessageParser {
         return sb.toString();
     }
 
+    private static String getAirportCode(final BulletinHeading bulletinHeading, final GenericAviationWeatherMessage aviationWeatherMessage,
+            final AviationCodeListUser.MessageType messageType) {
+        switch (messageType) {
+            case SIGMET:
+            case AIRMET:
+            case TROPICAL_CYCLONE_ADVISORY:
+            case VOLCANIC_ASH_ADVISORY:
+            case WX_WARNING:
+            case SPECIAL_AIR_REPORT:
+            case WXREP:
+            case SPACE_WEATHER_ADVISORY:
+                return bulletinHeading.getLocationIndicator();
+            case TAF:
+            case METAR:
+            case SPECI:
+            case LOW_WIND:
+            case GAFOR:
+            default:
+                return aviationWeatherMessage.getTargetAerodrome().orElseThrow(() -> new IllegalStateException("No target aerodrome")).getDesignator();
+        }
+    }
+
     public Collection<Message> parse(final int routeId, final MessageFilenamePattern messageFilePattern, final String content, final Instant currentTime,
             @Nullable final Instant fileLastModified) {
         final ConversionResult<GenericMeteorologicalBulletin> bulletinConversion = aviMessageConverter.convertMessage(content,
@@ -104,10 +127,7 @@ public class MessageParser {
                                     bulletin.getHeading().getType().getPrefix() + String.valueOf(Character.toChars('A' + augmentationNumber - 1)));
                         }
 
-                        // Message aerodrome or bulletin location indicator as fallback
-                        final String airportCode = message.getTargetAerodrome().isPresent()
-                                ? message.getTargetAerodrome().get().getDesignator()
-                                : bulletin.getHeading().getLocationIndicator();
+                        final String airportCode = getAirportCode(bulletin.getHeading(), message, message.getMessageType().get());
 
                         // Get partial issue time from message or bulletin heading and try to complete it
                         final PartialOrCompleteTimeInstant issueTime = message.getIssueTime().isPresent()
