@@ -46,7 +46,6 @@ public class DirectoryInspectionConfig {
 
     @Bean
     public IntegrationFlow fileProcessor() {
-        // TODO: Add file processing logic
         return IntegrationFlows.from(processingChannel)//
                 .channel(archivedChannel)//
                 .get();
