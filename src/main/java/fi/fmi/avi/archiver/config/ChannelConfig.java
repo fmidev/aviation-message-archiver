@@ -24,4 +24,15 @@ public class ChannelConfig {
     public MessageChannel failedChannel() {
         return new PublishSubscribeChannel();
     }
+
+    @Bean
+    public MessageChannel parserChannel() {
+        return new PublishSubscribeChannel();
+    }
+
+    @Bean
+    public MessageChannel modifierChannel() {
+        return new PublishSubscribeChannel();
+    }
+
 }

@@ -27,7 +27,7 @@ import org.springframework.integration.handler.LoggingHandler.Level;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 
-import fi.fmi.avi.archiver.message.MessageFilenamePattern;
+import fi.fmi.avi.archiver.message.AviationMessageFilenamePattern;
 
 /**
  * Initializes Message file source directory reading, filename filtering and archiving of the files.
@@ -38,8 +38,8 @@ public class MessageFileMonitorInitializer {
 
     private static final String PRODUCT_KEY = "product";
     private static final String INPUT_CATEGORY = "input";
-    public static final String MESSAGE_FILE_PATTERN = "message_file_pattern";
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageFileMonitorInitializer.class);
+    public static final String MESSAGE_FILE_PATTERN = "message_file_pattern";
 
     private final IntegrationFlowContext context;
 
@@ -118,12 +118,12 @@ public class MessageFileMonitorInitializer {
     }
 
     @Nullable
-    private MessageFilenamePattern getFilePattern(final Message<?> fileMessage, final Pattern pattern) {
+    private AviationMessageFilenamePattern getFilePattern(final Message<?> fileMessage, final Pattern pattern) {
         final String filename = fileMessage.getHeaders().get(FileHeaders.FILENAME, String.class);
         if (filename == null) {
             return null;
         }
-        return new MessageFilenamePattern(filename, pattern);
+        return new AviationMessageFilenamePattern(filename, pattern);
     }
 
     @Nullable

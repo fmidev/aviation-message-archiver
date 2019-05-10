@@ -5,7 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class MessageFilenamePattern {
+public class AviationMessageFilenamePattern {
 
     static final String YEAR = "yyyy";
     static final String MONTH = "MM";
@@ -17,7 +17,7 @@ public class MessageFilenamePattern {
     private final String filename;
     private final Pattern pattern;
 
-    public MessageFilenamePattern(final String filename, final Pattern pattern) {
+    public AviationMessageFilenamePattern(final String filename, final Pattern pattern) {
         this.filename = requireNonNull(filename, "filename");
         this.pattern = requireNonNull(pattern, "pattern");
     }

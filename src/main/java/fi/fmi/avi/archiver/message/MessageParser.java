@@ -2,10 +2,10 @@ package fi.fmi.avi.archiver.message;
 
 import static java.util.Objects.requireNonNull;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -16,8 +16,12 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.messaging.MessageHeaders;
+
 import com.google.auto.value.AutoValue;
 
+import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.converter.ConversionResult;
 import fi.fmi.avi.converter.tac.conf.TACConverter;
@@ -32,13 +36,13 @@ import fi.fmi.avi.util.BulletinHeadingEncoder;
 
 public class MessageParser {
 
-    private final ZoneId zone;
+    private final Clock clock;
 
     private final AviMessageConverter aviMessageConverter;
     private final Map<AviationCodeListUser.MessageType, Integer> types;
 
-    public MessageParser(final ZoneId zone, final AviMessageConverter aviMessageConverter, final Map<AviationCodeListUser.MessageType, Integer> types) {
-        this.zone = zone;
+    public MessageParser(final Clock clock, final AviMessageConverter aviMessageConverter, final Map<AviationCodeListUser.MessageType, Integer> types) {
+        this.clock = requireNonNull(clock, "clock");
         this.aviMessageConverter = requireNonNull(aviMessageConverter, "aviMessageConverter");
         this.types = requireNonNull(types, "types");
     }
@@ -79,8 +83,17 @@ public class MessageParser {
         }
     }
 
-    public List<Message> parse(final int routeId, final MessageFilenamePattern messageFilePattern, final String content, final Instant currentTime,
-            @Nullable final Instant fileLastModified) {
+    @ServiceActivator
+    public List<AviationMessage> parse(final String content, final MessageHeaders headers) {
+        // TODO Bring current time from outside? Possibly in headers?
+        final Instant now = clock.instant();
+        final AviationMessageFilenamePattern pattern = (AviationMessageFilenamePattern) headers.get(MessageFileMonitorInitializer.MESSAGE_FILE_PATTERN);
+        final Instant fileLastModified = (Instant) headers.get(MessageFileMonitorInitializer.FILE_LAST_MODIFIED);
+        return parse(0, pattern, content.trim(), now, fileLastModified);
+    }
+
+    public List<AviationMessage> parse(final int routeId, final AviationMessageFilenamePattern messageFilePattern, final String content,
+            final Instant currentTime, @Nullable final Instant fileLastModified) {
         final ConversionResult<GenericMeteorologicalBulletin> bulletinConversion = aviMessageConverter.convertMessage(content,
                 TACConverter.TAC_TO_GENERIC_BULLETIN_POJO);
         if (bulletinConversion.getConvertedMessage().isPresent()) {
@@ -120,7 +133,7 @@ public class MessageParser {
                             }
                         }
 
-                        return Message.builder()//
+                        return AviationMessage.builder()//
                                 .setHeading(BulletinHeadingEncoder.encode(bulletin.getHeading(), null))//
                                 .setIcaoAirportCode(airportCode)//
                                 .setMessage(message.getOriginalMessage())//
@@ -137,8 +150,8 @@ public class MessageParser {
         return Collections.emptyList();
     }
 
-    private Instant getIssueTime(final PartialOrCompleteTimeInstant issueTime, final MessageFilenamePattern messageFilePattern, final Instant currentTime,
-            @Nullable final Instant fileLastModified) {
+    private Instant getIssueTime(final PartialOrCompleteTimeInstant issueTime, final AviationMessageFilenamePattern messageFilePattern,
+            final Instant currentTime, @Nullable final Instant fileLastModified) {
         if (issueTime.getCompleteTime().isPresent()) {
             return issueTime.getCompleteTime().get().toInstant();
         }
@@ -147,24 +160,24 @@ public class MessageParser {
         else if (issueTime.getPartialTime().isPresent()) {
             OptionalInt minute = issueTime.getMinute();
             if (!minute.isPresent()) {
-                minute = getTemporalComponent(messageFilePattern, MessageFilenamePattern.MINUTE);
+                minute = getTemporalComponent(messageFilePattern, AviationMessageFilenamePattern.MINUTE);
             }
 
             OptionalInt hour = issueTime.getHour();
             if (!hour.isPresent()) {
-                hour = getTemporalComponent(messageFilePattern, MessageFilenamePattern.HOUR);
+                hour = getTemporalComponent(messageFilePattern, AviationMessageFilenamePattern.HOUR);
             }
 
             OptionalInt day = issueTime.getDay();
             if (!day.isPresent()) {
-                day = getTemporalComponent(messageFilePattern, MessageFilenamePattern.DAY);
+                day = getTemporalComponent(messageFilePattern, AviationMessageFilenamePattern.DAY);
             }
 
-            OptionalInt year = getTemporalComponent(messageFilePattern, MessageFilenamePattern.YEAR);
-            OptionalInt month = getTemporalComponent(messageFilePattern, MessageFilenamePattern.MONTH);
+            OptionalInt year = getTemporalComponent(messageFilePattern, AviationMessageFilenamePattern.YEAR);
+            OptionalInt month = getTemporalComponent(messageFilePattern, AviationMessageFilenamePattern.MONTH);
 
             if (year.isPresent() && month.isPresent() && day.isPresent() && hour.isPresent() && minute.isPresent()) {
-                return PartialDateTime.of(day.getAsInt(), hour.getAsInt(), minute.getAsInt(), zone)
+                return PartialDateTime.of(day.getAsInt(), hour.getAsInt(), minute.getAsInt(), clock.getZone())
                         .toZonedDateTime(YearMonth.of(year.getAsInt(), month.getAsInt()))
                         .toInstant();
             }
@@ -179,7 +192,7 @@ public class MessageParser {
         return currentTime;
     }
 
-    private OptionalInt getTemporalComponent(final MessageFilenamePattern messageFilePattern, final String component) {
+    private OptionalInt getTemporalComponent(final AviationMessageFilenamePattern messageFilePattern, final String component) {
         try {
             return OptionalInt.of(messageFilePattern.getInt(component));
         } catch (final Throwable t) {
@@ -188,21 +201,21 @@ public class MessageParser {
         }
     }
 
-    private Optional<ValidityTime> getValidityTime(final PartialOrCompleteTimePeriod validityPeriod, final MessageFilenamePattern messageFilePattern,
+    private Optional<ValidityTime> getValidityTime(final PartialOrCompleteTimePeriod validityPeriod, final AviationMessageFilenamePattern messageFilePattern,
             final Instant currentTime, @Nullable final Instant fileLastModified) {
         if (validityPeriod.isCompleteStrict()) {
             return Optional.of(ValidityTime.create(validityPeriod));
         } else {
             // Use file timestamp as completion time. then file modified and last current time
-            OptionalInt year = getTemporalComponent(messageFilePattern, MessageFilenamePattern.YEAR);
-            OptionalInt month = getTemporalComponent(messageFilePattern, MessageFilenamePattern.MONTH);
-            OptionalInt day = getTemporalComponent(messageFilePattern, MessageFilenamePattern.DAY);
-            OptionalInt hour = getTemporalComponent(messageFilePattern, MessageFilenamePattern.HOUR);
-            OptionalInt minute = getTemporalComponent(messageFilePattern, MessageFilenamePattern.MINUTE);
+            OptionalInt year = getTemporalComponent(messageFilePattern, AviationMessageFilenamePattern.YEAR);
+            OptionalInt month = getTemporalComponent(messageFilePattern, AviationMessageFilenamePattern.MONTH);
+            OptionalInt day = getTemporalComponent(messageFilePattern, AviationMessageFilenamePattern.DAY);
+            OptionalInt hour = getTemporalComponent(messageFilePattern, AviationMessageFilenamePattern.HOUR);
+            OptionalInt minute = getTemporalComponent(messageFilePattern, AviationMessageFilenamePattern.MINUTE);
 
             if (year.isPresent() && month.isPresent() && day.isPresent() && hour.isPresent() && minute.isPresent()) {
                 final ZonedDateTime reference = ZonedDateTime.of(
-                        LocalDateTime.of(year.getAsInt(), month.getAsInt(), day.getAsInt(), hour.getAsInt(), minute.getAsInt()), zone);
+                        LocalDateTime.of(year.getAsInt(), month.getAsInt(), day.getAsInt(), hour.getAsInt(), minute.getAsInt()), clock.getZone());
                 final PartialOrCompleteTimePeriod completeValidityPeriod = validityPeriod.toBuilder().completePartialStartingNear(reference).build();
                 if (completeValidityPeriod.isCompleteStrict()) {
                     return Optional.of(ValidityTime.create(completeValidityPeriod));
@@ -212,7 +225,7 @@ public class MessageParser {
             // Use file last modified
             if (fileLastModified != null) {
                 final PartialOrCompleteTimePeriod completeValidityPeriod = validityPeriod.toBuilder()
-                        .completePartialStartingNear(fileLastModified.atZone(zone))
+                        .completePartialStartingNear(fileLastModified.atZone(clock.getZone()))
                         .build();
                 if (completeValidityPeriod.isCompleteStrict()) {
                     return Optional.of(ValidityTime.create(completeValidityPeriod));
@@ -220,7 +233,9 @@ public class MessageParser {
             }
 
             // Use current time
-            final PartialOrCompleteTimePeriod completeValidityPeriod = validityPeriod.toBuilder().completePartialStartingNear(currentTime.atZone(zone)).build();
+            final PartialOrCompleteTimePeriod completeValidityPeriod = validityPeriod.toBuilder()
+                    .completePartialStartingNear(currentTime.atZone(clock.getZone()))
+                    .build();
             if (completeValidityPeriod.isCompleteStrict()) {
                 return Optional.of(ValidityTime.create(completeValidityPeriod));
             }

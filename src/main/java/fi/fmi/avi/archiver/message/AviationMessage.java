@@ -9,9 +9,9 @@ import jdk.nashorn.internal.ir.annotations.Immutable;
 
 @Immutable
 @FreeBuilder
-public abstract class Message {
+public abstract class AviationMessage {
 
-    Message() {
+    AviationMessage() {
     }
 
     public static Builder builder() {
@@ -40,7 +40,7 @@ public abstract class Message {
 
     public abstract Optional<String> getVersion();
 
-    public static class Builder extends Message_Builder {
+    public static class Builder extends AviationMessage_Builder {
         Builder() {
         }
     }

@@ -12,8 +12,8 @@ public class MessageModifierService {
         this.modifiers = requireNonNull(modifiers, "modifiers");
     }
 
-    public Message modifyMessage(final Message message) {
-        Message modifiedMessage = message;
+    public AviationMessage modifyMessage(final AviationMessage message) {
+        AviationMessage modifiedMessage = message;
         for (final MessageModifier messageModifier : modifiers) {
             modifiedMessage = messageModifier.modify(message);
         }

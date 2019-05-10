@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
+import java.time.Clock;
 import java.time.ZoneId;
 import java.util.Map;
 
@@ -9,6 +10,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.integration.dsl.IntegrationFlow;
+import org.springframework.integration.dsl.IntegrationFlows;
+import org.springframework.messaging.MessageChannel;
 
 import fi.fmi.avi.archiver.message.MessageParser;
 import fi.fmi.avi.converter.AviMessageConverter;
@@ -38,6 +42,15 @@ public class ParserConfig {
     @Autowired
     private AviMessageSpecificConverter<String, GenericMeteorologicalBulletin> genericBulletinTACParser;
 
+    @Autowired
+    private MessageChannel parserChannel;
+
+    @Autowired
+    private MessageChannel modifierChannel;
+
+    @Autowired
+    private Clock clock;
+
     public ZoneId getZone() {
         return zone;
     }
@@ -55,7 +68,15 @@ public class ParserConfig {
 
     @Bean
     public MessageParser messageParser() {
-        return new MessageParser(zone, aviMessageConverter(), types);
+        return new MessageParser(clock, aviMessageConverter(), types);
+    }
+
+    @Bean
+    public IntegrationFlow parserFlow() {
+        return IntegrationFlows.from(parserChannel)//
+                .handle(messageParser())//
+                .channel(modifierChannel)//
+                .get();
     }
 
 }

@@ -4,16 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.Pollers;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
-import org.springframework.integration.file.transformer.FileToStringTransformer;
 import org.springframework.integration.scheduling.PollerMetadata;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessageHeaders;
 
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
@@ -48,27 +45,8 @@ public class DirectoryInspectionConfig {
     }
 
     @Bean
-    public IntegrationFlow fileProcessor() {
-        return IntegrationFlows.from(processingChannel)//
-                .transform(new FileToStringTransformer()).channel(archivedChannel)//
-                .get();
-    }
-
-    @Bean
-    public IntegrationFlow archiveProcessor() {
-        return IntegrationFlows.from(archivedChannel).handle(this).log("Archive").get();
-    }
-
-    @ServiceActivator
-    public String handle(String payload, MessageHeaders headers) {
-
-        //TODO: Use file name and content
-        FileContent.builder()//
-                .setMessageHeader(headers)//
-                .setContent(payload)
-                .build().getHeader();
-
-        return payload;
+    public IntegrationFlow archiveFlow() {
+        return IntegrationFlows.from(archivedChannel).log("Archive").get();
     }
 
 }
