@@ -18,6 +18,8 @@ public abstract class Message {
         return new Builder();
     }
 
+    public abstract Builder toBuilder();
+
     public abstract Instant getMessageTime();
 
     public abstract String getIcaoAirportCode();

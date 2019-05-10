@@ -18,10 +18,10 @@ import fi.fmi.avi.model.AviationCodeListUser;
 import fi.fmi.avi.model.GenericMeteorologicalBulletin;
 
 @Configuration
-@EnableConfigurationProperties(MessageParserConfig.class)
+@EnableConfigurationProperties(ParserConfig.class)
 @ConfigurationProperties("message-parsing")
 @Import(TACConverter.class)
-public class MessageParserConfig {
+public class ParserConfig {
 
     private ZoneId zone;
 

@@ -7,8 +7,8 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -58,17 +58,19 @@ public class MessageParser {
     private static String getAirportCode(final BulletinHeading bulletinHeading, final GenericAviationWeatherMessage aviationWeatherMessage,
             final AviationCodeListUser.MessageType messageType) {
         switch (messageType) {
+            case WX_WARNING:
+                return aviationWeatherMessage.getTargetAerodrome().isPresent()
+                        ? aviationWeatherMessage.getTargetAerodrome().get().getDesignator()
+                        : bulletinHeading.getLocationIndicator();
             case TAF:
             case METAR:
             case SPECI:
             case LOW_WIND:
-            case GAFOR:
                 return aviationWeatherMessage.getTargetAerodrome().orElseThrow(() -> new IllegalStateException("No target aerodrome")).getDesignator();
             case SIGMET:
             case AIRMET:
             case TROPICAL_CYCLONE_ADVISORY:
             case VOLCANIC_ASH_ADVISORY:
-            case WX_WARNING:
             case SPECIAL_AIR_REPORT:
             case WXREP:
             case SPACE_WEATHER_ADVISORY:
@@ -77,7 +79,7 @@ public class MessageParser {
         }
     }
 
-    public Collection<Message> parse(final int routeId, final MessageFilenamePattern messageFilePattern, final String content, final Instant currentTime,
+    public List<Message> parse(final int routeId, final MessageFilenamePattern messageFilePattern, final String content, final Instant currentTime,
             @Nullable final Instant fileLastModified) {
         final ConversionResult<GenericMeteorologicalBulletin> bulletinConversion = aviMessageConverter.convertMessage(content,
                 TACConverter.TAC_TO_GENERIC_BULLETIN_POJO);
@@ -130,9 +132,9 @@ public class MessageParser {
                                 .setNullableFileModified(fileLastModified)//
                                 .setVersion(version)//
                                 .build();
-                    }).collect(Collectors.toSet());
+                    }).collect(Collectors.toList());
         }
-        return Collections.emptySet();
+        return Collections.emptyList();
     }
 
     private Instant getIssueTime(final PartialOrCompleteTimeInstant issueTime, final MessageFilenamePattern messageFilePattern, final Instant currentTime,
