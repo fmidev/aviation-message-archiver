@@ -58,6 +58,7 @@
 
   <properties>
     <spring-boot.version>2.1.4.RELEASE</spring-boot.version>
+    <auto-value.version>1.6.5</auto-value.version>
   </properties>
 
   <dependencyManagement>
@@ -80,6 +81,33 @@
     <dependency>
       <groupId>org.springframework.integration</groupId>
       <artifactId>spring-integration-file</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.inferred</groupId>
+      <artifactId>freebuilder</artifactId>
+      <version>2.3.0</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>com.google.auto.value</groupId>
+      <artifactId>auto-value-annotations</artifactId>
+      <version>${auto-value.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.auto.value</groupId>
+      <artifactId>auto-value</artifactId>
+      <version>${auto-value.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>fi.fmi.avi.converter</groupId>
+      <artifactId>fmi-avi-messageconverter</artifactId>
+      <version>3.6.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>fi.fmi.avi.converter</groupId>
+      <artifactId>fmi-avi-messageconverter-tac</artifactId>
+      <version>2.5.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
