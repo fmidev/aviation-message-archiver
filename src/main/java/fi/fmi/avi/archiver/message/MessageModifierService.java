@@ -24,7 +24,7 @@ public class MessageModifierService {
     private AviationMessage modifyMessage(final AviationMessage message) {
         AviationMessage modifiedMessage = message;
         for (final MessageModifier messageModifier : modifiers) {
-            modifiedMessage = messageModifier.modify(message);
+            modifiedMessage = messageModifier.modify(modifiedMessage);
         }
         return modifiedMessage;
     }
