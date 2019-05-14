@@ -25,6 +25,15 @@ production-line-initialization:
 
 # END SNIPPET: products
 
+##############################################
+#
+#  File handling
+#
+##############################################
+# START SNIPPET: File andling
+file-handler:
+  charset: UTF-8
+# END SNIPPET: File handling
 
 ##############################################
 #
@@ -33,7 +42,6 @@ production-line-initialization:
 ##############################################
 # START SNIPPET: Message parsing
 message-parsing:
-  zone: UTC
   types:
     TAF: -1
     METAR: -1

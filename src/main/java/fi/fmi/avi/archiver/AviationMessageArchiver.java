@@ -20,6 +20,11 @@ public class AviationMessageArchiver {
         return Clock.systemUTC();
     }
 
+    @Bean(destroyMethod = "destroy")
+    public ThreadGroup aviationMessageArchiverThreadGroup() {
+        return new ThreadGroup(AviationMessageArchiver.class.getSimpleName());
+    }
+
     public static void main(final String[] args) {
         SpringApplication.run(AviationMessageArchiver.class, args);
     }

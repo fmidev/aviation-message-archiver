@@ -1,38 +1,49 @@
 package fi.fmi.avi.archiver.config;
 
+import java.util.concurrent.Executors;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.PublishSubscribeChannel;
-import org.springframework.integration.config.EnableIntegration;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 @Configuration
-@EnableIntegration
 public class ChannelConfig {
+
+    @Autowired
+    private ThreadGroup aviationMessageArchiverThreadGroup;
 
     @Bean
     public MessageChannel processingChannel() {
-        return new PublishSubscribeChannel();
+        return new PublishSubscribeChannel(Executors.newSingleThreadScheduledExecutor(newThreadFactory("Processing-")));
     }
 
     @Bean
-    public MessageChannel archivedChannel() {
-        return new PublishSubscribeChannel();
+    public MessageChannel archiveChannel() {
+        return new PublishSubscribeChannel(Executors.newSingleThreadScheduledExecutor(newThreadFactory("Archive-")));
     }
 
     @Bean
-    public MessageChannel failedChannel() {
-        return new PublishSubscribeChannel();
+    public MessageChannel failChannel() {
+        return new PublishSubscribeChannel(Executors.newSingleThreadScheduledExecutor(newThreadFactory("Fail-")));
     }
 
     @Bean
     public MessageChannel parserChannel() {
-        return new PublishSubscribeChannel();
+        return new PublishSubscribeChannel(Executors.newSingleThreadScheduledExecutor(newThreadFactory("Parser-")));
     }
 
     @Bean
     public MessageChannel modifierChannel() {
-        return new PublishSubscribeChannel();
+        return new PublishSubscribeChannel(Executors.newSingleThreadScheduledExecutor(newThreadFactory("Modifier-")));
+    }
+
+    private CustomizableThreadFactory newThreadFactory(final String threadNamePrefix) {
+        final CustomizableThreadFactory threadFactory = new CustomizableThreadFactory(threadNamePrefix);
+        threadFactory.setThreadGroup(aviationMessageArchiverThreadGroup);
+        return threadFactory;
     }
 
 }

@@ -14,6 +14,7 @@ import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.integration.annotation.Transformer;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.core.GenericSelector;
 import org.springframework.integration.dsl.IntegrationFlows;
@@ -26,6 +27,7 @@ import org.springframework.integration.file.support.FileExistsMode;
 import org.springframework.integration.handler.LoggingHandler.Level;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.handler.annotation.Header;
 
 import fi.fmi.avi.archiver.message.AviationMessageFilenamePattern;
 
@@ -34,12 +36,14 @@ import fi.fmi.avi.archiver.message.AviationMessageFilenamePattern;
  */
 public class MessageFileMonitorInitializer {
 
+    public static final String MESSAGE_FILE_PATTERN = "message_file_pattern";
+
     public static final String FILE_LAST_MODIFIED = "file_last_modified";
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageFileMonitorInitializer.class);
 
     private static final String PRODUCT_KEY = "product";
     private static final String INPUT_CATEGORY = "input";
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageFileMonitorInitializer.class);
-    public static final String MESSAGE_FILE_PATTERN = "message_file_pattern";
+    private static final String ORIGINAL_FILE = "file_originalFile";
 
     private final IntegrationFlowContext context;
 
@@ -98,15 +102,18 @@ public class MessageFileMonitorInitializer {
 
             // Initialize file moving flows
             final GenericSelector<Message> productFilter = m -> Objects.equals(m.getHeaders().get(PRODUCT_KEY), product);
+            final HeaderToFileTransformer headerToFileTransformer = new HeaderToFileTransformer();
 
             registerations.add(context.registration(IntegrationFlows.from(archivedChannel)//
                     .filter(Message.class, productFilter)//
+                    .transform(headerToFileTransformer)//
                     .handle(archivedDirectory)//
                     .get()//
             ).register());
 
             registerations.add(context.registration(IntegrationFlows.from(failedChannel)//
                     .filter(Message.class, productFilter)//
+                    .transform(headerToFileTransformer)//
                     .handle(failedDirectory)//
                     .get()//
             ).register());
@@ -137,6 +144,13 @@ public class MessageFileMonitorInitializer {
             }
         }
         return null;
+    }
+
+    public static class HeaderToFileTransformer {
+        @Transformer
+        public File transform(@Header(ORIGINAL_FILE) final File originalFile) {
+            return originalFile;
+        }
     }
 
 }

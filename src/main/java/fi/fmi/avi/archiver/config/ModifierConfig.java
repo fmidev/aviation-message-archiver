@@ -19,6 +19,9 @@ public class ModifierConfig {
     private MessageChannel modifierChannel;
 
     @Autowired
+    private MessageChannel archiveChannel;
+
+    @Autowired
     private List<MessageModifier> messageModifiers;
 
     // This is a placeholder modifier that is only used when the application is launched without external message modifier configuration
@@ -34,7 +37,10 @@ public class ModifierConfig {
 
     @Bean
     public IntegrationFlow modifierFlow() {
-        return IntegrationFlows.from(modifierChannel).log("Modifier").get();
+        return IntegrationFlows.from(modifierChannel)//
+                .handle(messageModifierService())//
+                .channel(archiveChannel)//
+                .get();
     }
 
 }
