@@ -1,5 +1,8 @@
 package fi.fmi.avi.archiver.message;
 
+import static fi.fmi.avi.model.MessageType.METAR;
+import static fi.fmi.avi.model.MessageType.SPECI;
+import static fi.fmi.avi.model.MessageType.TAF;
 import static java.util.Objects.requireNonNull;
 
 import java.time.Clock;
@@ -16,6 +19,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import org.inferred.freebuilder.shaded.com.google.common.collect.ImmutableSet;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.MessageHeaders;
 
@@ -25,10 +29,10 @@ import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.converter.ConversionResult;
 import fi.fmi.avi.converter.tac.conf.TACConverter;
-import fi.fmi.avi.model.AviationCodeListUser;
 import fi.fmi.avi.model.BulletinHeading;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.GenericMeteorologicalBulletin;
+import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.PartialDateTime;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
@@ -36,12 +40,14 @@ import fi.fmi.avi.util.BulletinHeadingEncoder;
 
 public class MessageParser {
 
+    private static final MessageType LOW_WIND = new MessageType("LOW_WIND");
+    private static final MessageType WX_WARNING = new MessageType("WX_WARNING");
     private final Clock clock;
 
     private final AviMessageConverter aviMessageConverter;
-    private final Map<AviationCodeListUser.MessageType, Integer> types;
+    private final Map<MessageType, Integer> types;
 
-    public MessageParser(final Clock clock, final AviMessageConverter aviMessageConverter, final Map<AviationCodeListUser.MessageType, Integer> types) {
+    public MessageParser(final Clock clock, final AviMessageConverter aviMessageConverter, final Map<MessageType, Integer> types) {
         this.clock = requireNonNull(clock, "clock");
         this.aviMessageConverter = requireNonNull(aviMessageConverter, "aviMessageConverter");
         this.types = requireNonNull(types, "types");
@@ -60,26 +66,16 @@ public class MessageParser {
      * @return airport icao code
      */
     private static String getAirportCode(final BulletinHeading bulletinHeading, final GenericAviationWeatherMessage aviationWeatherMessage,
-            final AviationCodeListUser.MessageType messageType) {
-        switch (messageType) {
-            case WX_WARNING:
-                return aviationWeatherMessage.getTargetAerodrome().isPresent()
-                        ? aviationWeatherMessage.getTargetAerodrome().get().getDesignator()
-                        : bulletinHeading.getLocationIndicator();
-            case TAF:
-            case METAR:
-            case SPECI:
-            case LOW_WIND:
-                return aviationWeatherMessage.getTargetAerodrome().orElseThrow(() -> new IllegalStateException("No target aerodrome")).getDesignator();
-            case SIGMET:
-            case AIRMET:
-            case TROPICAL_CYCLONE_ADVISORY:
-            case VOLCANIC_ASH_ADVISORY:
-            case SPECIAL_AIR_REPORT:
-            case WXREP:
-            case SPACE_WEATHER_ADVISORY:
-            default:
-                return bulletinHeading.getLocationIndicator();
+            final MessageType messageType) {
+
+        if (messageType.equals(WX_WARNING)) {
+            return aviationWeatherMessage.getTargetAerodrome().isPresent()
+                    ? aviationWeatherMessage.getTargetAerodrome().get().getDesignator()
+                    : bulletinHeading.getLocationIndicator();
+        } else if (ImmutableSet.of(TAF, METAR, SPECI, LOW_WIND).contains(messageType)) {
+            return aviationWeatherMessage.getTargetAerodrome().orElseThrow(() -> new IllegalStateException("No target aerodrome")).getDesignator();
+        } else {
+            return bulletinHeading.getLocationIndicator();
         }
     }
 
