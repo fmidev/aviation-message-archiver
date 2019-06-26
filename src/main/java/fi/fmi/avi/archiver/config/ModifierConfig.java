@@ -9,6 +9,7 @@ import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.messaging.MessageChannel;
 
+import fi.fmi.avi.archiver.message.AviationMessage;
 import fi.fmi.avi.archiver.message.MessageModifier;
 import fi.fmi.avi.archiver.message.MessageModifierService;
 
@@ -20,6 +21,9 @@ public class ModifierConfig {
 
     @Autowired
     private MessageChannel archiveChannel;
+
+    @Autowired
+    private MessageChannel failChannel;
 
     @Autowired
     private List<MessageModifier> messageModifiers;
@@ -39,6 +43,7 @@ public class ModifierConfig {
     public IntegrationFlow modifierFlow() {
         return IntegrationFlows.from(modifierChannel)//
                 .handle(messageModifierService())//
+                .<List<AviationMessage>> filter(msgs -> !msgs.isEmpty(), discards -> discards.discardChannel(failChannel))//
                 .channel(archiveChannel)//
                 .get();
     }
