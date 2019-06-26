@@ -29,6 +29,8 @@ import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
         initializers = { ConfigFileApplicationContextInitializer.class })
 public class AviationMessageArchiverTest {
 
+    private static final int WAIT_MILLIS = 100;
+    private static final int TIMEOUT_MILLIS = 1000;
     private static final File BASE_DIR = new File(System.getProperty("java.io.tmpdir") + "/.avi-message-archiver");
     private static final File TMP_DIR = new File(BASE_DIR, "temp");
     @Rule
@@ -50,11 +52,21 @@ public class AviationMessageArchiverTest {
         FileUtils.deleteDirectory(BASE_DIR);
     }
 
-    private void writeContentToFile(final String content, final File inputFile) throws IOException, InterruptedException {
+    private void writeContentToFile(final String content, final File inputFile) throws IOException {
         final Path tmpFile = File.createTempFile("test", ".txt", TMP_DIR).toPath();
         Files.write(tmpFile, content.getBytes(StandardCharsets.UTF_8));
         Files.move(tmpFile, inputFile.toPath());
-        Thread.sleep(500);
+    }
+
+    private void assertFilesEquals(final File inputFile, final File expectedOutFile) throws InterruptedException {
+        long totalWaitTime = 0;
+        while (!expectedOutFile.exists() && totalWaitTime < TIMEOUT_MILLIS) {
+            Thread.sleep(WAIT_MILLIS);
+            totalWaitTime += WAIT_MILLIS;
+        }
+
+        softly.assertThat(expectedOutFile).exists();
+        softly.assertThat(expectedOutFile).hasSameContentAs(inputFile);
     }
 
     private AviationProductsHolder.AviationProduct getTestProduct(final String id) {
@@ -71,10 +83,8 @@ public class AviationMessageArchiverTest {
 
         final File inputFile = new File(product.getInputDir(), "test_failing_flow.txt");
         writeContentToFile(content, inputFile);
-        final File expectedOutFile = new File(product.getFailedDir(), inputFile.getName());
 
-        softly.assertThat(expectedOutFile).exists();
-        softly.assertThat(expectedOutFile).hasSameContentAs(inputFile);
+        assertFilesEquals(inputFile, new File(product.getFailedDir(), inputFile.getName()));
     }
 
     @Test
@@ -84,10 +94,8 @@ public class AviationMessageArchiverTest {
 
         final File inputFile = new File(product.getInputDir(), "test_simple_taf.txt2");
         writeContentToFile(content, inputFile);
-        final File expectedOutFile = new File(product.getArchivedDir(), inputFile.getName());
 
-        softly.assertThat(expectedOutFile).exists();
-        softly.assertThat(expectedOutFile).hasSameContentAs(inputFile);
+        assertFilesEquals(inputFile, new File(product.getArchivedDir(), inputFile.getName()));
     }
 
     @Test
@@ -102,12 +110,7 @@ public class AviationMessageArchiverTest {
         writeContentToFile(content, inputFile);
         writeContentToFile(content, inputFile2);
 
-        final File expectedOutFile = new File(product.getArchivedDir(), inputFile.getName());
-        final File expectedOutFile2 = new File(product2.getArchivedDir(), inputFile2.getName());
-
-        softly.assertThat(expectedOutFile).exists();
-        softly.assertThat(expectedOutFile).hasSameContentAs(inputFile);
-        softly.assertThat(expectedOutFile2).exists();
-        softly.assertThat(expectedOutFile2).hasSameContentAs(inputFile2);
+        assertFilesEquals(inputFile, new File(product.getArchivedDir(), inputFile.getName()));
+        assertFilesEquals(inputFile, new File(product2.getArchivedDir(), inputFile2.getName()));
     }
 }
