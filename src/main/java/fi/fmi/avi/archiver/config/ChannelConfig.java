@@ -1,5 +1,7 @@
 package fi.fmi.avi.archiver.config;
 
+import java.util.concurrent.Executors;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.PublishSubscribeChannel;
@@ -17,11 +19,11 @@ public class ChannelConfig {
 
     @Bean
     public MessageChannel archivedChannel() {
-        return new PublishSubscribeChannel();
+        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor());
     }
 
     @Bean
     public MessageChannel failedChannel() {
-        return new PublishSubscribeChannel();
+        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor());
     }
 }
