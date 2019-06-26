@@ -18,8 +18,8 @@ import fi.fmi.avi.archiver.message.MessageParser;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.converter.AviMessageSpecificConverter;
 import fi.fmi.avi.converter.tac.conf.TACConverter;
-import fi.fmi.avi.model.AviationCodeListUser;
 import fi.fmi.avi.model.GenericMeteorologicalBulletin;
+import fi.fmi.avi.model.MessageType;
 
 @Configuration
 @EnableConfigurationProperties(ParserConfig.class)
@@ -29,13 +29,13 @@ public class ParserConfig {
 
     private ZoneId zone;
 
-    private Map<AviationCodeListUser.MessageType, Integer> types;
+    private Map<MessageType, Integer> types;
 
-    public Map<AviationCodeListUser.MessageType, Integer> getTypes() {
+    public Map<MessageType, Integer> getTypes() {
         return types;
     }
 
-    public void setTypes(final Map<AviationCodeListUser.MessageType, Integer> types) {
+    public void setTypes(final Map<MessageType, Integer> types) {
         this.types = types;
     }
 

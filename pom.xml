@@ -59,6 +59,7 @@
   <properties>
     <spring-boot.version>2.1.4.RELEASE</spring-boot.version>
     <auto-value.version>1.6.5</auto-value.version>
+    <guava.version>28.0-jre</guava.version>
   </properties>
 
   <dependencyManagement>
@@ -98,6 +99,11 @@
       <artifactId>auto-value</artifactId>
       <version>${auto-value.version}</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
     </dependency>
     <dependency>
       <groupId>fi.fmi.avi.converter</groupId>
