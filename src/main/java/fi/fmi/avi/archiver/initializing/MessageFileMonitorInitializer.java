@@ -1,5 +1,7 @@
 package fi.fmi.avi.archiver.initializing;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,7 +16,6 @@ import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.integration.annotation.Transformer;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.core.GenericSelector;
 import org.springframework.integration.dsl.IntegrationFlows;
@@ -27,9 +28,10 @@ import org.springframework.integration.file.support.FileExistsMode;
 import org.springframework.integration.handler.LoggingHandler.Level;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.MessageHeaders;
 
 import fi.fmi.avi.archiver.message.AviationMessageFilenamePattern;
+import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 
 /**
  * Initializes Message file source directory reading, filename filtering and archiving of the files.
@@ -43,7 +45,6 @@ public class MessageFileMonitorInitializer {
 
     private static final String PRODUCT_KEY = "product";
     private static final String INPUT_CATEGORY = "input";
-    private static final String ORIGINAL_FILE = "file_originalFile";
 
     private final IntegrationFlowContext context;
 
@@ -53,15 +54,18 @@ public class MessageFileMonitorInitializer {
     private final MessageChannel processingChannel;
     private final MessageChannel archivedChannel;
     private final MessageChannel failedChannel;
+    private final MessageChannel errorMessageChannel;
 
     public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
-            final MessageChannel processingChannel, final MessageChannel archivedChannel, final MessageChannel failedChannel) {
-        this.context = context;
+            final MessageChannel processingChannel, final MessageChannel archivedChannel, final MessageChannel failedChannel,
+            final MessageChannel errorMessageChannel) {
+        this.context = requireNonNull(context, "context");
         this.registerations = new HashSet<>();
-        this.aviationProductsHolder = aviationProductsHolder;
-        this.processingChannel = processingChannel;
-        this.archivedChannel = archivedChannel;
-        this.failedChannel = failedChannel;
+        this.aviationProductsHolder = requireNonNull(aviationProductsHolder, "aviationProductsHolder");
+        this.processingChannel = requireNonNull(processingChannel, "processingChannel");
+        this.archivedChannel = requireNonNull(archivedChannel, "archivedChannel");
+        this.failedChannel = requireNonNull(failedChannel, "failedChannel");
+        this.errorMessageChannel = requireNonNull(errorMessageChannel, "errorMessageChannel");
     }
 
     @PostConstruct
@@ -92,6 +96,7 @@ public class MessageFileMonitorInitializer {
             product.getFiles().stream().map(fileConfig -> context.registration(IntegrationFlows.from(inputChannel)//
                             .filter(new RegexPatternFileListFilter(fileConfig.getPattern()))//
                             .enrichHeaders(s -> s.header(PRODUCT_KEY, product)//
+                                    .headerFunction(MessageHeaders.ERROR_CHANNEL, message -> errorMessageChannel)
                                     .headerFunction(MESSAGE_FILE_PATTERN, message -> getFilePattern(message, fileConfig.getCompiledPattern()))//
                                     .headerFunction(FILE_LAST_MODIFIED, this::getFileLastModified))//
                             .log(Level.INFO, INPUT_CATEGORY)//
@@ -144,13 +149,6 @@ public class MessageFileMonitorInitializer {
             }
         }
         return null;
-    }
-
-    public static class HeaderToFileTransformer {
-        @Transformer
-        public File transform(@Header(ORIGINAL_FILE) final File originalFile) {
-            return originalFile;
-        }
     }
 
 }

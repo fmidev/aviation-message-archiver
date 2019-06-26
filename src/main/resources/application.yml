@@ -30,9 +30,13 @@ production-line-initialization:
 #  File handling
 #
 ##############################################
-# START SNIPPET: File andling
+# START SNIPPET: File handling
 file-handler:
   charset: UTF-8
+  retry:
+    initial-interval: PT0.5S
+    multiplier: 2
+    max-attempts: 3
 # END SNIPPET: File handling
 
 ##############################################

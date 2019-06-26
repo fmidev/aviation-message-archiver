@@ -32,6 +32,9 @@ public class DirectoryInspectionConfig {
     @Autowired
     private MessageChannel failChannel;
 
+    @Autowired
+    private MessageChannel errorMessageChannel;
+
     @Bean(name = PollerMetadata.DEFAULT_POLLER)
     public PollerMetadata poller(@Value("${polling.delay}") final int pollingDelay) {
         return Pollers.fixedDelay(pollingDelay).get();
@@ -39,7 +42,7 @@ public class DirectoryInspectionConfig {
 
     @Bean(destroyMethod = "dispose")
     public MessageFileMonitorInitializer messageFileMonitorInitializer() {
-        return new MessageFileMonitorInitializer(flowContext, aviationProductsHolder, processingChannel, archiveChannel, failChannel);
+        return new MessageFileMonitorInitializer(flowContext, aviationProductsHolder, processingChannel, archiveChannel, failChannel, errorMessageChannel);
     }
 
     @Bean

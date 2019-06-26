@@ -40,6 +40,11 @@ public class ChannelConfig {
         return new PublishSubscribeChannel(Executors.newSingleThreadExecutor(newThreadFactory("Modifier-")));
     }
 
+    @Bean
+    MessageChannel errorMessageChannel() {
+        return new PublishSubscribeChannel(Executors.newCachedThreadPool(newThreadFactory("Error-")));
+    }
+
     private CustomizableThreadFactory newThreadFactory(final String threadNamePrefix) {
         final CustomizableThreadFactory threadFactory = new CustomizableThreadFactory(threadNamePrefix);
         threadFactory.setThreadGroup(aviationMessageArchiverThreadGroup);
