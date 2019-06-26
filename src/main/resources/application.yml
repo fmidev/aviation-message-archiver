@@ -1,11 +1,27 @@
 ##############################################
 #
-#  Testing
+#  Product specific properties
 #
 ##############################################
-# START SNIPPET: test
+# START SNIPPET: products
+polling:
+  delay: 500
 
-test:
-  value: aviation-message-archiver-service
+production-line-initialization:
+  products:
+    - id: textFile
+      input-dir: ${user.home}/.avi-message-archiver/src
+      archived-dir: ${user.home}/.avi-message-archiver/dst
+      failed-dir: ${user.home}/.avi-message-archiver/failed
+      files:
+        - pattern: ^.*\.txt$
+        - pattern: ^.*\.txt2$
+    - id: anotherFile
+      input-dir: ${user.home}/.avi-message-archiver/src2
+      archived-dir: ${user.home}/.avi-message-archiver/dst2
+      failed-dir: ${user.home}/.avi-message-archiver/failed2
+      files:
+        - pattern: ^.*another$
 
-# END SNIPPET: test
+# END SNIPPET: products
+
