@@ -12,7 +12,7 @@ public class ChannelConfig {
 
     @Bean
     public MessageChannel processingChannel() {
-        return new PublishSubscribeChannel();
+        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor());
     }
 
     @Bean
