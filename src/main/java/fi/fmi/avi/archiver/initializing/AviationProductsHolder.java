@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * Holder for Aviation products
+ * Holder for Aviation products.
  */
 @Component
 @ConfigurationProperties(prefix = "production-line-initialization")
@@ -34,7 +34,7 @@ public class AviationProductsHolder {
     }
 
     /**
-     * Aviation product
+     * Aviation product.
      */
     public static class AviationProduct {
         private String id;
@@ -101,7 +101,7 @@ public class AviationProductsHolder {
             }
             final AviationProduct other = (AviationProduct) obj;
             return Objects.equals(id, other.id) && Objects.equals(inputDir, other.getInputDir()) && Objects.equals(archivedDir, other.getArchivedDir())
-                    && Objects.equals(failedDir, other.getFailedDir());
+                    && Objects.equals(failedDir, other.getFailedDir()) && Objects.equals(files, other.getFiles());
         }
 
         @Override
@@ -134,6 +134,20 @@ public class AviationProductsHolder {
                 compiledPattern = Pattern.compile(pattern);
             }
             return compiledPattern;
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (!(obj instanceof FileConfig)) {
+                return false;
+            }
+            final FileConfig other = (FileConfig) obj;
+            return Objects.equals(pattern, other.getPattern());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(pattern);
         }
     }
 }
