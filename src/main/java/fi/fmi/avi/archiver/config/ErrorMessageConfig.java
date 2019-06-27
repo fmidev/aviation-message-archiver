@@ -1,5 +1,7 @@
 package fi.fmi.avi.archiver.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +17,8 @@ import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 
 @Configuration
 public class ErrorMessageConfig {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ErrorMessageConfig.class);
 
     @Autowired
     private MessageChannel errorMessageChannel;
@@ -37,6 +41,12 @@ public class ErrorMessageConfig {
         if (errorMessage.getPayload() instanceof MessagingException) {
             return ((MessagingException) errorMessage.getPayload()).getFailedMessage();
         }
+        // Attempt to use original message if the exception is not a MessagingException
+        else if (errorMessage.getOriginalMessage() != null) {
+            return errorMessage.getOriginalMessage();
+        }
+        // Unable to get the original message, log the exception
+        LOGGER.error("Unable to extract message from error message", errorMessage.getPayload());
         return null;
     }
 

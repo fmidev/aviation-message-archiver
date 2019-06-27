@@ -145,6 +145,24 @@ public class MessageParser {
         return Collections.emptyList();
     }
 
+    /**
+     * Get a complete issue time from the given (partial) issue time. Completion is attempted using one of the following as reference:
+     * 1) File timestamp
+     * 2) File modification time
+     *
+     * If neither is available, current time is returned.
+     *
+     * @param issueTime
+     *         issue time that will be completed if it is partial
+     * @param messageFilePattern
+     *         message file pattern for the given message type
+     * @param currentTime
+     *         current time
+     * @param fileLastModified
+     *         last modified time of the file
+     *
+     * @return complete issue time
+     */
     private Instant getIssueTime(final PartialOrCompleteTimeInstant issueTime, final AviationMessageFilenamePattern messageFilePattern,
             final Instant currentTime, @Nullable final Instant fileLastModified) {
         if (issueTime.getCompleteTime().isPresent()) {
@@ -187,21 +205,28 @@ public class MessageParser {
         return currentTime;
     }
 
-    private OptionalInt getTemporalComponent(final AviationMessageFilenamePattern messageFilePattern, final String component) {
-        try {
-            return OptionalInt.of(messageFilePattern.getInt(component));
-        } catch (final Throwable t) {
-            // There's no group with the given name or it is not parseable into an integer
-            return OptionalInt.empty();
-        }
-    }
-
+    /**
+     * Get a complete validity time from the given validity period. Completion is attempted using one of the following as reference:
+     * 1) File timestamp
+     * 2) File modification time
+     * 3) Current time
+     *
+     * @param validityPeriod
+     *         validity period that will be completed if it is partial
+     * @param messageFilePattern
+     *         message file pattern for the given message type
+     * @param currentTime
+     *         current time
+     * @param fileLastModified
+     *         last modified time of the file
+     *
+     * @return completed validity time or an empty optional if completion is not possible
+     */
     private Optional<ValidityTime> getValidityTime(final PartialOrCompleteTimePeriod validityPeriod, final AviationMessageFilenamePattern messageFilePattern,
             final Instant currentTime, @Nullable final Instant fileLastModified) {
         if (validityPeriod.isCompleteStrict()) {
             return Optional.of(ValidityTime.create(validityPeriod));
         } else {
-            // Use file timestamp as completion time. then file modified and last current time
             OptionalInt year = getTemporalComponent(messageFilePattern, AviationMessageFilenamePattern.YEAR);
             OptionalInt month = getTemporalComponent(messageFilePattern, AviationMessageFilenamePattern.MONTH);
             OptionalInt day = getTemporalComponent(messageFilePattern, AviationMessageFilenamePattern.DAY);
@@ -237,6 +262,15 @@ public class MessageParser {
         }
 
         return Optional.empty();
+    }
+
+    private OptionalInt getTemporalComponent(final AviationMessageFilenamePattern messageFilePattern, final String component) {
+        try {
+            return OptionalInt.of(messageFilePattern.getInt(component));
+        } catch (final Throwable t) {
+            // There's no group with the given name or it is not parseable into an integer
+            return OptionalInt.empty();
+        }
     }
 
     @AutoValue
