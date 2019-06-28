@@ -36,10 +36,10 @@ public class MessageParserTest {
 
     @Before
     public void setUp() {
-        messageParser = new MessageParser(Clock.systemUTC(), getAviMessageConverter(), new ImmutableMap.Builder<MessageType, Integer>()//
+        clock = Clock.fixed(Instant.parse("2019-05-05T10:21:20Z"), ZoneId.of("UTC"));
+        messageParser = new MessageParser(clock, getAviMessageConverter(), new ImmutableMap.Builder<MessageType, Integer>()//
                 .put(MessageType.TAF, 1)//
                 .build());
-        clock = Clock.fixed(Instant.parse("2019-05-05T10:21:20Z"), ZoneId.of("UTC"));
     }
 
     @Test
