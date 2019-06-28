@@ -17,27 +17,27 @@ public class ChannelConfig {
 
     @Bean
     public MessageChannel processingChannel() {
-        return new PublishSubscribeChannel(Executors.newSingleThreadScheduledExecutor(newThreadFactory("Processing-")));
+        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor());
     }
 
     @Bean
     public MessageChannel archiveChannel() {
-        return new PublishSubscribeChannel(Executors.newSingleThreadScheduledExecutor(newThreadFactory("Archive-")));
+        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor());
     }
 
     @Bean
     public MessageChannel failChannel() {
-        return new PublishSubscribeChannel(Executors.newSingleThreadScheduledExecutor(newThreadFactory("Fail-")));
+        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor());
     }
 
     @Bean
     public MessageChannel parserChannel() {
-        return new PublishSubscribeChannel(Executors.newSingleThreadScheduledExecutor(newThreadFactory("Parser-")));
+        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor());
     }
 
     @Bean
     public MessageChannel modifierChannel() {
-        return new PublishSubscribeChannel(Executors.newSingleThreadScheduledExecutor(newThreadFactory("Modifier-")));
+        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor());
     }
 
     private CustomizableThreadFactory newThreadFactory(final String threadNamePrefix) {

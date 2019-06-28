@@ -102,12 +102,12 @@
     <dependency>
       <groupId>fi.fmi.avi.converter</groupId>
       <artifactId>fmi-avi-messageconverter</artifactId>
-      <version>3.7.2-SNAPSHOT</version>
+      <version>3.8.0</version>
     </dependency>
     <dependency>
       <groupId>fi.fmi.avi.converter</groupId>
       <artifactId>fmi-avi-messageconverter-tac</artifactId>
-      <version>2.6.2-SNAPSHOT</version>
+      <version>2.7.1</version>
     </dependency>
 
     <dependency>
