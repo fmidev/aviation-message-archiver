@@ -1,116 +1,157 @@
 package fi.fmi.avi.archiver;
 
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
-import org.assertj.core.api.JUnitSoftAssertions;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.inferred.freebuilder.FreeBuilder;
+import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest({ "auto.startup=false" })
 @ContextConfiguration(classes = { AviationMessageArchiver.class },//
         loader = AnnotationConfigContextLoader.class,//
         initializers = { ConfigFileApplicationContextInitializer.class })
 public class AviationMessageArchiverTest {
 
-    private static final int WAIT_MILLIS = 100;
-    private static final int TIMEOUT_MILLIS = 1000;
+    @ClassRule
+    public static final SpringClassRule scr = new SpringClassRule();
     private static final File BASE_DIR = new File(System.getProperty("java.io.tmpdir") + "/.avi-message-archiver");
     private static final File TMP_DIR = new File(BASE_DIR, "temp");
     @Rule
-    public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+    public final SpringMethodRule smr = new SpringMethodRule();
 
     @Autowired
     private AviationProductsHolder aviationProductsHolder;
 
-    @BeforeClass
-    public static void startup() {
+    @BeforeAll
+    public static void startup() throws IOException {
+        FileUtils.deleteDirectory(BASE_DIR);
         final boolean succeeded = TMP_DIR.mkdirs();
         if (!succeeded) {
             throw new IllegalStateException("Cannot write to the temp folder of the system");
         }
     }
 
-    @AfterClass
-    public static void cleanup() throws IOException {
+    @AfterAll
+    public static void done() throws IOException {
         FileUtils.deleteDirectory(BASE_DIR);
     }
 
-    private void writeContentToFile(final String content, final File inputFile) throws IOException {
-        final Path tmpFile = File.createTempFile("test", ".txt", TMP_DIR).toPath();
-        Files.write(tmpFile, content.getBytes(StandardCharsets.UTF_8));
-        Files.move(tmpFile, inputFile.toPath());
+    private static Stream<AviationMessageArchiverTestCase> test_file_flow() {
+        return Stream.of(//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Minimal TAF")//
+                        .setProductName("testProduct")//
+                        .setInputFileName("simple_taf.txt2")//
+                        .setExpectedOutputPath("dst/simple_taf.txt2")//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Minimal TAF with another product")//
+                        .setProductName("testProduct2")//
+                        .setInputFileName("simple_taf.another")//
+                        .setExpectedOutputPath("dst2/simple_taf.another")//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Not convertable message goes to failed dir")//
+                        .setProductName("testProduct")//
+                        .setInputFileName("not_convertable.txt")//
+                        .setExpectedOutputPath("failed/not_convertable.txt")//
+                        .build()//
+        );
     }
 
-    private void assertFilesEquals(final File inputFile, final File expectedOutFile) throws InterruptedException {
-        long totalWaitTime = 0;
-        while (!expectedOutFile.exists() && totalWaitTime < TIMEOUT_MILLIS) {
-            Thread.sleep(WAIT_MILLIS);
-            totalWaitTime += WAIT_MILLIS;
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource
+    public void test_file_flow(final AviationMessageArchiverTestCase testCase) throws IOException, InterruptedException, URISyntaxException {
+        final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
+        Files.copy(testCase.getInputFile(), Paths.get(product.getInputDir().getPath() + "/" + testCase.getInputFileName()));
+        testCase.assertInputAndOutputFilesEquals();
+    }
+
+    @FreeBuilder
+    static abstract class AviationMessageArchiverTestCase {
+        private static final int WAIT_MILLIS = 100;
+        private static final int TIMEOUT_MILLIS = 1000;
+        private static final String TEST_DATA_ROOT = "fi/fmi/avi/archiver/";
+
+        AviationMessageArchiverTestCase() {
+
         }
 
-        softly.assertThat(expectedOutFile).exists();
-        softly.assertThat(expectedOutFile).hasSameContentAs(inputFile);
+        public static AviationMessageArchiverTestCase.Builder builder() {
+            return new Builder();
+        }
+
+        @Override
+        public String toString() {
+            return getName();
+        }
+
+        public abstract String getName();
+
+        public abstract String getInputFileName();
+
+        public Path getInputFile() throws URISyntaxException {
+            final URL resource = requireNonNull(AviationMessageArchiverTest.class.getClassLoader().getResource(TEST_DATA_ROOT + getInputFileName()));
+            final Path path = Paths.get(resource.toURI());
+            assertThat(path).exists();
+            return path;
+        }
+
+        public abstract String getProductName();
+
+        public AviationProductsHolder.AviationProduct getProduct(final AviationProductsHolder holder) {
+            return holder.getProducts().stream()//
+                    .filter(aviationProduct -> aviationProduct.getId().equals(getProductName()))//
+                    .findFirst()//
+                    .orElseThrow(IllegalStateException::new);
+        }
+
+        public void assertInputAndOutputFilesEquals() throws InterruptedException, URISyntaxException {
+            final File expectedOutputFile = new File(BASE_DIR + "/" + getExpectedOutputPath());
+            long totalWaitTime = 0;
+            while (!expectedOutputFile.exists() && totalWaitTime < TIMEOUT_MILLIS) {
+                Thread.sleep(WAIT_MILLIS);
+                totalWaitTime += WAIT_MILLIS;
+            }
+
+            assertThat(expectedOutputFile).exists();
+            assertThat(expectedOutputFile).hasSameContentAs(getInputFile().toFile());
+        }
+
+        public abstract String getExpectedOutputPath();
+
+        public static class Builder extends AviationMessageArchiverTest_AviationMessageArchiverTestCase_Builder {
+
+            public Builder() {
+
+            }
+
+        }
+
     }
 
-    private AviationProductsHolder.AviationProduct getTestProduct(final String id) {
-        return aviationProductsHolder.getProducts().stream()//
-                .filter(aviationProduct -> aviationProduct.getId().equals(id))//
-                .findFirst()//
-                .orElseThrow(IllegalStateException::new);
-    }
-
-    @Test
-    public void test_failing_flow() throws IOException, InterruptedException {
-        final String content = "Not convertable message";
-        final AviationProductsHolder.AviationProduct product = getTestProduct("testProduct");
-
-        final File inputFile = new File(product.getInputDir(), "test_failing_flow.txt");
-        writeContentToFile(content, inputFile);
-
-        assertFilesEquals(inputFile, new File(product.getFailedDir(), inputFile.getName()));
-    }
-
-    @Test
-    public void test_simple_taf() throws IOException, InterruptedException {
-        final String content = "FTXX33 XXXX 181500\n" + "TAF XXXX 181500Z 1812/1912 00000KT CAVOK=";
-        final AviationProductsHolder.AviationProduct product = getTestProduct("testProduct");
-
-        final File inputFile = new File(product.getInputDir(), "test_simple_taf.txt2");
-        writeContentToFile(content, inputFile);
-
-        assertFilesEquals(inputFile, new File(product.getArchivedDir(), inputFile.getName()));
-    }
-
-    @Test
-    public void test_two_products_with_simple_taf() throws IOException, InterruptedException {
-        final String content = "FTXX33 XXXX 181500\n" + "TAF XXXX 181500Z 1812/1912 00000KT CAVOK=";
-        final AviationProductsHolder.AviationProduct product = getTestProduct("testProduct");
-        final AviationProductsHolder.AviationProduct product2 = getTestProduct("testProduct2");
-
-        final File inputFile = new File(product.getInputDir(), "test_two_products_with_simple_taf.txt");
-        final File inputFile2 = new File(product2.getInputDir(), "test_two_products_with_simple_taf.another");
-
-        writeContentToFile(content, inputFile);
-        writeContentToFile(content, inputFile2);
-
-        assertFilesEquals(inputFile, new File(product.getArchivedDir(), inputFile.getName()));
-        assertFilesEquals(inputFile, new File(product2.getArchivedDir(), inputFile2.getName()));
-    }
 }
