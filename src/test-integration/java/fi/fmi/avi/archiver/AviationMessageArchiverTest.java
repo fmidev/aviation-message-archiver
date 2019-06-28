@@ -49,8 +49,7 @@ public class AviationMessageArchiverTest {
     @BeforeAll
     public static void startup() throws IOException {
         FileUtils.deleteDirectory(BASE_DIR);
-        final boolean succeeded = TMP_DIR.mkdirs();
-        if (!succeeded) {
+        if (!TMP_DIR.mkdirs()) {
             throw new IllegalStateException("Cannot write to the temp folder of the system");
         }
     }
@@ -66,19 +65,17 @@ public class AviationMessageArchiverTest {
                         .setName("Minimal TAF")//
                         .setProductName("testProduct")//
                         .setInputFileName("simple_taf.txt2")//
-                        .setExpectedOutputPath("dst/simple_taf.txt2")//
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
                         .setName("Minimal TAF with another product")//
                         .setProductName("testProduct2")//
                         .setInputFileName("simple_taf.another")//
-                        .setExpectedOutputPath("dst2/simple_taf.another")//
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
                         .setName("Not convertable message goes to failed dir")//
                         .setProductName("testProduct")//
                         .setInputFileName("not_convertable.txt")//
-                        .setExpectedOutputPath("failed/not_convertable.txt")//
+                        .expectFail()//
                         .build()//
         );
     }
@@ -88,17 +85,15 @@ public class AviationMessageArchiverTest {
     public void test_file_flow(final AviationMessageArchiverTestCase testCase) throws IOException, InterruptedException, URISyntaxException {
         final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
         Files.copy(testCase.getInputFile(), Paths.get(product.getInputDir().getPath() + "/" + testCase.getInputFileName()));
-        testCase.assertInputAndOutputFilesEquals();
+        testCase.assertInputAndOutputFilesEquals(product);
     }
 
     @FreeBuilder
     static abstract class AviationMessageArchiverTestCase {
         private static final int WAIT_MILLIS = 100;
         private static final int TIMEOUT_MILLIS = 1000;
-        private static final String TEST_DATA_ROOT = "fi/fmi/avi/archiver/";
 
         AviationMessageArchiverTestCase() {
-
         }
 
         public static AviationMessageArchiverTestCase.Builder builder() {
@@ -114,8 +109,10 @@ public class AviationMessageArchiverTest {
 
         public abstract String getInputFileName();
 
+        public abstract boolean getExpectFail();
+
         public Path getInputFile() throws URISyntaxException {
-            final URL resource = requireNonNull(AviationMessageArchiverTest.class.getClassLoader().getResource(TEST_DATA_ROOT + getInputFileName()));
+            final URL resource = requireNonNull(AviationMessageArchiverTest.class.getResource(getInputFileName()));
             final Path path = Paths.get(resource.toURI());
             assertThat(path).exists();
             return path;
@@ -130,24 +127,30 @@ public class AviationMessageArchiverTest {
                     .orElseThrow(IllegalStateException::new);
         }
 
-        public void assertInputAndOutputFilesEquals() throws InterruptedException, URISyntaxException {
-            final File expectedOutputFile = new File(BASE_DIR + "/" + getExpectedOutputPath());
-            long totalWaitTime = 0;
-            while (!expectedOutputFile.exists() && totalWaitTime < TIMEOUT_MILLIS) {
-                Thread.sleep(WAIT_MILLIS);
-                totalWaitTime += WAIT_MILLIS;
-            }
+        public void assertInputAndOutputFilesEquals(final AviationProductsHolder.AviationProduct product) throws InterruptedException, URISyntaxException {
+            final File expectedOutputFile = new File((getExpectFail() ? product.getFailedDir() : product.getArchivedDir()) + "/" + getInputFileName());
+            waitUntilFileExists(expectedOutputFile);
 
             assertThat(expectedOutputFile).exists();
             assertThat(expectedOutputFile).hasSameContentAs(getInputFile().toFile());
         }
 
-        public abstract String getExpectedOutputPath();
+        private void waitUntilFileExists(final File expectedOutputFile) throws InterruptedException {
+            long totalWaitTime = 0;
+            while (!expectedOutputFile.exists() && totalWaitTime < TIMEOUT_MILLIS) {
+                Thread.sleep(WAIT_MILLIS);
+                totalWaitTime += WAIT_MILLIS;
+            }
+        }
 
         public static class Builder extends AviationMessageArchiverTest_AviationMessageArchiverTestCase_Builder {
 
             public Builder() {
+                setExpectFail(false);
+            }
 
+            public Builder expectFail() {
+                return super.setExpectFail(true);
             }
 
         }
