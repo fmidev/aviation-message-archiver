@@ -19,7 +19,7 @@ public class ModifierConfig {
     private MessageChannel modifierChannel;
 
     @Autowired
-    private MessageChannel archiveChannel;
+    private MessageChannel validatorChannel;
 
     @Autowired
     private List<MessageModifier> messageModifiers;
@@ -39,7 +39,7 @@ public class ModifierConfig {
     public IntegrationFlow modifierFlow() {
         return IntegrationFlows.from(modifierChannel)//
                 .handle(messageModifierService())//
-                .channel(archiveChannel)//
+                .channel(validatorChannel)//
                 .get();
     }
 

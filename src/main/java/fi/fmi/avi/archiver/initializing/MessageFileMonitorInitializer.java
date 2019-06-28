@@ -120,7 +120,7 @@ public class MessageFileMonitorInitializer {
                     .filter(Message.class, productFilter)//
                     .transform(headerToFileTransformer)//
                     .handle(failedDirectory)//
-                    .get()//
+                    .nullChannel()//
             ).register());
         });
     }

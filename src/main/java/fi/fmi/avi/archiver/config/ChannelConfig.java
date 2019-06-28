@@ -41,7 +41,12 @@ public class ChannelConfig {
     }
 
     @Bean
-    MessageChannel errorMessageChannel() {
+    public MessageChannel validatorChannel() {
+        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor(newThreadFactory("Validator-")));
+    }
+
+    @Bean
+    public MessageChannel errorMessageChannel() {
         return new PublishSubscribeChannel(Executors.newCachedThreadPool(newThreadFactory("Error-")));
     }
 
