@@ -6,6 +6,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.junit.Before;
@@ -28,6 +29,10 @@ public class MessageParserTest {
 
     private MessageParser messageParser;
     private Clock clock;
+
+    static AviMessageConverter getAviMessageConverter() {
+        return AviMessageConverterHolder.INSTANCE;
+    }
 
     @Before
     public void setUp() {
@@ -62,8 +67,50 @@ public class MessageParserTest {
         assertThat(taf.getVersion()).isEmpty();
     }
 
-    static AviMessageConverter getAviMessageConverter() {
-        return AviMessageConverterHolder.INSTANCE;
+    @Test
+    public void parse_single_cnl_taf() {
+        final AviationMessageFilenamePattern filenamePattern = new AviationMessageFilenamePattern("TAF_20190505_102013_12332319",
+                Pattern.compile("^TAF_(?<yyyy>\\d{4})(?<MM>\\d{2})(?<dd>\\d{2})_(?<hh>\\d{2})(?<mm>\\d{2})(?<ss>\\d{2})_\\d{8}$"));
+        final String content = "FTXX33 YYYY 020500 AAA\n" + "TAF AMD YYYY 020532Z 0206/0312 CNL=";
+        final Instant currentTime = clock.instant();
+
+        final List<AviationMessage> parsedMessages = messageParser.parse(1, filenamePattern, content, currentTime, currentTime.minusSeconds(60));
+        assertThat(parsedMessages).hasSize(1);
+
+        final AviationMessage taf = parsedMessages.iterator().next();
+        assertThat(taf.getType()).isEqualTo(1);
+        assertThat(taf.getRoute()).isEqualTo(1);
+        assertThat(taf.getMessageTime()).isEqualTo(Instant.parse("2019-05-02T05:32:00Z"));
+        assertThat(taf.getIcaoAirportCode()).isEqualTo("YYYY");
+        assertThat(taf.getHeading()).isEqualTo("FTXX33 YYYY 020500 AAA");
+        assertThat(taf.getMessage()).isEqualTo("TAF AMD YYYY 020532Z 0206/0312 CNL=");
+        assertThat(taf.getValidFrom()).hasValue(Instant.parse("2019-05-02T06:00:00Z"));
+        assertThat(taf.getValidTo()).hasValue(Instant.parse("2019-05-03T12:00:00Z"));
+        assertThat(taf.getFileModified()).hasValue(Instant.parse("2019-05-05T10:20:20Z"));
+        assertThat(taf.getVersion()).isEqualTo(Optional.of("AAA"));
+    }
+
+    @Test
+    public void parse_single_corr_taf() {
+        final AviationMessageFilenamePattern filenamePattern = new AviationMessageFilenamePattern("TAF_20190505_102013_12332319",
+                Pattern.compile("^TAF_(?<yyyy>\\d{4})(?<MM>\\d{2})(?<dd>\\d{2})_(?<hh>\\d{2})(?<mm>\\d{2})(?<ss>\\d{2})_\\d{8}$"));
+        final String content = "FTXX33 YYYY 020500 CCA\n" + "TAF COR YYYY 020532Z 0206/0312 20108KT 8000=";
+        final Instant currentTime = clock.instant();
+
+        final List<AviationMessage> parsedMessages = messageParser.parse(1, filenamePattern, content, currentTime, currentTime.minusSeconds(60));
+        assertThat(parsedMessages).hasSize(1);
+
+        final AviationMessage taf = parsedMessages.iterator().next();
+        assertThat(taf.getType()).isEqualTo(1);
+        assertThat(taf.getRoute()).isEqualTo(1);
+        assertThat(taf.getMessageTime()).isEqualTo(Instant.parse("2019-05-02T05:32:00Z"));
+        assertThat(taf.getIcaoAirportCode()).isEqualTo("YYYY");
+        assertThat(taf.getHeading()).isEqualTo("FTXX33 YYYY 020500 CCA");
+        assertThat(taf.getMessage()).isEqualTo("TAF COR YYYY 020532Z 0206/0312 20108KT 8000=");
+        assertThat(taf.getValidFrom()).hasValue(Instant.parse("2019-05-02T06:00:00Z"));
+        assertThat(taf.getValidTo()).hasValue(Instant.parse("2019-05-03T12:00:00Z"));
+        assertThat(taf.getFileModified()).hasValue(Instant.parse("2019-05-05T10:20:20Z"));
+        assertThat(taf.getVersion()).isEqualTo(Optional.of("CCA"));
     }
 
     private static final class AviMessageConverterHolder {
