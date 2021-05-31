@@ -11,8 +11,8 @@ public class MessageValidatorService {
 
     private final Collection<MessageValidator> validators;
 
-    public MessageValidatorService(final Collection<MessageValidator> modifiers) {
-        this.validators = requireNonNull(modifiers, "modifiers");
+    public MessageValidatorService(final Collection<MessageValidator> validators) {
+        this.validators = requireNonNull(validators, "validators");
     }
 
     @ServiceActivator

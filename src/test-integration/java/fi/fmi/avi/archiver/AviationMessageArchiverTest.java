@@ -21,8 +21,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
@@ -30,10 +33,10 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 
-@SpringBootTest({ "auto.startup=false" })
-@ContextConfiguration(classes = { AviationMessageArchiver.class },//
+@SpringBootTest({"auto.startup=false"})
+@ContextConfiguration(classes = {AviationMessageArchiver.class, AviationMessageArchiverTest.TestConfig.class},//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = { ConfigFileApplicationContextInitializer.class })
+        initializers = {ConfigFileApplicationContextInitializer.class})
 public class AviationMessageArchiverTest {
 
     @ClassRule
@@ -157,4 +160,11 @@ public class AviationMessageArchiverTest {
 
     }
 
+    @Configuration
+    static class TestConfig {
+        @Bean
+        public ApplicationConversionService conversionService() {
+            return new ApplicationConversionService();
+        }
+    }
 }
