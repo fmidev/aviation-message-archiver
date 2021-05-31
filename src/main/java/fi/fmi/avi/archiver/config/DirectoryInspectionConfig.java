@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.Pollers;
@@ -16,7 +15,6 @@ import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 
 @Configuration
-@EnableIntegration
 public class DirectoryInspectionConfig {
 
     @Autowired
@@ -29,10 +27,10 @@ public class DirectoryInspectionConfig {
     private MessageChannel processingChannel;
 
     @Autowired
-    private MessageChannel archivedChannel;
+    private MessageChannel archiveChannel;
 
     @Autowired
-    private MessageChannel failedChannel;
+    private MessageChannel failChannel;
 
     @Bean(name = PollerMetadata.DEFAULT_POLLER)
     public PollerMetadata poller(@Value("${polling.delay}") final int pollingDelay) {
@@ -41,15 +39,12 @@ public class DirectoryInspectionConfig {
 
     @Bean(destroyMethod = "dispose")
     public MessageFileMonitorInitializer messageFileMonitorInitializer() {
-        return new MessageFileMonitorInitializer(flowContext, aviationProductsHolder, processingChannel, archivedChannel, failedChannel);
+        return new MessageFileMonitorInitializer(flowContext, aviationProductsHolder, processingChannel, archiveChannel, failChannel);
     }
 
     @Bean
-    public IntegrationFlow fileProcessor() {
-        // TODO: Add file processing logic
-        return IntegrationFlows.from(processingChannel)//
-                .channel(archivedChannel)//
-                .get();
+    public IntegrationFlow archiveFlow() {
+        return IntegrationFlows.from(archiveChannel).log("Archive").get();
     }
 
 }
