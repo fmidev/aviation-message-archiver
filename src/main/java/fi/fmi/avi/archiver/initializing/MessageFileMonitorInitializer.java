@@ -1,19 +1,7 @@
 package fi.fmi.avi.archiver.initializing;
 
-import static java.util.Objects.requireNonNull;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.time.Instant;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
-
+import fi.fmi.avi.archiver.message.AviationMessageFilenamePattern;
+import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.channel.PublishSubscribeChannel;
@@ -30,8 +18,18 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
 
-import fi.fmi.avi.archiver.message.AviationMessageFilenamePattern;
-import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
+import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Initializes Message file source directory reading, filename filtering and archiving of the files.
@@ -94,7 +92,7 @@ public class MessageFileMonitorInitializer {
 
             // Integration flow for file name filtering
             product.getFiles().stream().map(fileConfig -> context.registration(IntegrationFlows.from(inputChannel)//
-                            .filter(new RegexPatternFileListFilter(fileConfig.getPattern()))//
+                            .filter(new RegexPatternFileListFilter(fileConfig.getPattern())::accept)//
                             .enrichHeaders(s -> s.header(PRODUCT_KEY, product)//
                                     .headerFunction(MessageHeaders.ERROR_CHANNEL, message -> errorMessageChannel)
                                     .headerFunction(MESSAGE_FILE_PATTERN, message -> getFilePattern(message, fileConfig.getCompiledPattern()))//

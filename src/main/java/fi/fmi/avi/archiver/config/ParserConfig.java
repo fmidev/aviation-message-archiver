@@ -1,11 +1,12 @@
 package fi.fmi.avi.archiver.config;
 
-import java.time.Clock;
-import java.time.ZoneId;
-import java.util.List;
-import java.util.Map;
-
 import fi.fmi.avi.archiver.message.AviationMessage;
+import fi.fmi.avi.archiver.message.MessageParser;
+import fi.fmi.avi.converter.AviMessageConverter;
+import fi.fmi.avi.converter.AviMessageSpecificConverter;
+import fi.fmi.avi.converter.tac.conf.TACConverter;
+import fi.fmi.avi.model.MessageType;
+import fi.fmi.avi.model.bulletin.GenericMeteorologicalBulletin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -16,12 +17,10 @@ import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.messaging.MessageChannel;
 
-import fi.fmi.avi.archiver.message.MessageParser;
-import fi.fmi.avi.converter.AviMessageConverter;
-import fi.fmi.avi.converter.AviMessageSpecificConverter;
-import fi.fmi.avi.converter.tac.conf.TACConverter;
-import fi.fmi.avi.model.GenericMeteorologicalBulletin;
-import fi.fmi.avi.model.MessageType;
+import java.time.Clock;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableConfigurationProperties(ParserConfig.class)
@@ -80,7 +79,7 @@ public class ParserConfig {
     public IntegrationFlow parserFlow() {
         return IntegrationFlows.from(parserChannel)//
                 .handle(messageParser())//
-                .<List<AviationMessage>> filter(msgs -> !msgs.isEmpty(), discards -> discards.discardChannel(failChannel))//
+                .<List<AviationMessage>>filter(msgs -> !msgs.isEmpty(), discards -> discards.discardChannel(failChannel))//
                 .channel(modifierChannel)//
                 .get();
     }

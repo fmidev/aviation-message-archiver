@@ -1,6 +1,18 @@
 package fi.fmi.avi.archiver.message;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import com.google.common.collect.ImmutableMap;
+import fi.fmi.avi.converter.AviMessageConverter;
+import fi.fmi.avi.converter.AviMessageSpecificConverter;
+import fi.fmi.avi.converter.tac.conf.TACConverter;
+import fi.fmi.avi.model.MessageType;
+import fi.fmi.avi.model.bulletin.GenericMeteorologicalBulletin;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -9,21 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
-import com.google.common.collect.ImmutableMap;
-
-import fi.fmi.avi.converter.AviMessageConverter;
-import fi.fmi.avi.converter.AviMessageSpecificConverter;
-import fi.fmi.avi.converter.tac.conf.TACConverter;
-import fi.fmi.avi.model.GenericMeteorologicalBulletin;
-import fi.fmi.avi.model.MessageType;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class MessageParserTest {
 
@@ -34,7 +32,7 @@ public class MessageParserTest {
         return AviMessageConverterHolder.INSTANCE;
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         clock = Clock.fixed(Instant.parse("2019-05-05T10:21:20Z"), ZoneId.of("UTC"));
         messageParser = new MessageParser(clock, getAviMessageConverter(), new ImmutableMap.Builder<MessageType, Integer>()//
@@ -125,7 +123,7 @@ public class MessageParserTest {
     }
 
     @Configuration
-    @Import({ TACConverter.class })
+    @Import({TACConverter.class})
     static class ConverterContextConfiguration {
         @Autowired
         private AviMessageSpecificConverter<String, GenericMeteorologicalBulletin> genericBulletinTACParser;

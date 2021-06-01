@@ -1,42 +1,25 @@
 package fi.fmi.avi.archiver.message;
 
-import static fi.fmi.avi.model.MessageType.METAR;
-import static fi.fmi.avi.model.MessageType.SPECI;
-import static fi.fmi.avi.model.MessageType.TAF;
-import static java.util.Objects.requireNonNull;
-
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.ZonedDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
-
-import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.messaging.MessageHeaders;
-
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableSet;
-
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.converter.ConversionResult;
 import fi.fmi.avi.converter.tac.conf.TACConverter;
-import fi.fmi.avi.model.BulletinHeading;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import fi.fmi.avi.model.GenericMeteorologicalBulletin;
-import fi.fmi.avi.model.MessageType;
-import fi.fmi.avi.model.PartialDateTime;
-import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
-import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
+import fi.fmi.avi.model.*;
+import fi.fmi.avi.model.bulletin.BulletinHeading;
+import fi.fmi.avi.model.bulletin.GenericMeteorologicalBulletin;
 import fi.fmi.avi.util.BulletinHeadingEncoder;
+import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.messaging.MessageHeaders;
+
+import javax.annotation.Nullable;
+import java.time.*;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static fi.fmi.avi.model.MessageType.*;
+import static java.util.Objects.requireNonNull;
 
 public class MessageParser {
 
@@ -56,17 +39,13 @@ public class MessageParser {
     /**
      * Certain message types get their airport code from the bulletin heading and others from the message itself.
      *
-     * @param bulletinHeading
-     *         bulletin heading
-     * @param aviationWeatherMessage
-     *         aviation weather message
-     * @param messageType
-     *         message type
-     *
+     * @param bulletinHeading        bulletin heading
+     * @param aviationWeatherMessage aviation weather message
+     * @param messageType            message type
      * @return airport icao code
      */
     private static String getAirportCode(final BulletinHeading bulletinHeading, final GenericAviationWeatherMessage aviationWeatherMessage,
-            final MessageType messageType) {
+                                         final MessageType messageType) {
         if (messageType.equals(WX_WARNING)) {
             return aviationWeatherMessage.getTargetAerodrome().isPresent()
                     ? aviationWeatherMessage.getTargetAerodrome().get().getDesignator()
@@ -88,7 +67,7 @@ public class MessageParser {
     }
 
     public List<AviationMessage> parse(final int routeId, final AviationMessageFilenamePattern messageFilePattern, final String content,
-            final Instant currentTime, @Nullable final Instant fileLastModified) {
+                                       final Instant currentTime, @Nullable final Instant fileLastModified) {
         final ConversionResult<GenericMeteorologicalBulletin> bulletinConversion = aviMessageConverter.convertMessage(content,
                 TACConverter.TAC_TO_GENERIC_BULLETIN_POJO);
         if (bulletinConversion.getConvertedMessage().isPresent()) {
@@ -149,22 +128,17 @@ public class MessageParser {
      * Get a complete issue time from the given (partial) issue time. Completion is attempted using one of the following as reference:
      * 1) File timestamp
      * 2) File modification time
-     *
+     * <p>
      * If neither is available, current time is returned.
      *
-     * @param issueTime
-     *         issue time that will be completed if it is partial
-     * @param messageFilePattern
-     *         message file pattern for the given message type
-     * @param currentTime
-     *         current time
-     * @param fileLastModified
-     *         last modified time of the file
-     *
+     * @param issueTime          issue time that will be completed if it is partial
+     * @param messageFilePattern message file pattern for the given message type
+     * @param currentTime        current time
+     * @param fileLastModified   last modified time of the file
      * @return complete issue time
      */
     private Instant getIssueTime(final PartialOrCompleteTimeInstant issueTime, final AviationMessageFilenamePattern messageFilePattern,
-            final Instant currentTime, @Nullable final Instant fileLastModified) {
+                                 final Instant currentTime, @Nullable final Instant fileLastModified) {
         if (issueTime.getCompleteTime().isPresent()) {
             return issueTime.getCompleteTime().get().toInstant();
         }
@@ -211,19 +185,14 @@ public class MessageParser {
      * 2) File modification time
      * 3) Current time
      *
-     * @param validityPeriod
-     *         validity period that will be completed if it is partial
-     * @param messageFilePattern
-     *         message file pattern for the given message type
-     * @param currentTime
-     *         current time
-     * @param fileLastModified
-     *         last modified time of the file
-     *
+     * @param validityPeriod     validity period that will be completed if it is partial
+     * @param messageFilePattern message file pattern for the given message type
+     * @param currentTime        current time
+     * @param fileLastModified   last modified time of the file
      * @return completed validity time or an empty optional if completion is not possible
      */
     private Optional<ValidityTime> getValidityTime(final PartialOrCompleteTimePeriod validityPeriod, final AviationMessageFilenamePattern messageFilePattern,
-            final Instant currentTime, @Nullable final Instant fileLastModified) {
+                                                   final Instant currentTime, @Nullable final Instant fileLastModified) {
         if (validityPeriod.isCompleteStrict()) {
             return Optional.of(ValidityTime.create(validityPeriod));
         } else {

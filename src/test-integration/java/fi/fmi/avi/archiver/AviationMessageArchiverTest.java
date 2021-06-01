@@ -1,7 +1,20 @@
 package fi.fmi.avi.archiver;
 
-import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
+import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+import org.apache.commons.io.FileUtils;
+import org.inferred.freebuilder.FreeBuilder;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.convert.ApplicationConversionService;
+import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,39 +25,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
-import org.apache.commons.io.FileUtils;
-import org.inferred.freebuilder.FreeBuilder;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.convert.ApplicationConversionService;
-import org.springframework.boot.test.context.ConfigFileApplicationContextInitializer;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
-
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest({"auto.startup=false"})
 @ContextConfiguration(classes = {AviationMessageArchiver.class, AviationMessageArchiverTest.TestConfig.class},//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = {ConfigFileApplicationContextInitializer.class})
+        initializers = {ConfigDataApplicationContextInitializer.class})
 public class AviationMessageArchiverTest {
 
-    @ClassRule
-    public static final SpringClassRule scr = new SpringClassRule();
     private static final File BASE_DIR = new File(System.getProperty("java.io.tmpdir") + "/.avi-message-archiver");
     private static final File TMP_DIR = new File(BASE_DIR, "temp");
-    @Rule
-    public final SpringMethodRule smr = new SpringMethodRule();
 
     @Autowired
     private AviationProductsHolder aviationProductsHolder;
@@ -135,7 +126,7 @@ public class AviationMessageArchiverTest {
             waitUntilFileExists(expectedOutputFile);
 
             assertThat(expectedOutputFile).exists();
-            assertThat(expectedOutputFile).hasSameContentAs(getInputFile().toFile());
+            assertThat(expectedOutputFile).hasSameTextualContentAs(getInputFile().toFile());
         }
 
         private void waitUntilFileExists(final File expectedOutputFile) throws InterruptedException {
