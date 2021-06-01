@@ -23,9 +23,6 @@ public class ModifierConfig {
     private MessageChannel validatorChannel;
 
     @Autowired
-    private MessageChannel failChannel;
-
-    @Autowired
     private List<MessageModifier> messageModifiers;
 
     // This is a placeholder modifier that is only used when the application is launched without external message modifier configuration
@@ -43,7 +40,6 @@ public class ModifierConfig {
     public IntegrationFlow modifierFlow() {
         return IntegrationFlows.from(modifierChannel)//
                 .handle(messageModifierService())//
-                .<List<AviationMessage>> filter(msgs -> !msgs.isEmpty(), discards -> discards.discardChannel(failChannel))//
                 .channel(validatorChannel)//
                 .get();
     }
