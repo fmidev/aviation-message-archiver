@@ -1,11 +1,10 @@
 package fi.fmi.avi.archiver.message;
 
-import java.time.Instant;
-import java.util.Optional;
-
+import jdk.nashorn.internal.ir.annotations.Immutable;
 import org.inferred.freebuilder.FreeBuilder;
 
-import jdk.nashorn.internal.ir.annotations.Immutable;
+import java.time.Instant;
+import java.util.Optional;
 
 @Immutable
 @FreeBuilder
@@ -40,8 +39,11 @@ public abstract class AviationMessage {
 
     public abstract Optional<String> getVersion();
 
+    public abstract ProcessingResult getProcessingResult();
+
     public static class Builder extends AviationMessage_Builder {
         Builder() {
+            setProcessingResult(ProcessingResult.OK);
         }
     }
 
