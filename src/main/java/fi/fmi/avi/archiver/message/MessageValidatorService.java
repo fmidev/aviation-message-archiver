@@ -1,11 +1,12 @@
 package fi.fmi.avi.archiver.message;
 
-import static java.util.Objects.requireNonNull;
+import org.springframework.integration.annotation.ServiceActivator;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.springframework.integration.annotation.ServiceActivator;
+import static java.util.Objects.requireNonNull;
 
 public class MessageValidatorService {
 
@@ -17,12 +18,18 @@ public class MessageValidatorService {
 
     @ServiceActivator
     public List<AviationMessage> validateMessages(final List<AviationMessage> messages) {
-        messages.forEach(this::validateMessage);
-        return messages;
+        return messages.stream().map(this::validateMessage).collect(Collectors.toList());
     }
 
-    private void validateMessage(final AviationMessage message) {
-        validators.forEach(validator -> validator.validate(message));
+    private AviationMessage validateMessage(final AviationMessage message) {
+        final AviationMessage.Builder messageBuilder = message.toBuilder();
+        for (MessageValidator messageValidator : validators) {
+            messageValidator.validate(messageBuilder);
+            if (messageBuilder.getProcessingResult() != ProcessingResult.OK) {
+                break;
+            }
+        }
+        return messageBuilder.build();
     }
 
 }

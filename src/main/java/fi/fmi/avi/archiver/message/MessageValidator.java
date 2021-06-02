@@ -6,9 +6,8 @@ public interface MessageValidator {
     /**
      * Validates an aviation message. Throws an exception if validation fails.
      *
-     * @param message
-     *         message
+     * @param message message
      */
-    void validate(AviationMessage message);
+    AviationMessage.Builder validate(AviationMessage.Builder message);
 
 }
