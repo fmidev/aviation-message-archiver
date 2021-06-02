@@ -35,17 +35,15 @@ import static java.util.Objects.requireNonNull;
  * Initializes Message file source directory reading, filename filtering and archiving of the files.
  */
 public class MessageFileMonitorInitializer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageFileMonitorInitializer.class);
 
     public static final String MESSAGE_FILE_PATTERN = "message_file_pattern";
-
     public static final String FILE_LAST_MODIFIED = "file_last_modified";
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageFileMonitorInitializer.class);
 
     private static final String PRODUCT_KEY = "product";
     private static final String INPUT_CATEGORY = "input";
 
     private final IntegrationFlowContext context;
-
     private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registerations;
 
     private final AviationProductsHolder aviationProductsHolder;
@@ -55,8 +53,8 @@ public class MessageFileMonitorInitializer {
     private final MessageChannel errorMessageChannel;
 
     public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
-            final MessageChannel processingChannel, final MessageChannel archivedChannel, final MessageChannel failedChannel,
-            final MessageChannel errorMessageChannel) {
+                                         final MessageChannel processingChannel, final MessageChannel archivedChannel,
+                                         final MessageChannel failedChannel, final MessageChannel errorMessageChannel) {
         this.context = requireNonNull(context, "context");
         this.registerations = new HashSet<>();
         this.aviationProductsHolder = requireNonNull(aviationProductsHolder, "aviationProductsHolder");
