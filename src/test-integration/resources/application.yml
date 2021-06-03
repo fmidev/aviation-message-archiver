@@ -30,7 +30,7 @@ production-line-initialization:
 #  File handling
 #
 ##############################################
-# START SNIPPET: File andling
+# START SNIPPET: File handling
 file-handler:
   charset: UTF-8
   retry:

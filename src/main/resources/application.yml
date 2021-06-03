@@ -1,5 +1,19 @@
 ##############################################
 #
+#  Datasource properties
+#
+##############################################
+# START SNIPPET: Datasource properties
+spring:
+  datasource:
+    url: jdbc:h2:mem:archiver
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+
+##############################################
+#
 #  Product specific properties
 #
 ##############################################
