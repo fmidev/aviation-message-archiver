@@ -1,12 +1,12 @@
 package fi.fmi.avi.archiver.message;
 
-import static java.util.Objects.requireNonNull;
+import org.springframework.integration.annotation.ServiceActivator;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.integration.annotation.ServiceActivator;
+import static java.util.Objects.requireNonNull;
 
 public class MessageModifierService {
 
@@ -22,11 +22,11 @@ public class MessageModifierService {
     }
 
     private AviationMessage modifyMessage(final AviationMessage message) {
-        AviationMessage modifiedMessage = message;
+        final AviationMessage.Builder messageBuilder = message.toBuilder();
         for (final MessageModifier messageModifier : modifiers) {
-            modifiedMessage = messageModifier.modify(modifiedMessage);
+            messageModifier.modify(messageBuilder);
         }
-        return modifiedMessage;
+        return messageBuilder.build();
     }
 
 }
