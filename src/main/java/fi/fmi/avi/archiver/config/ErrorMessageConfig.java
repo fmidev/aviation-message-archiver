@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
+import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +13,6 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.ErrorMessage;
-
-import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 
 @Configuration
 public class ErrorMessageConfig {
@@ -38,16 +37,20 @@ public class ErrorMessageConfig {
 
     @ServiceActivator
     public Message<?> errorMessageToOriginalMessage(final ErrorMessage errorMessage) {
+        final Message<?> failedMessage;
         if (errorMessage.getPayload() instanceof MessagingException) {
-            return ((MessagingException) errorMessage.getPayload()).getFailedMessage();
+            failedMessage = ((MessagingException) errorMessage.getPayload()).getFailedMessage();
         }
         // Attempt to use original message if the exception is not a MessagingException
         else if (errorMessage.getOriginalMessage() != null) {
-            return errorMessage.getOriginalMessage();
+            failedMessage = errorMessage.getOriginalMessage();
+        } else {
+            // Unable to get the original message, log the exception
+            LOGGER.error("Unable to extract message from error message", errorMessage.getPayload());
+            return null;
         }
-        // Unable to get the original message, log the exception
-        LOGGER.error("Unable to extract message from error message", errorMessage.getPayload());
-        return null;
+        LOGGER.error("Processing message {} failed: ", failedMessage, errorMessage.getPayload());
+        return failedMessage;
     }
 
 }

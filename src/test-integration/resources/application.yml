@@ -11,15 +11,15 @@ production-line-initialization:
   products:
     - id: testProduct
       input-dir: ${java.io.tmpdir}/.avi-message-archiver/src
-      archived-dir: ${java.io.tmpdir}/.avi-message-archiver/dst
-      failed-dir: ${java.io.tmpdir}/.avi-message-archiver/failed
+      archive-dir: ${java.io.tmpdir}/.avi-message-archiver/dst
+      fail-dir: ${java.io.tmpdir}/.avi-message-archiver/failed
       files:
         - pattern: ^.*\.txt$
         - pattern: ^.*\.txt2$
     - id: testProduct2
       input-dir: ${java.io.tmpdir}/.avi-message-archiver/src2
-      archived-dir: ${java.io.tmpdir}/.avi-message-archiver/dst2
-      failed-dir: ${java.io.tmpdir}/.avi-message-archiver/failed2
+      archive-dir: ${java.io.tmpdir}/.avi-message-archiver/dst2
+      fail-dir: ${java.io.tmpdir}/.avi-message-archiver/failed2
       files:
         - pattern: ^.*\.another$
 

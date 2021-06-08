@@ -1,4 +1,6 @@
-package fi.fmi.avi.archiver.message;
+package fi.fmi.avi.archiver.message.validator;
+
+import fi.fmi.avi.archiver.message.AviationMessage;
 
 @FunctionalInterface
 public interface MessageValidator {

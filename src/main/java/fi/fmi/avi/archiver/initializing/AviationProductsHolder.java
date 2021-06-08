@@ -1,13 +1,13 @@
 package fi.fmi.avi.archiver.initializing;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
 import java.io.File;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 /**
  * Holder for Aviation products.
@@ -39,18 +39,18 @@ public class AviationProductsHolder {
     public static class AviationProduct {
         private String id;
         private File inputDir;
-        private File archivedDir;
-        private File failedDir;
+        private File archiveDir;
+        private File failDir;
         private Set<FileConfig> files = Collections.emptySet();
 
         public AviationProduct() {
         }
 
-        public AviationProduct(final String id, final File inputDir, final File archivedDir, final File failedDir, final Set<FileConfig> files) {
+        public AviationProduct(final String id, final File inputDir, final File archiveDir, final File failDir, final Set<FileConfig> files) {
             this.id = id;
             this.inputDir = inputDir;
-            this.archivedDir = archivedDir;
-            this.failedDir = failedDir;
+            this.archiveDir = archiveDir;
+            this.failDir = failDir;
             this.files = Collections.unmodifiableSet(files);
         }
 
@@ -70,20 +70,20 @@ public class AviationProductsHolder {
             this.inputDir = inputDir;
         }
 
-        public File getArchivedDir() {
-            return archivedDir;
+        public File getArchiveDir() {
+            return archiveDir;
         }
 
-        public void setArchivedDir(final File archivedDir) {
-            this.archivedDir = archivedDir;
+        public void setArchiveDir(final File archiveDir) {
+            this.archiveDir = archiveDir;
         }
 
-        public File getFailedDir() {
-            return failedDir;
+        public File getFailDir() {
+            return failDir;
         }
 
-        public void setFailedDir(final File failedDir) {
-            this.failedDir = failedDir;
+        public void setFailDir(final File failDir) {
+            this.failDir = failDir;
         }
 
         public Set<FileConfig> getFiles() {
@@ -100,13 +100,13 @@ public class AviationProductsHolder {
                 return false;
             }
             final AviationProduct other = (AviationProduct) obj;
-            return Objects.equals(id, other.id) && Objects.equals(inputDir, other.getInputDir()) && Objects.equals(archivedDir, other.getArchivedDir())
-                    && Objects.equals(failedDir, other.getFailedDir()) && Objects.equals(files, other.getFiles());
+            return Objects.equals(id, other.id) && Objects.equals(inputDir, other.getInputDir()) && Objects.equals(archiveDir, other.getArchiveDir())
+                    && Objects.equals(failDir, other.getFailDir()) && Objects.equals(files, other.getFiles());
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(id, inputDir, archivedDir, failedDir);
+            return Objects.hash(id, inputDir, archiveDir, failDir);
         }
     }
 

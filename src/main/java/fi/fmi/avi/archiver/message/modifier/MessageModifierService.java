@@ -1,5 +1,6 @@
-package fi.fmi.avi.archiver.message;
+package fi.fmi.avi.archiver.message.modifier;
 
+import fi.fmi.avi.archiver.message.AviationMessage;
 import org.springframework.integration.annotation.ServiceActivator;
 
 import java.util.Collection;

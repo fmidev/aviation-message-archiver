@@ -1,5 +1,7 @@
-package fi.fmi.avi.archiver.message;
+package fi.fmi.avi.archiver.message.validator;
 
+import fi.fmi.avi.archiver.message.AviationMessage;
+import fi.fmi.avi.archiver.message.ProcessingResult;
 import org.springframework.integration.annotation.ServiceActivator;
 
 import java.util.Collection;

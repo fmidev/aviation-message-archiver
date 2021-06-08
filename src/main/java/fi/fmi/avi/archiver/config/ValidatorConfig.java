@@ -1,7 +1,7 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.message.MessageValidator;
-import fi.fmi.avi.archiver.message.MessageValidatorService;
+import fi.fmi.avi.archiver.message.validator.MessageValidator;
+import fi.fmi.avi.archiver.message.validator.MessageValidatorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,12 +22,6 @@ public class ValidatorConfig {
 
     @Autowired
     private List<MessageValidator> messageValidators;
-
-    // This is a placeholder validator that is only used when the application is launched without external message validator configuration
-    @Bean
-    public MessageValidator exampleValidator() {
-        return aviationMessage -> aviationMessage;
-    }
 
     @Bean
     public MessageValidatorService messageValidatorService() {

@@ -4,6 +4,8 @@
 #
 ##############################################
 # START SNIPPET: Datasource properties
+spring.config.activate.on-profile: h2
+
 spring:
   datasource:
     url: jdbc:h2:mem:archiver
@@ -11,7 +13,10 @@ spring:
   h2:
     console:
       enabled: true
-
+  sql:
+    init:
+      platform: h2
+---
 ##############################################
 #
 #  Product specific properties
@@ -25,15 +30,15 @@ production-line-initialization:
   products:
     - id: textFile
       input-dir: ${user.home}/.avi-message-archiver/src
-      archived-dir: ${user.home}/.avi-message-archiver/dst
-      failed-dir: ${user.home}/.avi-message-archiver/failed
+      archive-dir: ${user.home}/.avi-message-archiver/dst
+      fail-dir: ${user.home}/.avi-message-archiver/failed
       files:
         - pattern: ^.*\.txt$
         - pattern: ^.*\.txt2$
     - id: anotherFile
       input-dir: ${user.home}/.avi-message-archiver/src2
-      archived-dir: ${user.home}/.avi-message-archiver/dst2
-      failed-dir: ${user.home}/.avi-message-archiver/failed2
+      archive-dir: ${user.home}/.avi-message-archiver/dst2
+      fail-dir: ${user.home}/.avi-message-archiver/failed2
       files:
         - pattern: ^.*another$
 

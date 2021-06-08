@@ -8,12 +8,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import java.io.File;
@@ -29,7 +27,11 @@ import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest({"auto.startup=false"})
-@ContextConfiguration(classes = {AviationMessageArchiver.class, AviationMessageArchiverTest.TestConfig.class},//
+@Sql(scripts = {"classpath:/schema-h2.sql", "classpath:/h2-data/avidb_message_types_test.sql",
+        "classpath:/h2-data/avidb_message_format_test.sql", "classpath:/h2-data/avidb_message_routes_test.sql",
+        "classpath:/h2-data/avidb_stations_test.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class},//
         loader = AnnotationConfigContextLoader.class,//
         initializers = {ConfigDataApplicationContextInitializer.class})
 public class AviationMessageArchiverTest {
@@ -122,7 +124,7 @@ public class AviationMessageArchiverTest {
         }
 
         public void assertInputAndOutputFilesEquals(final AviationProductsHolder.AviationProduct product) throws InterruptedException, URISyntaxException {
-            final File expectedOutputFile = new File((getExpectFail() ? product.getFailedDir() : product.getArchivedDir()) + "/" + getInputFileName());
+            final File expectedOutputFile = new File((getExpectFail() ? product.getFailDir() : product.getArchiveDir()) + "/" + getInputFileName());
             waitUntilFileExists(expectedOutputFile);
 
             assertThat(expectedOutputFile).exists();
@@ -148,14 +150,6 @@ public class AviationMessageArchiverTest {
             }
 
         }
-
     }
 
-    @Configuration
-    static class TestConfig {
-        @Bean
-        public ApplicationConversionService conversionService() {
-            return new ApplicationConversionService();
-        }
-    }
 }

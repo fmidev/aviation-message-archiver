@@ -1,12 +1,13 @@
 package fi.fmi.avi.archiver.message;
 
-import jdk.nashorn.internal.ir.annotations.Immutable;
 import org.inferred.freebuilder.FreeBuilder;
 
 import java.time.Instant;
 import java.util.Optional;
 
-@Immutable
+/**
+ * Model representing an aviation message in the database.
+ */
 @FreeBuilder
 public abstract class AviationMessage {
 
@@ -22,6 +23,8 @@ public abstract class AviationMessage {
     public abstract Instant getMessageTime();
 
     public abstract String getIcaoAirportCode();
+
+    public abstract Optional<Integer> getStationId();
 
     public abstract int getType();
 

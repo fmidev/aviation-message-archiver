@@ -48,19 +48,19 @@ public class MessageFileMonitorInitializer {
 
     private final AviationProductsHolder aviationProductsHolder;
     private final MessageChannel processingChannel;
-    private final MessageChannel archivedChannel;
-    private final MessageChannel failedChannel;
+    private final MessageChannel archiveChannel;
+    private final MessageChannel failChannel;
     private final MessageChannel errorMessageChannel;
 
     public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
-                                         final MessageChannel processingChannel, final MessageChannel archivedChannel,
-                                         final MessageChannel failedChannel, final MessageChannel errorMessageChannel) {
+                                         final MessageChannel processingChannel, final MessageChannel archiveChannel,
+                                         final MessageChannel failChannel, final MessageChannel errorMessageChannel) {
         this.context = requireNonNull(context, "context");
         this.registerations = new HashSet<>();
         this.aviationProductsHolder = requireNonNull(aviationProductsHolder, "aviationProductsHolder");
         this.processingChannel = requireNonNull(processingChannel, "processingChannel");
-        this.archivedChannel = requireNonNull(archivedChannel, "archivedChannel");
-        this.failedChannel = requireNonNull(failedChannel, "failedChannel");
+        this.archiveChannel = requireNonNull(archiveChannel, "archiveChannel");
+        this.failChannel = requireNonNull(failChannel, "failChannel");
         this.errorMessageChannel = requireNonNull(errorMessageChannel, "errorMessageChannel");
     }
 
@@ -70,13 +70,13 @@ public class MessageFileMonitorInitializer {
             final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
             sourceDirectory.setDirectory(product.getInputDir());
 
-            final FileWritingMessageHandler archivedDirectory = new FileWritingMessageHandler(product.getArchivedDir());
-            archivedDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
-            archivedDirectory.setExpectReply(false);
+            final FileWritingMessageHandler archiveDirectory = new FileWritingMessageHandler(product.getArchiveDir());
+            archiveDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
+            archiveDirectory.setExpectReply(false);
 
-            final FileWritingMessageHandler failedDirectory = new FileWritingMessageHandler(product.getFailedDir());
-            archivedDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
-            archivedDirectory.setExpectReply(false);
+            final FileWritingMessageHandler failDirectory = new FileWritingMessageHandler(product.getFailDir());
+            archiveDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
+            archiveDirectory.setExpectReply(false);
 
             // Separate input channel needed in order to use multiple different
             // filters for the same source directory
@@ -105,17 +105,17 @@ public class MessageFileMonitorInitializer {
             final GenericSelector<Message> productFilter = m -> Objects.equals(m.getHeaders().get(PRODUCT_KEY), product);
             final HeaderToFileTransformer headerToFileTransformer = new HeaderToFileTransformer();
 
-            registerations.add(context.registration(IntegrationFlows.from(archivedChannel)//
+            registerations.add(context.registration(IntegrationFlows.from(archiveChannel)//
                     .filter(Message.class, productFilter)//
                     .transform(headerToFileTransformer)//
-                    .handle(archivedDirectory)//
+                    .handle(archiveDirectory)//
                     .get()//
             ).register());
 
-            registerations.add(context.registration(IntegrationFlows.from(failedChannel)//
+            registerations.add(context.registration(IntegrationFlows.from(failChannel)//
                     .filter(Message.class, productFilter)//
                     .transform(headerToFileTransformer)//
-                    .handle(failedDirectory)//
+                    .handle(failDirectory)//
                     .nullChannel()//
             ).register());
         });
@@ -139,7 +139,7 @@ public class MessageFileMonitorInitializer {
         final File file = fileMessage.getHeaders().get(FileHeaders.ORIGINAL_FILE, File.class);
         if (file != null) {
             try {
-                Files.getLastModifiedTime(file.toPath()).toInstant();
+                return Files.getLastModifiedTime(file.toPath()).toInstant();
             } catch (final IOException e) {
                 LOGGER.error("Unable to get file last modified time: {}", file.getName(), e);
             }
