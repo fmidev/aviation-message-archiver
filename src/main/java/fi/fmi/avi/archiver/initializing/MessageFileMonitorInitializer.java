@@ -122,7 +122,7 @@ public class MessageFileMonitorInitializer {
     }
 
     public void dispose() {
-        registerations.forEach(registeration -> context.remove(registeration.getId()));
+        registerations.forEach(registration -> context.remove(registration.getId()));
     }
 
     @Nullable
