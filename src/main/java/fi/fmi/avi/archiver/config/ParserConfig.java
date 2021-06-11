@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
+import fi.fmi.avi.archiver.file.FileParser;
 import fi.fmi.avi.archiver.message.AviationMessage;
 import fi.fmi.avi.archiver.message.MessageParser;
 import fi.fmi.avi.converter.AviMessageConverter;
@@ -71,13 +72,19 @@ public class ParserConfig {
     }
 
     @Bean
+    public FileParser fileParser() {
+        return new FileParser(aviMessageConverter());
+    }
+
+    @Bean
     public MessageParser messageParser() {
-        return new MessageParser(clock, aviMessageConverter(), types);
+        return new MessageParser(clock, types);
     }
 
     @Bean
     public IntegrationFlow parserFlow() {
         return IntegrationFlows.from(parserChannel)//
+                .handle(fileParser())//
                 .handle(messageParser())//
                 .<List<AviationMessage>>filter(msgs -> !msgs.isEmpty(), discards -> discards.discardChannel(failChannel))//
                 .channel(modifierChannel)//
