@@ -57,14 +57,18 @@ public class MessageParser {
     @ServiceActivator
     public List<AviationMessage> parse(final List<FileAviationMessage> fileAviationMessages) {
         final Instant currentTime = clock.instant();
-        return fileAviationMessages.stream().map(message -> {
+        return fileAviationMessages.stream().map(fileMessage -> {
             // TODO Assume that the GTS heading is present for now
-            final BulletinHeading bulletinHeading = message.getGtsBulletinHeading().get();
+            final BulletinHeading bulletinHeading = fileMessage.getGtsBulletinHeading().get();
 
-            if (!types.containsKey(message.getType())) {
+            if (!fileMessage.getMessage().getMessageType().isPresent()) {
+                throw new IllegalStateException("Unable to parse message type");
+            }
+            final MessageType messageType = fileMessage.getMessage().getMessageType().get();
+            if (!types.containsKey(messageType)) {
                 throw new IllegalStateException("Unknown message type");
             }
-            final Integer typeId = types.get(message.getType());
+            final Integer typeId = types.get(messageType);
 
             Optional<String> version = Optional.empty();
             if (bulletinHeading.getType() != BulletinHeading.Type.NORMAL) {
@@ -75,19 +79,19 @@ public class MessageParser {
                         bulletinHeading.getType().getPrefix() + String.valueOf(Character.toChars('A' + augmentationNumber - 1)));
             }
 
-            final String airportCode = getAirportCode(bulletinHeading, message.getLocationIndicator().orElse(null), message.getType());
+            final String airportCode = getAirportCode(bulletinHeading, fileMessage.getMessage().getTargetAerodrome().orElse(null), messageType);
 
             // Get partial issue time from message or bulletin heading and try to complete it
-            final PartialOrCompleteTimeInstant issueTime = message.getMessageTime().isPresent()
-                    ? message.getMessageTime().get()
+            final PartialOrCompleteTimeInstant issueTime = fileMessage.getMessage().getIssueTime().isPresent()
+                    ? fileMessage.getMessage().getIssueTime().get()
                     : bulletinHeading.getIssueTime();
-            final Instant issueInstant = getIssueTime(issueTime, message.getFilenamePattern(), currentTime, message.getFileModified());
+            final Instant issueInstant = getIssueTime(issueTime, fileMessage.getFilenamePattern(), currentTime, fileMessage.getFileModified());
 
             Optional<Instant> validTimeStart = Optional.empty();
             Optional<Instant> validTimeEnd = Optional.empty();
-            if (message.getValidityPeriod().isPresent()) {
-                final Optional<ValidityTime> validityTime = getValidityTime(message.getValidityPeriod().get(), message.getFilenamePattern(), currentTime,
-                        message.getFileModified());
+            if (fileMessage.getMessage().getValidityTime().isPresent()) {
+                final Optional<ValidityTime> validityTime = getValidityTime(fileMessage.getMessage().getValidityTime().get(),
+                        fileMessage.getFilenamePattern(), currentTime, fileMessage.getFileModified());
                 if (validityTime.isPresent()) {
                     validTimeStart = Optional.of(validityTime.get().getStart());
                     validTimeEnd = Optional.of(validityTime.get().getEnd());
@@ -95,15 +99,15 @@ public class MessageParser {
             }
 
             return AviationMessage.builder()//
-                    .setHeading(message.getGtsBulletinHeadingString().get())//
+                    .setHeading(fileMessage.getGtsBulletinHeadingString().get())// TODO
                     .setIcaoAirportCode(airportCode)//
-                    .setMessage(message.getContent())//
+                    .setMessage(fileMessage.getMessage().getOriginalMessage())//
                     .setMessageTime(issueInstant)//
                     .setRoute(1)// TODO
                     .setType(typeId)//
                     .setValidFrom(validTimeStart)//
                     .setValidTo(validTimeEnd)//
-                    .setFileModified(message.getFileModified())//
+                    .setFileModified(fileMessage.getFileModified())//
                     .setVersion(version)//
                     .build();
         }).collect(Collectors.toList());

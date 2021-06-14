@@ -54,12 +54,8 @@ public class FileParser {
                             .setGtsBulletinHeadingString(BulletinHeadingEncoder.encode(bulletin.getHeading(), MessageFormat.TEXT, null))//
                             .setFilenamePattern(filenamePattern)//
                             .setProductIdentifier(productIdentifier)
-                            .setLocationIndicator(message.getTargetAerodrome())//
-                            .setContent(message.getOriginalMessage())//
-                            .setMessageTime(message.getIssueTime())//
-                            .setType(message.getMessageType().get()) // Throw an exception if type cannot be determined
-                            .setValidityPeriod(message.getValidityTime())//
                             .setFileModified(fileLastModified)//
+                            .setMessage(message)
                             .build();
                 }).collect(Collectors.toList());
     }

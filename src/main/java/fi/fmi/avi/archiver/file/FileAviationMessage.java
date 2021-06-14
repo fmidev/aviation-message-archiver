@@ -1,9 +1,6 @@
 package fi.fmi.avi.archiver.file;
 
-import fi.fmi.avi.model.Aerodrome;
-import fi.fmi.avi.model.MessageType;
-import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
-import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.bulletin.BulletinHeading;
 import org.inferred.freebuilder.FreeBuilder;
 
@@ -39,15 +36,7 @@ public abstract class FileAviationMessage {
 
     public abstract Instant getFileModified();
 
-    public abstract String getContent();
-
-    public abstract MessageType getType();
-
-    public abstract Optional<Aerodrome> getLocationIndicator();
-
-    public abstract Optional<PartialOrCompleteTimeInstant> getMessageTime();
-
-    public abstract Optional<PartialOrCompleteTimePeriod> getValidityPeriod();
+    public abstract GenericAviationWeatherMessage getMessage();
 
     public static class Builder extends FileAviationMessage_Builder {
         Builder() {
