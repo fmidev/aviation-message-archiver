@@ -2,6 +2,8 @@ package fi.fmi.avi.archiver.message;
 
 import com.google.common.collect.ImmutableMap;
 import fi.fmi.avi.archiver.file.FileAviationMessage;
+import fi.fmi.avi.archiver.file.FileBulletinHeading;
+import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FilenamePattern;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
@@ -47,13 +49,19 @@ public class MessageParserTest {
                 .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)
                 .setTranslated(false)
                 .build();
-        final FileAviationMessage fileAviationMessage = FileAviationMessage.builder()
+        final FileBulletinHeading gtsBulletinHeading = FileBulletinHeading.builder()//
+                .setBulletinHeadingString("FTFI33 EFPP 020500")
+                .setBulletinHeading(BulletinHeadingDecoder.decode("FTFI33 EFPP 020500", null))
+                .build();
+        final FileMetadata fileMetadata = FileMetadata.builder()
                 .setFilenamePattern(new FilenamePattern("TAF_20190505_102013_12332319",
                         Pattern.compile("^TAF_(?<yyyy>\\d{4})(?<MM>\\d{2})(?<dd>\\d{2})_(?<hh>\\d{2})(?<mm>\\d{2})(?<ss>\\d{2})_\\d{8}$")))
-                .setGtsBulletinHeadingString("FTFI33 EFPP 020500")
-                .setGtsBulletinHeading(BulletinHeadingDecoder.decode("FTFI33 EFPP 020500", null))
                 .setFileModified(clock.instant())
                 .setProductIdentifier("test identifier")
+                .build();
+        final FileAviationMessage fileAviationMessage = FileAviationMessage.builder()
+                .setGtsBulletinHeading(gtsBulletinHeading)
+                .setFileMetadata(fileMetadata)
                 .setMessage(message)
                 .build();
 
@@ -85,13 +93,19 @@ public class MessageParserTest {
                 .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)
                 .setTranslated(false)
                 .build();
-        final FileAviationMessage fileAviationMessage = FileAviationMessage.builder()
+        final FileBulletinHeading gtsBulletinHeading = FileBulletinHeading.builder()//
+                .setBulletinHeadingString("FTXX33 YYYY 020500 AAA")
+                .setBulletinHeading(BulletinHeadingDecoder.decode("FTXX33 YYYY 020500 AAA", null))
+                .build();
+        final FileMetadata fileMetadata = FileMetadata.builder()
                 .setFilenamePattern(new FilenamePattern("TAF_20190505_102013_12332319",
                         Pattern.compile("^TAF_(?<yyyy>\\d{4})(?<MM>\\d{2})(?<dd>\\d{2})_(?<hh>\\d{2})(?<mm>\\d{2})(?<ss>\\d{2})_\\d{8}$")))
-                .setGtsBulletinHeadingString("FTXX33 YYYY 020500 AAA")
-                .setGtsBulletinHeading(BulletinHeadingDecoder.decode("FTXX33 YYYY 020500 AAA", null))
                 .setFileModified(clock.instant())
                 .setProductIdentifier("test identifier")
+                .build();
+        final FileAviationMessage fileAviationMessage = FileAviationMessage.builder()
+                .setGtsBulletinHeading(gtsBulletinHeading)
+                .setFileMetadata(fileMetadata)
                 .setMessage(message)
                 .build();
 
@@ -122,13 +136,19 @@ public class MessageParserTest {
                 .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)
                 .setTranslated(false)
                 .build();
-        final FileAviationMessage fileAviationMessage = FileAviationMessage.builder()
+        final FileBulletinHeading gtsBulletinHeading = FileBulletinHeading.builder()//
+                .setBulletinHeadingString("FTXX33 YYYY 020500 CCA")
+                .setBulletinHeading(BulletinHeadingDecoder.decode("FTXX33 YYYY 020500 CCA", null))
+                .build();
+        final FileMetadata fileMetadata = FileMetadata.builder()
                 .setFilenamePattern(new FilenamePattern("TAF_20190505_102013_12332319",
                         Pattern.compile("^TAF_(?<yyyy>\\d{4})(?<MM>\\d{2})(?<dd>\\d{2})_(?<hh>\\d{2})(?<mm>\\d{2})(?<ss>\\d{2})_\\d{8}$")))
-                .setGtsBulletinHeadingString("FTXX33 YYYY 020500 CCA")
-                .setGtsBulletinHeading(BulletinHeadingDecoder.decode("FTXX33 YYYY 020500 CCA", null))
                 .setFileModified(clock.instant())
                 .setProductIdentifier("test identifier")
+                .build();
+        final FileAviationMessage fileAviationMessage = FileAviationMessage.builder()
+                .setGtsBulletinHeading(gtsBulletinHeading)
+                .setFileMetadata(fileMetadata)
                 .setMessage(message)
                 .build();
 

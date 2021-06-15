@@ -29,20 +29,31 @@ public class FileParser {
     @ServiceActivator
     public List<FileAviationMessage> parse(final String content, final MessageHeaders headers) {
         final FilenamePattern pattern = (FilenamePattern) headers.get(MessageFileMonitorInitializer.MESSAGE_FILE_PATTERN);
-        final Instant fileLastModified = (Instant) headers.get(MessageFileMonitorInitializer.FILE_LAST_MODIFIED);
+        final Instant fileModified = (Instant) headers.get(MessageFileMonitorInitializer.FILE_MODIFIED);
         final String productIdentifier = (String) headers.get(MessageFileMonitorInitializer.PRODUCT_IDENTIFIER);
-        return parse(productIdentifier, pattern, content.trim(), fileLastModified);
+        return parse(productIdentifier, pattern, content.trim(), fileModified);
     }
 
     public List<FileAviationMessage> parse(final String productIdentifier, final FilenamePattern filenamePattern, final String content,
-                                           @Nullable final Instant fileLastModified) {
+                                           @Nullable final Instant fileModified) {
         final ConversionResult<GenericMeteorologicalBulletin> bulletinConversion = aviMessageConverter.convertMessage(content,
                 TACConverter.TAC_TO_GENERIC_BULLETIN_POJO);
         if (!bulletinConversion.getConvertedMessage().isPresent()) {
             // Unable to get any messages out of the file content
             return Collections.emptyList();
         }
+
         final GenericMeteorologicalBulletin bulletin = bulletinConversion.getConvertedMessage().get();
+        final FileBulletinHeading gtsBulletinHeading = FileBulletinHeading.builder()
+                .setBulletinHeading(bulletin.getHeading())
+                .setBulletinHeadingString(BulletinHeadingEncoder.encode(bulletin.getHeading(), MessageFormat.TEXT, null))
+                .build();
+        final FileMetadata fileMetadata = FileMetadata.builder()
+                .setFilenamePattern(filenamePattern)//
+                .setProductIdentifier(productIdentifier)//
+                .setFileModified(fileModified)
+                .build();
+
         return bulletin.getMessages().stream()//
                 .map(message -> { //
                     if (!message.getMessageType().isPresent()) {
@@ -50,11 +61,8 @@ public class FileParser {
                     }
 
                     return FileAviationMessage.builder()//
-                            .setGtsBulletinHeading(bulletin.getHeading())//
-                            .setGtsBulletinHeadingString(BulletinHeadingEncoder.encode(bulletin.getHeading(), MessageFormat.TEXT, null))//
-                            .setFilenamePattern(filenamePattern)//
-                            .setProductIdentifier(productIdentifier)
-                            .setFileModified(fileLastModified)//
+                            .setGtsBulletinHeading(gtsBulletinHeading)
+                            .setFileMetadata(fileMetadata)
                             .setMessage(message)
                             .build();
                 }).collect(Collectors.toList());

@@ -38,7 +38,7 @@ public class MessageFileMonitorInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageFileMonitorInitializer.class);
 
     public static final String MESSAGE_FILE_PATTERN = "message_file_pattern";
-    public static final String FILE_LAST_MODIFIED = "file_last_modified";
+    public static final String FILE_MODIFIED = "file_modified";
     public static final String PRODUCT_IDENTIFIER = "product_identifier";
 
     private static final String PRODUCT_KEY = "product";
@@ -96,7 +96,7 @@ public class MessageFileMonitorInitializer {
                                     .headerFunction(PRODUCT_IDENTIFIER, message -> product.getId())
                                     .headerFunction(MessageHeaders.ERROR_CHANNEL, message -> errorMessageChannel)
                                     .headerFunction(MESSAGE_FILE_PATTERN, message -> getFilePattern(message, fileConfig.getCompiledPattern()))//
-                                    .headerFunction(FILE_LAST_MODIFIED, this::getFileLastModified))//
+                                    .headerFunction(FILE_MODIFIED, this::getFileModified))//
                             .log(Level.INFO, INPUT_CATEGORY)//
                             .channel(processingChannel)//
                             .get()//
@@ -137,7 +137,7 @@ public class MessageFileMonitorInitializer {
     }
 
     @Nullable
-    private Instant getFileLastModified(final Message<?> fileMessage) {
+    private Instant getFileModified(final Message<?> fileMessage) {
         final File file = fileMessage.getHeaders().get(FileHeaders.ORIGINAL_FILE, File.class);
         if (file != null) {
             try {

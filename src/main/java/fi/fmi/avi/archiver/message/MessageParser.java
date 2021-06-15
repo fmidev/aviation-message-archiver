@@ -59,7 +59,7 @@ public class MessageParser {
         final Instant currentTime = clock.instant();
         return fileAviationMessages.stream().map(fileMessage -> {
             // TODO Assume that the GTS heading is present for now
-            final BulletinHeading bulletinHeading = fileMessage.getGtsBulletinHeading().get();
+            final BulletinHeading bulletinHeading = fileMessage.getGtsBulletinHeading().getBulletinHeading().get();
 
             if (!fileMessage.getMessage().getMessageType().isPresent()) {
                 throw new IllegalStateException("Unable to parse message type");
@@ -85,13 +85,14 @@ public class MessageParser {
             final PartialOrCompleteTimeInstant issueTime = fileMessage.getMessage().getIssueTime().isPresent()
                     ? fileMessage.getMessage().getIssueTime().get()
                     : bulletinHeading.getIssueTime();
-            final Instant issueInstant = getIssueTime(issueTime, fileMessage.getFilenamePattern(), currentTime, fileMessage.getFileModified());
+            final Instant issueInstant = getIssueTime(issueTime, fileMessage.getFileMetadata().getFilenamePattern(),
+                    currentTime, fileMessage.getFileMetadata().getFileModified());
 
             Optional<Instant> validTimeStart = Optional.empty();
             Optional<Instant> validTimeEnd = Optional.empty();
             if (fileMessage.getMessage().getValidityTime().isPresent()) {
                 final Optional<ValidityTime> validityTime = getValidityTime(fileMessage.getMessage().getValidityTime().get(),
-                        fileMessage.getFilenamePattern(), currentTime, fileMessage.getFileModified());
+                        fileMessage.getFileMetadata().getFilenamePattern(), currentTime, fileMessage.getFileMetadata().getFileModified());
                 if (validityTime.isPresent()) {
                     validTimeStart = Optional.of(validityTime.get().getStart());
                     validTimeEnd = Optional.of(validityTime.get().getEnd());
@@ -99,7 +100,7 @@ public class MessageParser {
             }
 
             return AviationMessage.builder()//
-                    .setHeading(fileMessage.getGtsBulletinHeadingString().get())// TODO
+                    .setHeading(fileMessage.getGtsBulletinHeading().getBulletinHeadingString().get())// TODO
                     .setIcaoAirportCode(airportCode)//
                     .setMessage(fileMessage.getMessage().getOriginalMessage())//
                     .setMessageTime(issueInstant)//
@@ -107,7 +108,7 @@ public class MessageParser {
                     .setType(typeId)//
                     .setValidFrom(validTimeStart)//
                     .setValidTo(validTimeEnd)//
-                    .setFileModified(fileMessage.getFileModified())//
+                    .setFileModified(fileMessage.getFileMetadata().getFileModified())//
                     .setVersion(version)//
                     .build();
         }).collect(Collectors.toList());
