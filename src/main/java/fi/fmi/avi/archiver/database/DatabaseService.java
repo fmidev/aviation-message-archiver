@@ -17,14 +17,23 @@ public class DatabaseService {
     }
 
     @ServiceActivator
-    public void insertMessages(final List<AviationMessage> messages) {
+    public List<AviationMessage> insertMessages(final List<AviationMessage> messages) throws Exception {
+        Exception databaseInsertionException = null;
         for (final AviationMessage message : messages) {
-            if (message.getProcessingResult() == ProcessingResult.OK) {
-                databaseAccess.insertAviationMessage(message);
-            } else {
-                databaseAccess.insertRejectedAviationMessage(message);
+            try {
+                if (message.getProcessingResult() == ProcessingResult.OK) {
+                    databaseAccess.insertAviationMessage(message);
+                } else {
+                    databaseAccess.insertRejectedAviationMessage(message);
+                }
+            } catch (final Exception e) {
+                databaseInsertionException = e;
             }
         }
+        if (databaseInsertionException != null) {
+            throw databaseInsertionException;
+        }
+        return messages;
     }
 
 }

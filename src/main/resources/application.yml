@@ -17,6 +17,26 @@ spring:
     init:
       platform: h2
 ---
+spring:
+  datasource:
+    hikari:
+      login-timeout: 40
+      connection-timeout: 20000
+      validation-timeout: 5000
+      # Allow the application to start even if initial datasource connection fails
+      initialization-fail-timeout: 0
+  jdbc:
+    template:
+      query-timeout: PT15S
+  transaction:
+    default-timeout: PT15S
+
+datasource:
+  retry:
+    initial-interval: PT0.5S
+    multiplier: 2
+    max-interval: PT1M
+---
 ##############################################
 #
 #  Product specific properties

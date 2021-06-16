@@ -1,8 +1,5 @@
 package fi.fmi.avi.archiver.config;
 
-import java.io.File;
-import java.time.Duration;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +16,9 @@ import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 
+import java.io.File;
+import java.time.Duration;
+
 @Configuration
 public class FileHandlerConfig {
 
@@ -27,13 +27,13 @@ public class FileHandlerConfig {
     @Value("${file-handler.charset}")
     private String charset;
 
-    @Value("${file-handler.retry.initial-interval}")
+    @Value("${file-handler.retry.initial-interval:PT0.5S}")
     private Duration initialInterval;
 
-    @Value("${file-handler.retry.multiplier}")
+    @Value("${file-handler.retry.multiplier:2}")
     private int retryMultiplier;
 
-    @Value("${file-handler.retry.max-attempts}")
+    @Value("${file-handler.retry.max-attempts:3}")
     private int retryMaxAttempts;
 
     @Transformer(inputChannel = "processingChannel", outputChannel = "parserChannel", adviceChain = "fileReadingRetryAdvice")

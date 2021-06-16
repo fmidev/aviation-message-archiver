@@ -18,7 +18,7 @@ public class ValidatorConfig {
     private MessageChannel validatorChannel;
 
     @Autowired
-    private MessageChannel archiveChannel;
+    private MessageChannel databaseChannel;
 
     @Autowired
     private List<MessageValidator> messageValidators;
@@ -32,7 +32,7 @@ public class ValidatorConfig {
     public IntegrationFlow validatorFlow() {
         return IntegrationFlows.from(validatorChannel)//
                 .handle(messageValidatorService())//
-                .channel(archiveChannel)//
+                .channel(databaseChannel)//
                 .get();
     }
 
