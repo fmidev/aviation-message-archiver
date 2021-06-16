@@ -4,6 +4,7 @@ import org.inferred.freebuilder.FreeBuilder;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
  * Model representing an aviation message in the database.
@@ -24,7 +25,7 @@ public abstract class AviationMessage {
 
     public abstract String getIcaoAirportCode();
 
-    public abstract Optional<Integer> getStationId();
+    public abstract OptionalInt getStationId();
 
     public abstract int getType();
 

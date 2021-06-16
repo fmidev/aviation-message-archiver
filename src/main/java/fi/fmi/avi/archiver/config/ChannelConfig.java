@@ -1,13 +1,13 @@
 package fi.fmi.avi.archiver.config;
 
-import java.util.concurrent.Executors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+
+import java.util.concurrent.Executors;
 
 @Configuration
 public class ChannelConfig {
@@ -43,6 +43,11 @@ public class ChannelConfig {
     @Bean
     public MessageChannel validatorChannel() {
         return new PublishSubscribeChannel(Executors.newSingleThreadExecutor(newThreadFactory("Validator-")));
+    }
+
+    @Bean
+    public MessageChannel databaseChannel() {
+        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor(newThreadFactory("Database-")));
     }
 
     @Bean

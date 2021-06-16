@@ -63,7 +63,7 @@ public class MessageParser {
         final Instant now = clock.instant();
         final AviationMessageFilenamePattern pattern = (AviationMessageFilenamePattern) headers.get(MessageFileMonitorInitializer.MESSAGE_FILE_PATTERN);
         final Instant fileLastModified = (Instant) headers.get(MessageFileMonitorInitializer.FILE_LAST_MODIFIED);
-        return parse(0, pattern, content.trim(), now, fileLastModified);
+        return parse(1, pattern, content.trim(), now, fileLastModified);
     }
 
     public List<AviationMessage> parse(final int routeId, final AviationMessageFilenamePattern messageFilePattern, final String content,

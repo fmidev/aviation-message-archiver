@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
@@ -19,6 +20,7 @@ import java.util.Collections;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @JdbcTest
 @Sql(scripts = {"classpath:/schema-h2.sql", "classpath:/h2-data/avidb_message_types_test.sql",
@@ -42,7 +44,7 @@ public class DatabaseAccessTest {
     private Clock clock;
 
     @Test
-    public void test_insert_aviation_message() {
+    public void test_insert_aviation_message() throws Exception {
         final Instant now = clock.instant();
         final AviationMessage aviationMessage = AviationMessage.builder()//
                 .setMessageTime(now)//
@@ -63,7 +65,27 @@ public class DatabaseAccessTest {
     }
 
     @Test
-    public void test_insert_rejected_aviation_message() {
+    public void test_insert_aviation_message_with_nonexistent_station_id() {
+        final Instant now = clock.instant();
+        final AviationMessage aviationMessage = AviationMessage.builder()//
+                .setMessageTime(now)//
+                .setStationId(200)//
+                .setIcaoAirportCode("EFXX")//
+                .setType(2)//
+                .setRoute(1)//
+                .setMessage("TAF =")//
+                .setValidFrom(now)//
+                .setValidTo(now)//
+                .setFileModified(now)//
+                .setHeading("TEST HEADING")//
+                .build();
+
+        assertThrows(DataIntegrityViolationException.class,
+                () -> databaseAccess.insertAviationMessage(aviationMessage));
+    }
+
+    @Test
+    public void test_insert_rejected_aviation_message() throws Exception {
         final Instant now = clock.instant();
         final AviationMessage aviationMessage = AviationMessage.builder()//
                 .setMessageTime(now)//
