@@ -37,6 +37,9 @@ public class DataSourceConfig {
     @Value("${datasource.retry.max-interval:PT1M}")
     private Duration retryMaxInterval;
 
+    @Value("${datasource.retry.timeout:PT0S}")
+    private Duration retryTimeout;
+
     @Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
 
@@ -67,6 +70,19 @@ public class DataSourceConfig {
                 .get();
     }
 
+    /**
+     * Retry logic for database operations.
+     * <p>
+     * Database operations are retried in blocking manner. When a database operation fails and enters the retrying logic,
+     * no further operations will be attempted until the retry succeeds or timeouts. The retry logic is not applied
+     * for {@link NonTransientDataAccessException}s because they are known to not succeed on future attempts. Retrying
+     * applies for query timeouts, connectivity issues and similar recoverable errors. The blocking approach is preferable
+     * in these situations, because it is unlikely that a parallel operation would succeed while retrying another operation.
+     * <p>
+     * Retrying is done infinitely unless a timeout is configured.
+     *
+     * @return retry template for database access
+     */
     @Bean
     public RetryTemplate databaseAccessRetryTemplate() {
         final ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
@@ -75,7 +91,11 @@ public class DataSourceConfig {
         backOffPolicy.setMaxInterval(retryMaxInterval.toMillis());
 
         final RetryTemplateBuilder retryTemplateBuilder = new RetryTemplateBuilder();
-        retryTemplateBuilder.infiniteRetry();
+        if (retryTimeout.isZero()) {
+            retryTemplateBuilder.infiniteRetry();
+        } else {
+            retryTemplateBuilder.withinMillis(retryTimeout.toMillis());
+        }
         retryTemplateBuilder.customBackoff(backOffPolicy);
         retryTemplateBuilder.notRetryOn(NonTransientDataAccessException.class);
 
@@ -83,7 +103,8 @@ public class DataSourceConfig {
             @Override
             public <T, E extends Throwable> void close(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
                 super.close(context, callback, throwable);
-                if (context.getRetryCount() > 0 && !NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
+                if (context.getRetryCount() > 0 && throwable != null
+                        && !NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
                     LOGGER.error("Database operation retry attempts exhausted");
                 }
             }

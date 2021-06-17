@@ -36,6 +36,8 @@ datasource:
     initial-interval: PT0.5S
     multiplier: 2
     max-interval: PT1M
+    # Set to zero to retry infinitely. Set a positive duration for time limited retries.
+    timeout: PT0S
 ---
 ##############################################
 #

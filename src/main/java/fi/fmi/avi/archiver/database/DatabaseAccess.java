@@ -8,7 +8,6 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.springframework.retry.RetryCallback;
 import org.springframework.retry.support.RetryTemplate;
 
 import java.time.Clock;
@@ -43,7 +42,7 @@ public class DatabaseAccess {
         return jdbcTemplate;
     }
 
-    public int insertAviationMessage(final AviationMessage aviationMessage) throws Exception {
+    public int insertAviationMessage(final AviationMessage aviationMessage) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("message_time", aviationMessage.getMessageTime());
         parameters.addValue("station_id", aviationMessage.getStationId()
@@ -60,15 +59,14 @@ public class DatabaseAccess {
         parameters.addValue("version", aviationMessage.getVersion().orElse(null));
         parameters.addValue("format_id", 1);
         try {
-            return retryTemplate.execute((RetryCallback<Integer, Exception>) context ->
-                    insertAviationMessage.execute(parameters));
-        } catch (final Exception e) {
+            return retryTemplate.execute(context -> insertAviationMessage.execute(parameters));
+        } catch (final RuntimeException e) {
             LOGGER.error("Inserting aviation message {} failed", aviationMessage, e);
             throw e;
         }
     }
 
-    public int insertRejectedAviationMessage(final AviationMessage aviationMessage) throws Exception {
+    public int insertRejectedAviationMessage(final AviationMessage aviationMessage) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("icao_code", aviationMessage.getIcaoAirportCode());
         parameters.addValue("message_time", aviationMessage.getMessageTime());
@@ -84,9 +82,8 @@ public class DatabaseAccess {
         parameters.addValue("reject_reason", aviationMessage.getProcessingResult().getCode());
         parameters.addValue("version", aviationMessage.getVersion().orElse(null));
         try {
-            return retryTemplate.execute((RetryCallback<Integer, Exception>) context ->
-                    insertRejectedAviationMessage.execute(parameters));
-        } catch (final Exception e) {
+            return retryTemplate.execute(context -> insertRejectedAviationMessage.execute(parameters));
+        } catch (final RuntimeException e) {
             LOGGER.error("Inserting rejected aviation message {} failed", aviationMessage, e);
             throw e;
         }
@@ -96,12 +93,12 @@ public class DatabaseAccess {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("icao_code", icaoAirportCode);
         try {
-            final Integer stationId = retryTemplate.execute((RetryCallback<Integer, Exception>) context ->
+            final Integer stationId = retryTemplate.execute(context ->
                     jdbcTemplate.queryForObject(STATION_ID_QUERY, parameters, Integer.class));
             return Optional.ofNullable(stationId);
         } catch (final EmptyResultDataAccessException ignored) {
             // No station was found
-        } catch (final Exception e) {
+        } catch (final RuntimeException e) {
             LOGGER.error("Querying station id with icao airport code {} failed", icaoAirportCode, e);
         }
         return Optional.empty();

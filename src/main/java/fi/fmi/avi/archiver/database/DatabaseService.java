@@ -17,8 +17,8 @@ public class DatabaseService {
     }
 
     @ServiceActivator
-    public List<AviationMessage> insertMessages(final List<AviationMessage> messages) throws Exception {
-        Exception databaseInsertionException = null;
+    public List<AviationMessage> insertMessages(final List<AviationMessage> messages) {
+        RuntimeException databaseInsertionException = null;
         for (final AviationMessage message : messages) {
             try {
                 if (message.getProcessingResult() == ProcessingResult.OK) {
@@ -26,7 +26,7 @@ public class DatabaseService {
                 } else {
                     databaseAccess.insertRejectedAviationMessage(message);
                 }
-            } catch (final Exception e) {
+            } catch (final RuntimeException e) {
                 databaseInsertionException = e;
             }
         }
