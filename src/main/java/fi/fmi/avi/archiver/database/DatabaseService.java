@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.database;
 
-import fi.fmi.avi.archiver.message.AviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 import org.springframework.integration.annotation.ServiceActivator;
 
@@ -17,9 +17,9 @@ public class DatabaseService {
     }
 
     @ServiceActivator
-    public List<AviationMessage> insertMessages(final List<AviationMessage> messages) {
+    public List<ArchiveAviationMessage> insertMessages(final List<ArchiveAviationMessage> messages) {
         RuntimeException databaseInsertionException = null;
-        for (final AviationMessage message : messages) {
+        for (final ArchiveAviationMessage message : messages) {
             try {
                 if (message.getProcessingResult() == ProcessingResult.OK) {
                     databaseAccess.insertAviationMessage(message);

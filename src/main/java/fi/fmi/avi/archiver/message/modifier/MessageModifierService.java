@@ -1,9 +1,9 @@
 package fi.fmi.avi.archiver.message.modifier;
 
-import fi.fmi.avi.archiver.message.AviationMessage;
+import fi.fmi.avi.archiver.file.FileAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import org.springframework.integration.annotation.ServiceActivator;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,21 +11,21 @@ import static java.util.Objects.requireNonNull;
 
 public class MessageModifierService {
 
-    private final Collection<MessageModifier> modifiers;
+    private final List<MessageModifier> modifiers;
 
-    public MessageModifierService(final Collection<MessageModifier> modifiers) {
+    public MessageModifierService(final List<MessageModifier> modifiers) {
         this.modifiers = requireNonNull(modifiers, "modifiers");
     }
 
     @ServiceActivator
-    public List<AviationMessage> modifyMessages(final List<AviationMessage> messages) {
+    public List<ArchiveAviationMessage> modifyMessages(final List<FileAviationMessage> messages) {
         return messages.stream().map(this::modifyMessage).collect(Collectors.toList());
     }
 
-    private AviationMessage modifyMessage(final AviationMessage message) {
-        final AviationMessage.Builder messageBuilder = message.toBuilder();
+    private ArchiveAviationMessage modifyMessage(final FileAviationMessage fileAviationMessage) {
+        final ArchiveAviationMessage.Builder messageBuilder = ArchiveAviationMessage.builder();
         for (final MessageModifier messageModifier : modifiers) {
-            messageModifier.modify(messageBuilder);
+            messageModifier.modify(fileAviationMessage, messageBuilder);
         }
         return messageBuilder.build();
     }

@@ -1,23 +1,25 @@
 package fi.fmi.avi.archiver.message.modifier;
 
 import fi.fmi.avi.archiver.database.DatabaseAccess;
-import fi.fmi.avi.archiver.message.AviationMessage;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import fi.fmi.avi.archiver.file.FileAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 import java.util.Optional;
 
-@Component
+import static java.util.Objects.requireNonNull;
+
 public class StationIdModifier implements MessageModifier {
 
-    @Autowired
-    private DatabaseAccess databaseAccess;
+    private final DatabaseAccess databaseAccess;
+
+    public StationIdModifier(final DatabaseAccess databaseAccess) {
+        this.databaseAccess = requireNonNull(databaseAccess, "databaseAccess");
+    }
 
     @Override
-    public AviationMessage.Builder modify(final AviationMessage.Builder message) {
-        final Optional<Integer> stationId = databaseAccess.queryStationId(message.getIcaoAirportCode());
-        stationId.ifPresent(message::setStationId);
-        return message;
+    public void modify(FileAviationMessage fileAviationMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
+        final Optional<Integer> stationId = databaseAccess.queryStationId(aviationMessageBuilder.getIcaoAirportCode());
+        stationId.ifPresent(aviationMessageBuilder::setStationId);
     }
 
 }

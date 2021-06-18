@@ -1,10 +1,11 @@
-package fi.fmi.avi.archiver.message;
+package fi.fmi.avi.archiver.message.modifier;
 
 import com.google.common.collect.ImmutableMap;
 import fi.fmi.avi.archiver.file.FileAviationMessage;
 import fi.fmi.avi.archiver.file.FileBulletinHeading;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FilenamePattern;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
@@ -18,22 +19,20 @@ import org.junit.jupiter.api.Test;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class MessageParserTest {
+public class BaseDataModifierTest {
 
-    private MessageParser messageParser;
+    private BaseDataModifier baseDataModifier;
     private Clock clock;
 
     @BeforeEach
     public void setUp() {
         clock = Clock.fixed(Instant.parse("2019-05-05T10:21:20Z"), ZoneId.of("UTC"));
-        messageParser = new MessageParser(clock, new ImmutableMap.Builder<MessageType, Integer>()//
+        baseDataModifier = new BaseDataModifier(clock, new ImmutableMap.Builder<MessageType, Integer>()//
                 .put(MessageType.TAF, 1)//
                 .build());
     }
@@ -65,10 +64,10 @@ public class MessageParserTest {
                 .setMessage(message)
                 .build();
 
-        final List<AviationMessage> parsedMessages = messageParser.parse(Collections.singletonList(fileAviationMessage));
-        assertThat(parsedMessages).hasSize(1);
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
+        baseDataModifier.modify(fileAviationMessage, builder);
+        final ArchiveAviationMessage taf = builder.build();
 
-        final AviationMessage taf = parsedMessages.iterator().next();
         assertThat(taf.getType()).isEqualTo(1);
         assertThat(taf.getRoute()).isEqualTo(1);
         assertThat(taf.getMessageTime()).isEqualTo(Instant.parse("2019-05-02T05:32:00Z"));
@@ -109,10 +108,10 @@ public class MessageParserTest {
                 .setMessage(message)
                 .build();
 
-        final List<AviationMessage> parsedMessages = messageParser.parse(Collections.singletonList(fileAviationMessage));
-        assertThat(parsedMessages).hasSize(1);
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
+        baseDataModifier.modify(fileAviationMessage, builder);
+        final ArchiveAviationMessage taf = builder.build();
 
-        final AviationMessage taf = parsedMessages.iterator().next();
         assertThat(taf.getType()).isEqualTo(1);
         assertThat(taf.getRoute()).isEqualTo(1);
         assertThat(taf.getMessageTime()).isEqualTo(Instant.parse("2019-05-02T05:32:00Z"));
@@ -152,10 +151,10 @@ public class MessageParserTest {
                 .setMessage(message)
                 .build();
 
-        final List<AviationMessage> parsedMessages = messageParser.parse(Collections.singletonList(fileAviationMessage));
-        assertThat(parsedMessages).hasSize(1);
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
+        baseDataModifier.modify(fileAviationMessage, builder);
+        final ArchiveAviationMessage taf = builder.build();
 
-        final AviationMessage taf = parsedMessages.iterator().next();
         assertThat(taf.getType()).isEqualTo(1);
         assertThat(taf.getRoute()).isEqualTo(1);
         assertThat(taf.getMessageTime()).isEqualTo(Instant.parse("2019-05-02T05:32:00Z"));

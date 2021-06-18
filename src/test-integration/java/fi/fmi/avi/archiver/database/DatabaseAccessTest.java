@@ -2,7 +2,7 @@ package fi.fmi.avi.archiver.database;
 
 import fi.fmi.avi.archiver.AviationMessageArchiver;
 import fi.fmi.avi.archiver.TestConfig;
-import fi.fmi.avi.archiver.message.AviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +56,7 @@ public class DatabaseAccessTest {
     @Test
     public void test_insert_aviation_message() {
         final Instant now = clock.instant();
-        final AviationMessage aviationMessage = AviationMessage.builder()//
+        final ArchiveAviationMessage archiveAviationMessage = ArchiveAviationMessage.builder()//
                 .setMessageTime(now)//
                 .setStationId(1)
                 .setIcaoAirportCode("EFXX")//
@@ -69,15 +69,15 @@ public class DatabaseAccessTest {
                 .setHeading("TEST HEADING")//
                 .build();
 
-        final int affectedRows = databaseAccess.insertAviationMessage(aviationMessage);
+        final int affectedRows = databaseAccess.insertAviationMessage(archiveAviationMessage);
         assertThat(affectedRows).isEqualTo(1);
-        assertAvidbMessagesContains(aviationMessage);
+        assertAvidbMessagesContains(archiveAviationMessage);
     }
 
     @Test
     public void test_insert_aviation_message_with_nonexistent_station_id() {
         final Instant now = clock.instant();
-        final AviationMessage aviationMessage = AviationMessage.builder()//
+        final ArchiveAviationMessage archiveAviationMessage = ArchiveAviationMessage.builder()//
                 .setMessageTime(now)//
                 .setStationId(200)//
                 .setIcaoAirportCode("EFXX")//
@@ -91,7 +91,7 @@ public class DatabaseAccessTest {
                 .build();
 
         assertThrows(DataIntegrityViolationException.class,
-                () -> databaseAccess.insertAviationMessage(aviationMessage));
+                () -> databaseAccess.insertAviationMessage(archiveAviationMessage));
     }
 
     @Test
@@ -102,7 +102,7 @@ public class DatabaseAccessTest {
                 .thenCallRealMethod();
 
         final Instant now = clock.instant();
-        final AviationMessage aviationMessage = AviationMessage.builder()//
+        final ArchiveAviationMessage archiveAviationMessage = ArchiveAviationMessage.builder()//
                 .setMessageTime(now)//
                 .setStationId(1)
                 .setIcaoAirportCode("EFXX")//
@@ -115,7 +115,7 @@ public class DatabaseAccessTest {
                 .setHeading("TEST HEADING")//
                 .build();
 
-        final int affectedRows = databaseAccess.insertAviationMessage(aviationMessage);
+        final int affectedRows = databaseAccess.insertAviationMessage(archiveAviationMessage);
         verify(jdbcTemplate, times(3)).update(anyString(), any(PreparedStatementSetter.class));
         assertThat(affectedRows).isEqualTo(1);
     }
@@ -123,7 +123,7 @@ public class DatabaseAccessTest {
     @Test
     public void test_insert_rejected_aviation_message() {
         final Instant now = clock.instant();
-        final AviationMessage aviationMessage = AviationMessage.builder()//
+        final ArchiveAviationMessage archiveAviationMessage = ArchiveAviationMessage.builder()//
                 .setMessageTime(now)//
                 .setIcaoAirportCode("XXXX")//
                 .setType(2)//
@@ -136,9 +136,9 @@ public class DatabaseAccessTest {
                 .setProcessingResult(ProcessingResult.UNKNOWN_ICAO_CODE)//
                 .build();
 
-        final int affectedRows = databaseAccess.insertRejectedAviationMessage(aviationMessage);
+        final int affectedRows = databaseAccess.insertRejectedAviationMessage(archiveAviationMessage);
         assertThat(affectedRows).isEqualTo(1);
-        assertAvidbRejectedMessagesContains(aviationMessage);
+        assertAvidbRejectedMessagesContains(archiveAviationMessage);
     }
 
     @Test
@@ -153,39 +153,39 @@ public class DatabaseAccessTest {
         assertThat(testId).isEmpty();
     }
 
-    private void assertAvidbMessagesContains(final AviationMessage aviationMessage) {
-        databaseAccess.getJdbcTemplate().queryForObject(SELECT_AVIATION_MESSAGES, Collections.emptyMap(), (RowMapper<AviationMessage>) (rs, rowNum) -> {
-            assertThat(rs.getObject(1, Instant.class)).isEqualTo(aviationMessage.getMessageTime());
-            assertThat(rs.getInt(2)).isEqualTo(aviationMessage.getStationId().orElse(-1));
-            assertThat(rs.getInt(3)).isEqualTo(aviationMessage.getType());
-            assertThat(rs.getInt(4)).isEqualTo(aviationMessage.getRoute());
-            assertThat(rs.getString(5)).isEqualTo(aviationMessage.getMessage());
-            assertThat(rs.getObject(6, Instant.class)).isEqualTo(aviationMessage.getValidFrom().orElse(Instant.EPOCH));
-            assertThat(rs.getObject(7, Instant.class)).isEqualTo(aviationMessage.getValidTo().orElse(Instant.EPOCH));
+    private void assertAvidbMessagesContains(final ArchiveAviationMessage archiveAviationMessage) {
+        databaseAccess.getJdbcTemplate().queryForObject(SELECT_AVIATION_MESSAGES, Collections.emptyMap(), (RowMapper<ArchiveAviationMessage>) (rs, rowNum) -> {
+            assertThat(rs.getObject(1, Instant.class)).isEqualTo(archiveAviationMessage.getMessageTime());
+            assertThat(rs.getInt(2)).isEqualTo(archiveAviationMessage.getStationId().orElse(-1));
+            assertThat(rs.getInt(3)).isEqualTo(archiveAviationMessage.getType());
+            assertThat(rs.getInt(4)).isEqualTo(archiveAviationMessage.getRoute());
+            assertThat(rs.getString(5)).isEqualTo(archiveAviationMessage.getMessage());
+            assertThat(rs.getObject(6, Instant.class)).isEqualTo(archiveAviationMessage.getValidFrom().orElse(Instant.EPOCH));
+            assertThat(rs.getObject(7, Instant.class)).isEqualTo(archiveAviationMessage.getValidTo().orElse(Instant.EPOCH));
             assertThat(rs.getObject(8, Instant.class)).isEqualTo(clock.instant());
-            assertThat(rs.getObject(9, Instant.class)).isEqualTo(aviationMessage.getFileModified().orElse(Instant.EPOCH));
+            assertThat(rs.getObject(9, Instant.class)).isEqualTo(archiveAviationMessage.getFileModified().orElse(Instant.EPOCH));
             assertThat(rs.getObject(10)).isEqualTo(0);
-            assertThat(rs.getString(11)).isEqualTo(aviationMessage.getHeading());
+            assertThat(rs.getString(11)).isEqualTo(archiveAviationMessage.getHeading());
             assertThat(rs.getString(12)).isNull();
             assertThat(rs.getInt(13)).isEqualTo(1);
             return null;
         });
     }
 
-    private void assertAvidbRejectedMessagesContains(final AviationMessage aviationMessage) {
-        databaseAccess.getJdbcTemplate().queryForObject(SELECT_REJECTED_MESSAGES, Collections.emptyMap(), (RowMapper<AviationMessage>) (rs, rowNum) -> {
-            assertThat(rs.getString(1)).isEqualTo(aviationMessage.getIcaoAirportCode());
-            assertThat(rs.getObject(2, Instant.class)).isEqualTo(aviationMessage.getMessageTime());
-            assertThat(rs.getInt(3)).isEqualTo(aviationMessage.getType());
-            assertThat(rs.getInt(4)).isEqualTo(aviationMessage.getRoute());
-            assertThat(rs.getString(5)).isEqualTo(aviationMessage.getMessage());
-            assertThat(rs.getObject(6, Instant.class)).isEqualTo(aviationMessage.getValidFrom().orElse(Instant.EPOCH));
-            assertThat(rs.getObject(7, Instant.class)).isEqualTo(aviationMessage.getValidTo().orElse(Instant.EPOCH));
+    private void assertAvidbRejectedMessagesContains(final ArchiveAviationMessage archiveAviationMessage) {
+        databaseAccess.getJdbcTemplate().queryForObject(SELECT_REJECTED_MESSAGES, Collections.emptyMap(), (RowMapper<ArchiveAviationMessage>) (rs, rowNum) -> {
+            assertThat(rs.getString(1)).isEqualTo(archiveAviationMessage.getIcaoAirportCode());
+            assertThat(rs.getObject(2, Instant.class)).isEqualTo(archiveAviationMessage.getMessageTime());
+            assertThat(rs.getInt(3)).isEqualTo(archiveAviationMessage.getType());
+            assertThat(rs.getInt(4)).isEqualTo(archiveAviationMessage.getRoute());
+            assertThat(rs.getString(5)).isEqualTo(archiveAviationMessage.getMessage());
+            assertThat(rs.getObject(6, Instant.class)).isEqualTo(archiveAviationMessage.getValidFrom().orElse(Instant.EPOCH));
+            assertThat(rs.getObject(7, Instant.class)).isEqualTo(archiveAviationMessage.getValidTo().orElse(Instant.EPOCH));
             assertThat(rs.getObject(8, Instant.class)).isEqualTo(clock.instant());
-            assertThat(rs.getObject(9, Instant.class)).isEqualTo(aviationMessage.getFileModified().orElse(Instant.EPOCH));
+            assertThat(rs.getObject(9, Instant.class)).isEqualTo(archiveAviationMessage.getFileModified().orElse(Instant.EPOCH));
             assertThat(rs.getObject(10)).isEqualTo(0);
-            assertThat(rs.getString(11)).isEqualTo(aviationMessage.getHeading());
-            assertThat(rs.getInt(12)).isEqualTo(aviationMessage.getProcessingResult().getCode());
+            assertThat(rs.getString(11)).isEqualTo(archiveAviationMessage.getHeading());
+            assertThat(rs.getInt(12)).isEqualTo(archiveAviationMessage.getProcessingResult().getCode());
             assertThat(rs.getString(13)).isNull();
             return null;
         });

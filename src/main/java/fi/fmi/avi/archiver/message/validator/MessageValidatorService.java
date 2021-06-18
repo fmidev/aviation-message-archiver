@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.message.validator;
 
-import fi.fmi.avi.archiver.message.AviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 import org.springframework.integration.annotation.ServiceActivator;
 
@@ -19,12 +19,12 @@ public class MessageValidatorService {
     }
 
     @ServiceActivator
-    public List<AviationMessage> validateMessages(final List<AviationMessage> messages) {
+    public List<ArchiveAviationMessage> validateMessages(final List<ArchiveAviationMessage> messages) {
         return messages.stream().map(this::validateMessage).collect(Collectors.toList());
     }
 
-    private AviationMessage validateMessage(final AviationMessage message) {
-        final AviationMessage.Builder messageBuilder = message.toBuilder();
+    private ArchiveAviationMessage validateMessage(final ArchiveAviationMessage message) {
+        final ArchiveAviationMessage.Builder messageBuilder = message.toBuilder();
         for (MessageValidator messageValidator : validators) {
             messageValidator.validate(messageBuilder);
             if (messageBuilder.getProcessingResult() != ProcessingResult.OK) {

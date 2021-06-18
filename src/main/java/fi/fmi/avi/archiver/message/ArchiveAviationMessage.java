@@ -10,9 +10,9 @@ import java.util.OptionalInt;
  * Model representing an aviation message in the database.
  */
 @FreeBuilder
-public abstract class AviationMessage {
+public abstract class ArchiveAviationMessage {
 
-    AviationMessage() {
+    ArchiveAviationMessage() {
     }
 
     public static Builder builder() {
@@ -45,7 +45,7 @@ public abstract class AviationMessage {
 
     public abstract ProcessingResult getProcessingResult();
 
-    public static class Builder extends AviationMessage_Builder {
+    public static class Builder extends ArchiveAviationMessage_Builder {
         Builder() {
             setProcessingResult(ProcessingResult.OK);
         }

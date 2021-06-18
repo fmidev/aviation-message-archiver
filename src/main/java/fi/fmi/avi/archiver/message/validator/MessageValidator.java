@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.message.validator;
 
-import fi.fmi.avi.archiver.message.AviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 @FunctionalInterface
 public interface MessageValidator {
@@ -10,6 +10,6 @@ public interface MessageValidator {
      *
      * @param message message
      */
-    AviationMessage.Builder validate(AviationMessage.Builder message);
+    ArchiveAviationMessage.Builder validate(ArchiveAviationMessage.Builder message);
 
 }

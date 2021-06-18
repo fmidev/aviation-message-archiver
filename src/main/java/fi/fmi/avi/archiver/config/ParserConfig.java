@@ -1,8 +1,12 @@
 package fi.fmi.avi.archiver.config;
 
+import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.FileParser;
-import fi.fmi.avi.archiver.message.AviationMessage;
-import fi.fmi.avi.archiver.message.MessageParser;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.modifier.BaseDataModifier;
+import fi.fmi.avi.archiver.message.modifier.MessageModifier;
+import fi.fmi.avi.archiver.message.modifier.MessageModifierService;
+import fi.fmi.avi.archiver.message.modifier.StationIdModifier;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.converter.AviMessageSpecificConverter;
 import fi.fmi.avi.converter.tac.conf.TACConverter;
@@ -18,8 +22,10 @@ import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.messaging.MessageChannel;
 
+import javax.annotation.PostConstruct;
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -51,10 +57,20 @@ public class ParserConfig {
     private MessageChannel modifierChannel;
 
     @Autowired
+    private MessageChannel validatorChannel;
+
+    @Autowired
     private MessageChannel failChannel;
+
+    @SuppressWarnings("FieldMayBeFinal")
+    @Autowired(required = false)
+    private List<MessageModifier> messageModifiers = new ArrayList<>();
 
     @Autowired
     private Clock clock;
+
+    @Autowired
+    private DatabaseAccess databaseAccess;
 
     public ZoneId getZone() {
         return zone;
@@ -77,18 +93,25 @@ public class ParserConfig {
     }
 
     @Bean
-    public MessageParser messageParser() {
-        return new MessageParser(clock, types);
+    public MessageModifierService messageModifierService() {
+        return new MessageModifierService(messageModifiers);
     }
 
     @Bean
     public IntegrationFlow parserFlow() {
         return IntegrationFlows.from(parserChannel)//
                 .handle(fileParser())//
-                .handle(messageParser())//
-                .<List<AviationMessage>>filter(msgs -> !msgs.isEmpty(), discards -> discards.discardChannel(failChannel))//
+                .<List<ArchiveAviationMessage>>filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))//
                 .channel(modifierChannel)//
+                .handle(messageModifierService())//
+                .channel(validatorChannel)//
                 .get();
+    }
+
+    @PostConstruct
+    private void addBaseModifiers() {
+        messageModifiers.add(0, new BaseDataModifier(clock, types));
+        messageModifiers.add(1, new StationIdModifier(databaseAccess));
     }
 
 }

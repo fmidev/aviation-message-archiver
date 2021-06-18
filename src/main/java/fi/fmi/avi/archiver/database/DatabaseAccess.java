@@ -1,7 +1,7 @@
 package fi.fmi.avi.archiver.database;
 
 import com.google.common.annotations.VisibleForTesting;
-import fi.fmi.avi.archiver.message.AviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -42,49 +42,49 @@ public class DatabaseAccess {
         return jdbcTemplate;
     }
 
-    public int insertAviationMessage(final AviationMessage aviationMessage) {
+    public int insertAviationMessage(final ArchiveAviationMessage archiveAviationMessage) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
-        parameters.addValue("message_time", aviationMessage.getMessageTime());
-        parameters.addValue("station_id", aviationMessage.getStationId()
+        parameters.addValue("message_time", archiveAviationMessage.getMessageTime());
+        parameters.addValue("station_id", archiveAviationMessage.getStationId()
                 .orElseThrow(() -> new IllegalArgumentException("Station id has to be supplied when inserting an aviation message")));
-        parameters.addValue("type_id", aviationMessage.getType());
-        parameters.addValue("route_id", aviationMessage.getRoute());
-        parameters.addValue("message", aviationMessage.getMessage());
-        parameters.addValue("valid_from", aviationMessage.getValidFrom().orElse(null));
-        parameters.addValue("valid_to", aviationMessage.getValidTo().orElse(null));
+        parameters.addValue("type_id", archiveAviationMessage.getType());
+        parameters.addValue("route_id", archiveAviationMessage.getRoute());
+        parameters.addValue("message", archiveAviationMessage.getMessage());
+        parameters.addValue("valid_from", archiveAviationMessage.getValidFrom().orElse(null));
+        parameters.addValue("valid_to", archiveAviationMessage.getValidTo().orElse(null));
         parameters.addValue("created", clock.instant());
-        parameters.addValue("file_modified", aviationMessage.getFileModified().orElse(null));
+        parameters.addValue("file_modified", archiveAviationMessage.getFileModified().orElse(null));
         parameters.addValue("flag", 0);
-        parameters.addValue("messir_heading", aviationMessage.getHeading());
-        parameters.addValue("version", aviationMessage.getVersion().orElse(null));
+        parameters.addValue("messir_heading", archiveAviationMessage.getHeading());
+        parameters.addValue("version", archiveAviationMessage.getVersion().orElse(null));
         parameters.addValue("format_id", 1);
         try {
             return retryTemplate.execute(context -> insertAviationMessage.execute(parameters));
         } catch (final RuntimeException e) {
-            LOGGER.error("Inserting aviation message {} failed", aviationMessage, e);
+            LOGGER.error("Inserting aviation message {} failed", archiveAviationMessage, e);
             throw e;
         }
     }
 
-    public int insertRejectedAviationMessage(final AviationMessage aviationMessage) {
+    public int insertRejectedAviationMessage(final ArchiveAviationMessage archiveAviationMessage) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
-        parameters.addValue("icao_code", aviationMessage.getIcaoAirportCode());
-        parameters.addValue("message_time", aviationMessage.getMessageTime());
-        parameters.addValue("type_id", aviationMessage.getType());
-        parameters.addValue("route_id", aviationMessage.getRoute());
-        parameters.addValue("message", aviationMessage.getMessage());
-        parameters.addValue("valid_from", aviationMessage.getValidFrom().orElse(null));
-        parameters.addValue("valid_to", aviationMessage.getValidTo().orElse(null));
+        parameters.addValue("icao_code", archiveAviationMessage.getIcaoAirportCode());
+        parameters.addValue("message_time", archiveAviationMessage.getMessageTime());
+        parameters.addValue("type_id", archiveAviationMessage.getType());
+        parameters.addValue("route_id", archiveAviationMessage.getRoute());
+        parameters.addValue("message", archiveAviationMessage.getMessage());
+        parameters.addValue("valid_from", archiveAviationMessage.getValidFrom().orElse(null));
+        parameters.addValue("valid_to", archiveAviationMessage.getValidTo().orElse(null));
         parameters.addValue("created", clock.instant());
-        parameters.addValue("file_modified", aviationMessage.getFileModified().orElse(null));
+        parameters.addValue("file_modified", archiveAviationMessage.getFileModified().orElse(null));
         parameters.addValue("flag", 0);
-        parameters.addValue("messir_heading", aviationMessage.getHeading());
-        parameters.addValue("reject_reason", aviationMessage.getProcessingResult().getCode());
-        parameters.addValue("version", aviationMessage.getVersion().orElse(null));
+        parameters.addValue("messir_heading", archiveAviationMessage.getHeading());
+        parameters.addValue("reject_reason", archiveAviationMessage.getProcessingResult().getCode());
+        parameters.addValue("version", archiveAviationMessage.getVersion().orElse(null));
         try {
             return retryTemplate.execute(context -> insertRejectedAviationMessage.execute(parameters));
         } catch (final RuntimeException e) {
-            LOGGER.error("Inserting rejected aviation message {} failed", aviationMessage, e);
+            LOGGER.error("Inserting rejected aviation message {} failed", archiveAviationMessage, e);
             throw e;
         }
     }
