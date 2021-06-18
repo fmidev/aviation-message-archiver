@@ -27,15 +27,15 @@ public class FileParser {
     }
 
     @ServiceActivator
-    public List<FileAviationMessage> parse(final String content, final MessageHeaders headers) {
+    public List<InputAviationMessage> parse(final String content, final MessageHeaders headers) {
         final FilenamePattern pattern = (FilenamePattern) headers.get(MessageFileMonitorInitializer.MESSAGE_FILE_PATTERN);
         final Instant fileModified = (Instant) headers.get(MessageFileMonitorInitializer.FILE_MODIFIED);
         final String productIdentifier = (String) headers.get(MessageFileMonitorInitializer.PRODUCT_IDENTIFIER);
         return parse(productIdentifier, pattern, content.trim(), fileModified);
     }
 
-    public List<FileAviationMessage> parse(final String productIdentifier, final FilenamePattern filenamePattern, final String content,
-                                           @Nullable final Instant fileModified) {
+    public List<InputAviationMessage> parse(final String productIdentifier, final FilenamePattern filenamePattern, final String content,
+                                            @Nullable final Instant fileModified) {
         final ConversionResult<GenericMeteorologicalBulletin> bulletinConversion = aviMessageConverter.convertMessage(content,
                 TACConverter.TAC_TO_GENERIC_BULLETIN_POJO);
         if (!bulletinConversion.getConvertedMessage().isPresent()) {
@@ -44,7 +44,7 @@ public class FileParser {
         }
 
         final GenericMeteorologicalBulletin bulletin = bulletinConversion.getConvertedMessage().get();
-        final FileBulletinHeading gtsBulletinHeading = FileBulletinHeading.builder()
+        final InputBulletinHeading gtsBulletinHeading = InputBulletinHeading.builder()
                 .setBulletinHeading(bulletin.getHeading())
                 .setBulletinHeadingString(BulletinHeadingEncoder.encode(bulletin.getHeading(), MessageFormat.TEXT, null))
                 .build();
@@ -60,7 +60,7 @@ public class FileParser {
                         throw new IllegalStateException("Message type cannot be determined");
                     }
 
-                    return FileAviationMessage.builder()//
+                    return InputAviationMessage.builder()//
                             .setGtsBulletinHeading(gtsBulletinHeading)
                             .setFileMetadata(fileMetadata)
                             .setMessage(message)

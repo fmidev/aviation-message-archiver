@@ -6,9 +6,9 @@ import org.inferred.freebuilder.FreeBuilder;
 import java.util.Optional;
 
 @FreeBuilder
-public abstract class FileBulletinHeading {
+public abstract class InputBulletinHeading {
 
-    FileBulletinHeading() {
+    InputBulletinHeading() {
     }
 
     public static Builder builder() {
@@ -21,7 +21,7 @@ public abstract class FileBulletinHeading {
 
     public abstract Optional<String> getBulletinHeadingString();
 
-    public static class Builder extends FileBulletinHeading_Builder {
+    public static class Builder extends InputBulletinHeading_Builder {
         Builder() {
         }
     }

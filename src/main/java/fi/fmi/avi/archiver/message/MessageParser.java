@@ -2,8 +2,8 @@ package fi.fmi.avi.archiver.message;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableSet;
-import fi.fmi.avi.archiver.file.FileAviationMessage;
 import fi.fmi.avi.archiver.file.FilenamePattern;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.model.*;
 import fi.fmi.avi.model.bulletin.BulletinHeading;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -55,9 +55,9 @@ public class MessageParser {
     }
 
     @ServiceActivator
-    public List<AviationMessage> parse(final List<FileAviationMessage> fileAviationMessages) {
+    public List<AviationMessage> parse(final List<InputAviationMessage> inputAviationMessages) {
         final Instant currentTime = clock.instant();
-        return fileAviationMessages.stream().map(fileMessage -> {
+        return inputAviationMessages.stream().map(fileMessage -> {
             // TODO Assume that the GTS heading is present for now
             final BulletinHeading bulletinHeading = fileMessage.getGtsBulletinHeading().getBulletinHeading().get();
 

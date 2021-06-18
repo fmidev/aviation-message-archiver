@@ -1,10 +1,10 @@
 package fi.fmi.avi.archiver.message;
 
 import com.google.common.collect.ImmutableMap;
-import fi.fmi.avi.archiver.file.FileAviationMessage;
-import fi.fmi.avi.archiver.file.FileBulletinHeading;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FilenamePattern;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
@@ -49,7 +49,7 @@ public class MessageParserTest {
                 .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)
                 .setTranslated(false)
                 .build();
-        final FileBulletinHeading gtsBulletinHeading = FileBulletinHeading.builder()//
+        final InputBulletinHeading gtsBulletinHeading = InputBulletinHeading.builder()//
                 .setBulletinHeadingString("FTFI33 EFPP 020500")
                 .setBulletinHeading(BulletinHeadingDecoder.decode("FTFI33 EFPP 020500", null))
                 .build();
@@ -59,13 +59,13 @@ public class MessageParserTest {
                 .setFileModified(clock.instant())
                 .setProductIdentifier("test identifier")
                 .build();
-        final FileAviationMessage fileAviationMessage = FileAviationMessage.builder()
+        final InputAviationMessage inputAviationMessage = InputAviationMessage.builder()
                 .setGtsBulletinHeading(gtsBulletinHeading)
                 .setFileMetadata(fileMetadata)
                 .setMessage(message)
                 .build();
 
-        final List<AviationMessage> parsedMessages = messageParser.parse(Collections.singletonList(fileAviationMessage));
+        final List<AviationMessage> parsedMessages = messageParser.parse(Collections.singletonList(inputAviationMessage));
         assertThat(parsedMessages).hasSize(1);
 
         final AviationMessage taf = parsedMessages.iterator().next();
@@ -93,7 +93,7 @@ public class MessageParserTest {
                 .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)
                 .setTranslated(false)
                 .build();
-        final FileBulletinHeading gtsBulletinHeading = FileBulletinHeading.builder()//
+        final InputBulletinHeading gtsBulletinHeading = InputBulletinHeading.builder()//
                 .setBulletinHeadingString("FTXX33 YYYY 020500 AAA")
                 .setBulletinHeading(BulletinHeadingDecoder.decode("FTXX33 YYYY 020500 AAA", null))
                 .build();
@@ -103,13 +103,13 @@ public class MessageParserTest {
                 .setFileModified(clock.instant())
                 .setProductIdentifier("test identifier")
                 .build();
-        final FileAviationMessage fileAviationMessage = FileAviationMessage.builder()
+        final InputAviationMessage inputAviationMessage = InputAviationMessage.builder()
                 .setGtsBulletinHeading(gtsBulletinHeading)
                 .setFileMetadata(fileMetadata)
                 .setMessage(message)
                 .build();
 
-        final List<AviationMessage> parsedMessages = messageParser.parse(Collections.singletonList(fileAviationMessage));
+        final List<AviationMessage> parsedMessages = messageParser.parse(Collections.singletonList(inputAviationMessage));
         assertThat(parsedMessages).hasSize(1);
 
         final AviationMessage taf = parsedMessages.iterator().next();
@@ -136,7 +136,7 @@ public class MessageParserTest {
                 .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)
                 .setTranslated(false)
                 .build();
-        final FileBulletinHeading gtsBulletinHeading = FileBulletinHeading.builder()//
+        final InputBulletinHeading gtsBulletinHeading = InputBulletinHeading.builder()//
                 .setBulletinHeadingString("FTXX33 YYYY 020500 CCA")
                 .setBulletinHeading(BulletinHeadingDecoder.decode("FTXX33 YYYY 020500 CCA", null))
                 .build();
@@ -146,13 +146,13 @@ public class MessageParserTest {
                 .setFileModified(clock.instant())
                 .setProductIdentifier("test identifier")
                 .build();
-        final FileAviationMessage fileAviationMessage = FileAviationMessage.builder()
+        final InputAviationMessage inputAviationMessage = InputAviationMessage.builder()
                 .setGtsBulletinHeading(gtsBulletinHeading)
                 .setFileMetadata(fileMetadata)
                 .setMessage(message)
                 .build();
 
-        final List<AviationMessage> parsedMessages = messageParser.parse(Collections.singletonList(fileAviationMessage));
+        final List<AviationMessage> parsedMessages = messageParser.parse(Collections.singletonList(inputAviationMessage));
         assertThat(parsedMessages).hasSize(1);
 
         final AviationMessage taf = parsedMessages.iterator().next();
