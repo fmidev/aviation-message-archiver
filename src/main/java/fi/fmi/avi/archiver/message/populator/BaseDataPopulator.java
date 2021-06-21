@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.message.modifier;
+package fi.fmi.avi.archiver.message.populator;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableSet;
@@ -53,7 +53,7 @@ public class BaseDataPopulator implements MessagePopulator {
     }
 
     @Override
-    public void modify(InputAviationMessage inputAviationMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
+    public void populate(InputAviationMessage inputAviationMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
         final Instant currentTime = clock.instant();
         // TODO Assume that the GTS heading is present for now
         final BulletinHeading bulletinHeading = inputAviationMessage.getGtsBulletinHeading().getBulletinHeading().get();

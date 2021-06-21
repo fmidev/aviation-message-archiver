@@ -36,8 +36,8 @@ public class ChannelConfig {
     }
 
     @Bean
-    public MessageChannel modifierChannel() {
-        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor(newThreadFactory("Modifier-")));
+    public MessageChannel populatorChannel() {
+        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor(newThreadFactory("Populator-")));
     }
 
     @Bean

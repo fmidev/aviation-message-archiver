@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.message.modifier;
+package fi.fmi.avi.archiver.message.populator;
 
 import com.google.common.collect.ImmutableMap;
 import fi.fmi.avi.archiver.file.FileMetadata;
@@ -24,15 +24,15 @@ import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class BaseDataModifierTest {
+public class BaseDataPopulatorTest {
 
-    private BaseDataPopulator baseDataModifier;
+    private BaseDataPopulator baseDataPopulator;
     private Clock clock;
 
     @BeforeEach
     public void setUp() {
         clock = Clock.fixed(Instant.parse("2019-05-05T10:21:20Z"), ZoneId.of("UTC"));
-        baseDataModifier = new BaseDataPopulator(clock, new ImmutableMap.Builder<MessageType, Integer>()//
+        baseDataPopulator = new BaseDataPopulator(clock, new ImmutableMap.Builder<MessageType, Integer>()//
                 .put(MessageType.TAF, 1)//
                 .build());
     }
@@ -65,7 +65,7 @@ public class BaseDataModifierTest {
                 .build();
 
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
-        baseDataModifier.modify(inputAviationMessage, builder);
+        baseDataPopulator.populate(inputAviationMessage, builder);
         final ArchiveAviationMessage taf = builder.build();
 
         assertThat(taf.getType()).isEqualTo(1);
@@ -109,7 +109,7 @@ public class BaseDataModifierTest {
                 .build();
 
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
-        baseDataModifier.modify(inputAviationMessage, builder);
+        baseDataPopulator.populate(inputAviationMessage, builder);
         final ArchiveAviationMessage taf = builder.build();
 
         assertThat(taf.getType()).isEqualTo(1);
@@ -152,7 +152,7 @@ public class BaseDataModifierTest {
                 .build();
 
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
-        baseDataModifier.modify(inputAviationMessage, builder);
+        baseDataPopulator.populate(inputAviationMessage, builder);
         final ArchiveAviationMessage taf = builder.build();
 
         assertThat(taf.getType()).isEqualTo(1);

@@ -3,10 +3,10 @@ package fi.fmi.avi.archiver.config;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.FileParser;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.modifier.BaseDataPopulator;
-import fi.fmi.avi.archiver.message.modifier.MessageModifierService;
-import fi.fmi.avi.archiver.message.modifier.MessagePopulator;
-import fi.fmi.avi.archiver.message.modifier.StationIdPopulator;
+import fi.fmi.avi.archiver.message.populator.BaseDataPopulator;
+import fi.fmi.avi.archiver.message.populator.MessagePopulator;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatorService;
+import fi.fmi.avi.archiver.message.populator.StationIdPopulator;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.converter.AviMessageSpecificConverter;
 import fi.fmi.avi.converter.tac.conf.TACConverter;
@@ -54,7 +54,7 @@ public class ParserConfig {
     private MessageChannel parserChannel;
 
     @Autowired
-    private MessageChannel modifierChannel;
+    private MessageChannel populatorChannel;
 
     @Autowired
     private MessageChannel validatorChannel;
@@ -93,8 +93,8 @@ public class ParserConfig {
     }
 
     @Bean
-    public MessageModifierService messageModifierService() {
-        return new MessageModifierService(messagePopulators);
+    public MessagePopulatorService messagePopulatorService() {
+        return new MessagePopulatorService(messagePopulators);
     }
 
     @Bean
@@ -102,14 +102,14 @@ public class ParserConfig {
         return IntegrationFlows.from(parserChannel)//
                 .handle(fileParser())//
                 .<List<ArchiveAviationMessage>>filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))//
-                .channel(modifierChannel)//
-                .handle(messageModifierService())//
+                .channel(populatorChannel)//
+                .handle(messagePopulatorService())//
                 .channel(validatorChannel)//
                 .get();
     }
 
     @PostConstruct
-    private void addBaseModifiers() {
+    private void addBasePopulators() {
         messagePopulators.add(0, new BaseDataPopulator(clock, types));
         messagePopulators.add(1, new StationIdPopulator(databaseAccess));
     }

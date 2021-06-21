@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.message.modifier;
+package fi.fmi.avi.archiver.message.populator;
 
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
@@ -17,7 +17,7 @@ public class StationIdPopulator implements MessagePopulator {
     }
 
     @Override
-    public void modify(InputAviationMessage inputAviationMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
+    public void populate(InputAviationMessage inputAviationMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
         final Optional<Integer> stationId = databaseAccess.queryStationId(aviationMessageBuilder.getIcaoAirportCode());
         stationId.ifPresent(aviationMessageBuilder::setStationId);
     }
