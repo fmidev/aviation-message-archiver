@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.initializing;
 
-import fi.fmi.avi.archiver.message.AviationMessageFilenamePattern;
+import fi.fmi.avi.archiver.file.FilenamePattern;
 import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,8 @@ public class MessageFileMonitorInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageFileMonitorInitializer.class);
 
     public static final String MESSAGE_FILE_PATTERN = "message_file_pattern";
-    public static final String FILE_LAST_MODIFIED = "file_last_modified";
+    public static final String FILE_MODIFIED = "file_modified";
+    public static final String PRODUCT_IDENTIFIER = "product_identifier";
 
     private static final String PRODUCT_KEY = "product";
     private static final String INPUT_CATEGORY = "input";
@@ -92,9 +93,10 @@ public class MessageFileMonitorInitializer {
             product.getFiles().stream().map(fileConfig -> context.registration(IntegrationFlows.from(inputChannel)//
                             .filter(new RegexPatternFileListFilter(fileConfig.getPattern())::accept)//
                             .enrichHeaders(s -> s.header(PRODUCT_KEY, product)//
+                                    .headerFunction(PRODUCT_IDENTIFIER, message -> product.getId())
                                     .headerFunction(MessageHeaders.ERROR_CHANNEL, message -> errorMessageChannel)
                                     .headerFunction(MESSAGE_FILE_PATTERN, message -> getFilePattern(message, fileConfig.getCompiledPattern()))//
-                                    .headerFunction(FILE_LAST_MODIFIED, this::getFileLastModified))//
+                                    .headerFunction(FILE_MODIFIED, this::getFileModified))//
                             .log(Level.INFO, INPUT_CATEGORY)//
                             .channel(processingChannel)//
                             .get()//
@@ -122,20 +124,20 @@ public class MessageFileMonitorInitializer {
     }
 
     public void dispose() {
-        registerations.forEach(registeration -> context.remove(registeration.getId()));
+        registerations.forEach(registration -> context.remove(registration.getId()));
     }
 
     @Nullable
-    private AviationMessageFilenamePattern getFilePattern(final Message<?> fileMessage, final Pattern pattern) {
+    private FilenamePattern getFilePattern(final Message<?> fileMessage, final Pattern pattern) {
         final String filename = fileMessage.getHeaders().get(FileHeaders.FILENAME, String.class);
         if (filename == null) {
             return null;
         }
-        return new AviationMessageFilenamePattern(filename, pattern);
+        return new FilenamePattern(filename, pattern);
     }
 
     @Nullable
-    private Instant getFileLastModified(final Message<?> fileMessage) {
+    private Instant getFileModified(final Message<?> fileMessage) {
         final File file = fileMessage.getHeaders().get(FileHeaders.ORIGINAL_FILE, File.class);
         if (file != null) {
             try {
