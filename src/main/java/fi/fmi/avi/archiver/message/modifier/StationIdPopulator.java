@@ -8,16 +8,16 @@ import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
-public class StationIdModifier implements MessageModifier {
+public class StationIdPopulator implements MessagePopulator {
 
     private final DatabaseAccess databaseAccess;
 
-    public StationIdModifier(final DatabaseAccess databaseAccess) {
+    public StationIdPopulator(final DatabaseAccess databaseAccess) {
         this.databaseAccess = requireNonNull(databaseAccess, "databaseAccess");
     }
 
     @Override
-    public void modify(InputAviationMessage InputAviationMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
+    public void modify(InputAviationMessage inputAviationMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
         final Optional<Integer> stationId = databaseAccess.queryStationId(aviationMessageBuilder.getIcaoAirportCode());
         stationId.ifPresent(aviationMessageBuilder::setStationId);
     }

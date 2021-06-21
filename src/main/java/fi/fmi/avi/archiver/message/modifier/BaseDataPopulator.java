@@ -17,7 +17,7 @@ import java.util.OptionalInt;
 import static fi.fmi.avi.model.MessageType.*;
 import static java.util.Objects.requireNonNull;
 
-public class BaseDataModifier implements MessageModifier {
+public class BaseDataPopulator implements MessagePopulator {
 
     private static final MessageType LOW_WIND = new MessageType("LOW_WIND");
     private static final MessageType WX_WARNING = new MessageType("WX_WARNING");
@@ -25,7 +25,7 @@ public class BaseDataModifier implements MessageModifier {
     private final Clock clock;
     private final Map<MessageType, Integer> types;
 
-    public BaseDataModifier(final Clock clock, final Map<MessageType, Integer> types) {
+    public BaseDataPopulator(final Clock clock, final Map<MessageType, Integer> types) {
         this.clock = requireNonNull(clock, "clock");
         this.types = requireNonNull(types, "types");
     }
@@ -233,7 +233,7 @@ public class BaseDataModifier implements MessageModifier {
         static ValidityTime create(final PartialOrCompleteTimePeriod completeValidityPeriod) {
             final Instant start = completeValidityPeriod.getStartTime().get().getCompleteTime().get().toInstant();
             final Instant end = completeValidityPeriod.getEndTime().get().getCompleteTime().get().toInstant();
-            return new AutoValue_BaseDataModifier_ValidityTime(start, end);
+            return new AutoValue_BaseDataPopulator_ValidityTime(start, end);
         }
 
         abstract Instant getStart();

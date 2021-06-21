@@ -11,9 +11,9 @@ import static java.util.Objects.requireNonNull;
 
 public class MessageModifierService {
 
-    private final List<MessageModifier> modifiers;
+    private final List<MessagePopulator> modifiers;
 
-    public MessageModifierService(final List<MessageModifier> modifiers) {
+    public MessageModifierService(final List<MessagePopulator> modifiers) {
         this.modifiers = requireNonNull(modifiers, "modifiers");
     }
 
@@ -22,10 +22,10 @@ public class MessageModifierService {
         return messages.stream().map(this::modifyMessage).collect(Collectors.toList());
     }
 
-    private ArchiveAviationMessage modifyMessage(final InputAviationMessage InputAviationMessage) {
+    private ArchiveAviationMessage modifyMessage(final InputAviationMessage inputAviationMessage) {
         final ArchiveAviationMessage.Builder messageBuilder = ArchiveAviationMessage.builder();
-        for (final MessageModifier messageModifier : modifiers) {
-            messageModifier.modify(InputAviationMessage, messageBuilder);
+        for (final MessagePopulator messagePopulator : modifiers) {
+            messagePopulator.modify(inputAviationMessage, messageBuilder);
         }
         return messageBuilder.build();
     }

@@ -26,13 +26,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class BaseDataModifierTest {
 
-    private BaseDataModifier baseDataModifier;
+    private BaseDataPopulator baseDataModifier;
     private Clock clock;
 
     @BeforeEach
     public void setUp() {
         clock = Clock.fixed(Instant.parse("2019-05-05T10:21:20Z"), ZoneId.of("UTC"));
-        baseDataModifier = new BaseDataModifier(clock, new ImmutableMap.Builder<MessageType, Integer>()//
+        baseDataModifier = new BaseDataPopulator(clock, new ImmutableMap.Builder<MessageType, Integer>()//
                 .put(MessageType.TAF, 1)//
                 .build());
     }

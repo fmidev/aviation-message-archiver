@@ -3,10 +3,10 @@ package fi.fmi.avi.archiver.config;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.FileParser;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.modifier.BaseDataModifier;
-import fi.fmi.avi.archiver.message.modifier.MessageModifier;
+import fi.fmi.avi.archiver.message.modifier.BaseDataPopulator;
 import fi.fmi.avi.archiver.message.modifier.MessageModifierService;
-import fi.fmi.avi.archiver.message.modifier.StationIdModifier;
+import fi.fmi.avi.archiver.message.modifier.MessagePopulator;
+import fi.fmi.avi.archiver.message.modifier.StationIdPopulator;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.converter.AviMessageSpecificConverter;
 import fi.fmi.avi.converter.tac.conf.TACConverter;
@@ -64,7 +64,7 @@ public class ParserConfig {
 
     @SuppressWarnings("FieldMayBeFinal")
     @Autowired(required = false)
-    private List<MessageModifier> messageModifiers = new ArrayList<>();
+    private List<MessagePopulator> messagePopulators = new ArrayList<>();
 
     @Autowired
     private Clock clock;
@@ -94,7 +94,7 @@ public class ParserConfig {
 
     @Bean
     public MessageModifierService messageModifierService() {
-        return new MessageModifierService(messageModifiers);
+        return new MessageModifierService(messagePopulators);
     }
 
     @Bean
@@ -110,8 +110,8 @@ public class ParserConfig {
 
     @PostConstruct
     private void addBaseModifiers() {
-        messageModifiers.add(0, new BaseDataModifier(clock, types));
-        messageModifiers.add(1, new StationIdModifier(databaseAccess));
+        messagePopulators.add(0, new BaseDataPopulator(clock, types));
+        messagePopulators.add(1, new StationIdPopulator(databaseAccess));
     }
 
 }
