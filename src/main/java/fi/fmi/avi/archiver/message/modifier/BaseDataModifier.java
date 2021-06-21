@@ -2,8 +2,8 @@ package fi.fmi.avi.archiver.message.modifier;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableSet;
-import fi.fmi.avi.archiver.file.FileAviationMessage;
 import fi.fmi.avi.archiver.file.FilenamePattern;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.*;
 import fi.fmi.avi.model.bulletin.BulletinHeading;
@@ -53,15 +53,15 @@ public class BaseDataModifier implements MessageModifier {
     }
 
     @Override
-    public void modify(FileAviationMessage fileMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
+    public void modify(InputAviationMessage inputAviationMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
         final Instant currentTime = clock.instant();
         // TODO Assume that the GTS heading is present for now
-        final BulletinHeading bulletinHeading = fileMessage.getGtsBulletinHeading().getBulletinHeading().get();
+        final BulletinHeading bulletinHeading = inputAviationMessage.getGtsBulletinHeading().getBulletinHeading().get();
 
-        if (!fileMessage.getMessage().getMessageType().isPresent()) {
+        if (!inputAviationMessage.getMessage().getMessageType().isPresent()) {
             throw new IllegalStateException("Unable to parse message type");
         }
-        final MessageType messageType = fileMessage.getMessage().getMessageType().get();
+        final MessageType messageType = inputAviationMessage.getMessage().getMessageType().get();
         if (!types.containsKey(messageType)) {
             throw new IllegalStateException("Unknown message type");
         }
@@ -76,20 +76,20 @@ public class BaseDataModifier implements MessageModifier {
                     bulletinHeading.getType().getPrefix() + String.valueOf(Character.toChars('A' + augmentationNumber - 1)));
         }
 
-        final String airportCode = getAirportCode(bulletinHeading, fileMessage.getMessage().getTargetAerodrome().orElse(null), messageType);
+        final String airportCode = getAirportCode(bulletinHeading, inputAviationMessage.getMessage().getTargetAerodrome().orElse(null), messageType);
 
         // Get partial issue time from message or bulletin heading and try to complete it
-        final PartialOrCompleteTimeInstant issueTime = fileMessage.getMessage().getIssueTime().isPresent()
-                ? fileMessage.getMessage().getIssueTime().get()
+        final PartialOrCompleteTimeInstant issueTime = inputAviationMessage.getMessage().getIssueTime().isPresent()
+                ? inputAviationMessage.getMessage().getIssueTime().get()
                 : bulletinHeading.getIssueTime();
-        final Instant issueInstant = getIssueTime(issueTime, fileMessage.getFileMetadata().getFilenamePattern(),
-                currentTime, fileMessage.getFileMetadata().getFileModified());
+        final Instant issueInstant = getIssueTime(issueTime, inputAviationMessage.getFileMetadata().getFilenamePattern(),
+                currentTime, inputAviationMessage.getFileMetadata().getFileModified());
 
         Optional<Instant> validTimeStart = Optional.empty();
         Optional<Instant> validTimeEnd = Optional.empty();
-        if (fileMessage.getMessage().getValidityTime().isPresent()) {
-            final Optional<ValidityTime> validityTime = getValidityTime(fileMessage.getMessage().getValidityTime().get(),
-                    fileMessage.getFileMetadata().getFilenamePattern(), currentTime, fileMessage.getFileMetadata().getFileModified());
+        if (inputAviationMessage.getMessage().getValidityTime().isPresent()) {
+            final Optional<ValidityTime> validityTime = getValidityTime(inputAviationMessage.getMessage().getValidityTime().get(),
+                    inputAviationMessage.getFileMetadata().getFilenamePattern(), currentTime, inputAviationMessage.getFileMetadata().getFileModified());
             if (validityTime.isPresent()) {
                 validTimeStart = Optional.of(validityTime.get().getStart());
                 validTimeEnd = Optional.of(validityTime.get().getEnd());
@@ -97,15 +97,15 @@ public class BaseDataModifier implements MessageModifier {
         }
 
         aviationMessageBuilder
-                .setHeading(fileMessage.getGtsBulletinHeading().getBulletinHeadingString().get())// TODO
+                .setHeading(inputAviationMessage.getGtsBulletinHeading().getBulletinHeadingString().get())// TODO
                 .setIcaoAirportCode(airportCode)//
-                .setMessage(fileMessage.getMessage().getOriginalMessage())//
+                .setMessage(inputAviationMessage.getMessage().getOriginalMessage())//
                 .setMessageTime(issueInstant)//
                 .setRoute(1)// TODO
                 .setType(typeId)//
                 .setValidFrom(validTimeStart)//
                 .setValidTo(validTimeEnd)//
-                .setFileModified(fileMessage.getFileMetadata().getFileModified())//
+                .setFileModified(inputAviationMessage.getFileMetadata().getFileModified())//
                 .setVersion(version)//
                 .build();
     }

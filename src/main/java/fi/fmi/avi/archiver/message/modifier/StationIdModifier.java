@@ -1,7 +1,7 @@
 package fi.fmi.avi.archiver.message.modifier;
 
 import fi.fmi.avi.archiver.database.DatabaseAccess;
-import fi.fmi.avi.archiver.file.FileAviationMessage;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 import java.util.Optional;
@@ -17,7 +17,7 @@ public class StationIdModifier implements MessageModifier {
     }
 
     @Override
-    public void modify(FileAviationMessage fileAviationMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
+    public void modify(InputAviationMessage InputAviationMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
         final Optional<Integer> stationId = databaseAccess.queryStationId(aviationMessageBuilder.getIcaoAirportCode());
         stationId.ifPresent(aviationMessageBuilder::setStationId);
     }

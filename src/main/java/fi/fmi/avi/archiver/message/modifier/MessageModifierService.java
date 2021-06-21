@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.message.modifier;
 
-import fi.fmi.avi.archiver.file.FileAviationMessage;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import org.springframework.integration.annotation.ServiceActivator;
 
@@ -18,14 +18,14 @@ public class MessageModifierService {
     }
 
     @ServiceActivator
-    public List<ArchiveAviationMessage> modifyMessages(final List<FileAviationMessage> messages) {
+    public List<ArchiveAviationMessage> modifyMessages(final List<InputAviationMessage> messages) {
         return messages.stream().map(this::modifyMessage).collect(Collectors.toList());
     }
 
-    private ArchiveAviationMessage modifyMessage(final FileAviationMessage fileAviationMessage) {
+    private ArchiveAviationMessage modifyMessage(final InputAviationMessage InputAviationMessage) {
         final ArchiveAviationMessage.Builder messageBuilder = ArchiveAviationMessage.builder();
         for (final MessageModifier messageModifier : modifiers) {
-            messageModifier.modify(fileAviationMessage, messageBuilder);
+            messageModifier.modify(InputAviationMessage, messageBuilder);
         }
         return messageBuilder.build();
     }

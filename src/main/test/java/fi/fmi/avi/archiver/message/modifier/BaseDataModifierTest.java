@@ -1,10 +1,10 @@
 package fi.fmi.avi.archiver.message.modifier;
 
 import com.google.common.collect.ImmutableMap;
-import fi.fmi.avi.archiver.file.FileAviationMessage;
-import fi.fmi.avi.archiver.file.FileBulletinHeading;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FilenamePattern;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
@@ -48,7 +48,7 @@ public class BaseDataModifierTest {
                 .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)
                 .setTranslated(false)
                 .build();
-        final FileBulletinHeading gtsBulletinHeading = FileBulletinHeading.builder()//
+        final InputBulletinHeading gtsBulletinHeading = InputBulletinHeading.builder()//
                 .setBulletinHeadingString("FTFI33 EFPP 020500")
                 .setBulletinHeading(BulletinHeadingDecoder.decode("FTFI33 EFPP 020500", null))
                 .build();
@@ -58,14 +58,14 @@ public class BaseDataModifierTest {
                 .setFileModified(clock.instant())
                 .setProductIdentifier("test identifier")
                 .build();
-        final FileAviationMessage fileAviationMessage = FileAviationMessage.builder()
+        final InputAviationMessage inputAviationMessage = InputAviationMessage.builder()
                 .setGtsBulletinHeading(gtsBulletinHeading)
                 .setFileMetadata(fileMetadata)
                 .setMessage(message)
                 .build();
 
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
-        baseDataModifier.modify(fileAviationMessage, builder);
+        baseDataModifier.modify(inputAviationMessage, builder);
         final ArchiveAviationMessage taf = builder.build();
 
         assertThat(taf.getType()).isEqualTo(1);
@@ -92,7 +92,7 @@ public class BaseDataModifierTest {
                 .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)
                 .setTranslated(false)
                 .build();
-        final FileBulletinHeading gtsBulletinHeading = FileBulletinHeading.builder()//
+        final InputBulletinHeading gtsBulletinHeading = InputBulletinHeading.builder()//
                 .setBulletinHeadingString("FTXX33 YYYY 020500 AAA")
                 .setBulletinHeading(BulletinHeadingDecoder.decode("FTXX33 YYYY 020500 AAA", null))
                 .build();
@@ -102,14 +102,14 @@ public class BaseDataModifierTest {
                 .setFileModified(clock.instant())
                 .setProductIdentifier("test identifier")
                 .build();
-        final FileAviationMessage fileAviationMessage = FileAviationMessage.builder()
+        final InputAviationMessage inputAviationMessage = InputAviationMessage.builder()
                 .setGtsBulletinHeading(gtsBulletinHeading)
                 .setFileMetadata(fileMetadata)
                 .setMessage(message)
                 .build();
 
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
-        baseDataModifier.modify(fileAviationMessage, builder);
+        baseDataModifier.modify(inputAviationMessage, builder);
         final ArchiveAviationMessage taf = builder.build();
 
         assertThat(taf.getType()).isEqualTo(1);
@@ -135,7 +135,7 @@ public class BaseDataModifierTest {
                 .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)
                 .setTranslated(false)
                 .build();
-        final FileBulletinHeading gtsBulletinHeading = FileBulletinHeading.builder()//
+        final InputBulletinHeading gtsBulletinHeading = InputBulletinHeading.builder()//
                 .setBulletinHeadingString("FTXX33 YYYY 020500 CCA")
                 .setBulletinHeading(BulletinHeadingDecoder.decode("FTXX33 YYYY 020500 CCA", null))
                 .build();
@@ -145,14 +145,14 @@ public class BaseDataModifierTest {
                 .setFileModified(clock.instant())
                 .setProductIdentifier("test identifier")
                 .build();
-        final FileAviationMessage fileAviationMessage = FileAviationMessage.builder()
+        final InputAviationMessage inputAviationMessage = InputAviationMessage.builder()
                 .setGtsBulletinHeading(gtsBulletinHeading)
                 .setFileMetadata(fileMetadata)
                 .setMessage(message)
                 .build();
 
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
-        baseDataModifier.modify(fileAviationMessage, builder);
+        baseDataModifier.modify(inputAviationMessage, builder);
         final ArchiveAviationMessage taf = builder.build();
 
         assertThat(taf.getType()).isEqualTo(1);
