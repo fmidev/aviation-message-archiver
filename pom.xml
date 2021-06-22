@@ -125,12 +125,12 @@
         <dependency>
             <groupId>fi.fmi.avi.converter</groupId>
             <artifactId>fmi-avi-messageconverter</artifactId>
-            <version>5.0.0</version>
+            <version>5.0.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>fi.fmi.avi.converter</groupId>
             <artifactId>fmi-avi-messageconverter-tac</artifactId>
-            <version>4.0.0</version>
+            <version>4.0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>

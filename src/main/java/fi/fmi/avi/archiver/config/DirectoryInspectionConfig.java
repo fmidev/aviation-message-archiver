@@ -1,5 +1,7 @@
 package fi.fmi.avi.archiver.config;
 
+import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -10,9 +12,6 @@ import org.springframework.integration.dsl.Pollers;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.scheduling.PollerMetadata;
 import org.springframework.messaging.MessageChannel;
-
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
-import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 
 @Configuration
 public class DirectoryInspectionConfig {
@@ -30,6 +29,9 @@ public class DirectoryInspectionConfig {
     private MessageChannel archiveChannel;
 
     @Autowired
+    private MessageChannel successChannel;
+
+    @Autowired
     private MessageChannel failChannel;
 
     @Autowired
@@ -42,12 +44,21 @@ public class DirectoryInspectionConfig {
 
     @Bean(destroyMethod = "dispose")
     public MessageFileMonitorInitializer messageFileMonitorInitializer() {
-        return new MessageFileMonitorInitializer(flowContext, aviationProductsHolder, processingChannel, archiveChannel, failChannel, errorMessageChannel);
+        return new MessageFileMonitorInitializer(flowContext, aviationProductsHolder, processingChannel, successChannel, failChannel, errorMessageChannel);
     }
 
     @Bean
     public IntegrationFlow archiveFlow() {
-        return IntegrationFlows.from(archiveChannel).log("Archive").get();
+        return IntegrationFlows.from(successChannel).log("Archive").get();
+    }
+
+    @Bean
+    public IntegrationFlow archiveRouter() {
+        return IntegrationFlows.from(archiveChannel)
+                .route("headers." + MessageFileMonitorInitializer.FAILED_MESSAGES + ".isEmpty()", r -> r//
+                        .channelMapping(true, "successChannel")
+                        .channelMapping(false, "failChannel")
+                ).get();
     }
 
 }

@@ -26,6 +26,11 @@ public class ChannelConfig {
     }
 
     @Bean
+    public MessageChannel successChannel() {
+        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor(newThreadFactory("Success-")));
+    }
+
+    @Bean
     public MessageChannel failChannel() {
         return new PublishSubscribeChannel(Executors.newSingleThreadExecutor(newThreadFactory("Fail-")));
     }

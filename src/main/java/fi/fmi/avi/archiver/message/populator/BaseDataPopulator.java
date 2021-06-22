@@ -33,20 +33,20 @@ public class BaseDataPopulator implements MessagePopulator {
     /**
      * Certain message types get their airport code from the bulletin heading and others from the message itself.
      *
-     * @param bulletinHeading bulletin heading
-     * @param aerodrome       aerodrome
-     * @param messageType     message type
+     * @param bulletinHeading   bulletin heading
+     * @param locationIndicator aerodrome location indicator
+     * @param messageType       message type
      * @return airport icao code
      */
-    private static String getAirportCode(final BulletinHeading bulletinHeading, @Nullable final Aerodrome aerodrome,
+    private static String getAirportCode(final BulletinHeading bulletinHeading, @Nullable final String locationIndicator,
                                          final MessageType messageType) {
         if (messageType.equals(WX_WARNING)) {
-            return aerodrome != null ? aerodrome.getDesignator() : bulletinHeading.getLocationIndicator();
+            return locationIndicator != null ? locationIndicator : bulletinHeading.getLocationIndicator();
         } else if (ImmutableSet.of(TAF, METAR, SPECI, LOW_WIND).contains(messageType)) {
-            if (aerodrome == null) {
+            if (locationIndicator == null) {
                 throw new IllegalStateException("No target aerodrome");
             }
-            return aerodrome.getDesignator();
+            return locationIndicator;
         } else {
             return bulletinHeading.getLocationIndicator();
         }
@@ -76,7 +76,9 @@ public class BaseDataPopulator implements MessagePopulator {
                     bulletinHeading.getType().getPrefix() + String.valueOf(Character.toChars('A' + augmentationNumber - 1)));
         }
 
-        final String airportCode = getAirportCode(bulletinHeading, inputAviationMessage.getMessage().getTargetAerodrome().orElse(null), messageType);
+        final String messageAerodromeIndicator = inputAviationMessage.getMessage().getLocationIndicators()
+                .getOrDefault(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME, null);
+        final String airportCode = getAirportCode(bulletinHeading, messageAerodromeIndicator, messageType);
 
         // Get partial issue time from message or bulletin heading and try to complete it
         final PartialOrCompleteTimeInstant issueTime = inputAviationMessage.getMessage().getIssueTime().isPresent()

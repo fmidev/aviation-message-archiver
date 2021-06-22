@@ -40,6 +40,7 @@ public class MessageFileMonitorInitializer {
     public static final String MESSAGE_FILE_PATTERN = "message_file_pattern";
     public static final String FILE_MODIFIED = "file_modified";
     public static final String PRODUCT_IDENTIFIER = "product_identifier";
+    public static final String FAILED_MESSAGES = "processing_failures";
 
     private static final String PRODUCT_KEY = "product";
     private static final String INPUT_CATEGORY = "input";
@@ -49,18 +50,18 @@ public class MessageFileMonitorInitializer {
 
     private final AviationProductsHolder aviationProductsHolder;
     private final MessageChannel processingChannel;
-    private final MessageChannel archiveChannel;
+    private final MessageChannel successChannel;
     private final MessageChannel failChannel;
     private final MessageChannel errorMessageChannel;
 
     public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
-                                         final MessageChannel processingChannel, final MessageChannel archiveChannel,
+                                         final MessageChannel processingChannel, final MessageChannel successChannel,
                                          final MessageChannel failChannel, final MessageChannel errorMessageChannel) {
         this.context = requireNonNull(context, "context");
         this.registerations = new HashSet<>();
         this.aviationProductsHolder = requireNonNull(aviationProductsHolder, "aviationProductsHolder");
         this.processingChannel = requireNonNull(processingChannel, "processingChannel");
-        this.archiveChannel = requireNonNull(archiveChannel, "archiveChannel");
+        this.successChannel = requireNonNull(successChannel, "archiveChannel");
         this.failChannel = requireNonNull(failChannel, "failChannel");
         this.errorMessageChannel = requireNonNull(errorMessageChannel, "errorMessageChannel");
     }
@@ -107,7 +108,7 @@ public class MessageFileMonitorInitializer {
             final GenericSelector<Message> productFilter = m -> Objects.equals(m.getHeaders().get(PRODUCT_KEY), product);
             final HeaderToFileTransformer headerToFileTransformer = new HeaderToFileTransformer();
 
-            registerations.add(context.registration(IntegrationFlows.from(archiveChannel)//
+            registerations.add(context.registration(IntegrationFlows.from(successChannel)//
                     .filter(Message.class, productFilter)//
                     .transform(headerToFileTransformer)//
                     .handle(archiveDirectory)//

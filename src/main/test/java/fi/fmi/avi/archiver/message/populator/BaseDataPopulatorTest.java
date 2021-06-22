@@ -10,7 +10,6 @@ import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
-import fi.fmi.avi.model.immutable.AerodromeImpl;
 import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
 import fi.fmi.avi.util.BulletinHeadingDecoder;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +42,7 @@ public class BaseDataPopulatorTest {
                 .setOriginalMessage("TAF EFKE 020532Z 0206/0312 05005KT 9999 -SHRA BKN004 BECMG 0206/0208 FEW005 BKN020 TEMPO 0206/0215 4000 SHRA BKN010 SCT030CB=")
                 .setIssueTime(PartialOrCompleteTimeInstant.createIssueTime("020532Z"))
                 .setValidityTime(PartialOrCompleteTimePeriod.createValidityTime("0206/0312"))
-                .setTargetAerodrome(AerodromeImpl.builder().setDesignator("EFKE").build())
+                .putLocationIndicators(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME, "EFKE")
                 .setMessageType(MessageType.TAF)
                 .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)
                 .setTranslated(false)
@@ -87,7 +86,7 @@ public class BaseDataPopulatorTest {
                 .setOriginalMessage("TAF AMD YYYY 020532Z 0206/0312 CNL=")
                 .setIssueTime(PartialOrCompleteTimeInstant.createIssueTime("020532Z"))
                 .setValidityTime(PartialOrCompleteTimePeriod.createValidityTime("0206/0312"))
-                .setTargetAerodrome(AerodromeImpl.builder().setDesignator("YYYY").build())
+                .putLocationIndicators(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME, "YYYY")
                 .setMessageType(MessageType.TAF)
                 .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)
                 .setTranslated(false)
@@ -130,7 +129,7 @@ public class BaseDataPopulatorTest {
                 .setOriginalMessage("TAF COR YYYY 020532Z 0206/0312 20108KT 8000=")
                 .setIssueTime(PartialOrCompleteTimeInstant.createIssueTime("020532Z"))
                 .setValidityTime(PartialOrCompleteTimePeriod.createValidityTime("0206/0312"))
-                .setTargetAerodrome(AerodromeImpl.builder().setDesignator("YYYY").build())
+                .putLocationIndicators(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME, "YYYY")
                 .setMessageType(MessageType.TAF)
                 .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)
                 .setTranslated(false)
