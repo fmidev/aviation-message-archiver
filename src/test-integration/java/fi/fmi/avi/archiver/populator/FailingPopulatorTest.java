@@ -3,11 +3,14 @@ package fi.fmi.avi.archiver.populator;
 import fi.fmi.avi.archiver.AviationMessageArchiver;
 import fi.fmi.avi.archiver.TestConfig;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -31,6 +34,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,7 +73,10 @@ public class FailingPopulatorTest {
     private AviationProductsHolder aviationProductsHolder;
 
     @Captor
-    private ArgumentCaptor<ArchiveAviationMessage> messageCaptor;
+    private ArgumentCaptor<Message<?>> failChannelCaptor;
+
+    @Captor
+    private ArgumentCaptor<ArchiveAviationMessage> databaseMessageCaptor;
 
     @BeforeAll
     public static void startup() throws IOException {
@@ -79,6 +86,11 @@ public class FailingPopulatorTest {
         }
     }
 
+    @AfterAll
+    public static void done() throws IOException {
+        FileUtils.deleteDirectory(BASE_DIR);
+    }
+
     @Test
     public void test_failing_populator() throws URISyntaxException, IOException, InterruptedException {
         AviationProductsHolder.AviationProduct product = getProduct(aviationProductsHolder);
@@ -86,9 +98,15 @@ public class FailingPopulatorTest {
         waitUntilFileExists(new File(product.getFailDir().getPath() + "/" + FILENAME));
 
         verify(successChannel, times(0)).send(any(Message.class));
-        verify(failChannel).send(any(Message.class));
-        verify(databaseAccess).insertAviationMessage(messageCaptor.capture());
-        assertThat(messageCaptor.getValue().getIcaoAirportCode()).isEqualTo("EFXX");
+        verify(failChannel).send(failChannelCaptor.capture());
+        @SuppressWarnings("unchecked") final List<InputAviationMessage> failures = (List<InputAviationMessage>)
+                failChannelCaptor.getValue().getHeaders().get(MessageFileMonitorInitializer.FAILED_MESSAGES);
+        assertThat(failures).hasSize(1);
+        assertThat(failures.get(0).getMessage().getLocationIndicators()
+                .get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME)).isEqualTo("EFYY");
+
+        verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture());
+        assertThat(databaseMessageCaptor.getValue().getIcaoAirportCode()).isEqualTo("EFXX");
         verify(databaseAccess, times(0)).insertRejectedAviationMessage(any());
     }
 
