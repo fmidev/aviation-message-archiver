@@ -46,11 +46,6 @@ public class ChannelConfig {
     }
 
     @Bean
-    public MessageChannel validatorChannel() {
-        return new PublishSubscribeChannel(Executors.newSingleThreadExecutor(newThreadFactory("Validator-")));
-    }
-
-    @Bean
     public MessageChannel databaseChannel() {
         return new PublishSubscribeChannel(Executors.newSingleThreadExecutor(newThreadFactory("Database-")));
     }
