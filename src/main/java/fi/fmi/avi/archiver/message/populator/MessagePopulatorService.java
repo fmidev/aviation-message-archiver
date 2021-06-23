@@ -3,7 +3,6 @@ package fi.fmi.avi.archiver.message.populator;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ProcessingResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -52,9 +51,6 @@ public class MessagePopulatorService {
         final ArchiveAviationMessage.Builder messageBuilder = ArchiveAviationMessage.builder();
         for (final MessagePopulator messagePopulator : messagePopulators) {
             messagePopulator.populate(inputAviationMessage, messageBuilder);
-            if (messageBuilder.getProcessingResult() != ProcessingResult.OK) {
-                break;
-            }
         }
         return messageBuilder.build();
     }
