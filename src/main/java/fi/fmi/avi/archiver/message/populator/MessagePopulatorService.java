@@ -36,12 +36,12 @@ public class MessagePopulatorService {
                 final ArchiveAviationMessage archiveAviationMessage = populateMessage(inputMessage);
                 populatedMessages.add(archiveAviationMessage);
             } catch (final Exception e) {
-                LOGGER.error("Populating an archive message failed", e);
+                LOGGER.error("Populating an archive message failed: {}", inputMessage, e);
                 failures.add(inputMessage);
             }
         }
         return MessageBuilder
-                .withPayload(populatedMessages)
+                .withPayload(Collections.unmodifiableList(populatedMessages))
                 .copyHeaders(headers)
                 .setHeader(MessageFileMonitorInitializer.FAILED_MESSAGES, Collections.unmodifiableList(failures))
                 .build();

@@ -56,8 +56,8 @@ public class DirectoryInspectionConfig {
     public IntegrationFlow archiveRouter() {
         return IntegrationFlows.from(archiveChannel)
                 .route("headers." + MessageFileMonitorInitializer.FAILED_MESSAGES + ".isEmpty()", r -> r//
-                        .channelMapping(true, "successChannel")
-                        .channelMapping(false, "failChannel")
+                        .channelMapping(true, successChannel)
+                        .channelMapping(false, failChannel)
                 ).get();
     }
 
