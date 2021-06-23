@@ -57,7 +57,7 @@ public class ParserConfig {
     private MessageChannel populatorChannel;
 
     @Autowired
-    private MessageChannel validatorChannel;
+    private MessageChannel databaseChannel;
 
     @Autowired
     private MessageChannel failChannel;
@@ -104,14 +104,14 @@ public class ParserConfig {
                 .<List<ArchiveAviationMessage>>filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))//
                 .channel(populatorChannel)//
                 .handle(messagePopulatorService())//
-                .channel(validatorChannel)//
+                .channel(databaseChannel)//
                 .get();
     }
 
     @PostConstruct
     private void addBasePopulators() {
         messagePopulators.add(0, new BaseDataPopulator(clock, types));
-        messagePopulators.add(1, new StationIdPopulator(databaseAccess));
+        messagePopulators.add(new StationIdPopulator(databaseAccess));
     }
 
 }
