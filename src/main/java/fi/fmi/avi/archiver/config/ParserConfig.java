@@ -1,5 +1,21 @@
 package fi.fmi.avi.archiver.config;
 
+import java.time.Clock;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.integration.dsl.IntegrationFlow;
+import org.springframework.integration.dsl.IntegrationFlows;
+import org.springframework.messaging.MessageChannel;
+
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.FileParser;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
@@ -12,40 +28,10 @@ import fi.fmi.avi.converter.AviMessageSpecificConverter;
 import fi.fmi.avi.converter.tac.conf.TACConverter;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.bulletin.GenericMeteorologicalBulletin;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.integration.dsl.IntegrationFlow;
-import org.springframework.integration.dsl.IntegrationFlows;
-import org.springframework.messaging.MessageChannel;
-
-import javax.annotation.PostConstruct;
-import java.time.Clock;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 @Configuration
-@EnableConfigurationProperties(ParserConfig.class)
-@ConfigurationProperties("message-parsing")
 @Import(TACConverter.class)
 public class ParserConfig {
-
-    private ZoneId zone;
-
-    private Map<MessageType, Integer> types;
-
-    public Map<MessageType, Integer> getTypes() {
-        return types;
-    }
-
-    public void setTypes(final Map<MessageType, Integer> types) {
-        this.types = types;
-    }
 
     @Autowired
     private AviMessageSpecificConverter<String, GenericMeteorologicalBulletin> genericBulletinTACParser;
@@ -72,13 +58,8 @@ public class ParserConfig {
     @Autowired
     private DatabaseAccess databaseAccess;
 
-    public ZoneId getZone() {
-        return zone;
-    }
-
-    public void setZone(final ZoneId zone) {
-        this.zone = zone;
-    }
+    @Resource(name = "messageTypeIds")
+    private Map<MessageType, Integer> messageTypeIds;
 
     @Bean
     public AviMessageConverter aviMessageConverter() {
@@ -101,7 +82,7 @@ public class ParserConfig {
     public IntegrationFlow parserFlow() {
         return IntegrationFlows.from(parserChannel)//
                 .handle(fileParser())//
-                .<List<ArchiveAviationMessage>>filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))//
+                .<List<ArchiveAviationMessage>> filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))//
                 .channel(populatorChannel)//
                 .handle(messagePopulatorService())//
                 .channel(databaseChannel)//
@@ -110,7 +91,7 @@ public class ParserConfig {
 
     @PostConstruct
     private void addBasePopulators() {
-        messagePopulators.add(0, new BaseDataPopulator(clock, types));
+        messagePopulators.add(0, new BaseDataPopulator(clock, messageTypeIds));
         messagePopulators.add(new StationIdPopulator(databaseAccess));
     }
 

@@ -51,18 +51,26 @@ polling:
 production-line-initialization:
   products:
     - id: textFile
+      route: DEFAULT
       input-dir: ${user.home}/.avi-message-archiver/src
       archive-dir: ${user.home}/.avi-message-archiver/dst
       fail-dir: ${user.home}/.avi-message-archiver/failed
       files:
         - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
         - pattern: ^.*\.txt2$
+          nameTimeZone: Z
+          format: TAC
     - id: anotherFile
+      route: DEFAULT
       input-dir: ${user.home}/.avi-message-archiver/src2
       archive-dir: ${user.home}/.avi-message-archiver/dst2
       fail-dir: ${user.home}/.avi-message-archiver/failed2
       files:
         - pattern: ^.*another$
+          nameTimeZone: Z
+          format: TAC
 
 # END SNIPPET: products
 
@@ -82,12 +90,17 @@ file-handler:
 
 ##############################################
 #
-#  Message parsing
+#  Message static values
 #
 ##############################################
-# START SNIPPET: Message parsing
-message-parsing:
-  types:
+# START SNIPPET: Message static values
+message-static-values:
+  routeIds:
+    DEFAULT: 1
+  formatIds:
+    TAC: 1
+    IWXXM: 2
+  typeIds:
     TAF: -1
     METAR: -1
     SPECI: -1
@@ -103,4 +116,4 @@ message-parsing:
     SPECIAL_AIR_REPORT: -1
     WXREP: -1
     SPACE_WEATHER_ADVISORY: -1
-# END SNIPPET: Message parsing
+# END SNIPPET: Message static values
