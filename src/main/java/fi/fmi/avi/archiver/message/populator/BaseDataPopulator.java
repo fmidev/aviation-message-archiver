@@ -1,21 +1,33 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import com.google.auto.value.AutoValue;
-import com.google.common.collect.ImmutableSet;
-import fi.fmi.avi.archiver.file.FilenamePattern;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.model.*;
-import fi.fmi.avi.model.bulletin.BulletinHeading;
+import static fi.fmi.avi.model.MessageType.METAR;
+import static fi.fmi.avi.model.MessageType.SPECI;
+import static fi.fmi.avi.model.MessageType.TAF;
+import static java.util.Objects.requireNonNull;
 
-import javax.annotation.Nullable;
-import java.time.*;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 
-import static fi.fmi.avi.model.MessageType.*;
-import static java.util.Objects.requireNonNull;
+import javax.annotation.Nullable;
+
+import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableSet;
+
+import fi.fmi.avi.archiver.file.FilenamePattern;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import fi.fmi.avi.model.MessageType;
+import fi.fmi.avi.model.PartialDateTime;
+import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
+import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
+import fi.fmi.avi.model.bulletin.BulletinHeading;
 
 public class BaseDataPopulator implements MessagePopulator {
 
@@ -33,13 +45,16 @@ public class BaseDataPopulator implements MessagePopulator {
     /**
      * Certain message types get their airport code from the bulletin heading and others from the message itself.
      *
-     * @param bulletinHeading   bulletin heading
-     * @param locationIndicator aerodrome location indicator
-     * @param messageType       message type
+     * @param bulletinHeading
+     *         bulletin heading
+     * @param locationIndicator
+     *         aerodrome location indicator
+     * @param messageType
+     *         message type
+     *
      * @return airport icao code
      */
-    private static String getAirportCode(final BulletinHeading bulletinHeading, @Nullable final String locationIndicator,
-                                         final MessageType messageType) {
+    private static String getAirportCode(final BulletinHeading bulletinHeading, @Nullable final String locationIndicator, final MessageType messageType) {
         if (messageType.equals(WX_WARNING)) {
             return locationIndicator != null ? locationIndicator : bulletinHeading.getLocationIndicator();
         } else if (ImmutableSet.of(TAF, METAR, SPECI, LOW_WIND).contains(messageType)) {
@@ -53,7 +68,7 @@ public class BaseDataPopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(InputAviationMessage inputAviationMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
+    public void populate(final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder aviationMessageBuilder) {
         final Instant currentTime = clock.instant();
         // TODO Assume that the GTS heading is present for now
         final BulletinHeading bulletinHeading = inputAviationMessage.getGtsBulletinHeading().getBulletinHeading().get();
@@ -69,23 +84,22 @@ public class BaseDataPopulator implements MessagePopulator {
 
         Optional<String> version = Optional.empty();
         if (bulletinHeading.getType() != BulletinHeading.Type.NORMAL) {
-            final int augmentationNumber = bulletinHeading
-                    .getBulletinAugmentationNumber()
+            final int augmentationNumber = bulletinHeading.getBulletinAugmentationNumber()
                     .orElseThrow(() -> new IllegalStateException("Heading type is not normal but augmentation number is missing"));
-            version = Optional.of(
-                    bulletinHeading.getType().getPrefix() + String.valueOf(Character.toChars('A' + augmentationNumber - 1)));
+            version = Optional.of(bulletinHeading.getType().getPrefix() + String.valueOf(Character.toChars('A' + augmentationNumber - 1)));
         }
 
-        final String messageAerodromeIndicator = inputAviationMessage.getMessage().getLocationIndicators()
+        final String messageAerodromeIndicator = inputAviationMessage.getMessage()
+                .getLocationIndicators()
                 .getOrDefault(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME, null);
         final String airportCode = getAirportCode(bulletinHeading, messageAerodromeIndicator, messageType);
 
         // Get partial issue time from message or bulletin heading and try to complete it
-        final PartialOrCompleteTimeInstant issueTime = inputAviationMessage.getMessage().getIssueTime().isPresent()
-                ? inputAviationMessage.getMessage().getIssueTime().get()
+        final PartialOrCompleteTimeInstant issueTime = inputAviationMessage.getMessage().getIssueTime().isPresent() //
+                ? inputAviationMessage.getMessage().getIssueTime().get() //
                 : bulletinHeading.getIssueTime();
-        final Instant issueInstant = getIssueTime(issueTime, inputAviationMessage.getFileMetadata().getFilenamePattern(),
-                currentTime, inputAviationMessage.getFileMetadata().getFileModified());
+        final Instant issueInstant = getIssueTime(issueTime, inputAviationMessage.getFileMetadata().getFilenamePattern(), currentTime,
+                inputAviationMessage.getFileMetadata().getFileModified());
 
         Optional<Instant> validTimeStart = Optional.empty();
         Optional<Instant> validTimeEnd = Optional.empty();
@@ -98,11 +112,12 @@ public class BaseDataPopulator implements MessagePopulator {
             }
         }
 
-        aviationMessageBuilder
-                .setHeading(inputAviationMessage.getGtsBulletinHeading().getBulletinHeadingString().get())// TODO
+        aviationMessageBuilder//
+                .setHeading(inputAviationMessage.getGtsBulletinHeading().getBulletinHeadingString())// TODO
                 .setIcaoAirportCode(airportCode)//
                 .setMessage(inputAviationMessage.getMessage().getOriginalMessage())//
                 .setMessageTime(issueInstant)//
+                .setFormat(1)// TODO
                 .setRoute(1)// TODO
                 .setType(typeId)//
                 .setValidFrom(validTimeStart)//
@@ -119,14 +134,19 @@ public class BaseDataPopulator implements MessagePopulator {
      * <p>
      * If neither is available, current time is returned.
      *
-     * @param issueTime        issue time that will be completed if it is partial
-     * @param filenamePattern  message file pattern for the given message type
-     * @param currentTime      current time
-     * @param fileLastModified last modified time of the file
+     * @param issueTime
+     *         issue time that will be completed if it is partial
+     * @param filenamePattern
+     *         message file pattern for the given message type
+     * @param currentTime
+     *         current time
+     * @param fileLastModified
+     *         last modified time of the file
+     *
      * @return complete issue time
      */
-    private Instant getIssueTime(final PartialOrCompleteTimeInstant issueTime, final FilenamePattern filenamePattern,
-                                 final Instant currentTime, @Nullable final Instant fileLastModified) {
+    private Instant getIssueTime(final PartialOrCompleteTimeInstant issueTime, final FilenamePattern filenamePattern, final Instant currentTime,
+            @Nullable final Instant fileLastModified) {
         if (issueTime.getCompleteTime().isPresent()) {
             return issueTime.getCompleteTime().get().toInstant();
         }
@@ -148,8 +168,8 @@ public class BaseDataPopulator implements MessagePopulator {
                 day = getTemporalComponent(filenamePattern, FilenamePattern.DAY);
             }
 
-            OptionalInt year = getTemporalComponent(filenamePattern, FilenamePattern.YEAR);
-            OptionalInt month = getTemporalComponent(filenamePattern, FilenamePattern.MONTH);
+            final OptionalInt year = getTemporalComponent(filenamePattern, FilenamePattern.YEAR);
+            final OptionalInt month = getTemporalComponent(filenamePattern, FilenamePattern.MONTH);
 
             if (year.isPresent() && month.isPresent() && day.isPresent() && hour.isPresent() && minute.isPresent()) {
                 return PartialDateTime.of(day.getAsInt(), hour.getAsInt(), minute.getAsInt(), clock.getZone())
@@ -173,22 +193,27 @@ public class BaseDataPopulator implements MessagePopulator {
      * 2) File modification time
      * 3) Current time
      *
-     * @param validityPeriod  validity period that will be completed if it is partial
-     * @param filenamePattern message file pattern for the given message type
-     * @param currentTime     current time
-     * @param fileModified    last modified time of the file
+     * @param validityPeriod
+     *         validity period that will be completed if it is partial
+     * @param filenamePattern
+     *         message file pattern for the given message type
+     * @param currentTime
+     *         current time
+     * @param fileModified
+     *         last modified time of the file
+     *
      * @return completed validity time or an empty optional if completion is not possible
      */
     private Optional<ValidityTime> getValidityTime(final PartialOrCompleteTimePeriod validityPeriod, final FilenamePattern filenamePattern,
-                                                   final Instant currentTime, @Nullable final Instant fileModified) {
+            final Instant currentTime, @Nullable final Instant fileModified) {
         if (validityPeriod.isCompleteStrict()) {
             return Optional.of(ValidityTime.create(validityPeriod));
         } else {
-            OptionalInt year = getTemporalComponent(filenamePattern, FilenamePattern.YEAR);
-            OptionalInt month = getTemporalComponent(filenamePattern, FilenamePattern.MONTH);
-            OptionalInt day = getTemporalComponent(filenamePattern, FilenamePattern.DAY);
-            OptionalInt hour = getTemporalComponent(filenamePattern, FilenamePattern.HOUR);
-            OptionalInt minute = getTemporalComponent(filenamePattern, FilenamePattern.MINUTE);
+            final OptionalInt year = getTemporalComponent(filenamePattern, FilenamePattern.YEAR);
+            final OptionalInt month = getTemporalComponent(filenamePattern, FilenamePattern.MONTH);
+            final OptionalInt day = getTemporalComponent(filenamePattern, FilenamePattern.DAY);
+            final OptionalInt hour = getTemporalComponent(filenamePattern, FilenamePattern.HOUR);
+            final OptionalInt minute = getTemporalComponent(filenamePattern, FilenamePattern.MINUTE);
 
             if (year.isPresent() && month.isPresent() && day.isPresent() && hour.isPresent() && minute.isPresent()) {
                 final ZonedDateTime reference = ZonedDateTime.of(
