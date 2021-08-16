@@ -1,10 +1,10 @@
 package fi.fmi.avi.archiver.message;
 
-import org.inferred.freebuilder.FreeBuilder;
-
 import java.time.Instant;
 import java.util.Optional;
 import java.util.OptionalInt;
+
+import org.inferred.freebuilder.FreeBuilder;
 
 /**
  * Model representing an aviation message in the database.
@@ -19,7 +19,13 @@ public abstract class ArchiveAviationMessage {
         return new Builder();
     }
 
-    public abstract Builder toBuilder();
+    public abstract ProcessingResult getProcessingResult();
+
+    public abstract int getRoute();
+
+    public abstract int getFormat();
+
+    public abstract int getType();
 
     public abstract Instant getMessageTime();
 
@@ -27,28 +33,25 @@ public abstract class ArchiveAviationMessage {
 
     public abstract OptionalInt getStationId();
 
-    public abstract int getType();
-
-    public abstract int getRoute();
-
-    public abstract String getMessage();
-
     public abstract Optional<Instant> getValidFrom();
 
     public abstract Optional<Instant> getValidTo();
 
-    public abstract String getHeading();
-
     public abstract Optional<Instant> getFileModified();
+
+    public abstract Optional<String> getHeading();
 
     public abstract Optional<String> getVersion();
 
-    public abstract ProcessingResult getProcessingResult();
+    public abstract ArchiveAviationMessageIWXXMDetails getIWXXMDetails();
+
+    public abstract String getMessage();
+
+    public abstract Builder toBuilder();
 
     public static class Builder extends ArchiveAviationMessage_Builder {
         Builder() {
             setProcessingResult(ProcessingResult.OK);
         }
     }
-
 }

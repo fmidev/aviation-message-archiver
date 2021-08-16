@@ -1,7 +1,10 @@
 package fi.fmi.avi.archiver.database;
 
-import com.google.common.annotations.VisibleForTesting;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import static java.util.Objects.requireNonNull;
+
+import java.time.Clock;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -10,10 +13,9 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.retry.support.RetryTemplate;
 
-import java.time.Clock;
-import java.util.Optional;
+import com.google.common.annotations.VisibleForTesting;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 public class DatabaseAccess {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseAccess.class);
@@ -25,16 +27,13 @@ public class DatabaseAccess {
     private final SimpleJdbcInsert insertAviationMessage;
     private final SimpleJdbcInsert insertRejectedAviationMessage;
 
-    public DatabaseAccess(final NamedParameterJdbcTemplate jdbcTemplate, final Clock clock,
-                          final RetryTemplate retryTemplate) {
+    public DatabaseAccess(final NamedParameterJdbcTemplate jdbcTemplate, final Clock clock, final RetryTemplate retryTemplate) {
         this.clock = requireNonNull(clock, "clock");
         this.jdbcTemplate = requireNonNull(jdbcTemplate, "jdbcTemplate");
         this.retryTemplate = requireNonNull(retryTemplate, "retryTemplate");
-        this.insertAviationMessage = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate())
-                .withTableName("avidb_messages")
+        this.insertAviationMessage = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate()).withTableName("avidb_messages")
                 .usingGeneratedKeyColumns("message_id");
-        this.insertRejectedAviationMessage = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate())
-                .withTableName("avidb_rejected_messages");
+        this.insertRejectedAviationMessage = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate()).withTableName("avidb_rejected_messages");
     }
 
     @VisibleForTesting
@@ -55,9 +54,10 @@ public class DatabaseAccess {
         parameters.addValue("created", clock.instant());
         parameters.addValue("file_modified", archiveAviationMessage.getFileModified().orElse(null));
         parameters.addValue("flag", 0);
-        parameters.addValue("messir_heading", archiveAviationMessage.getHeading());
+        parameters.addValue("messir_heading", archiveAviationMessage.getHeading().orElse(null));
         parameters.addValue("version", archiveAviationMessage.getVersion().orElse(null));
-        parameters.addValue("format_id", 1);
+        parameters.addValue("format_id", archiveAviationMessage.getFormat());
+        // TODO: Store archiveAviationMessage.getIWXXMDetails() for IWXXM messages
         try {
             return retryTemplate.execute(context -> insertAviationMessage.execute(parameters));
         } catch (final RuntimeException e) {
@@ -78,9 +78,10 @@ public class DatabaseAccess {
         parameters.addValue("created", clock.instant());
         parameters.addValue("file_modified", archiveAviationMessage.getFileModified().orElse(null));
         parameters.addValue("flag", 0);
-        parameters.addValue("messir_heading", archiveAviationMessage.getHeading());
+        parameters.addValue("messir_heading", archiveAviationMessage.getHeading().orElse(null));
         parameters.addValue("reject_reason", archiveAviationMessage.getProcessingResult().getCode());
         parameters.addValue("version", archiveAviationMessage.getVersion().orElse(null));
+        // TODO: Store archiveAviationMessage.getIWXXMDetails() for IWXXM messages
         try {
             return retryTemplate.execute(context -> insertRejectedAviationMessage.execute(parameters));
         } catch (final RuntimeException e) {
@@ -93,8 +94,7 @@ public class DatabaseAccess {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("icao_code", icaoAirportCode);
         try {
-            final Integer stationId = retryTemplate.execute(context ->
-                    jdbcTemplate.queryForObject(STATION_ID_QUERY, parameters, Integer.class));
+            final Integer stationId = retryTemplate.execute(context -> jdbcTemplate.queryForObject(STATION_ID_QUERY, parameters, Integer.class));
             return Optional.ofNullable(stationId);
         } catch (final EmptyResultDataAccessException ignored) {
             // No station was found

@@ -60,6 +60,7 @@ public class DatabaseAccessTest {
                 .setMessageTime(now)//
                 .setStationId(1)//
                 .setIcaoAirportCode("EFXX")//
+                .setFormat(1)//
                 .setType(2)//
                 .setRoute(1)//
                 .setMessage("TAF =")//
@@ -81,6 +82,7 @@ public class DatabaseAccessTest {
                 .setMessageTime(now)//
                 .setStationId(200)//
                 .setIcaoAirportCode("EFXX")//
+                .setFormat(1)//
                 .setType(2)//
                 .setRoute(1)//
                 .setMessage("TAF =")//
@@ -105,6 +107,7 @@ public class DatabaseAccessTest {
                 .setMessageTime(now)//
                 .setStationId(1)//
                 .setIcaoAirportCode("EFXX")//
+                .setFormat(1)//
                 .setType(2)//
                 .setRoute(1)//
                 .setMessage("TAF =")//
@@ -125,6 +128,7 @@ public class DatabaseAccessTest {
         final ArchiveAviationMessage archiveAviationMessage = ArchiveAviationMessage.builder()//
                 .setMessageTime(now)//
                 .setIcaoAirportCode("XXXX")//
+                .setFormat(1)//
                 .setType(2)//
                 .setRoute(1)//
                 .setMessage("TAF =")//
@@ -164,7 +168,7 @@ public class DatabaseAccessTest {
             assertThat(rs.getObject(8, Instant.class)).isEqualTo(clock.instant());
             assertThat(rs.getObject(9, Instant.class)).isEqualTo(archiveAviationMessage.getFileModified().orElse(Instant.EPOCH));
             assertThat(rs.getObject(10)).isEqualTo(0);
-            assertThat(rs.getString(11)).isEqualTo(archiveAviationMessage.getHeading());
+            assertThat(rs.getString(11)).isEqualTo(archiveAviationMessage.getHeading().orElse(null));
             assertThat(rs.getString(12)).isNull();
             assertThat(rs.getInt(13)).isEqualTo(1);
             return null;
@@ -183,7 +187,7 @@ public class DatabaseAccessTest {
             assertThat(rs.getObject(8, Instant.class)).isEqualTo(clock.instant());
             assertThat(rs.getObject(9, Instant.class)).isEqualTo(archiveAviationMessage.getFileModified().orElse(Instant.EPOCH));
             assertThat(rs.getObject(10)).isEqualTo(0);
-            assertThat(rs.getString(11)).isEqualTo(archiveAviationMessage.getHeading());
+            assertThat(rs.getString(11)).isEqualTo(archiveAviationMessage.getHeading().orElse(null));
             assertThat(rs.getInt(12)).isEqualTo(archiveAviationMessage.getProcessingResult().getCode());
             assertThat(rs.getString(13)).isNull();
             return null;
