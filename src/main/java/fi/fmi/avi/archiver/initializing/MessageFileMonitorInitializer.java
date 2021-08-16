@@ -1,7 +1,19 @@
 package fi.fmi.avi.archiver.initializing;
 
-import fi.fmi.avi.archiver.file.FilenamePattern;
-import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
+import static java.util.Objects.requireNonNull;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.channel.PublishSubscribeChannel;
@@ -18,29 +30,19 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
 
-import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.time.Instant;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.file.FilenamePattern;
+import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 
 /**
  * Initializes Message file source directory reading, filename filtering and archiving of the files.
  */
 public class MessageFileMonitorInitializer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageFileMonitorInitializer.class);
-
     public static final String MESSAGE_FILE_PATTERN = "message_file_pattern";
     public static final String FILE_MODIFIED = "file_modified";
     public static final String PRODUCT_IDENTIFIER = "product_identifier";
     public static final String FAILED_MESSAGES = "processing_failures";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageFileMonitorInitializer.class);
 
     private static final String PRODUCT_KEY = "product";
     private static final String INPUT_CATEGORY = "input";
@@ -55,8 +57,8 @@ public class MessageFileMonitorInitializer {
     private final MessageChannel errorMessageChannel;
 
     public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
-                                         final MessageChannel processingChannel, final MessageChannel successChannel,
-                                         final MessageChannel failChannel, final MessageChannel errorMessageChannel) {
+            final MessageChannel processingChannel, final MessageChannel successChannel, final MessageChannel failChannel,
+            final MessageChannel errorMessageChannel) {
         this.context = requireNonNull(context, "context");
         this.registerations = new HashSet<>();
         this.aviationProductsHolder = requireNonNull(aviationProductsHolder, "aviationProductsHolder");
@@ -96,7 +98,7 @@ public class MessageFileMonitorInitializer {
                             .enrichHeaders(s -> s.header(PRODUCT_KEY, product)//
                                     .headerFunction(PRODUCT_IDENTIFIER, message -> product.getId())
                                     .headerFunction(MessageHeaders.ERROR_CHANNEL, message -> errorMessageChannel)
-                                    .headerFunction(MESSAGE_FILE_PATTERN, message -> getFilePattern(message, fileConfig.getCompiledPattern()))//
+                                    .headerFunction(MESSAGE_FILE_PATTERN, message -> getFilePattern(message, fileConfig.getPattern()))//
                                     .headerFunction(FILE_MODIFIED, this::getFileModified))//
                             .log(Level.INFO, INPUT_CATEGORY)//
                             .channel(processingChannel)//

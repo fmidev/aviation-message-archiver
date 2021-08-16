@@ -1,5 +1,19 @@
 ##############################################
 #
+#  Test-specific properties
+#
+##############################################
+# START SNIPPET: tests
+testclass:
+  #  Set name correctly in each test class
+  name: ~
+  workdir:
+    parent: ${java.io.tmpdir}
+    path: ${testclass.workdir.parent}/${testclass.name}
+# END SNIPPET: tests
+
+##############################################
+#
 #  Product specific properties
 #
 ##############################################
@@ -10,18 +24,26 @@ polling:
 production-line-initialization:
   products:
     - id: testProduct
-      input-dir: ${java.io.tmpdir}/.avi-message-archiver/src
-      archive-dir: ${java.io.tmpdir}/.avi-message-archiver/dst
-      fail-dir: ${java.io.tmpdir}/.avi-message-archiver/failed
+      route: TEST
+      input-dir: ${testclass.workdir.path}/src
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
       files:
         - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
         - pattern: ^.*\.txt2$
+          nameTimeZone: Z
+          format: TAC
     - id: testProduct2
-      input-dir: ${java.io.tmpdir}/.avi-message-archiver/src2
-      archive-dir: ${java.io.tmpdir}/.avi-message-archiver/dst2
-      fail-dir: ${java.io.tmpdir}/.avi-message-archiver/failed2
+      route: TEST
+      input-dir: ${testclass.workdir.path}/src2
+      archive-dir: ${testclass.workdir.path}/dst2
+      fail-dir: ${testclass.workdir.path}/failed2
       files:
         - pattern: ^.*\.another$
+          nameTimeZone: Z
+          format: TAC
 
 # END SNIPPET: products
 
@@ -41,12 +63,18 @@ file-handler:
 
 ##############################################
 #
-#  Message parsing
+#  Message static values
 #
 ##############################################
-# START SNIPPET: Message parsing
-message-parsing:
-  types:
+# START SNIPPET: Message static values
+message-static-values:
+  routeIds:
+    TEST: 1
+    TEST2: 2
+  formatIds:
+    TAC: 1
+    IWXXM: 2
+  typeIds:
     TAF: 2
     METAR: -1
     SPECI: -1
@@ -62,4 +90,4 @@ message-parsing:
     SPECIAL_AIR_REPORT: -1
     WXREP: -1
     SPACE_WEATHER_ADVISORY: -1
-# END SNIPPET: Message parsing
+# END SNIPPET: Message static values

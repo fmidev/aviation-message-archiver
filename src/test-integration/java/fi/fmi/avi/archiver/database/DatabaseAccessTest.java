@@ -32,7 +32,7 @@ import fi.fmi.avi.archiver.TestConfig;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 
-@JdbcTest
+@JdbcTest(properties = { "testclass.name=fi.fmi.avi.archiver.database.DatabaseAccessTest" })
 @Sql(scripts = { "classpath:/schema-h2.sql", "classpath:/h2-data/avidb_message_types_test.sql", "classpath:/h2-data/avidb_message_format_test.sql",
         "classpath:/h2-data/avidb_message_routes_test.sql",
         "classpath:/h2-data/avidb_stations_test.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
@@ -46,13 +46,10 @@ public class DatabaseAccessTest {
             + " valid_from, valid_to, created, file_modified, flag, messir_heading, version, format_id from avidb_messages";
     private static final String SELECT_REJECTED_MESSAGES = "select icao_code, message_time, type_id, route_id, message, "
             + "valid_from, valid_to, created, file_modified, flag, messir_heading, reject_reason, version from avidb_rejected_messages";
-
     @Autowired
     private DatabaseAccess databaseAccess;
-
     @Autowired
     private Clock clock;
-
     @SpyBean
     private JdbcTemplate jdbcTemplate;
 

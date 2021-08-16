@@ -1,18 +1,7 @@
 package fi.fmi.avi.archiver;
 
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
-import org.apache.commons.io.FileUtils;
-import org.inferred.freebuilder.FreeBuilder;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,37 +12,30 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
-import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.inferred.freebuilder.FreeBuilder;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-@SpringBootTest({"auto.startup=false"})
-@Sql(scripts = {"classpath:/schema-h2.sql", "classpath:/h2-data/avidb_message_types_test.sql",
-        "classpath:/h2-data/avidb_message_format_test.sql", "classpath:/h2-data/avidb_message_routes_test.sql",
-        "classpath:/h2-data/avidb_stations_test.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+
+@SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.AviationMessageArchiverTest" })
+@Sql(scripts = { "classpath:/schema-h2.sql", "classpath:/h2-data/avidb_message_types_test.sql", "classpath:/h2-data/avidb_message_format_test.sql",
+        "classpath:/h2-data/avidb_message_routes_test.sql",
+        "classpath:/h2-data/avidb_stations_test.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class},//
+@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = {ConfigDataApplicationContextInitializer.class})
+        initializers = { ConfigDataApplicationContextInitializer.class })
 public class AviationMessageArchiverTest {
-
-    private static final File BASE_DIR = new File(System.getProperty("java.io.tmpdir") + "/.avi-message-archiver");
-    private static final File TMP_DIR = new File(BASE_DIR, "temp");
 
     @Autowired
     private AviationProductsHolder aviationProductsHolder;
-
-    @BeforeAll
-    public static void startup() throws IOException {
-        FileUtils.deleteDirectory(BASE_DIR);
-        if (!TMP_DIR.mkdirs()) {
-            throw new IllegalStateException("Cannot write to the temp folder of the system");
-        }
-    }
-
-    @AfterAll
-    public static void done() throws IOException {
-        FileUtils.deleteDirectory(BASE_DIR);
-    }
 
     private static Stream<AviationMessageArchiverTestCase> test_file_flow() {
         return Stream.of(//
