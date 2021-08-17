@@ -9,7 +9,6 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
@@ -98,7 +97,7 @@ public class MessageFileMonitorInitializer {
                             .enrichHeaders(s -> s.header(PRODUCT_KEY, product)//
                                     .headerFunction(PRODUCT_IDENTIFIER, message -> product.getId())
                                     .headerFunction(MessageHeaders.ERROR_CHANNEL, message -> errorMessageChannel)
-                                    .headerFunction(MESSAGE_FILE_PATTERN, message -> getFilePattern(message, fileConfig.getPattern()))//
+                                    .headerFunction(MESSAGE_FILE_PATTERN, message -> getFilePattern(message, fileConfig))//
                                     .headerFunction(FILE_MODIFIED, this::getFileModified))//
                             .log(Level.INFO, INPUT_CATEGORY)//
                             .channel(processingChannel)//
@@ -131,12 +130,12 @@ public class MessageFileMonitorInitializer {
     }
 
     @Nullable
-    private FilenamePattern getFilePattern(final Message<?> fileMessage, final Pattern pattern) {
+    private FilenamePattern getFilePattern(final Message<?> fileMessage, final AviationProductsHolder.FileConfig fileConfig) {
         final String filename = fileMessage.getHeaders().get(FileHeaders.FILENAME, String.class);
         if (filename == null) {
             return null;
         }
-        return new FilenamePattern(filename, pattern);
+        return new FilenamePattern(filename, fileConfig.getPattern(), fileConfig.getNameTimeZone());
     }
 
     @Nullable
