@@ -57,7 +57,7 @@ class AviationProductsHolderTest {
     @Test
     public void product_file_message_formats_have_id() {
         final List<Map.Entry<String, Integer>> actualFormatIds = aviationProductsHolder.getProducts().stream()//
-                .flatMap(product -> product.getFiles()
+                .flatMap(product -> product.getFileConfigs()
                         .stream()
                         .map(file -> new SimpleImmutableEntry<>(product.getId() + ":" + file.getFormat(), file.getFormatId())))//
                 .collect(Collectors.toList());
@@ -69,7 +69,7 @@ class AviationProductsHolderTest {
     @Test
     public void product_file_message_formats_have_id_equal_to_format_table() {
         final List<Map.Entry<GenericAviationWeatherMessage.Format, Integer>> actualFormatIds = aviationProductsHolder.getProducts().stream()//
-                .flatMap(product -> product.getFiles().stream().map(file -> new SimpleImmutableEntry<>(file.getFormat(), file.getFormatId())))//
+                .flatMap(product -> product.getFileConfigs().stream().map(file -> new SimpleImmutableEntry<>(file.getFormat(), file.getFormatId())))//
                 .collect(Collectors.toList());
         assertThat(actualFormatIds)//
                 .isNotEmpty()//
