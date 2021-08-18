@@ -69,7 +69,7 @@ public class MessageFileMonitorInitializer {
 
     @PostConstruct
     private void initializeFilePatternFlows() {
-        aviationProductsHolder.getProducts().forEach(product -> {
+        aviationProductsHolder.getProducts().values().forEach(product -> {
             final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
             sourceDirectory.setDirectory(product.getInputDir());
 
@@ -92,7 +92,7 @@ public class MessageFileMonitorInitializer {
             ).register());
 
             // Integration flow for file name filtering
-            product.getFiles().stream().map(fileConfig -> context.registration(IntegrationFlows.from(inputChannel)//
+            product.getFileConfigs().stream().map(fileConfig -> context.registration(IntegrationFlows.from(inputChannel)//
                             .filter(new RegexPatternFileListFilter(fileConfig.getPattern())::accept)//
                             .enrichHeaders(s -> s.header(PRODUCT_KEY, product)//
                                     .headerFunction(PRODUCT_IDENTIFIER, message -> product.getId())
