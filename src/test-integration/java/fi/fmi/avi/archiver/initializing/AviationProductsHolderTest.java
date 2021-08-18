@@ -35,8 +35,7 @@ class AviationProductsHolderTest {
 
     @Test
     public void product_routes_have_id() {
-        final Map<String, Integer> actualRouteIds = aviationProductsHolder.getProducts()
-                .stream()
+        final Map<String, Integer> actualRouteIds = aviationProductsHolder.getProducts().values().stream()//
                 .collect(Collectors.toMap(product -> product.getId() + ":" + product.getRoute(), AviationProductsHolder.AviationProduct::getRouteId));
         assertThat(actualRouteIds)//
                 .isNotEmpty()//
@@ -45,9 +44,8 @@ class AviationProductsHolderTest {
 
     @Test
     public void product_routes_have_id_equal_to_route_table() {
-        final List<Map.Entry<String, Integer>> actualRouteIds = aviationProductsHolder.getProducts()
-                .stream()
-                .map(product -> new SimpleImmutableEntry<>(product.getRoute(), product.getRouteId()))
+        final List<Map.Entry<String, Integer>> actualRouteIds = aviationProductsHolder.getProducts().values().stream()//
+                .map(product -> new SimpleImmutableEntry<>(product.getRoute(), product.getRouteId()))//
                 .collect(Collectors.toList());
         assertThat(actualRouteIds)//
                 .isNotEmpty()//
@@ -56,7 +54,7 @@ class AviationProductsHolderTest {
 
     @Test
     public void product_file_message_formats_have_id() {
-        final List<Map.Entry<String, Integer>> actualFormatIds = aviationProductsHolder.getProducts().stream()//
+        final List<Map.Entry<String, Integer>> actualFormatIds = aviationProductsHolder.getProducts().values().stream()//
                 .flatMap(product -> product.getFileConfigs()
                         .stream()
                         .map(file -> new SimpleImmutableEntry<>(product.getId() + ":" + file.getFormat(), file.getFormatId())))//
@@ -68,7 +66,7 @@ class AviationProductsHolderTest {
 
     @Test
     public void product_file_message_formats_have_id_equal_to_format_table() {
-        final List<Map.Entry<GenericAviationWeatherMessage.Format, Integer>> actualFormatIds = aviationProductsHolder.getProducts().stream()//
+        final List<Map.Entry<GenericAviationWeatherMessage.Format, Integer>> actualFormatIds = aviationProductsHolder.getProducts().values().stream()//
                 .flatMap(product -> product.getFileConfigs().stream().map(file -> new SimpleImmutableEntry<>(file.getFormat(), file.getFormatId())))//
                 .collect(Collectors.toList());
         assertThat(actualFormatIds)//

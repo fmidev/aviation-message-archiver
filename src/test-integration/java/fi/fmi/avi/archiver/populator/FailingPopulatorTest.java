@@ -101,10 +101,7 @@ public class FailingPopulatorTest {
     }
 
     public AviationProductsHolder.AviationProduct getProduct(final AviationProductsHolder holder) {
-        return holder.getProducts().stream()//
-                .filter(aviationProduct -> aviationProduct.getId().equals(PRODUCT))//
-                .findFirst()//
-                .orElseThrow(IllegalStateException::new);
+        return requireNonNull(holder.getProducts().get(PRODUCT), PRODUCT);
     }
 
     private void waitUntilFileExists(final File expectedOutputFile) throws InterruptedException {

@@ -5,15 +5,16 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.File;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import org.inferred.freebuilder.FreeBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.google.common.collect.ImmutableMap;
 
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
@@ -22,7 +23,7 @@ import fi.fmi.avi.model.GenericAviationWeatherMessage;
  */
 @Component
 public class AviationProductsHolder {
-    private final List<AviationProduct> products;
+    private final Map<String, AviationProduct> products;
 
     public AviationProductsHolder(@Autowired final AviationProductBuildersHolder aviationProductBuildersHolder) {
         requireNonNull(aviationProductBuildersHolder, "aviationProductBuildersHolder");
@@ -40,15 +41,22 @@ public class AviationProductsHolder {
         }
     }
 
-    private List<AviationProduct> buildProducts(final List<AviationProduct.Builder> productBuilders) {
+    private Map<String, AviationProduct> buildProducts(final List<AviationProduct.Builder> productBuilders) {
         checkState(!productBuilders.isEmpty(), "Products are missing");
-        final int size = productBuilders.size();
-        final List<AviationProduct> builder = new ArrayList<>(size);
-        iterateProducts(productBuilders, product -> builder.add(product.build()));
-        return Collections.unmodifiableList(builder);
+        final ImmutableMap.Builder<String, AviationProduct> builder = ImmutableMap.builder();
+        iterateProducts(productBuilders, productBuilder -> {
+            final AviationProduct product = productBuilder.build();
+            builder.put(product.getId(), product);
+        });
+        return builder.build();
     }
 
-    public List<AviationProduct> getProducts() {
+    /**
+     * Returns products indexed by product id (returned by {@link AviationProduct#getId()}).
+     *
+     * @return products
+     */
+    public Map<String, AviationProduct> getProducts() {
         return products;
     }
 

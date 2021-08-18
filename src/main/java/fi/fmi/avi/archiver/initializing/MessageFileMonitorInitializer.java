@@ -70,7 +70,7 @@ public class MessageFileMonitorInitializer {
 
     @PostConstruct
     private void initializeFilePatternFlows() {
-        aviationProductsHolder.getProducts().forEach(product -> {
+        aviationProductsHolder.getProducts().values().forEach(product -> {
             final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
             sourceDirectory.setDirectory(product.getInputDir());
 
