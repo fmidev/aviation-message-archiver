@@ -99,10 +99,8 @@ public class AviationMessageArchiverTest {
         public abstract String getProductName();
 
         public AviationProductsHolder.AviationProduct getProduct(final AviationProductsHolder holder) {
-            return holder.getProducts().stream()//
-                    .filter(aviationProduct -> aviationProduct.getId().equals(getProductName()))//
-                    .findFirst()//
-                    .orElseThrow(IllegalStateException::new);
+            final String productName = getProductName();
+            return requireNonNull(holder.getProducts().get(productName), productName);
         }
 
         public void assertInputAndOutputFilesEquals(final AviationProductsHolder.AviationProduct product) throws InterruptedException, URISyntaxException {
