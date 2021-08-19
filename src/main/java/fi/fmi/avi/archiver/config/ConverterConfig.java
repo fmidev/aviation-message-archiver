@@ -20,6 +20,9 @@ public class ConverterConfig {
     private AviMessageSpecificConverter<String, GenericMeteorologicalBulletin> genericBulletinTACParser;
 
     @Autowired
+    private AviMessageSpecificConverter<String, GenericAviationWeatherMessage> genericAviationWeatherMessageTACParser;
+
+    @Autowired
     private AviMessageSpecificConverter<Document, GenericMeteorologicalBulletin> genericBulletinIWXXMDOMParser;
 
     @Autowired
@@ -29,6 +32,7 @@ public class ConverterConfig {
     public AviMessageConverter aviMessageConverter() {
         final AviMessageConverter aviMessageConverter = new AviMessageConverter();
         aviMessageConverter.setMessageSpecificConverter(TACConverter.TAC_TO_GENERIC_BULLETIN_POJO, genericBulletinTACParser);
+        aviMessageConverter.setMessageSpecificConverter(TACConverter.TAC_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO, genericAviationWeatherMessageTACParser);
         aviMessageConverter.setMessageSpecificConverter(IWXXMConverter.WMO_COLLECT_DOM_TO_GENERIC_BULLETIN_POJO, genericBulletinIWXXMDOMParser);
         aviMessageConverter.setMessageSpecificConverter(IWXXMConverter.IWXXM_DOM_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO, genericAviationWeatherMessageIWXXMDOMParser);
         return aviMessageConverter;

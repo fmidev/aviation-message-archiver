@@ -1,9 +1,12 @@
 package fi.fmi.avi.archiver;
 
+import fi.fmi.avi.archiver.file.FileParser;
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import org.inferred.freebuilder.FreeBuilder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,15 +26,17 @@ import java.util.stream.Stream;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.AviationMessageArchiverTest" })
-@Sql(scripts = { "classpath:/schema-h2.sql", "classpath:/h2-data/avidb_message_types_test.sql", "classpath:/h2-data/avidb_message_format_test.sql",
+@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.AviationMessageArchiverTest"})
+@Sql(scripts = {"classpath:/schema-h2.sql", "classpath:/h2-data/avidb_message_types_test.sql", "classpath:/h2-data/avidb_message_format_test.sql",
         "classpath:/h2-data/avidb_message_routes_test.sql",
-        "classpath:/h2-data/avidb_stations_test.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+        "classpath:/h2-data/avidb_stations_test.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class },//
+@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class},//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = { ConfigDataApplicationContextInitializer.class })
+        initializers = {ConfigDataApplicationContextInitializer.class})
 public class AviationMessageArchiverTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileParser.class);
 
     @Autowired
     private AviationProductsHolder aviationProductsHolder;
@@ -52,6 +57,12 @@ public class AviationMessageArchiverTest {
                         .setName("Not convertable message goes to failed dir")//
                         .setProductName("test_taf")//
                         .setInputFileName("not_convertable.txt")//
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("TAC TAF without GTS heading")//
+                        .setProductName("test_taf")//
+                        .setInputFileName("taf-no-gts-heading.txt")//
                         .expectFail()//
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
