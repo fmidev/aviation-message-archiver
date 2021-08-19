@@ -23,7 +23,7 @@ polling:
 
 production-line-initialization:
   products:
-    - id: testProduct
+    - id: test_taf
       route: TEST
       input-dir: ${testclass.workdir.path}/src
       archive-dir: ${testclass.workdir.path}/dst
@@ -35,7 +35,7 @@ production-line-initialization:
         - pattern: ^.*\.txt2$
           nameTimeZone: Z
           format: TAC
-    - id: testProduct2
+    - id: test_taf_2
       route: TEST
       input-dir: ${testclass.workdir.path}/src2
       archive-dir: ${testclass.workdir.path}/dst2
@@ -44,6 +44,15 @@ production-line-initialization:
         - pattern: ^.*\.another$
           nameTimeZone: Z
           format: TAC
+    - id: test_iwxxm_taf
+      route: TEST
+      input-dir: ${testclass.workdir.path}/src_iwxxm_taf
+      archive-dir: ${testclass.workdir.path}/dst_iwxxm_taf
+      fail-dir: ${testclass.workdir.path}/failed_iwxxm_taf
+      files:
+        - pattern: ^.*\.xml$
+          nameTimeZone: Z
+          format: IWXXM
 
 # END SNIPPET: products
 
