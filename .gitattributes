@@ -1,2 +1,2 @@
 # Do not modify line endings in bulletin files
-*.bul   -crlf
+*.bul   -text
