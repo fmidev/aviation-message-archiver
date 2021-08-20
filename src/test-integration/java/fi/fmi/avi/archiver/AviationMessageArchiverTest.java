@@ -1,12 +1,9 @@
 package fi.fmi.avi.archiver;
 
-import fi.fmi.avi.archiver.file.FileParser;
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import org.inferred.freebuilder.FreeBuilder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,8 +33,6 @@ import static org.assertj.core.api.Assertions.assertThat;
         initializers = {ConfigDataApplicationContextInitializer.class})
 public class AviationMessageArchiverTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FileParser.class);
-
     @Autowired
     private AviationProductsHolder aviationProductsHolder;
 
@@ -64,6 +59,17 @@ public class AviationMessageArchiverTest {
                         .setProductName("test_taf")//
                         .setInputFileName("taf-no-gts-heading.txt")//
                         .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("TAC TAF GTS Bulletin")//
+                        .setProductName("test_taf_bulletin")//
+                        .setInputFileName("taf-tac-bulletin.bul")//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Partially valid TAC TAF GTS Bulletin")//
+                        .setProductName("test_taf_bulletin")//
+                        .setInputFileName("taf-tac-bulletin-partially-valid.bul")//
+                        .expectFail()
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF")//

@@ -53,7 +53,15 @@ production-line-initialization:
         - pattern: ^.*\.xml$
           nameTimeZone: Z
           format: IWXXM
-
+    - id: test_taf_bulletin
+      route: TEST
+      input-dir: ${testclass.workdir.path}/src_taf_bulletin
+      archive-dir: ${testclass.workdir.path}/dst_taf_bulletin
+      fail-dir: ${testclass.workdir.path}/failed_taf_bulletin
+      files:
+        - pattern: ^.*\.bul$
+          nameTimeZone: Z
+          format: TAC
 # END SNIPPET: products
 
 ##############################################
