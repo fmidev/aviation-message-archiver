@@ -17,9 +17,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.file.FileHeaders;
+import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.support.MessageBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
@@ -71,6 +71,18 @@ public class FileParser {
         final String productIdentifier = headers.get(MessageFileMonitorInitializer.PRODUCT_IDENTIFIER, String.class);
         final GenericAviationWeatherMessage.Format fileFormat = headers.get(MessageFileMonitorInitializer.FILE_FORMAT, GenericAviationWeatherMessage.Format.class);
 
+        final FileParseResult result = parse(content, filename, filenamePattern, fileModified, productIdentifier, fileFormat);
+        return MessageBuilder
+                .withPayload(result.getInputAviationMessages())
+                .copyHeaders(headers)
+                .setHeader(MessageFileMonitorInitializer.FILE_PARSE_ERRORS, result.getParseErrors())
+                .build();
+    }
+
+    // TODO Clean up these parameters in issue #30
+    public FileParseResult parse(final String content, final String filename, final FilenamePattern filenamePattern,
+                                 final Instant fileModified, final String productIdentifier,
+                                 final GenericAviationWeatherMessage.Format fileFormat) {
         final List<GTSExchangeFileTemplate.ParseResult> parseResults = GTSExchangeFileTemplate.parseAll(content);
         if (parseResults.isEmpty()) {
             throw new IllegalStateException("Nothing to parse in file " + filename + "(" + productIdentifier + ")");
@@ -83,7 +95,7 @@ public class FileParser {
                 .build();
 
         final List<InputAviationMessage.Builder> parsedMessages = new ArrayList<>();
-        boolean parsingErrors = false;
+        boolean parseErrors = false;
 
         final boolean bulletinParsingSuccess = parseResults.stream().anyMatch(result -> result.getResult().isPresent());
         if (bulletinParsingSuccess) {
@@ -92,7 +104,7 @@ public class FileParser {
                 final LogDetails logDetails = LogDetails.from(filename, productIdentifier, i + 1);
                 if (result.getError().isPresent()) {
                     logError("Error parsing bulletin at index {} in {} ({}): {}", logDetails, result.getError().get().toString());
-                    parsingErrors = true;
+                    parseErrors = true;
                 } else if (result.getResult().isPresent()) {
                     final GTSExchangeFileTemplate bulletinTemplate = result.getResult().get();
                     parsedMessages.addAll(convertBulletin(bulletinTemplate, fileFormat, logDetails));
@@ -112,11 +124,7 @@ public class FileParser {
                 .map(messageBuilder -> messageBuilder.setFileMetadata(fileMetadata))
                 .map(InputAviationMessage_Builder::build)
                 .collect(ImmutableList.toImmutableList());
-        return MessageBuilder
-                .withPayload(inputAviationMessages)
-                .copyHeaders(headers)
-                .setHeader(MessageFileMonitorInitializer.FILE_PARSING_ERRORS, parsingErrors)
-                .build();
+        return FileParseResult.from(inputAviationMessages, parseErrors);
     }
 
     private List<InputAviationMessage.Builder> convertBulletin(final GTSExchangeFileTemplate bulletinTemplate,
@@ -295,6 +303,32 @@ public class FileParser {
         public abstract int getBulletinIndex();
 
         public static class Builder extends FileParser_LogDetails_Builder {
+            public Builder() {
+            }
+        }
+    }
+
+    @FreeBuilder
+    public static abstract class FileParseResult {
+        FileParseResult() {
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        static FileParseResult from(final List<InputAviationMessage> inputAviationMessages, final boolean parseErrors) {
+            return builder()
+                    .addAllInputAviationMessages(inputAviationMessages)
+                    .setParseErrors(parseErrors)
+                    .build();
+        }
+
+        public abstract List<InputAviationMessage> getInputAviationMessages();
+
+        public abstract boolean getParseErrors();
+
+        public static class Builder extends FileParser_FileParseResult_Builder {
             public Builder() {
             }
         }
