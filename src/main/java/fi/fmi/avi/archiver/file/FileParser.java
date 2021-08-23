@@ -97,8 +97,8 @@ public class FileParser {
         final List<InputAviationMessage.Builder> parsedMessages = new ArrayList<>();
         boolean parseErrors = false;
 
-        final boolean bulletinParsingSuccess = parseResults.stream().anyMatch(result -> result.getResult().isPresent());
-        if (bulletinParsingSuccess) {
+        final boolean bulletinParseSuccess = parseResults.stream().anyMatch(result -> result.getResult().isPresent());
+        if (bulletinParseSuccess) {
             for (int i = 0; i < parseResults.size(); i++) {
                 final GTSExchangeFileTemplate.ParseResult result = parseResults.get(i);
                 final LogDetails logDetails = LogDetails.from(filename, productIdentifier, i + 1);
@@ -106,14 +106,15 @@ public class FileParser {
                     logError("Error parsing bulletin at index {} in {} ({}): {}", logDetails, result.getError().get().toString());
                     parseErrors = true;
                 } else if (result.getResult().isPresent()) {
-                    final GTSExchangeFileTemplate bulletinTemplate = result.getResult().get();
-                    parsedMessages.addAll(convertBulletin(bulletinTemplate, fileFormat, logDetails));
+                    final GTSExchangeFileTemplate template = result.getResult().get();
+                    parsedMessages.addAll(convertContent(template, fileFormat, logDetails));
                 }
             }
         } else {
             // If there are no successful parse results, attempt lenient parsing as a single bulletin
-            final GTSExchangeFileTemplate lenientTemplate = GTSExchangeFileTemplate.parseHeadingAndTextLenient(content);
-            parsedMessages.addAll(convertBulletin(lenientTemplate, fileFormat, LogDetails.from(filename, productIdentifier, 1)));
+            final GTSExchangeFileTemplate template = GTSExchangeFileTemplate.parseHeadingAndTextLenient(content);
+            final LogDetails logDetails = LogDetails.from(filename, productIdentifier, 1);
+            parsedMessages.addAll(convertContent(template, fileFormat, logDetails));
         }
 
         if (parsedMessages.isEmpty()) {
@@ -127,33 +128,29 @@ public class FileParser {
         return FileParseResult.from(inputAviationMessages, parseErrors);
     }
 
-    private List<InputAviationMessage.Builder> convertBulletin(final GTSExchangeFileTemplate bulletinTemplate,
-                                                               final GenericAviationWeatherMessage.Format fileFormat,
-                                                               final LogDetails logDetails) {
+    private List<InputAviationMessage.Builder> convertContent(final GTSExchangeFileTemplate template,
+                                                              final GenericAviationWeatherMessage.Format fileFormat, final LogDetails logDetails) {
         final InputAviationMessage.Builder inputBuilder = InputAviationMessage.builder();
-        try {
-            final InputBulletinHeading gtsBulletinHeading = InputBulletinHeading.builder()
-                    .setBulletinHeading(BulletinHeadingDecoder.decode(bulletinTemplate.getHeading(), ConversionHints.EMPTY))
-                    .setBulletinHeadingString(bulletinTemplate.getHeading())
-                    .build();
-            inputBuilder.setGtsBulletinHeading(gtsBulletinHeading);
-        } catch (final RuntimeException e) {
+        final Optional<InputBulletinHeading> gtsHeading = createGtsHeading(template);
+        if (gtsHeading.isPresent()) {
+            inputBuilder.setGtsBulletinHeading(gtsHeading.get());
             if (fileFormat == GenericAviationWeatherMessage.Format.TAC) {
-                logError("Missing GTS heading in TAC bulletin at index {} in {} ({})", logDetails);
+                return convertBulletin(inputBuilder, template.toHeadingAndTextString().trim(), fileFormat, logDetails);
             }
+        } else if (fileFormat == GenericAviationWeatherMessage.Format.TAC) {
+            logError("Missing GTS heading in TAC bulletin at index {} in {} ({})", logDetails);
         }
+        return convertBulletin(inputBuilder, template.getText().trim(), fileFormat, logDetails);
+    }
 
-        final String convertableContent = (bulletinTemplate.getHeading() + "\n" + bulletinTemplate.getText()).trim();
+    private List<InputAviationMessage.Builder> convertBulletin(final InputAviationMessage.Builder inputBuilder,
+                                                               final String content, final GenericAviationWeatherMessage.Format fileFormat,
+                                                               final LogDetails logDetails) {
         if (fileFormat == GenericAviationWeatherMessage.Format.TAC) {
-            return convertTac(inputBuilder, convertableContent, logDetails);
+            return convertTac(inputBuilder, content, logDetails);
         } else {
             try {
-                final Document iwxxmDocument;
-                if (inputBuilder.getGtsBulletinHeadingBuilder().getBulletinHeading().isPresent()) {
-                    iwxxmDocument = stringToDocument(bulletinTemplate.getText().trim());
-                } else {
-                    iwxxmDocument = stringToDocument(convertableContent);
-                }
+                final Document iwxxmDocument = stringToDocument(content);
                 if (usesCollectSchema(iwxxmDocument)) {
                     return convertIwxxmCollectDocument(inputBuilder, iwxxmDocument, logDetails);
                 } else {
@@ -181,7 +178,6 @@ public class FileParser {
                     .map(message -> InputAviationMessage.builder().mergeFrom(inputBuilder).setMessage(message))
                     .collect(ImmutableList.toImmutableList());
         } else {
-            logWarning("Unable to parse TAC as a bulletin at index {} in {} ({}). Parsing as a single message", logDetails);
             final ConversionResult<GenericAviationWeatherMessage> messageConversion =
                     aviMessageConverter.convertMessage(bulletinContent, TACConverter.TAC_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO);
             if (messageConversion.getConvertedMessage().isPresent()) {
@@ -264,6 +260,17 @@ public class FileParser {
             XPathExpression expr = xpath.compile("/collect:MeteorologicalBulletin/collect:bulletinIdentifier");
             return Optional.of(expr.evaluate(collectDocument.getDocumentElement()));
         } catch (final XPathExpressionException e) {
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<InputBulletinHeading> createGtsHeading(final GTSExchangeFileTemplate template) {
+        try {
+            return Optional.of(InputBulletinHeading.builder()
+                    .setBulletinHeading(BulletinHeadingDecoder.decode(template.getHeading(), ConversionHints.EMPTY))
+                    .setBulletinHeadingString(template.getHeading())
+                    .build());
+        } catch (final RuntimeException e) {
             return Optional.empty();
         }
     }
