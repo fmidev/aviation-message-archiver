@@ -302,6 +302,13 @@ class BulletinHeadingDataPopulatorTest {
             this.id = id;
         }
 
+        public static FormatId valueOf(final GenericAviationWeatherMessage.Format format) {
+            return Arrays.stream(values())//
+                    .filter(formatId -> formatId.getFormat() == format)//
+                    .findAny()//
+                    .orElseThrow(() -> new IllegalArgumentException("Unknown format: " + format));
+        }
+
         public GenericAviationWeatherMessage.Format getFormat() {
             return format;
         }
