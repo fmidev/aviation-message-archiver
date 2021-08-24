@@ -85,7 +85,7 @@ public class FileParser {
                                  final GenericAviationWeatherMessage.Format fileFormat) {
         final List<GTSExchangeFileTemplate.ParseResult> parseResults = GTSExchangeFileTemplate.parseAll(content);
         if (parseResults.isEmpty()) {
-            throw new IllegalStateException("Nothing to parse in file " + filename + "(" + productIdentifier + ")");
+            throw new IllegalStateException("Nothing to parse in file " + filename + " (" + productIdentifier + ")");
         }
 
         final FileMetadata fileMetadata = FileMetadata.builder()
@@ -97,28 +97,31 @@ public class FileParser {
         final List<InputAviationMessage.Builder> parsedMessages = new ArrayList<>();
         boolean parseErrors = false;
 
-        final boolean bulletinParseSuccess = parseResults.stream().anyMatch(result -> result.getResult().isPresent());
-        if (bulletinParseSuccess) {
-            for (int i = 0; i < parseResults.size(); i++) {
-                final GTSExchangeFileTemplate.ParseResult result = parseResults.get(i);
-                final LogDetails logDetails = LogDetails.from(filename, productIdentifier, i + 1);
-                if (result.getError().isPresent()) {
-                    logError("Error parsing bulletin at index {} in {} ({}): {}", logDetails, result.getError().get().toString());
-                    parseErrors = true;
-                } else if (result.getResult().isPresent()) {
-                    final GTSExchangeFileTemplate template = result.getResult().get();
-                    parsedMessages.addAll(convertContent(template, fileFormat, logDetails));
+        try {
+            final boolean bulletinParseSuccess = parseResults.stream().anyMatch(result -> result.getResult().isPresent());
+            if (bulletinParseSuccess) {
+                for (int i = 0; i < parseResults.size(); i++) {
+                    final GTSExchangeFileTemplate.ParseResult result = parseResults.get(i);
+                    final LogDetails logDetails = LogDetails.from(filename, productIdentifier, i + 1);
+                    if (result.getError().isPresent()) {
+                        logError("Error parsing bulletin at index {} in {} ({}): {}", logDetails, result.getError().get().toString());
+                        parseErrors = true;
+                    } else if (result.getResult().isPresent()) {
+                        final GTSExchangeFileTemplate template = result.getResult().get();
+                        parsedMessages.addAll(convertContent(content, template, fileFormat, logDetails));
+                    }
                 }
+            } else {
+                // If there are no successful parse results, attempt lenient parsing as a single bulletin
+                final GTSExchangeFileTemplate template = GTSExchangeFileTemplate.parseHeadingAndTextLenient(content);
+                final LogDetails logDetails = LogDetails.from(filename, productIdentifier, 1);
+                parsedMessages.addAll(convertContent(content, template, fileFormat, logDetails));
             }
-        } else {
-            // If there are no successful parse results, attempt lenient parsing as a single bulletin
-            final GTSExchangeFileTemplate template = GTSExchangeFileTemplate.parseHeadingAndTextLenient(content);
-            final LogDetails logDetails = LogDetails.from(filename, productIdentifier, 1);
-            parsedMessages.addAll(convertContent(template, fileFormat, logDetails));
+        } catch (final RuntimeException e) {
+            throw new IllegalStateException("Unable to parse any input messages from file " + filename + " (" + productIdentifier + ")", e);
         }
-
         if (parsedMessages.isEmpty()) {
-            throw new IllegalStateException("Unable to parse any input messages from file " + filename + "(" + productIdentifier + ")");
+            throw new IllegalStateException("Unable to parse any input messages from file " + filename + " (" + productIdentifier + ")");
         }
 
         final List<InputAviationMessage> inputAviationMessages = parsedMessages.stream()
@@ -128,7 +131,7 @@ public class FileParser {
         return FileParseResult.from(inputAviationMessages, parseErrors);
     }
 
-    private List<InputAviationMessage.Builder> convertContent(final GTSExchangeFileTemplate template,
+    private List<InputAviationMessage.Builder> convertContent(final String fileContent, final GTSExchangeFileTemplate template,
                                                               final GenericAviationWeatherMessage.Format fileFormat, final LogDetails logDetails) {
         final InputAviationMessage.Builder inputBuilder = InputAviationMessage.builder();
         final Optional<InputBulletinHeading> gtsHeading = createGtsHeading(template);
@@ -136,11 +139,13 @@ public class FileParser {
             inputBuilder.setGtsBulletinHeading(gtsHeading.get());
             if (fileFormat == GenericAviationWeatherMessage.Format.TAC) {
                 return convertBulletin(inputBuilder, template.toHeadingAndTextString().trim(), fileFormat, logDetails);
+            } else {
+                return convertBulletin(inputBuilder, template.getText().trim(), fileFormat, logDetails);
             }
         } else if (fileFormat == GenericAviationWeatherMessage.Format.TAC) {
             logError("Missing GTS heading in TAC bulletin at index {} in {} ({})", logDetails);
         }
-        return convertBulletin(inputBuilder, template.getText().trim(), fileFormat, logDetails);
+        return convertBulletin(inputBuilder, fileContent.trim(), fileFormat, logDetails);
     }
 
     private List<InputAviationMessage.Builder> convertBulletin(final InputAviationMessage.Builder inputBuilder,
@@ -277,12 +282,12 @@ public class FileParser {
 
     // TODO Logging
     private static void logError(final String message, final LogDetails logDetails, final Object... additionalArguments) {
-        LOGGER.error(message, logDetails.getFilename(), logDetails.getProductIdentifier(), logDetails.getBulletinIndex(), additionalArguments);
+        LOGGER.error(message, logDetails.getBulletinIndex(), logDetails.getFilename(), logDetails.getProductIdentifier(), additionalArguments);
     }
 
     // TODO Logging
     private static void logWarning(final String message, final LogDetails logDetails, final Object... additionalArguments) {
-        LOGGER.warn(message, logDetails.getFilename(), logDetails.getProductIdentifier(), logDetails.getBulletinIndex(), additionalArguments);
+        LOGGER.warn(message, logDetails.getBulletinIndex(), logDetails.getFilename(), logDetails.getProductIdentifier(), additionalArguments);
     }
 
     // TODO Logging

@@ -51,7 +51,7 @@ public class AviationMessageArchiverTest {
                 AviationMessageArchiverTestCase.builder()//
                         .setName("Not convertable message goes to failed dir")//
                         .setProductName("test_taf")//
-                        .setInputFileName("not_convertable.txt")//
+                        .setInputFileName("inconvertible.txt")//
                         .expectFail()//
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
