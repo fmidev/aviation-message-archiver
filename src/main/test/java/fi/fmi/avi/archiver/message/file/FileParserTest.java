@@ -92,7 +92,7 @@ public class FileParserTest {
 
     @Test
     public void taf_tac_without_gts_heading() {
-        final String filename = "taf-no-gts-heading.txt";
+        final String filename = "taf-missing-gts-heading.txt";
         final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), filename,
                 DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, TAC);
 
@@ -191,6 +191,33 @@ public class FileParserTest {
     }
 
     @Test
+    public void taf_iwxxm_without_issue_and_valid_time_elements() {
+        final String filename = "taf-missing-issue-valid-times.xml";
+        final String fileContent = getFileContent(filename);
+        final FileParser.FileParseResult result = fileParser.parse(fileContent, filename,
+                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, IWXXM);
+
+        assertThat(result.getParseErrors()).isFalse();
+        assertThat(result.getInputAviationMessages()).hasSize(1);
+
+        final InputAviationMessage message = result.getInputAviationMessages().get(0);
+        assertThat(message.getGtsBulletinHeading().getBulletinHeading()).isEmpty();
+        assertThat(message.getGtsBulletinHeading().getBulletinHeadingString()).isEmpty();
+        assertThat(message.getCollectIdentifier().getBulletinHeading()).isEmpty();
+        assertThat(message.getCollectIdentifier().getBulletinHeadingString()).isEmpty();
+        assertThat(message.getMessage().getMessageType()).contains(MessageType.TAF);
+        assertThat(message.getMessage().getOriginalMessage()).isNotEmpty();
+    }
+
+    @Test
+    public void taf_iwxxm_invalid() {
+        final String filename = "taf-invalid-content.xml";
+        final String fileContent = getFileContent(filename);
+        assertThrows(IllegalStateException.class, () -> fileParser.parse(fileContent, filename,
+                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, IWXXM));
+    }
+
+    @Test
     public void taf_iwxxm_with_gts_heading() {
         final String filename = "taf-gts-heading.xml";
         final String fileContent = getFileContent(filename);
@@ -273,20 +300,8 @@ public class FileParserTest {
     public void taf_iwxxm_in_gts_bulletin_with_invalid_heading() {
         final String filename = "taf-iwxxm-in-gts-bulletin-with-invalid-heading.bul";
         final String fileContent = getFileContent(filename);
-        final FileParser.FileParseResult result = fileParser.parse(fileContent, filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, IWXXM);
-
-        assertThat(result.getParseErrors()).isFalse();
-        assertThat(result.getInputAviationMessages()).hasSize(1);
-
-        assertThat(result.getInputAviationMessages()).allSatisfy(message -> {
-            assertThat(message.getGtsBulletinHeading().getBulletinHeading()).isPresent();
-            assertThat(message.getGtsBulletinHeading().getBulletinHeadingString()).contains("LTFI31 EFKL 301115");
-            assertThat(message.getCollectIdentifier().getBulletinHeadingString()).contains("A_LTFI31EFKL301115_C_EFKL_201902011315--.xml");
-            assertThat(message.getCollectIdentifier().getBulletinHeading()).isPresent();
-            assertThat(message.getMessage().getMessageType()).contains(MessageType.TAF);
-            assertThat(message.getMessage().getOriginalMessage()).isNotEmpty();
-        });
+        assertThrows(IllegalStateException.class, () -> fileParser.parse(fileContent, filename,
+                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, IWXXM));
     }
 
     private static String getFileContent(final String filename) {

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iwxxm:TAF xmlns:gml="http://www.opengis.net/gml/3.2"
+           xmlns:iwxxm="http://icao.int/iwxxm/2.1"
+           xmlns:om="http://www.opengis.net/om/2.0"
+           xmlns:xlink="http://www.w3.org/1999/xlink"
+           gml:id="taf-d285e06a-6786-448b-af15-128c303e1aa0"
+           permissibleUsage="NON-OPERATIONAL"
+           permissibleUsageReason="TEST"
+           status="NORMAL">
+    <iwxxm:baseForecast>
+        <om:OM_Observation gml:id="bfct-c340b09a-a278-4438-9027-afb2852a0828">
+            <om:type xlink:href="http://codes.wmo.int/49-2/observation-type/iwxxm/2.1/MeteorologicalAerodromeForecast"
+                     xlink:title="Aerodrome Base Forecast"/>
+            <om:phenomenonTime xlink:href="#time-2dd0b516-8ed6-463b-862e-1d2f13009497"
+                               xlink:title="Valid time period of the TAF"/>
+            <om:resultTime xlink:href="#time-b7c71fa9-f76b-49ae-97f2-0a6164ae289a"
+                           xlink:title="issueTime of the TAF"/>
+            <om:validTime xlink:href="#time-2dd0b516-8ed6-463b-862e-1d2f13009497"
+                          xlink:title="Valid time period of the TAF"/>
+            <gml:endPosition>2017-07-30T18:00:00Z</gml:endPosition>
+        </gml:TimePeriod>
+    </om:phenomenonTime>
+    <om:resultTime xlink:href="#time-b7c71fa9-f76b-49ae-97f2-0a6164ae289a"
+                   xlink:title="Issue time of the TAF"/>
+    <om:validTime xlink:href="#time-2dd0b516-8ed6-463b-862e-1d2f13009497"
+                  xlink:title="Valid time period of the TAF"/>
+    <om:procedure xlink:href="#process-9958ae19-a15c-4f99-9d0b-9bf1a112c808"
+                  xlink:title="WMO 49-2 TAF"/>
+    <om:observedProperty
+            xlink:href="http://codes.wmo.int/49-2/observable-property/MeteorologicalAerodromeForecast"
+            xlink:title="TAF forecast properties"/>
+    <om:featureOfInterest xlink:href="#foi-c2dab068-3285-4691-8181-a3656d2b3899"
+                          xlink:title="Same aerodrome as in baseForecast"/>
+    <om:result>
+        <iwxxm:MeteorologicalAerodromeForecastRecord changeIndicator="TEMPORARY_FLUCTUATIONS"
+                                                     cloudAndVisibilityOK="false"
+                                                     gml:id="rec-8598ecae-994e-4257-b8bb-f8b3dc31e55d">
+            <iwxxm:prevailingVisibility uom="m">3000.0</iwxxm:prevailingVisibility>
+            <iwxxm:weather xlink:href="http://codes.wmo.int/306/4678/RADZ"
+                           xlink:title="Precipitation of rain and drizzle"/>
+            <iwxxm:weather xlink:href="http://codes.wmo.int/306/4678/BR" xlink:title="Mist"/>
+            <iwxxm:cloud>
+                <iwxxm:AerodromeCloudForecast gml:id="cfct-d519ae5c-ba78-40c4-8df2-a0bcf077b29b">
+                    <iwxxm:layer>
+                        <iwxxm:CloudLayer>
+                            <iwxxm:amount
+                                    xlink:href="http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome/OVC"
+                                    xlink:title="OVC, from codelist http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome"/>
+                            <iwxxm:base uom="[ft_i]">400.0</iwxxm:base>
+                        </iwxxm:CloudLayer>
+                    </iwxxm:layer>
+                </iwxxm:AerodromeCloudForecast>
+            </iwxxm:cloud>
+        </iwxxm:MeteorologicalAerodromeForecastRecord>
+    </om:result>
+</om:OM_Observation>
+        </iwxxm:changeForecast>
+<iwxxm:changeForecast>
+<om:OM_Observation gml:id="chfct-77f87927-8be7-40c9-a790-d87628fed229">
+    <om:type xlink:href="http://codes.wmo.int/49-2/observation-type/iwxxm/2.1/MeteorologicalAerodromeForecast"
+             xlink:title="Aerodrome Forecast"/>
+    <om:phenomenonTime>
+        <gml:TimePeriod gml:id="time-1f98694b-de76-4cf9-9673-3b8cd823440c">
+            <gml:beginPosition>2017-07-30T18:00:00Z</gml:beginPosition>
+            <gml:endPosition>2017-07-30T20:00:00Z</gml:endPosition>
+        </gml:TimePeriod>
+    </om:phenomenonTime>
+    <om:resultTime xlink:href="#time-b7c71fa9-f76b-49ae-97f2-0a6164ae289a"
+                   xlink:title="Issue time of the TAF"/>
+    <om:validTime xlink:href="#time-2dd0b516-8ed6-463b-862e-1d2f13009497"
+                  xlink:title="Valid time period of the TAF"/>
+    <om:procedure xlink:href="#process-9958ae19-a15c-4f99-9d0b-9bf1a112c808"
+                  xlink:title="WMO 49-2 TAF"/>
+    <om:observedProperty
+            xlink:href="http://codes.wmo.int/49-2/observable-property/MeteorologicalAerodromeForecast"
+            xlink:title="TAF forecast properties"/>
+    xlink:title="Valid time period of the TAF"/>
+    <om:procedure xlink:href="#process-9958ae19-a15c-4f99-9d0b-9bf1a112c808"
+                  xlink:title="WMO 49-2 TAF"/>
+    <om:observedProperty
+            xlink:href="http://codes.wmo.int/49-2/observable-property/MeteorologicalAerodromeForecast"
+            xlink:title="TAF forecast properties"/>
+    <om:featureOfInterest xlink:href="#foi-c2dab068-3285-4691-8181-a3656d2b3899"
+                          xlink:title="Same aerodrome as in baseForecast"/>
+    <om:result>
+        <iwxxm:MeteorologicalAerodromeForecastRecord changeIndicator="BECOMING"
+                                                     cloudAndVisibilityOK="false"
+                                                     gml:id="rec-52247736-8eec-4ed3-9487-90baa0e45708">
+            <iwxxm:surfaceWind>
+                <iwxxm:AerodromeSurfaceWindForecast variableWindDirection="false">
+                    <iwxxm:meanWindDirection uom="deg">210.0</iwxxm:meanWindDirection>
+                    <iwxxm:meanWindSpeed uom="[kn_i]">16.0</iwxxm:meanWindSpeed>
+                    <iwxxm:windGustSpeed uom="[kn_i]">30.0</iwxxm:windGustSpeed>
+                </iwxxm:AerodromeSurfaceWindForecast>
+            </iwxxm:surfaceWind>
+            <iwxxm:cloud>
+                <iwxxm:AerodromeCloudForecast gml:id="cfct-b8a5ba4d-68ef-466c-b7df-1a8ef583db38">
+                    <iwxxm:verticalVisibility uom="[ft_i]">100.0</iwxxm:verticalVisibility>
+                </iwxxm:AerodromeCloudForecast>
+            </iwxxm:cloud>
+        </iwxxm:MeteorologicalAerodromeForecastRecord>
+    </om:result>
+</om:OM_Observation>
+</iwxxm:changeForecast>
+        </iwxxm:TAF>

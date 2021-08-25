@@ -94,11 +94,13 @@ public class FileParser {
                 .setFileModified(fileModified)
                 .build();
 
-        final List<InputAviationMessage.Builder> parsedMessages = new ArrayList<>();
+        List<InputAviationMessage> inputAviationMessages;
         boolean parseErrors = false;
 
+        final List<InputAviationMessage.Builder> parsedMessages = new ArrayList<>();
+        final boolean bulletinParseSuccess = parseResults.stream().anyMatch(result -> result.getResult().isPresent());
+
         try {
-            final boolean bulletinParseSuccess = parseResults.stream().anyMatch(result -> result.getResult().isPresent());
             if (bulletinParseSuccess) {
                 for (int i = 0; i < parseResults.size(); i++) {
                     final GTSExchangeFileTemplate.ParseResult result = parseResults.get(i);
@@ -117,17 +119,14 @@ public class FileParser {
                 final LogDetails logDetails = LogDetails.from(filename, productIdentifier, 1);
                 parsedMessages.addAll(convertContent(content, template, fileFormat, logDetails));
             }
+            inputAviationMessages = parsedMessages.stream()
+                    .map(messageBuilder -> messageBuilder.setFileMetadata(fileMetadata))
+                    .map(InputAviationMessage_Builder::build)
+                    .collect(ImmutableList.toImmutableList());
         } catch (final RuntimeException e) {
             throw new IllegalStateException("Unable to parse any input messages from file " + filename + " (" + productIdentifier + ")", e);
         }
-        if (parsedMessages.isEmpty()) {
-            throw new IllegalStateException("Unable to parse any input messages from file " + filename + " (" + productIdentifier + ")");
-        }
 
-        final List<InputAviationMessage> inputAviationMessages = parsedMessages.stream()
-                .map(messageBuilder -> messageBuilder.setFileMetadata(fileMetadata))
-                .map(InputAviationMessage_Builder::build)
-                .collect(ImmutableList.toImmutableList());
         return FileParseResult.from(inputAviationMessages, parseErrors);
     }
 

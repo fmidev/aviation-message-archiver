@@ -57,7 +57,7 @@ public class AviationMessageArchiverTest {
                 AviationMessageArchiverTestCase.builder()//
                         .setName("TAC TAF without GTS heading")//
                         .setProductName("test_taf")//
-                        .setInputFileName("taf-no-gts-heading.txt")//
+                        .setInputFileName("taf-missing-gts-heading.txt")//
                         .expectFail()//
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
