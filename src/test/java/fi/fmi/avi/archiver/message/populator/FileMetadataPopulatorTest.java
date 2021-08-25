@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,15 +17,12 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 @SuppressWarnings("UnnecessaryLocalVariable")
 @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 class FileMetadataPopulatorTest {
-    private static final Pattern FILE_NAME_PATTERN = Pattern.compile("(metar|taf|tca|speci|sigmet|vaa|airmet|swx)"
-            + "(?:_(?:(?<yyyy>\\d{4})-)?(?:(?<MM>\\d{2})-)?(?<dd>\\d{2})?T(?<hh>\\d{2})?(?::(?<mm>\\d{2}))?(?::(?<ss>\\d{2}))?)?" + "(?:\\.txt|\\.xml)");
-    private static final ArchiveAviationMessage EMPTY_RESULT = ArchiveAviationMessage.builder().buildPartial();
     private static final Instant FILE_MODIFIED = Instant.parse("2000-01-02T03:05:34Z");
     private static final InputAviationMessage INPUT_MESSAGE_TEMPLATE = InputAviationMessage.builder()//
             .setFileMetadata(FileMetadata.builder()//
                     .setProductIdentifier("testproduct")//
                     .setFileModified(FILE_MODIFIED)//
-                    .setFilenamePattern(new FilenamePattern("taf.txt", FILE_NAME_PATTERN, ZoneOffset.UTC)))//
+                    .setFilenamePattern(new FilenamePattern("taf.txt", MessagePopulatorTests.FILE_NAME_PATTERN, ZoneOffset.UTC)))//
             .buildPartial();
 
     private FileMetadataPopulator populator;
@@ -39,11 +35,11 @@ class FileMetadataPopulatorTest {
     @Test
     void populates_fileModified() {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE;
-        final ArchiveAviationMessage expected = EMPTY_RESULT.toBuilder()//
+        final ArchiveAviationMessage expected = MessagePopulatorTests.EMPTY_RESULT.toBuilder()//
                 .setFileModified(FILE_MODIFIED)//
                 .buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.buildPartial()).isEqualTo(expected);
     }

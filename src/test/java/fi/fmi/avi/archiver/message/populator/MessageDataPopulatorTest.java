@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -30,7 +29,6 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FilenamePattern;
@@ -46,18 +44,11 @@ import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
 
 @SuppressWarnings("UnnecessaryLocalVariable")
 class MessageDataPopulatorTest {
-    private static final Pattern FILE_NAME_PATTERN = Pattern.compile("(metar|taf|tca|speci|sigmet|vaa|airmet|swx)"
-            + "(?:_(?:(?<yyyy>\\d{4})-)?(?:(?<MM>\\d{2})-)?(?<dd>\\d{2})?T(?<hh>\\d{2})?(?::(?<mm>\\d{2}))?(?::(?<ss>\\d{2}))?)?" + "(?:\\.txt|\\.xml)");
-    private static final ArchiveAviationMessage EMPTY_RESULT = ArchiveAviationMessage.builder().buildPartial();
-    private static final Map<GenericAviationWeatherMessage.Format, Integer> FORMAT_IDS = Arrays.stream(BulletinHeadingDataPopulatorTest.FormatId.values())//
-            .collect(Maps.toImmutableEnumMap(BulletinHeadingDataPopulatorTest.FormatId::getFormat, BulletinHeadingDataPopulatorTest.FormatId::getId));
-    private static final Map<MessageType, Integer> TYPE_IDS = Arrays.stream(BulletinHeadingDataPopulatorTest.TypeId.values())//
-            .collect(ImmutableMap.toImmutableMap(BulletinHeadingDataPopulatorTest.TypeId::getType, BulletinHeadingDataPopulatorTest.TypeId::getId));
     private static final InputAviationMessage INPUT_MESSAGE_TEMPLATE = InputAviationMessage.builder()//
             .setFileMetadata(FileMetadata.builder()//
                     .setProductIdentifier("testproduct")//
                     .setFileModified(Instant.parse("2000-01-02T03:05:34Z"))//
-                    .setFilenamePattern(new FilenamePattern("taf.txt", FILE_NAME_PATTERN, ZoneOffset.UTC)))//
+                    .setFilenamePattern(new FilenamePattern("taf.txt", MessagePopulatorTests.FILE_NAME_PATTERN, ZoneOffset.UTC)))//
             .setMessage(GenericAviationWeatherMessageImpl.builder()//
                     .setTranslated(false)//
                     .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)//
@@ -79,7 +70,7 @@ class MessageDataPopulatorTest {
 
     @BeforeEach
     void setUp() {
-        populator = new MessageDataPopulator(FORMAT_IDS, TYPE_IDS);
+        populator = new MessageDataPopulator(MessagePopulatorTests.FORMAT_IDS, MessagePopulatorTests.TYPE_IDS);
     }
 
     @Test
@@ -87,38 +78,38 @@ class MessageDataPopulatorTest {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE;
         final ArchiveAviationMessage expected = ArchiveAviationMessage.builder()//
                 .setMessage(INPUT_MESSAGE_TEMPLATE.getMessage().getOriginalMessage())//
-                .setFormat(BulletinHeadingDataPopulatorTest.FormatId.valueOf(INPUT_MESSAGE_TEMPLATE.getMessage().getMessageFormat()).getId())//
+                .setFormat(MessagePopulatorTests.FormatId.valueOf(INPUT_MESSAGE_TEMPLATE.getMessage().getMessageFormat()).getId())//
                 .buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.buildPartial()).isEqualTo(expected);
     }
 
     @ParameterizedTest
-    @EnumSource(BulletinHeadingDataPopulatorTest.FormatId.class)
-    void populates_format(final BulletinHeadingDataPopulatorTest.FormatId expectedFormat) {
+    @EnumSource(MessagePopulatorTests.FormatId.class)
+    void populates_format(final MessagePopulatorTests.FormatId expectedFormat) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
                         .setMessageFormat(expectedFormat.getFormat())//
                         .build())//
                 .buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getFormat()).isEqualTo(expectedFormat.getId());
     }
 
     @ParameterizedTest
-    @EnumSource(BulletinHeadingDataPopulatorTest.TypeId.class)
-    void populates_type_when_exists(final BulletinHeadingDataPopulatorTest.TypeId expectedType) {
+    @EnumSource(MessagePopulatorTests.TypeId.class)
+    void populates_type_when_exists(final MessagePopulatorTests.TypeId expectedType) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
                         .setMessageType(expectedType.getType())//
                         .build())//
                 .buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getType()).isEqualTo(expectedType.getId());
     }
@@ -139,7 +130,7 @@ class MessageDataPopulatorTest {
             final String filename, final Instant fileModified, final Instant expectedTime) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(filedata -> filedata.setFileModified(fileModified)//
-                        .setFilenamePattern(new FilenamePattern(filename, FILE_NAME_PATTERN, ZoneOffset.UTC)))//
+                        .setFilenamePattern(new FilenamePattern(filename, MessagePopulatorTests.FILE_NAME_PATTERN, ZoneOffset.UTC)))//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
                         .setIssueTime(PartialOrCompleteTimeInstant.builder()//
                                 .setNullablePartialTime(partialIssueTime)//
@@ -148,7 +139,7 @@ class MessageDataPopulatorTest {
                         .build())//
                 .buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getMessageTime()).isEqualTo(expectedTime);
     }
@@ -167,7 +158,7 @@ class MessageDataPopulatorTest {
                 .buildPartial();
 
         final String initialIcaoAirportCode = "NULL";
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder()//
                 .setIcaoAirportCode(initialIcaoAirportCode);
         populator.populate(inputMessage, builder);
         assertThat(builder.getIcaoAirportCode()).isEqualTo(Optional.ofNullable(expectedIcaoAirportCode).orElse(initialIcaoAirportCode));
@@ -183,7 +174,7 @@ class MessageDataPopulatorTest {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(fileData -> fileData//
                         .setFileModified(fileModified)//
-                        .setFilenamePattern(new FilenamePattern(filename, FILE_NAME_PATTERN, ZoneOffset.UTC)))
+                        .setFilenamePattern(new FilenamePattern(filename, MessagePopulatorTests.FILE_NAME_PATTERN, ZoneOffset.UTC)))
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
                         .setValidityTime(PartialOrCompleteTimePeriod.builder()//
                                 .setStartTime(partialOrCompleteTimeInstant(partialStartTime, completeStartTime))//
@@ -194,7 +185,7 @@ class MessageDataPopulatorTest {
 
         final Instant initialValidFrom = Instant.EPOCH;
         final Instant initialValidTo = initialValidFrom.plus(1, ChronoUnit.DAYS);
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder()//
                 .setValidFrom(initialValidFrom)//
                 .setValidTo(initialValidTo);
         populator.populate(inputMessage, builder);
@@ -227,7 +218,7 @@ class MessageDataPopulatorTest {
                         .build())//
                 .buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getMessage()).isEqualTo(expectedMessage);
     }

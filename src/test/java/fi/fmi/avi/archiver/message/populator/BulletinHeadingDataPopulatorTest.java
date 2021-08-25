@@ -7,9 +7,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -18,16 +16,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FilenamePattern;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingDataPopulator.BulletinHeadingSource;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.PartialDateTime;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.bulletin.BulletinHeading;
@@ -36,20 +29,13 @@ import fi.fmi.avi.model.bulletin.immutable.BulletinHeadingImpl;
 
 @SuppressWarnings("UnnecessaryLocalVariable")
 class BulletinHeadingDataPopulatorTest {
-    private static final Pattern FILE_NAME_PATTERN = Pattern.compile("(metar|taf|tca|speci|sigmet|vaa|airmet|swx)"
-            + "(?:_(?:(?<yyyy>\\d{4})-)?(?:(?<MM>\\d{2})-)?(?<dd>\\d{2})?T(?<hh>\\d{2})?(?::(?<mm>\\d{2}))?(?::(?<ss>\\d{2}))?)?" + "(?:\\.txt|\\.xml)");
-    private static final ArchiveAviationMessage EMPTY_RESULT = ArchiveAviationMessage.builder().buildPartial();
-    private static final Map<GenericAviationWeatherMessage.Format, Integer> FORMAT_IDS = Arrays.stream(FormatId.values())//
-            .collect(Maps.toImmutableEnumMap(FormatId::getFormat, FormatId::getId));
-    private static final Map<MessageType, Integer> TYPE_IDS = Arrays.stream(TypeId.values())//
-            .collect(ImmutableMap.toImmutableMap(TypeId::getType, TypeId::getId));
     private static final List<BulletinHeadingSource> BULLETIN_HEADING_SOURCES = Arrays.asList(BulletinHeadingSource.GTS_BULLETIN_HEADING,
             BulletinHeadingSource.COLLECT_IDENTIFIER);
     private static final InputAviationMessage INPUT_MESSAGE_TEMPLATE = InputAviationMessage.builder()//
             .setFileMetadata(FileMetadata.builder()//
                     .setProductIdentifier("testproduct")//
                     .setFileModified(Instant.parse("2000-01-02T03:05:34Z"))//
-                    .setFilenamePattern(new FilenamePattern("taf.txt", FILE_NAME_PATTERN, ZoneOffset.UTC)))//
+                    .setFilenamePattern(new FilenamePattern("taf.txt", MessagePopulatorTests.FILE_NAME_PATTERN, ZoneOffset.UTC)))//
             .buildPartial();
     private static final BulletinHeadingImpl BULLETIN_HEADING_TEMPLATE = BulletinHeadingImpl.builder()//
             .setDataTypeDesignatorT2(DataTypeDesignatorT2.ForecastsDataTypeDesignatorT2.FCT_AERODROME_VT_LONG)//
@@ -63,15 +49,15 @@ class BulletinHeadingDataPopulatorTest {
 
     @BeforeEach
     void setUp() {
-        populator = new BulletinHeadingDataPopulator(FORMAT_IDS, TYPE_IDS, BULLETIN_HEADING_SOURCES);
+        populator = new BulletinHeadingDataPopulator(MessagePopulatorTests.FORMAT_IDS, MessagePopulatorTests.TYPE_IDS, BULLETIN_HEADING_SOURCES);
     }
 
     @Test
     void does_nothing_when_bulletin_information_is_not_available() {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE;
-        final ArchiveAviationMessage expected = EMPTY_RESULT;
+        final ArchiveAviationMessage expected = MessagePopulatorTests.EMPTY_RESULT;
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.buildPartial()).isEqualTo(expected);
     }
@@ -87,7 +73,8 @@ class BulletinHeadingDataPopulatorTest {
             "XML_AERODROME_VT_LONG, XML_AERODROME_VT_LONG, IWXXM", //
             "XML_AERODROME_VT_LONG, FCT_AERODROME_VT_LONG, IWXXM", //
     })
-    void populates_format_when_exists(@Nullable final T2 gtsDesignatorT2, @Nullable final T2 collectDesignatorT2, final FormatId expectedFormat) {
+    void populates_format_when_exists(@Nullable final T2 gtsDesignatorT2, @Nullable final T2 collectDesignatorT2,
+            final MessagePopulatorTests.FormatId expectedFormat) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder();
         if (gtsDesignatorT2 != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(
@@ -99,7 +86,7 @@ class BulletinHeadingDataPopulatorTest {
         }
         final InputAviationMessage inputMessage = inputMessageBuilder.buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getFormat()).isEqualTo(expectedFormat.getId());
     }
@@ -124,7 +111,8 @@ class BulletinHeadingDataPopulatorTest {
             "WRN_AIRMET, FCT_SPACE_WEATHER, AIRMET", //
             "FCT_SPACE_WEATHER, WRN_AIRMET, SWX", //
     })
-    void populates_type_when_exists(@Nullable final T2 gtsDesignatorT2, @Nullable final T2 collectDesignatorT2, final TypeId expectedType) {
+    void populates_type_when_exists(@Nullable final T2 gtsDesignatorT2, @Nullable final T2 collectDesignatorT2,
+            final MessagePopulatorTests.TypeId expectedType) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder();
         if (gtsDesignatorT2 != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(
@@ -136,7 +124,7 @@ class BulletinHeadingDataPopulatorTest {
         }
         final InputAviationMessage inputMessage = inputMessageBuilder.buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getType()).isEqualTo(expectedType.getId());
     }
@@ -158,7 +146,7 @@ class BulletinHeadingDataPopulatorTest {
             final Instant fileModified, final Instant expectedTime) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(filedata -> filedata.setFileModified(fileModified)//
-                        .setFilenamePattern(new FilenamePattern(filename, FILE_NAME_PATTERN, ZoneOffset.UTC)));
+                        .setFilenamePattern(new FilenamePattern(filename, MessagePopulatorTests.FILE_NAME_PATTERN, ZoneOffset.UTC)));
         if (gtsIssueTime != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(builder -> builder.setBulletinHeading(
                     BULLETIN_HEADING_TEMPLATE.toBuilder().setIssueTime(PartialOrCompleteTimeInstant.of(gtsIssueTime)).build()));
@@ -169,7 +157,7 @@ class BulletinHeadingDataPopulatorTest {
         }
         final InputAviationMessage inputMessage = inputMessageBuilder.buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getMessageTime()).isEqualTo(expectedTime);
     }
@@ -193,7 +181,7 @@ class BulletinHeadingDataPopulatorTest {
         }
         final InputAviationMessage inputMessage = inputMessageBuilder.buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getIcaoAirportCode()).isEqualTo(expectedIcaoAirportCode);
     }
@@ -216,7 +204,7 @@ class BulletinHeadingDataPopulatorTest {
         }
         final InputAviationMessage inputMessage = inputMessageBuilder.buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getHeading()).isEqualTo(Optional.ofNullable(expectedHeading));
     }
@@ -261,7 +249,7 @@ class BulletinHeadingDataPopulatorTest {
         }
         final InputAviationMessage inputMessage = inputMessageBuilder.buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getVersion()).isEqualTo(Optional.ofNullable(expectedVersion));
     }
@@ -284,66 +272,9 @@ class BulletinHeadingDataPopulatorTest {
         }
         final InputAviationMessage inputMessage = inputMessageBuilder.buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getIWXXMDetailsBuilder().getCollectIdentifier()).isEqualTo(Optional.ofNullable(expectedCollectIdentifier));
-    }
-
-    enum FormatId {
-        TAC(GenericAviationWeatherMessage.Format.TAC, 1), //
-        IWXXM(GenericAviationWeatherMessage.Format.IWXXM, 2), //
-        ;
-
-        private final GenericAviationWeatherMessage.Format format;
-        private final int id;
-
-        FormatId(final GenericAviationWeatherMessage.Format format, final int id) {
-            this.format = format;
-            this.id = id;
-        }
-
-        public static FormatId valueOf(final GenericAviationWeatherMessage.Format format) {
-            return Arrays.stream(values())//
-                    .filter(formatId -> formatId.getFormat() == format)//
-                    .findAny()//
-                    .orElseThrow(() -> new IllegalArgumentException("Unknown format: " + format));
-        }
-
-        public GenericAviationWeatherMessage.Format getFormat() {
-            return format;
-        }
-
-        public int getId() {
-            return id;
-        }
-    }
-
-    enum TypeId {
-        SPECI(MessageType.SPECI, 1), //
-        METAR(MessageType.METAR, 2), //
-        TAF(MessageType.TAF, 3), //
-        SIGMET(MessageType.SIGMET, 4), //
-        AIRMET(MessageType.AIRMET, 5), //
-        TCA(MessageType.TROPICAL_CYCLONE_ADVISORY, 6), //
-        VAA(MessageType.VOLCANIC_ASH_ADVISORY, 7), //
-        SWX(MessageType.SPACE_WEATHER_ADVISORY, 8), //
-        ;
-
-        private final MessageType type;
-        private final int id;
-
-        TypeId(final MessageType type, final int id) {
-            this.type = type;
-            this.id = id;
-        }
-
-        public MessageType getType() {
-            return type;
-        }
-
-        public int getId() {
-            return id;
-        }
     }
 
     enum T2 {
