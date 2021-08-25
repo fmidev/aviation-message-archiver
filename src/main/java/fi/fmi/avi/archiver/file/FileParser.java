@@ -47,6 +47,9 @@ public class FileParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileParser.class);
 
+    private static final String COLLECT_1_2_NAMESPACE = "http://def.wmo.int/collect/2014";
+    private static final String BULLETIN_ELEMENT_NAME = "MeteorologicalBulletin";
+
     private final AviMessageConverter aviMessageConverter;
     private final DocumentBuilderFactory documentBuilderFactory;
 
@@ -87,6 +90,7 @@ public class FileParser {
         if (parseResults.isEmpty()) {
             throw new IllegalStateException("Nothing to parse in file " + filename + " (" + productIdentifier + ")");
         }
+        final boolean bulletinParseSuccess = parseResults.stream().anyMatch(result -> result.getResult().isPresent());
 
         final FileMetadata fileMetadata = FileMetadata.builder()
                 .setFilenamePattern(filenamePattern)
@@ -94,13 +98,10 @@ public class FileParser {
                 .setFileModified(fileModified)
                 .build();
 
-        List<InputAviationMessage> inputAviationMessages;
-        boolean parseErrors = false;
-
-        final List<InputAviationMessage.Builder> parsedMessages = new ArrayList<>();
-        final boolean bulletinParseSuccess = parseResults.stream().anyMatch(result -> result.getResult().isPresent());
-
         try {
+            final List<InputAviationMessage.Builder> parsedMessages = new ArrayList<>();
+            boolean parseErrors = false;
+
             if (bulletinParseSuccess) {
                 for (int i = 0; i < parseResults.size(); i++) {
                     final GTSExchangeFileTemplate.ParseResult result = parseResults.get(i);
@@ -119,15 +120,15 @@ public class FileParser {
                 final LogDetails logDetails = LogDetails.from(filename, productIdentifier, 1);
                 parsedMessages.addAll(convertContent(content, template, fileFormat, logDetails));
             }
-            inputAviationMessages = parsedMessages.stream()
+
+            final List<InputAviationMessage> inputAviationMessages = parsedMessages.stream()
                     .map(messageBuilder -> messageBuilder.setFileMetadata(fileMetadata))
                     .map(InputAviationMessage_Builder::build)
                     .collect(ImmutableList.toImmutableList());
+            return FileParseResult.from(inputAviationMessages, parseErrors);
         } catch (final RuntimeException e) {
             throw new IllegalStateException("Unable to parse any input messages from file " + filename + " (" + productIdentifier + ")", e);
         }
-
-        return FileParseResult.from(inputAviationMessages, parseErrors);
     }
 
     private List<InputAviationMessage.Builder> convertContent(final String fileContent, final GTSExchangeFileTemplate template,
@@ -253,7 +254,7 @@ public class FileParser {
 
     private static boolean usesCollectSchema(final Document document) {
         final Element root = document.getDocumentElement();
-        return root.getNamespaceURI().equals("http://def.wmo.int/collect/2014") && root.getLocalName().equals("MeteorologicalBulletin");
+        return root.getNamespaceURI().equals(COLLECT_1_2_NAMESPACE) && root.getLocalName().equals(BULLETIN_ELEMENT_NAME);
     }
 
     private static Optional<String> getCollectIdentifier(final Document collectDocument) {
