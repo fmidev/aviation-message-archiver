@@ -28,7 +28,6 @@ import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
 
 /**
  * Popuplates {@link ArchiveAviationMessage.Builder} properties from message data in {@link InputAviationMessage}.
- * In addition to properties in {@link GenericAviationWeatherMessage} this populator handles {@link InputAviationMessage#getXMLNamespace()}.
  *
  * <p>
  * Format and type are mapped from object to id by mappings provided as {@link #MessageDataPopulator(Map, Map)} constructor parameters.
@@ -119,8 +118,8 @@ public class MessageDataPopulator implements MessagePopulator {
                 .flatMap(PartialOrCompleteTimeInstant::getCompleteTime)//
                 .map(ChronoZonedDateTime::toInstant)//
                 .ifPresent(builder::setValidTo);
-        input.getXMLNamespace()//
-                .ifPresent(xmlNamespace -> builder.mutateIWXXMDetails(iwxxmDetails -> iwxxmDetails.setXMLNamespace(xmlNamespace)));
+        //        inputMessage.getXMLNamespace()//
+        //                .ifPresent(xmlNamespace -> builder.mutateIWXXMDetails(iwxxmDetails -> iwxxmDetails.setXMLNamespace(xmlNamespace)));
         builder.setMessage(inputMessage.getOriginalMessage());
     }
 
