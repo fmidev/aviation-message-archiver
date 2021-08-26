@@ -12,8 +12,9 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
@@ -26,7 +27,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @JdbcTest(properties = {"testclass.name=fi.fmi.avi.archiver.database.DatabaseAccessTest"})
@@ -67,8 +67,8 @@ public class DatabaseAccessTest {
                 .setHeading("TEST HEADING")//
                 .build();
 
-        final int affectedRows = databaseAccess.insertAviationMessage(archiveAviationMessage);
-        assertThat(affectedRows).isEqualTo(1);
+        final Number generatedId = databaseAccess.insertAviationMessage(archiveAviationMessage);
+        assertThat(generatedId.longValue()).isPositive();
         assertAvidbMessagesContains(archiveAviationMessage);
     }
 
@@ -94,10 +94,10 @@ public class DatabaseAccessTest {
 
     @Test
     public void test_insert_aviation_message_with_query_timeouts_and_retries() {
-        when(jdbcTemplate.update(anyString(), any(PreparedStatementSetter.class)))//
-                .thenThrow(QueryTimeoutException.class)//
-                .thenThrow(QueryTimeoutException.class)//
-                .thenCallRealMethod();
+        doThrow(QueryTimeoutException.class)
+                .doThrow(QueryTimeoutException.class)
+                .doCallRealMethod()
+                .when(jdbcTemplate).update(any(PreparedStatementCreator.class), any(KeyHolder.class));
 
         final Instant now = clock.instant();
         final ArchiveAviationMessage archiveAviationMessage = ArchiveAviationMessage.builder()//
@@ -114,9 +114,9 @@ public class DatabaseAccessTest {
                 .setHeading("TEST HEADING")//
                 .build();
 
-        final int affectedRows = databaseAccess.insertAviationMessage(archiveAviationMessage);
-        verify(jdbcTemplate, times(3)).update(anyString(), any(PreparedStatementSetter.class));
-        assertThat(affectedRows).isEqualTo(1);
+        final Number generatedId = databaseAccess.insertAviationMessage(archiveAviationMessage);
+        verify(jdbcTemplate, times(3)).update(any(PreparedStatementCreator.class), any(KeyHolder.class));
+        assertThat(generatedId.longValue()).isPositive();
     }
 
     @Test

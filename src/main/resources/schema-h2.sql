@@ -27,11 +27,11 @@ CREATE TABLE public.avidb_message_types
 CREATE TABLE public.avidb_messages
 (
     message_id     bigint auto_increment PRIMARY KEY NOT NULL,
-    message_time   timestamp                         NOT NULL,
-    station_id     int                               NOT NULL,
-    type_id        int                               NOT NULL,
-    route_id       int                               NOT NULL,
-    message        text                              NOT NULL,
+    message_time   timestamp           NOT NULL,
+    station_id     int                 NOT NULL,
+    type_id        int                 NOT NULL,
+    route_id       int                 NOT NULL,
+    message        text                NOT NULL,
     valid_from     timestamp,
     valid_to       timestamp,
     created        timestamp DEFAULT CURRENT_TIMESTAMP(),
@@ -39,7 +39,7 @@ CREATE TABLE public.avidb_messages
     flag           int       DEFAULT 0,
     messir_heading text,
     version        varchar(20),
-    format_id      smallint  DEFAULT 1               NOT NULL
+    format_id      smallint  DEFAULT 1 NOT NULL
 );
 
 CREATE TABLE public.avidb_stations
@@ -54,6 +54,13 @@ CREATE TABLE public.avidb_stations
     modified_last timestamp DEFAULT CURRENT_TIMESTAMP(),
     iwxxm_flag    int,
     country_code  varchar(2)
+);
+
+CREATE TABLE public.avidb_message_details_iwxxm
+(
+    message_id         bigint PRIMARY KEY NOT NULL,
+    collect_identifier text,
+    iwxxm_version      text
 );
 
 CREATE
@@ -81,6 +88,11 @@ ALTER TABLE public.avidb_messages
     ADD CONSTRAINT avidb_messages_fk1
         FOREIGN KEY (station_id)
             REFERENCES public.avidb_stations (station_id);
+
+ALTER TABLE public.avidb_message_details_iwxxm
+    ADD CONSTRAINT avidb_message_details_iwxxm_fk_message_id
+        FOREIGN KEY (message_id)
+            REFERENCES public.avidb_messages (message_id);
 
 CREATE
     INDEX avidb_messages_new_station_id_idx ON public.avidb_messages (station_id);
