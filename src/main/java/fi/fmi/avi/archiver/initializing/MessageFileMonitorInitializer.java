@@ -38,8 +38,10 @@ import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 public class MessageFileMonitorInitializer {
     public static final String MESSAGE_FILE_PATTERN = "message_file_pattern";
     public static final String FILE_MODIFIED = "file_modified";
+    public static final String FILE_FORMAT = "file_format";
     public static final String PRODUCT_IDENTIFIER = "product_identifier";
     public static final String FAILED_MESSAGES = "processing_failures";
+    public static final String FILE_PARSE_ERRORS = "file_parsed_partially";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageFileMonitorInitializer.class);
 
@@ -98,6 +100,7 @@ public class MessageFileMonitorInitializer {
                                     .headerFunction(PRODUCT_IDENTIFIER, message -> product.getId())
                                     .headerFunction(MessageHeaders.ERROR_CHANNEL, message -> errorMessageChannel)
                                     .headerFunction(MESSAGE_FILE_PATTERN, message -> getFilePattern(message, fileConfig))//
+                                    .headerFunction(FILE_FORMAT, message -> fileConfig.getFormat())//
                                     .headerFunction(FILE_MODIFIED, this::getFileModified))//
                             .log(Level.INFO, INPUT_CATEGORY)//
                             .channel(processingChannel)//
