@@ -15,10 +15,9 @@ public class FileMetadataPopulator implements MessagePopulator {
     public void populate(final InputAviationMessage input, final ArchiveAviationMessage.Builder builder) {
         requireNonNull(input, "input");
         requireNonNull(builder, "builder");
-        populate(input.getFileMetadata(), builder);
-    }
-
-    private void populate(final FileMetadata input, final ArchiveAviationMessage.Builder builder) {
-        builder.setFileModified(input.getFileModified());
+        final FileMetadata fileMetadata = input.getFileMetadata();
+        builder.setRoute(1); // TODO: depends on #30
+        builder.setFormat(1);  // TODO: depends on #30
+        builder.setFileModified(fileMetadata.getFileModified());
     }
 }

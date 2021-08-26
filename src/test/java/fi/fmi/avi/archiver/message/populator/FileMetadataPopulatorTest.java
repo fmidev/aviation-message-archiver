@@ -1,9 +1,11 @@
 package fi.fmi.avi.archiver.message.populator;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,15 +34,25 @@ class FileMetadataPopulatorTest {
         populator = new FileMetadataPopulator();
     }
 
+    // TODO: Depends on #30
+    @Test
+    void populates_route() {
+        fail("TODO");
+    }
+
+    // TODO: Depends on #30
+    @Test
+    void populates_format() {
+        fail("TODO");
+    }
+
     @Test
     void populates_fileModified() {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE;
-        final ArchiveAviationMessage expected = MessagePopulatorTests.EMPTY_RESULT.toBuilder()//
-                .setFileModified(FILE_MODIFIED)//
-                .buildPartial();
+        final Instant expected = FILE_MODIFIED;
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
-        assertThat(builder.buildPartial()).isEqualTo(expected);
+        assertThat(builder.getFileModified()).isEqualTo(Optional.of(expected));
     }
 }

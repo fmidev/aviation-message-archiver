@@ -195,6 +195,7 @@ class MessageDataPopulatorTest {
         });
     }
 
+    // TODO: Depends on fmidev/fmi-avi-messageconverter-iwxxm#92
     //    @Test
     //    void populates_xmlNamespace_when_exists() {
     //        final String expectedNamespace = "http://expected/namespace";
