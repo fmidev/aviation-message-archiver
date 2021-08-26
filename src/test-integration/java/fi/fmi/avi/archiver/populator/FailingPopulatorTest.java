@@ -52,7 +52,7 @@ public class FailingPopulatorTest {
     private static final int WAIT_MILLIS = 100;
     private static final int TIMEOUT_MILLIS = 1000;
     private static final String FILENAME = "populator_fail_bulletin.txt";
-    private static final String PRODUCT = "testProduct";
+    private static final String PRODUCT = "test_taf";
 
     @SpyBean(name = "successChannel")
     private MessageChannel successChannel;
