@@ -1,7 +1,6 @@
 package fi.fmi.avi.archiver.file;
 
 import com.google.common.collect.ImmutableList;
-import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.converter.ConversionHints;
 import fi.fmi.avi.converter.ConversionResult;
@@ -15,11 +14,6 @@ import fi.fmi.avi.util.GTSExchangeFileTemplate;
 import org.inferred.freebuilder.FreeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.integration.file.FileHeaders;
-import org.springframework.integration.support.MessageBuilder;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHeaders;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
@@ -64,22 +58,6 @@ public class FileParser {
         } catch (final ParserConfigurationException e) {
             throw new IllegalStateException("Unable to initialize file parser", e);
         }
-    }
-
-    @ServiceActivator
-    public Message<List<InputAviationMessage>> parse(final String content, final MessageHeaders headers) {
-        final String filename = headers.get(FileHeaders.FILENAME, String.class);
-        final FilenamePattern filenamePattern = headers.get(MessageFileMonitorInitializer.MESSAGE_FILE_PATTERN, FilenamePattern.class);
-        final Instant fileModified = headers.get(MessageFileMonitorInitializer.FILE_MODIFIED, Instant.class);
-        final String productIdentifier = headers.get(MessageFileMonitorInitializer.PRODUCT_IDENTIFIER, String.class);
-        final GenericAviationWeatherMessage.Format fileFormat = headers.get(MessageFileMonitorInitializer.FILE_FORMAT, GenericAviationWeatherMessage.Format.class);
-
-        final FileParseResult result = parse(content, filename, filenamePattern, fileModified, productIdentifier, fileFormat);
-        return MessageBuilder
-                .withPayload(result.getInputAviationMessages())
-                .copyHeaders(headers)
-                .setHeader(MessageFileMonitorInitializer.FILE_PARSE_ERRORS, result.getParseErrors())
-                .build();
     }
 
     // TODO Clean up these parameters in issue #30
