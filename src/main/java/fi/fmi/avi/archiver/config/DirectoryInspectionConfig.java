@@ -55,7 +55,8 @@ public class DirectoryInspectionConfig {
     @Bean
     public IntegrationFlow archiveRouter() {
         return IntegrationFlows.from(archiveChannel)
-                .route("headers." + MessageFileMonitorInitializer.FAILED_MESSAGES + ".isEmpty()", r -> r//
+                .route("headers." + MessageFileMonitorInitializer.FAILED_MESSAGES + ".isEmpty()" +
+                        " and !headers." + MessageFileMonitorInitializer.FILE_PARSE_ERRORS, r -> r//
                         .channelMapping(true, successChannel)
                         .channelMapping(false, failChannel)
                 ).get();
