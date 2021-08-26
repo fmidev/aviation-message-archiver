@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
 import fi.fmi.avi.archiver.util.TimeUtil;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage.LocationIndicatorType;
@@ -27,7 +28,7 @@ import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
 
 /**
- * Popuplates {@link ArchiveAviationMessage.Builder} properties from message data in {@link InputAviationMessage}.
+ * Populate {@link ArchiveAviationMessage.Builder} properties from message data in {@link InputAviationMessage}.
  *
  * <p>
  * Format and type are mapped from object to id by mappings provided as {@link #MessageDataPopulator(Map, Map)} constructor parameters.
@@ -36,7 +37,8 @@ import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
  * <p>
  * If time properties are complete, they are used as is. Partial times are completed primarily near to timestamp in file name, if exists. If timestamp in
  * file name is partial, it is first completed near to file modification time. (See {@link TimeUtil#toCompleteTime(Iterable)} for more information on
- * completion algorithm.)
+ * completion algorithm.) Populated time properties are {@link ArchiveAviationMessage#getMessageTime()}, {@link ArchiveAviationMessage#getValidFrom()} and
+ * {@link ArchiveAviationMessage#getValidTo()}.
  * </p>
  *
  * <p>
@@ -51,6 +53,8 @@ import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
  *     searched. (See {@link #setMessageTypeLocationIndicatorTypes(Map)}.)</li>
  *     <li>If no match by message type is found, the default list {@link #setDefaultLocationIndicatorTypes(List)} is used.</li>
  * </ol>
+ *
+ * {@link ArchiveAviationMessage#getMessage()} and {@link ArchiveAviationMessageIWXXMDetails#getXMLNamespace()} are also populated.
  */
 public class MessageDataPopulator implements MessagePopulator {
     private static final List<LocationIndicatorType> DEFAULT_LOCATION_INDICATOR_TYPES = Collections.unmodifiableList(
