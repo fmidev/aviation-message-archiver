@@ -3,6 +3,7 @@ package fi.fmi.avi.archiver.file;
 import static java.util.Objects.requireNonNull;
 
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.util.EnumMap;
 import java.util.Optional;
@@ -23,6 +24,11 @@ public class FilenamePattern {
     private final String filename;
     private final Pattern pattern;
     private final ZoneId timestampZone;
+
+    @Deprecated
+    public FilenamePattern(final String filename, final Pattern pattern) {
+        this(filename, pattern, ZoneOffset.UTC);
+    }
 
     public FilenamePattern(final String filename, final Pattern pattern, final ZoneId timestampZone) {
         this.filename = requireNonNull(filename, "filename");
