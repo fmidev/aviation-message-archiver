@@ -52,7 +52,6 @@ public class FileParserTest {
             .setFileConfig(TAC_FILECONFIG)
             .buildPartial();
 
-
     @Autowired
     private AviMessageConverter aviMessageConverter;
 
