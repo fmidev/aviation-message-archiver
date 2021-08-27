@@ -1,9 +1,7 @@
 package fi.fmi.avi.archiver.message.file;
 
 import fi.fmi.avi.archiver.config.ConverterConfig;
-import fi.fmi.avi.archiver.file.FileParser;
-import fi.fmi.avi.archiver.file.FilenamePattern;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.file.*;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.model.MessageType;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.regex.Pattern;
 
 import static fi.fmi.avi.model.GenericAviationWeatherMessage.Format.IWXXM;
@@ -33,6 +32,24 @@ public class FileParserTest {
     private static final FilenamePattern DEFAULT_FILENAME_PATTERN = new FilenamePattern(DEFAULT_FILENAME, Pattern.compile(""));
     private static final Instant FILE_MODIFIED = Instant.now();
     private static final String PRODUCT_IDENTIFIER = "test";
+    private static final FileMetadata.Builder DEFAULT_METADATA = FileMetadata.builder()
+            .setFilename(DEFAULT_FILENAME)
+            .setFileModified(FILE_MODIFIED)
+            .setFilenamePattern(DEFAULT_FILENAME_PATTERN)
+            .setProductIdentifier(PRODUCT_IDENTIFIER);
+    private static final FileConfig TAC_FILECONFIG = new FileConfig.Builder()
+            .setFormat(TAC)
+            .setFormatId(0)
+            .setNameTimeZone(ZoneId.of("Z"))
+            .setPattern(Pattern.compile("test_file"))
+            .build();
+    private static final FileConfig IWXXM_FILECONFIG = new FileConfig.Builder()
+            .setFormat(IWXXM)
+            .setFormatId(0)
+            .setNameTimeZone(ZoneId.of("Z"))
+            .setPattern(Pattern.compile("test_file"))
+            .build();
+
 
     @Autowired
     private AviMessageConverter aviMessageConverter;
@@ -47,20 +64,20 @@ public class FileParserTest {
     @Test
     public void empty_content() {
         assertThrows(IllegalStateException.class, () -> fileParser.parse("",
-                DEFAULT_FILENAME, DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, TAC));
+                DEFAULT_METADATA.setFileConfig(TAC_FILECONFIG).build()));
     }
 
     @Test
     public void whitespace_content() {
         assertThrows(IllegalStateException.class, () -> fileParser.parse("\r\r\n ",
-                DEFAULT_FILENAME, DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, TAC));
+                DEFAULT_METADATA.setFileConfig(TAC_FILECONFIG).build()));
     }
 
     @Test
     public void inconvertible_content() {
         final String filename = "inconvertible.txt";
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, TAC);
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(TAC_FILECONFIG).build();
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -76,8 +93,8 @@ public class FileParserTest {
     @Test
     public void taf_tac() {
         final String filename = "simple_taf.txt2";
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, TAC);
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(TAC_FILECONFIG).build();
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -93,8 +110,8 @@ public class FileParserTest {
     @Test
     public void taf_tac_without_gts_heading() {
         final String filename = "taf-missing-gts-heading.txt";
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, TAC);
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(TAC_FILECONFIG).build();
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -110,8 +127,8 @@ public class FileParserTest {
     @Test
     public void taf_tac_bulletin() {
         final String filename = "taf-tac-bulletin.bul";
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, TAC);
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(TAC_FILECONFIG).build();
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(2);
@@ -130,8 +147,8 @@ public class FileParserTest {
     @Test
     public void taf_tac_bulletin_partially_valid() {
         final String filename = "taf-tac-bulletin-partially-valid.bul";
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, TAC);
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(TAC_FILECONFIG).build();
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
 
         assertThat(result.getParseErrors()).isTrue();
         assertThat(result.getInputAviationMessages()).hasSize(2);
@@ -150,8 +167,8 @@ public class FileParserTest {
     @Test
     public void taf_tac_two_bulletins() {
         final String filename = "taf-tac-two-bulletins.bul";
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, TAC);
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(TAC_FILECONFIG).build();
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(4);
@@ -174,9 +191,8 @@ public class FileParserTest {
     @Test
     public void taf_iwxxm() {
         final String filename = "taf.xml";
-        final String fileContent = getFileContent(filename);
-        final FileParser.FileParseResult result = fileParser.parse(fileContent, filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, IWXXM);
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -193,9 +209,8 @@ public class FileParserTest {
     @Test
     public void taf_iwxxm_without_issue_and_valid_time_elements() {
         final String filename = "taf-missing-issue-valid-times.xml";
-        final String fileContent = getFileContent(filename);
-        final FileParser.FileParseResult result = fileParser.parse(fileContent, filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, IWXXM);
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -212,17 +227,15 @@ public class FileParserTest {
     @Test
     public void taf_iwxxm_invalid() {
         final String filename = "taf-invalid-content.xml";
-        final String fileContent = getFileContent(filename);
-        assertThrows(IllegalStateException.class, () -> fileParser.parse(fileContent, filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, IWXXM));
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
+        assertThrows(IllegalStateException.class, () -> fileParser.parse(getFileContent(filename), metadata));
     }
 
     @Test
     public void taf_iwxxm_with_gts_heading() {
         final String filename = "taf-gts-heading.xml";
-        final String fileContent = getFileContent(filename);
-        final FileParser.FileParseResult result = fileParser.parse(fileContent, filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, IWXXM);
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -239,9 +252,8 @@ public class FileParserTest {
     @Test
     public void taf_iwxxm_bulletin() {
         final String filename = "taf-bulletin.xml";
-        final String fileContent = getFileContent(filename);
-        final FileParser.FileParseResult result = fileParser.parse(fileContent, filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, IWXXM);
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(2);
@@ -259,9 +271,8 @@ public class FileParserTest {
     @Test
     public void taf_iwxxm_bulletin_with_gts_heading() {
         final String filename = "taf-gts-heading-bulletin.xml";
-        final String fileContent = getFileContent(filename);
-        final FileParser.FileParseResult result = fileParser.parse(fileContent, filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, IWXXM);
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(2);
@@ -279,9 +290,8 @@ public class FileParserTest {
     @Test
     public void taf_iwxxm_in_gts_bulletin() {
         final String filename = "taf-iwxxm-bulletin.bul";
-        final String fileContent = getFileContent(filename);
-        final FileParser.FileParseResult result = fileParser.parse(fileContent, filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, IWXXM);
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -299,9 +309,8 @@ public class FileParserTest {
     @Test
     public void taf_iwxxm_in_gts_bulletin_with_invalid_heading() {
         final String filename = "taf-iwxxm-in-gts-bulletin-with-invalid-heading.bul";
-        final String fileContent = getFileContent(filename);
-        assertThrows(IllegalStateException.class, () -> fileParser.parse(fileContent, filename,
-                DEFAULT_FILENAME_PATTERN, FILE_MODIFIED, PRODUCT_IDENTIFIER, IWXXM));
+        final FileMetadata metadata = DEFAULT_METADATA.setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
+        assertThrows(IllegalStateException.class, () -> fileParser.parse(getFileContent(filename), metadata));
     }
 
     private static String getFileContent(final String filename) {
