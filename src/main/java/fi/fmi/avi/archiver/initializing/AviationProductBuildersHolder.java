@@ -1,19 +1,17 @@
 package fi.fmi.avi.archiver.initializing;
 
+import fi.fmi.avi.archiver.file.FileConfig;
+import fi.fmi.avi.archiver.initializing.AviationProductsHolder.AviationProduct;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder.AviationProduct;
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder.FileConfig;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
 /**
  * Holder for Aviation product builders.

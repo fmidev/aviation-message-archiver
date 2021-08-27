@@ -1,33 +1,21 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static fi.fmi.avi.model.MessageType.METAR;
-import static fi.fmi.avi.model.MessageType.SPECI;
-import static fi.fmi.avi.model.MessageType.TAF;
-import static java.util.Objects.requireNonNull;
+import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableSet;
+import fi.fmi.avi.archiver.file.FilenamePattern;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.model.*;
+import fi.fmi.avi.model.bulletin.BulletinHeading;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.ZonedDateTime;
+import javax.annotation.Nullable;
+import java.time.*;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 
-import javax.annotation.Nullable;
-
-import com.google.auto.value.AutoValue;
-import com.google.common.collect.ImmutableSet;
-
-import fi.fmi.avi.archiver.file.FilenamePattern;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import fi.fmi.avi.model.MessageType;
-import fi.fmi.avi.model.PartialDateTime;
-import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
-import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
-import fi.fmi.avi.model.bulletin.BulletinHeading;
+import static fi.fmi.avi.model.MessageType.*;
+import static java.util.Objects.requireNonNull;
 
 public class BaseDataPopulator implements MessagePopulator {
 
@@ -45,13 +33,9 @@ public class BaseDataPopulator implements MessagePopulator {
     /**
      * Certain message types get their airport code from the bulletin heading and others from the message itself.
      *
-     * @param bulletinHeading
-     *         bulletin heading
-     * @param locationIndicator
-     *         aerodrome location indicator
-     * @param messageType
-     *         message type
-     *
+     * @param bulletinHeading   bulletin heading
+     * @param locationIndicator aerodrome location indicator
+     * @param messageType       message type
      * @return airport icao code
      */
     private static String getAirportCode(final BulletinHeading bulletinHeading, @Nullable final String locationIndicator, final MessageType messageType) {
@@ -99,13 +83,13 @@ public class BaseDataPopulator implements MessagePopulator {
                 ? inputAviationMessage.getMessage().getIssueTime().get() //
                 : bulletinHeading.getIssueTime();
         final Instant issueInstant = getIssueTime(issueTime, inputAviationMessage.getFileMetadata().getFilenamePattern(), currentTime,
-                inputAviationMessage.getFileMetadata().getFileModified());
+                inputAviationMessage.getFileMetadata().getFileModified().orElse(null));
 
         Optional<Instant> validTimeStart = Optional.empty();
         Optional<Instant> validTimeEnd = Optional.empty();
         if (inputAviationMessage.getMessage().getValidityTime().isPresent()) {
             final Optional<ValidityTime> validityTime = getValidityTime(inputAviationMessage.getMessage().getValidityTime().get(),
-                    inputAviationMessage.getFileMetadata().getFilenamePattern(), currentTime, inputAviationMessage.getFileMetadata().getFileModified());
+                    inputAviationMessage.getFileMetadata().getFilenamePattern(), currentTime, inputAviationMessage.getFileMetadata().getFileModified().orElse(null));
             if (validityTime.isPresent()) {
                 validTimeStart = Optional.of(validityTime.get().getStart());
                 validTimeEnd = Optional.of(validityTime.get().getEnd());
@@ -134,19 +118,14 @@ public class BaseDataPopulator implements MessagePopulator {
      * <p>
      * If neither is available, current time is returned.
      *
-     * @param issueTime
-     *         issue time that will be completed if it is partial
-     * @param filenamePattern
-     *         message file pattern for the given message type
-     * @param currentTime
-     *         current time
-     * @param fileLastModified
-     *         last modified time of the file
-     *
+     * @param issueTime        issue time that will be completed if it is partial
+     * @param filenamePattern  message file pattern for the given message type
+     * @param currentTime      current time
+     * @param fileLastModified last modified time of the file
      * @return complete issue time
      */
     private Instant getIssueTime(final PartialOrCompleteTimeInstant issueTime, final FilenamePattern filenamePattern, final Instant currentTime,
-            @Nullable final Instant fileLastModified) {
+                                 @Nullable final Instant fileLastModified) {
         if (issueTime.getCompleteTime().isPresent()) {
             return issueTime.getCompleteTime().get().toInstant();
         }
@@ -193,19 +172,14 @@ public class BaseDataPopulator implements MessagePopulator {
      * 2) File modification time
      * 3) Current time
      *
-     * @param validityPeriod
-     *         validity period that will be completed if it is partial
-     * @param filenamePattern
-     *         message file pattern for the given message type
-     * @param currentTime
-     *         current time
-     * @param fileModified
-     *         last modified time of the file
-     *
+     * @param validityPeriod  validity period that will be completed if it is partial
+     * @param filenamePattern message file pattern for the given message type
+     * @param currentTime     current time
+     * @param fileModified    last modified time of the file
      * @return completed validity time or an empty optional if completion is not possible
      */
     private Optional<ValidityTime> getValidityTime(final PartialOrCompleteTimePeriod validityPeriod, final FilenamePattern filenamePattern,
-            final Instant currentTime, @Nullable final Instant fileModified) {
+                                                   final Instant currentTime, @Nullable final Instant fileModified) {
         if (validityPeriod.isCompleteStrict()) {
             return Optional.of(ValidityTime.create(validityPeriod));
         } else {

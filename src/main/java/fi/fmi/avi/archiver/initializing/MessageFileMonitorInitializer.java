@@ -1,5 +1,7 @@
 package fi.fmi.avi.archiver.initializing;
 
+import fi.fmi.avi.archiver.file.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FilenamePattern;
 import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 import org.slf4j.Logger;
@@ -18,7 +20,6 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
 
-import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
@@ -26,8 +27,8 @@ import java.nio.file.Files;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import static java.util.Objects.requireNonNull;
 
@@ -35,10 +36,7 @@ import static java.util.Objects.requireNonNull;
  * Initializes Message file source directory reading, filename filtering and archiving of the files.
  */
 public class MessageFileMonitorInitializer {
-    public static final String MESSAGE_FILE_PATTERN = "message_file_pattern";
-    public static final String FILE_MODIFIED = "file_modified";
-    public static final String FILE_FORMAT = "file_format";
-    public static final String PRODUCT_IDENTIFIER = "product_identifier";
+    public static final String FILE_METADATA = "file_metadata";
     public static final String FAILED_MESSAGES = "processing_failures";
     public static final String FILE_PARSE_ERRORS = "file_parsed_partially";
 
@@ -96,11 +94,8 @@ public class MessageFileMonitorInitializer {
             product.getFileConfigs().stream().map(fileConfig -> context.registration(IntegrationFlows.from(inputChannel)//
                             .filter(new RegexPatternFileListFilter(fileConfig.getPattern())::accept)//
                             .enrichHeaders(s -> s.header(PRODUCT_KEY, product)//
-                                    .headerFunction(PRODUCT_IDENTIFIER, message -> product.getId())
                                     .headerFunction(MessageHeaders.ERROR_CHANNEL, message -> errorMessageChannel)
-                                    .headerFunction(MESSAGE_FILE_PATTERN, message -> getFilePattern(message, fileConfig.getPattern()))//
-                                    .headerFunction(FILE_FORMAT, message -> fileConfig.getFormat())//
-                                    .headerFunction(FILE_MODIFIED, this::getFileModified))//
+                                    .headerFunction(FILE_METADATA, message -> createFileMetadata(message, fileConfig, product.getId())))
                             .log(Level.INFO, INPUT_CATEGORY)//
                             .channel(processingChannel)//
                             .get()//
@@ -131,26 +126,28 @@ public class MessageFileMonitorInitializer {
         registerations.forEach(registration -> context.remove(registration.getId()));
     }
 
-    @Nullable
-    private FilenamePattern getFilePattern(final Message<?> fileMessage, final Pattern pattern) {
-        final String filename = fileMessage.getHeaders().get(FileHeaders.FILENAME, String.class);
-        if (filename == null) {
-            return null;
-        }
-        return new FilenamePattern(filename, pattern);
+    private static FileMetadata createFileMetadata(final Message<?> message, final FileConfig fileConfig,
+                                                   final String productIdentifier) {
+        final String filename = message.getHeaders().get(FileHeaders.FILENAME, String.class);
+        return FileMetadata.builder()
+                .setFilename(filename)
+                .setFileConfig(fileConfig)
+                .setFilenamePattern(new FilenamePattern(filename, fileConfig.getPattern()))
+                .setProductIdentifier(productIdentifier)
+                .setFileModified(getFileModified(message))
+                .build();
     }
 
-    @Nullable
-    private Instant getFileModified(final Message<?> fileMessage) {
-        final File file = fileMessage.getHeaders().get(FileHeaders.ORIGINAL_FILE, File.class);
+    private static Optional<Instant> getFileModified(final Message<?> message) {
+        final File file = message.getHeaders().get(FileHeaders.ORIGINAL_FILE, File.class);
         if (file != null) {
             try {
-                return Files.getLastModifiedTime(file.toPath()).toInstant();
+                return Optional.of(Files.getLastModifiedTime(file.toPath()).toInstant());
             } catch (final IOException e) {
                 LOGGER.error("Unable to get file last modified time: {}", file.getName(), e);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
 }
