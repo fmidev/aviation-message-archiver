@@ -1,7 +1,10 @@
 package fi.fmi.avi.archiver.message.file;
 
 import fi.fmi.avi.archiver.config.ConverterConfig;
-import fi.fmi.avi.archiver.file.*;
+import fi.fmi.avi.archiver.file.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileParser;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.model.MessageType;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class FileParserTest {
 
     private static final String DEFAULT_FILENAME = "test_file";
-    private static final FilenamePattern DEFAULT_FILENAME_PATTERN = new FilenamePattern(DEFAULT_FILENAME, Pattern.compile(""));
     private static final Instant FILE_MODIFIED = Instant.now();
     private static final String PRODUCT_IDENTIFIER = "test";
     private static final FileConfig TAC_FILECONFIG = new FileConfig.Builder()
@@ -47,7 +49,6 @@ public class FileParserTest {
     private static final FileMetadata DEFAULT_METADATA = FileMetadata.builder()
             .setFilename(DEFAULT_FILENAME)
             .setFileModified(FILE_MODIFIED)
-            .setFilenamePattern(DEFAULT_FILENAME_PATTERN)
             .setProductIdentifier(PRODUCT_IDENTIFIER)
             .setFileConfig(TAC_FILECONFIG)
             .buildPartial();

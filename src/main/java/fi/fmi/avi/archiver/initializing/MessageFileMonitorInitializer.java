@@ -2,7 +2,6 @@ package fi.fmi.avi.archiver.initializing;
 
 import fi.fmi.avi.archiver.file.FileConfig;
 import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FilenamePattern;
 import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,7 +131,6 @@ public class MessageFileMonitorInitializer {
         return FileMetadata.builder()
                 .setFilename(filename)
                 .setFileConfig(fileConfig)
-                .setFilenamePattern(new FilenamePattern(filename, fileConfig.getPattern()))
                 .setProductIdentifier(productIdentifier)
                 .setFileModified(getFileModified(message))
                 .build();

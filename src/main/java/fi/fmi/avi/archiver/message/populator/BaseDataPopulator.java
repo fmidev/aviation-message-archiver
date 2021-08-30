@@ -2,7 +2,7 @@ package fi.fmi.avi.archiver.message.populator;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableSet;
-import fi.fmi.avi.archiver.file.FilenamePattern;
+import fi.fmi.avi.archiver.file.FilenameMatcher;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.*;
@@ -79,17 +79,18 @@ public class BaseDataPopulator implements MessagePopulator {
         final String airportCode = getAirportCode(bulletinHeading, messageAerodromeIndicator, messageType);
 
         // Get partial issue time from message or bulletin heading and try to complete it
+        final FilenameMatcher filenameMatcher = inputAviationMessage.getFileMetadata().createFilenameMatcher();
         final PartialOrCompleteTimeInstant issueTime = inputAviationMessage.getMessage().getIssueTime().isPresent() //
                 ? inputAviationMessage.getMessage().getIssueTime().get() //
                 : bulletinHeading.getIssueTime();
-        final Instant issueInstant = getIssueTime(issueTime, inputAviationMessage.getFileMetadata().getFilenamePattern(), currentTime,
+        final Instant issueInstant = getIssueTime(issueTime, filenameMatcher, currentTime,
                 inputAviationMessage.getFileMetadata().getFileModified().orElse(null));
 
         Optional<Instant> validTimeStart = Optional.empty();
         Optional<Instant> validTimeEnd = Optional.empty();
         if (inputAviationMessage.getMessage().getValidityTime().isPresent()) {
             final Optional<ValidityTime> validityTime = getValidityTime(inputAviationMessage.getMessage().getValidityTime().get(),
-                    inputAviationMessage.getFileMetadata().getFilenamePattern(), currentTime, inputAviationMessage.getFileMetadata().getFileModified().orElse(null));
+                    filenameMatcher, currentTime, inputAviationMessage.getFileMetadata().getFileModified().orElse(null));
             if (validityTime.isPresent()) {
                 validTimeStart = Optional.of(validityTime.get().getStart());
                 validTimeEnd = Optional.of(validityTime.get().getEnd());
@@ -119,12 +120,12 @@ public class BaseDataPopulator implements MessagePopulator {
      * If neither is available, current time is returned.
      *
      * @param issueTime        issue time that will be completed if it is partial
-     * @param filenamePattern  message file pattern for the given message type
+     * @param filenameMatcher  message file pattern for the given message type
      * @param currentTime      current time
      * @param fileLastModified last modified time of the file
      * @return complete issue time
      */
-    private Instant getIssueTime(final PartialOrCompleteTimeInstant issueTime, final FilenamePattern filenamePattern, final Instant currentTime,
+    private Instant getIssueTime(final PartialOrCompleteTimeInstant issueTime, final FilenameMatcher filenameMatcher, final Instant currentTime,
                                  @Nullable final Instant fileLastModified) {
         if (issueTime.getCompleteTime().isPresent()) {
             return issueTime.getCompleteTime().get().toInstant();
@@ -134,21 +135,21 @@ public class BaseDataPopulator implements MessagePopulator {
         else if (issueTime.getPartialTime().isPresent()) {
             OptionalInt minute = issueTime.getMinute();
             if (!minute.isPresent()) {
-                minute = getTemporalComponent(filenamePattern, FilenamePattern.MINUTE);
+                minute = getTemporalComponent(filenameMatcher, FilenameMatcher.MINUTE);
             }
 
             OptionalInt hour = issueTime.getHour();
             if (!hour.isPresent()) {
-                hour = getTemporalComponent(filenamePattern, FilenamePattern.HOUR);
+                hour = getTemporalComponent(filenameMatcher, FilenameMatcher.HOUR);
             }
 
             OptionalInt day = issueTime.getDay();
             if (!day.isPresent()) {
-                day = getTemporalComponent(filenamePattern, FilenamePattern.DAY);
+                day = getTemporalComponent(filenameMatcher, FilenameMatcher.DAY);
             }
 
-            final OptionalInt year = getTemporalComponent(filenamePattern, FilenamePattern.YEAR);
-            final OptionalInt month = getTemporalComponent(filenamePattern, FilenamePattern.MONTH);
+            final OptionalInt year = getTemporalComponent(filenameMatcher, FilenameMatcher.YEAR);
+            final OptionalInt month = getTemporalComponent(filenameMatcher, FilenameMatcher.MONTH);
 
             if (year.isPresent() && month.isPresent() && day.isPresent() && hour.isPresent() && minute.isPresent()) {
                 return PartialDateTime.of(day.getAsInt(), hour.getAsInt(), minute.getAsInt(), clock.getZone())
@@ -173,21 +174,21 @@ public class BaseDataPopulator implements MessagePopulator {
      * 3) Current time
      *
      * @param validityPeriod  validity period that will be completed if it is partial
-     * @param filenamePattern message file pattern for the given message type
+     * @param filenameMatcher message file pattern for the given message type
      * @param currentTime     current time
      * @param fileModified    last modified time of the file
      * @return completed validity time or an empty optional if completion is not possible
      */
-    private Optional<ValidityTime> getValidityTime(final PartialOrCompleteTimePeriod validityPeriod, final FilenamePattern filenamePattern,
+    private Optional<ValidityTime> getValidityTime(final PartialOrCompleteTimePeriod validityPeriod, final FilenameMatcher filenameMatcher,
                                                    final Instant currentTime, @Nullable final Instant fileModified) {
         if (validityPeriod.isCompleteStrict()) {
             return Optional.of(ValidityTime.create(validityPeriod));
         } else {
-            final OptionalInt year = getTemporalComponent(filenamePattern, FilenamePattern.YEAR);
-            final OptionalInt month = getTemporalComponent(filenamePattern, FilenamePattern.MONTH);
-            final OptionalInt day = getTemporalComponent(filenamePattern, FilenamePattern.DAY);
-            final OptionalInt hour = getTemporalComponent(filenamePattern, FilenamePattern.HOUR);
-            final OptionalInt minute = getTemporalComponent(filenamePattern, FilenamePattern.MINUTE);
+            final OptionalInt year = getTemporalComponent(filenameMatcher, FilenameMatcher.YEAR);
+            final OptionalInt month = getTemporalComponent(filenameMatcher, FilenameMatcher.MONTH);
+            final OptionalInt day = getTemporalComponent(filenameMatcher, FilenameMatcher.DAY);
+            final OptionalInt hour = getTemporalComponent(filenameMatcher, FilenameMatcher.HOUR);
+            final OptionalInt minute = getTemporalComponent(filenameMatcher, FilenameMatcher.MINUTE);
 
             if (year.isPresent() && month.isPresent() && day.isPresent() && hour.isPresent() && minute.isPresent()) {
                 final ZonedDateTime reference = ZonedDateTime.of(
@@ -220,11 +221,11 @@ public class BaseDataPopulator implements MessagePopulator {
         return Optional.empty();
     }
 
-    private OptionalInt getTemporalComponent(final FilenamePattern filenamePattern, final String component) {
+    private OptionalInt getTemporalComponent(final FilenameMatcher filenameMatcher, final String component) {
         try {
-            return OptionalInt.of(filenamePattern.getInt(component));
+            return filenameMatcher.getInt(component);
         } catch (final Throwable t) {
-            // There's no group with the given name or it is not parseable into an integer
+            // There's no group with the given name
             return OptionalInt.empty();
         }
     }
