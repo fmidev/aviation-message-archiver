@@ -19,13 +19,15 @@ public abstract class FileMetadata {
 
     public abstract String getFilename();
 
-    public abstract FilenamePattern getFilenamePattern();
-
     public abstract Optional<Instant> getFileModified();
 
     public abstract FileConfig getFileConfig();
 
     public abstract String getProductIdentifier();
+
+    public FilenameMatcher createFilenameMatcher() {
+        return new FilenameMatcher(getFilename(), getFileConfig().getPattern());
+    }
 
     public static class Builder extends FileMetadata_Builder {
         Builder() {

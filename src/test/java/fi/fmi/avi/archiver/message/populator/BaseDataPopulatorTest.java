@@ -1,8 +1,8 @@
 package fi.fmi.avi.archiver.message.populator;
 
 import com.google.common.collect.ImmutableMap;
+import fi.fmi.avi.archiver.file.FileConfig;
 import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FilenamePattern;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
@@ -52,8 +52,13 @@ public class BaseDataPopulatorTest {
                 .setBulletinHeading(BulletinHeadingDecoder.decode("FTFI33 EFPP 020500", null))
                 .build();
         final FileMetadata fileMetadata = FileMetadata.builder()
-                .setFilenamePattern(new FilenamePattern("TAF_20190505_102013_12332319",
-                        Pattern.compile("^TAF_(?<yyyy>\\d{4})(?<MM>\\d{2})(?<dd>\\d{2})_(?<hh>\\d{2})(?<mm>\\d{2})(?<ss>\\d{2})_\\d{8}$")))
+                .setFilename("TAF_20190505_102013_12332319")
+                .setFileConfig(new FileConfig.Builder()//
+                        .setPattern(Pattern.compile("^TAF_(?<yyyy>\\d{4})(?<MM>\\d{2})(?<dd>\\d{2})_(?<hh>\\d{2})(?<mm>\\d{2})(?<ss>\\d{2})_\\d{8}$"))
+                        .setNameTimeZone(ZoneId.of("Z"))
+                        .setFormat(GenericAviationWeatherMessage.Format.TAC)
+                        .setFormatId(0)
+                        .build())
                 .setFileModified(clock.instant())
                 .setProductIdentifier("test identifier")
                 .build();
@@ -71,7 +76,7 @@ public class BaseDataPopulatorTest {
         assertThat(taf.getRoute()).isEqualTo(1);
         assertThat(taf.getMessageTime()).isEqualTo(Instant.parse("2019-05-02T05:32:00Z"));
         assertThat(taf.getIcaoAirportCode()).isEqualTo("EFKE");
-        assertThat(taf.getHeading()).isEqualTo("FTFI33 EFPP 020500");
+        assertThat(taf.getHeading()).contains("FTFI33 EFPP 020500");
         assertThat(taf.getMessage()).isEqualTo(
                 "TAF EFKE 020532Z 0206/0312 05005KT 9999 -SHRA BKN004 BECMG 0206/0208 FEW005 BKN020 TEMPO 0206/0215 4000 SHRA " + "BKN010 SCT030CB=");
         assertThat(taf.getValidFrom()).hasValue(Instant.parse("2019-05-02T06:00:00Z"));
@@ -96,8 +101,13 @@ public class BaseDataPopulatorTest {
                 .setBulletinHeading(BulletinHeadingDecoder.decode("FTXX33 YYYY 020500 AAA", null))
                 .build();
         final FileMetadata fileMetadata = FileMetadata.builder()
-                .setFilenamePattern(new FilenamePattern("TAF_20190505_102013_12332319",
-                        Pattern.compile("^TAF_(?<yyyy>\\d{4})(?<MM>\\d{2})(?<dd>\\d{2})_(?<hh>\\d{2})(?<mm>\\d{2})(?<ss>\\d{2})_\\d{8}$")))
+                .setFilename("TAF_20190505_102013_12332319")
+                .setFileConfig(new FileConfig.Builder()//
+                        .setPattern(Pattern.compile("^TAF_(?<yyyy>\\d{4})(?<MM>\\d{2})(?<dd>\\d{2})_(?<hh>\\d{2})(?<mm>\\d{2})(?<ss>\\d{2})_\\d{8}$"))
+                        .setNameTimeZone(ZoneId.of("Z"))
+                        .setFormat(GenericAviationWeatherMessage.Format.TAC)
+                        .setFormatId(0)
+                        .build())
                 .setFileModified(clock.instant())
                 .setProductIdentifier("test identifier")
                 .build();
@@ -115,7 +125,7 @@ public class BaseDataPopulatorTest {
         assertThat(taf.getRoute()).isEqualTo(1);
         assertThat(taf.getMessageTime()).isEqualTo(Instant.parse("2019-05-02T05:32:00Z"));
         assertThat(taf.getIcaoAirportCode()).isEqualTo("YYYY");
-        assertThat(taf.getHeading()).isEqualTo("FTXX33 YYYY 020500 AAA");
+        assertThat(taf.getHeading()).contains("FTXX33 YYYY 020500 AAA");
         assertThat(taf.getMessage()).isEqualTo("TAF AMD YYYY 020532Z 0206/0312 CNL=");
         assertThat(taf.getValidFrom()).hasValue(Instant.parse("2019-05-02T06:00:00Z"));
         assertThat(taf.getValidTo()).hasValue(Instant.parse("2019-05-03T12:00:00Z"));
@@ -139,8 +149,13 @@ public class BaseDataPopulatorTest {
                 .setBulletinHeading(BulletinHeadingDecoder.decode("FTXX33 YYYY 020500 CCA", null))
                 .build();
         final FileMetadata fileMetadata = FileMetadata.builder()
-                .setFilenamePattern(new FilenamePattern("TAF_20190505_102013_12332319",
-                        Pattern.compile("^TAF_(?<yyyy>\\d{4})(?<MM>\\d{2})(?<dd>\\d{2})_(?<hh>\\d{2})(?<mm>\\d{2})(?<ss>\\d{2})_\\d{8}$")))
+                .setFilename("TAF_20190505_102013_12332319")
+                .setFileConfig(new FileConfig.Builder()//
+                        .setPattern(Pattern.compile("^TAF_(?<yyyy>\\d{4})(?<MM>\\d{2})(?<dd>\\d{2})_(?<hh>\\d{2})(?<mm>\\d{2})(?<ss>\\d{2})_\\d{8}$"))
+                        .setNameTimeZone(ZoneId.of("Z"))
+                        .setFormat(GenericAviationWeatherMessage.Format.TAC)
+                        .setFormatId(0)
+                        .build())
                 .setFileModified(clock.instant())
                 .setProductIdentifier("test identifier")
                 .build();
@@ -158,7 +173,7 @@ public class BaseDataPopulatorTest {
         assertThat(taf.getRoute()).isEqualTo(1);
         assertThat(taf.getMessageTime()).isEqualTo(Instant.parse("2019-05-02T05:32:00Z"));
         assertThat(taf.getIcaoAirportCode()).isEqualTo("YYYY");
-        assertThat(taf.getHeading()).isEqualTo("FTXX33 YYYY 020500 CCA");
+        assertThat(taf.getHeading()).contains("FTXX33 YYYY 020500 CCA");
         assertThat(taf.getMessage()).isEqualTo("TAF COR YYYY 020532Z 0206/0312 20108KT 8000=");
         assertThat(taf.getValidFrom()).hasValue(Instant.parse("2019-05-02T06:00:00Z"));
         assertThat(taf.getValidTo()).hasValue(Instant.parse("2019-05-03T12:00:00Z"));
