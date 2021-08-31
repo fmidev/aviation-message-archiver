@@ -1,22 +1,18 @@
 package fi.fmi.avi.archiver.initializing;
 
-import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
-
-import java.io.File;
-import java.time.ZoneId;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.regex.Pattern;
-
+import com.google.common.collect.ImmutableMap;
+import fi.fmi.avi.archiver.file.FileConfig;
 import org.inferred.freebuilder.FreeBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Holder for Aviation products.
@@ -101,28 +97,4 @@ public class AviationProductsHolder {
         }
     }
 
-    @FreeBuilder
-    public static abstract class FileConfig {
-        FileConfig() {
-        }
-
-        public abstract Pattern getPattern();
-
-        public abstract ZoneId getNameTimeZone();
-
-        public abstract GenericAviationWeatherMessage.Format getFormat();
-
-        public abstract int getFormatId();
-
-        public static class Builder extends AviationProductsHolder_FileConfig_Builder {
-            public Builder() {
-            }
-
-            @Override
-            public FileConfig build() {
-                checkState(!getPattern().toString().isEmpty(), "pattern is empty");
-                return super.build();
-            }
-        }
-    }
 }
