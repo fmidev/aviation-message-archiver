@@ -29,6 +29,9 @@ public class MessagePopulatorService {
     @ServiceActivator
     public Message<List<ArchiveAviationMessage>> populateMessages(final List<InputAviationMessage> inputMessages,
                                                                   final MessageHeaders headers) {
+        requireNonNull(inputMessages, "inputMessages");
+        requireNonNull(headers, "headers");
+
         final List<ArchiveAviationMessage> populatedMessages = new ArrayList<>();
         final List<InputAviationMessage> failures = new ArrayList<>();
         for (InputAviationMessage inputMessage : inputMessages) {

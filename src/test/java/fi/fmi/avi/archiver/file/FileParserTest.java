@@ -1,10 +1,6 @@
-package fi.fmi.avi.archiver.message.file;
+package fi.fmi.avi.archiver.file;
 
 import fi.fmi.avi.archiver.config.ConverterConfig;
-import fi.fmi.avi.archiver.file.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileParser;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.model.MessageType;
 import org.junit.jupiter.api.BeforeEach;

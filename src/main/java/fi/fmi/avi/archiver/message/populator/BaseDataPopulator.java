@@ -53,6 +53,9 @@ public class BaseDataPopulator implements MessagePopulator {
 
     @Override
     public void populate(final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder aviationMessageBuilder) {
+        requireNonNull(inputAviationMessage, "inputAviationMessage");
+        requireNonNull(aviationMessageBuilder, "aviationMessageBuilder");
+
         final Instant currentTime = clock.instant();
         // TODO Assume that the GTS heading is present for now
         final BulletinHeading bulletinHeading = inputAviationMessage.getGtsBulletinHeading().getBulletinHeading().get();
@@ -68,7 +71,7 @@ public class BaseDataPopulator implements MessagePopulator {
 
         Optional<String> version = Optional.empty();
         if (bulletinHeading.getType() != BulletinHeading.Type.NORMAL) {
-            final int augmentationNumber = bulletinHeading.getBulletinAugmentationNumber()
+            final int augmentationNumber = bulletinHeading.getAugmentationNumber()
                     .orElseThrow(() -> new IllegalStateException("Heading type is not normal but augmentation number is missing"));
             version = Optional.of(bulletinHeading.getType().getPrefix() + String.valueOf(Character.toChars('A' + augmentationNumber - 1)));
         }

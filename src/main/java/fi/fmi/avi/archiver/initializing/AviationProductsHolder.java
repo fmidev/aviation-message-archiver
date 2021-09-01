@@ -27,6 +27,9 @@ public class AviationProductsHolder {
     }
 
     public static <E> void iterateProducts(final List<E> productBuilders, final Consumer<? super E> productConsumer) {
+        requireNonNull(productBuilders, "productBuilders");
+        requireNonNull(productConsumer, "productConsumer");
+
         final int size = productBuilders.size();
         for (int i = 0; i < size; i++) {
             try {
@@ -59,6 +62,10 @@ public class AviationProductsHolder {
     @FreeBuilder
     public abstract static class AviationProduct {
         AviationProduct() {
+        }
+
+        public static Builder builder() {
+            return new Builder();
         }
 
         public abstract String getId();
