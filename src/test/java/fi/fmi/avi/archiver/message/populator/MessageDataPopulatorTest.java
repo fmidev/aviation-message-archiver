@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.message.populator;
 
+import static fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.EMPTY_RESULT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
@@ -85,7 +86,7 @@ class MessageDataPopulatorTest {
                 .setFormat(MessagePopulatorTests.FormatId.valueOf(INPUT_MESSAGE_TEMPLATE.getMessage().getMessageFormat()).getId())//
                 .buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.buildPartial()).isEqualTo(expected);
     }
@@ -99,7 +100,7 @@ class MessageDataPopulatorTest {
                         .build())//
                 .buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getFormat()).isEqualTo(expectedFormat.getId());
     }
@@ -113,7 +114,7 @@ class MessageDataPopulatorTest {
                         .build())//
                 .buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getType()).isEqualTo(expectedType.getId());
     }
@@ -144,7 +145,7 @@ class MessageDataPopulatorTest {
                         .build())//
                 .buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getMessageTime()).isEqualTo(expectedTime);
     }
@@ -163,7 +164,7 @@ class MessageDataPopulatorTest {
                 .buildPartial();
 
         final String initialIcaoAirportCode = "NULL";
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder()//
+        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
                 .setIcaoAirportCode(initialIcaoAirportCode);
         populator.populate(inputMessage, builder);
         assertThat(builder.getIcaoAirportCode()).isEqualTo(Optional.ofNullable(expectedIcaoAirportCode).orElse(initialIcaoAirportCode));
@@ -190,7 +191,7 @@ class MessageDataPopulatorTest {
 
         final Instant initialValidFrom = Instant.EPOCH;
         final Instant initialValidTo = initialValidFrom.plus(1, ChronoUnit.DAYS);
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder()//
+        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
                 .setValidFrom(initialValidFrom)//
                 .setValidTo(initialValidTo);
         populator.populate(inputMessage, builder);
@@ -200,20 +201,19 @@ class MessageDataPopulatorTest {
         });
     }
 
-    // TODO: Depends on fmidev/fmi-avi-messageconverter-iwxxm#92
-    //    @Test
-    //    void populates_xmlNamespace_when_exists() {
-    //        final String expectedNamespace = "http://expected/namespace";
-    //        final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-    //                .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
-    //                        .setXMLNamespace(expectedNamespace)//
-    //                        .build())//
-    //                .buildPartial();
-    //
-    //        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
-    //        populator.populate(inputMessage, builder);
-    //        assertThat(builder.getIWXXMDetailsBuilder().getXMLNamespace()).isEqualTo(Optional.of(expectedNamespace));
-    //    }
+    @Test
+    void populates_xmlNamespace_when_exists() {
+        final String expectedNamespace = "http://expected/namespace";
+        final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
+                .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
+                        .setXMLNamespace(expectedNamespace)//
+                        .build())//
+                .buildPartial();
+
+        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        populator.populate(inputMessage, builder);
+        assertThat(builder.getIWXXMDetailsBuilder().getXMLNamespace()).isEqualTo(Optional.of(expectedNamespace));
+    }
 
     @Test
     void populates_originalMessage_when_exists() {
@@ -224,7 +224,7 @@ class MessageDataPopulatorTest {
                         .build())//
                 .buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
         assertThat(builder.getMessage()).isEqualTo(expectedMessage);
     }

@@ -122,9 +122,8 @@ public class MessageDataPopulator implements MessagePopulator {
                 .flatMap(PartialOrCompleteTimeInstant::getCompleteTime)//
                 .map(ChronoZonedDateTime::toInstant)//
                 .ifPresent(builder::setValidTo);
-        // TODO: Depends on fmidev/fmi-avi-messageconverter-iwxxm#92
-        //        inputMessage.getXMLNamespace()//
-        //                .ifPresent(xmlNamespace -> builder.mutateIWXXMDetails(iwxxmDetails -> iwxxmDetails.setXMLNamespace(xmlNamespace)));
+        inputMessage.getXMLNamespace()//
+                .ifPresent(xmlNamespace -> builder.mutateIWXXMDetails(iwxxmDetails -> iwxxmDetails.setXMLNamespace(xmlNamespace)));
         builder.setMessage(inputMessage.getOriginalMessage());
     }
 
