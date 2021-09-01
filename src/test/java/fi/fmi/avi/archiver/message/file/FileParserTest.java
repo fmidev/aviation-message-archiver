@@ -36,12 +36,14 @@ public class FileParserTest {
     private static final String DEFAULT_FILENAME = "test_file";
     private static final Instant FILE_MODIFIED = Instant.now();
     private static final String PRODUCT_IDENTIFIER = "test";
-    private static final FileConfig TAC_FILECONFIG = new FileConfig.Builder().setFormat(GenericAviationWeatherMessage.Format.TAC)
+    private static final FileConfig TAC_FILECONFIG = FileConfig.builder()
+            .setFormat(GenericAviationWeatherMessage.Format.TAC)
             .setFormatId(0)
             .setNameTimeZone(ZoneId.of("Z"))
             .setPattern(Pattern.compile("test_file"))
             .build();
-    private static final FileConfig IWXXM_FILECONFIG = new FileConfig.Builder().setFormat(GenericAviationWeatherMessage.Format.IWXXM)
+    private static final FileConfig IWXXM_FILECONFIG = FileConfig.builder()
+            .setFormat(GenericAviationWeatherMessage.Format.IWXXM)
             .setFormatId(1)
             .setNameTimeZone(ZoneId.of("Z"))
             .setPattern(Pattern.compile("test_file"))

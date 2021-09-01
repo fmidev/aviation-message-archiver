@@ -2,6 +2,8 @@ package fi.fmi.avi.archiver.message.populator;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableMap;
@@ -24,7 +26,7 @@ public final class MessagePopulatorTests {
         throw new AssertionError();
     }
 
-    enum FormatId {
+    enum FormatId implements NumericIdHolder {
         TAC(GenericAviationWeatherMessage.Format.TAC, 1), //
         IWXXM(GenericAviationWeatherMessage.Format.IWXXM, 2), //
         ;
@@ -38,22 +40,24 @@ public final class MessagePopulatorTests {
         }
 
         public static FormatId valueOf(final GenericAviationWeatherMessage.Format format) {
-            return Arrays.stream(values())//
-                    .filter(formatId -> formatId.getFormat() == format)//
-                    .findAny()//
-                    .orElseThrow(() -> new IllegalArgumentException("Unknown format: " + format));
+            return NumericIdHolder.valueOf(format, FormatId::getFormat, values());
+        }
+
+        public static FormatId valueOf(final int id) {
+            return NumericIdHolder.valueOf(id, values());
         }
 
         public GenericAviationWeatherMessage.Format getFormat() {
             return format;
         }
 
+        @Override
         public int getId() {
             return id;
         }
     }
 
-    enum TypeId {
+    enum TypeId implements NumericIdHolder {
         SPECI(MessageType.SPECI, 1), //
         METAR(MessageType.METAR, 2), //
         TAF(MessageType.TAF, 3), //
@@ -73,18 +77,64 @@ public final class MessagePopulatorTests {
         }
 
         public static TypeId valueOf(final MessageType type) {
-            return Arrays.stream(values())//
-                    .filter(typeId -> typeId.getType() == type)//
-                    .findAny()//
-                    .orElseThrow(() -> new IllegalArgumentException("Unknown type: " + type));
+            return NumericIdHolder.valueOf(type, TypeId::getType, values());
+        }
+
+        public static TypeId valudOf(final int id) {
+            return NumericIdHolder.valueOf(id, values());
         }
 
         public MessageType getType() {
             return type;
         }
 
+        @Override
         public int getId() {
             return id;
         }
+    }
+
+    enum RouteId implements NumericIdHolder {
+        TEST(1), //
+        TEST2(2);
+
+        private final int id;
+
+        RouteId(final int id) {
+            this.id = id;
+        }
+
+        public static RouteId valudOf(final int id) {
+            return NumericIdHolder.valueOf(id, values());
+        }
+
+        public String getName() {
+            return name();
+        }
+
+        @Override
+        public int getId() {
+            return id;
+        }
+    }
+
+    private interface NumericIdHolder {
+        @SafeVarargs
+        static <H extends NumericIdHolder> H valueOf(final int id, final H... holders) {
+            return Arrays.stream(holders)//
+                    .filter(holder -> holder.getId() == id)//
+                    .findAny()//
+                    .orElseThrow(() -> new IllegalArgumentException("Unknown id: " + id));
+        }
+
+        @SafeVarargs
+        static <H extends NumericIdHolder, V> H valueOf(final V value, final Function<H, V> holderValue, final H... holders) {
+            return Arrays.stream(holders)//
+                    .filter(holder -> Objects.equals(holderValue.apply(holder), value))//
+                    .findAny()//
+                    .orElseThrow(() -> new IllegalArgumentException("Unknown " + value.getClass().getSimpleName() + ": " + value));
+        }
+
+        int getId();
     }
 }

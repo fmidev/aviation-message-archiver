@@ -26,6 +26,7 @@ import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileParser;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingDataPopulator;
@@ -66,6 +67,9 @@ public class ParserConfig {
     @Autowired
     private AviMessageConverter aviMessageConverter;
 
+    @Autowired
+    private AviationProductsHolder aviationProductsHolder;
+
     @Resource(name = "messageTypeIds")
     private Map<MessageType, Integer> messageTypeIds;
 
@@ -101,7 +105,7 @@ public class ParserConfig {
     @PostConstruct
     private void addBasePopulators() {
         messagePopulators.addAll(0, Arrays.asList(//
-                new FileMetadataPopulator(), //
+                new FileMetadataPopulator(aviationProductsHolder.getProducts()), //
                 new BulletinHeadingDataPopulator(messageFormatIds, messageTypeIds,
                         Arrays.asList(BulletinHeadingDataPopulator.BulletinHeadingSource.GTS_BULLETIN_HEADING,
                                 BulletinHeadingDataPopulator.BulletinHeadingSource.COLLECT_IDENTIFIER)), // TODO: make configurable in application.yml
