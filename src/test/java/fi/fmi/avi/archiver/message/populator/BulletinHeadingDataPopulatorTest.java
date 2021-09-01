@@ -17,7 +17,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FilenamePattern;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingDataPopulator.BulletinHeadingSource;
@@ -35,7 +34,12 @@ class BulletinHeadingDataPopulatorTest {
             .setFileMetadata(FileMetadata.builder()//
                     .setProductIdentifier("testproduct")//
                     .setFileModified(Instant.parse("2000-01-02T03:05:34Z"))//
-                    .setFilenamePattern(new FilenamePattern("taf.txt", MessagePopulatorTests.FILE_NAME_PATTERN, ZoneOffset.UTC)))//
+                    .setFilename("taf.txt")//
+                    .mutateFileConfig(fileConfig -> fileConfig//
+                            .setFormat(MessagePopulatorTests.FormatId.TAC.getFormat())//
+                            .setFormatId(MessagePopulatorTests.FormatId.TAC.getId())//
+                            .setPattern(MessagePopulatorTests.FILE_NAME_PATTERN)//
+                            .setNameTimeZone(ZoneOffset.UTC)))//
             .buildPartial();
     private static final BulletinHeadingImpl BULLETIN_HEADING_TEMPLATE = BulletinHeadingImpl.builder()//
             .setDataTypeDesignatorT2(DataTypeDesignatorT2.ForecastsDataTypeDesignatorT2.FCT_AERODROME_VT_LONG)//
@@ -145,8 +149,9 @@ class BulletinHeadingDataPopulatorTest {
     void populates_messageTime_when_exists(@Nullable final PartialDateTime gtsIssueTime, @Nullable final ZonedDateTime collectIssueTime, final String filename,
             final Instant fileModified, final Instant expectedTime) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(filedata -> filedata.setFileModified(fileModified)//
-                        .setFilenamePattern(new FilenamePattern(filename, MessagePopulatorTests.FILE_NAME_PATTERN, ZoneOffset.UTC)));
+                .mutateFileMetadata(filedata -> filedata//
+                        .setFilename(filename)//
+                        .setFileModified(fileModified));
         if (gtsIssueTime != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(builder -> builder.setBulletinHeading(
                     BULLETIN_HEADING_TEMPLATE.toBuilder().setIssueTime(PartialOrCompleteTimeInstant.of(gtsIssueTime)).build()));
@@ -238,13 +243,13 @@ class BulletinHeadingDataPopulatorTest {
         if (gtsBulletinType != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(builder -> builder.setBulletinHeading(BULLETIN_HEADING_TEMPLATE.toBuilder()//
                     .setType(gtsBulletinType)//
-                    .setNullableBulletinAugmentationNumber(gtsAugmentationNumber)//
+                    .setNullableAugmentationNumber(gtsAugmentationNumber)//
                     .build()));
         }
         if (collectBulletinType != null) {
             inputMessageBuilder.mutateCollectIdentifier(builder -> builder.setBulletinHeading(BULLETIN_HEADING_TEMPLATE.toBuilder()//
                     .setType(collectBulletinType)//
-                    .setNullableBulletinAugmentationNumber(collectAugmentationNumber)//
+                    .setNullableAugmentationNumber(collectAugmentationNumber)//
                     .build()));
         }
         final InputAviationMessage inputMessage = inputMessageBuilder.buildPartial();

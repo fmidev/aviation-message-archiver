@@ -53,7 +53,8 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
     private final Map<MessageType, Integer> typeIds;
     private final List<BulletinHeadingSource> bulletinHeadingSources;
 
-    public BulletinHeadingDataPopulator(final Map<GenericAviationWeatherMessage.Format, Integer> formatIds, final Map<MessageType, Integer> typeIds, final List<BulletinHeadingSource> bulletinHeadingSources) {
+    public BulletinHeadingDataPopulator(final Map<GenericAviationWeatherMessage.Format, Integer> formatIds, final Map<MessageType, Integer> typeIds,
+            final List<BulletinHeadingSource> bulletinHeadingSources) {
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");
         this.bulletinHeadingSources = requireNonNull(bulletinHeadingSources, "bulletinHeadingSources");
@@ -85,7 +86,7 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
         getFirstNonNullFromBulletinHeading(input, inputHeading -> inputHeading.getBulletinHeading()//
                 .flatMap(heading -> heading.getType() == BulletinHeading.Type.NORMAL //
                         ? Optional.empty() //
-                        : heading.getBulletinAugmentationNumber()//
+                        : heading.getAugmentationNumber()//
                                 .map(augmentationNumber -> heading.getType().getPrefix() + String.valueOf(Character.toChars('A' + augmentationNumber - 1)))))//
                 .ifPresent(builder::setVersion);
         input.getCollectIdentifier()//
@@ -102,8 +103,10 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
                 .mapPartialTime(partialDateTime -> partialDateTime.withZone(partialDateTime.getZone().orElse(ZoneOffset.UTC)))//
                 .build();
         return TimeUtil.toCompleteTime(zonedMessageTime, //
-                input.getFileMetadata().getFilenamePattern().getTimestamp().orElse(null), //
-                PartialOrCompleteTimeInstant.of(input.getFileMetadata().getFileModified().atZone(ZoneOffset.UTC)));
+                input.getFileMetadata().createFilenameMatcher().getTimestamp().orElse(null), //
+                input.getFileMetadata().getFileModified()//
+                        .map(fileModified -> PartialOrCompleteTimeInstant.of(fileModified.atZone(ZoneOffset.UTC)))//
+                        .orElse(null));
     }
 
     private <T> Optional<T> getFirstNonNullFromBulletinHeading(final InputAviationMessage input, final Function<InputBulletinHeading, Optional<T>> fn) {

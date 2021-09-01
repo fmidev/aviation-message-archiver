@@ -1,17 +1,9 @@
 package fi.fmi.avi.archiver.message.file;
 
-import fi.fmi.avi.archiver.config.ConverterConfig;
-import fi.fmi.avi.archiver.file.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileParser;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.converter.AviMessageConverter;
-import fi.fmi.avi.model.MessageType;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -30,10 +22,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import fi.fmi.avi.archiver.config.ConverterConfig;
+import fi.fmi.avi.archiver.file.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileParser;
-import fi.fmi.avi.archiver.file.FilenamePattern;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.converter.AviMessageConverter;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 
 @SpringJUnitConfig(ConverterConfig.class)
@@ -42,12 +36,12 @@ public class FileParserTest {
     private static final String DEFAULT_FILENAME = "test_file";
     private static final Instant FILE_MODIFIED = Instant.now();
     private static final String PRODUCT_IDENTIFIER = "test";
-    private static final FileConfig TAC_FILECONFIG = new FileConfig.Builder().setFormat(TAC)
+    private static final FileConfig TAC_FILECONFIG = new FileConfig.Builder().setFormat(GenericAviationWeatherMessage.Format.TAC)
             .setFormatId(0)
             .setNameTimeZone(ZoneId.of("Z"))
             .setPattern(Pattern.compile("test_file"))
             .build();
-    private static final FileConfig IWXXM_FILECONFIG = new FileConfig.Builder().setFormat(IWXXM)
+    private static final FileConfig IWXXM_FILECONFIG = new FileConfig.Builder().setFormat(GenericAviationWeatherMessage.Format.IWXXM)
             .setFormatId(1)
             .setNameTimeZone(ZoneId.of("Z"))
             .setPattern(Pattern.compile("test_file"))
@@ -71,18 +65,6 @@ public class FileParserTest {
             assertThat(path).exists();
             return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
         } catch (final RuntimeException | URISyntaxException | IOException e) {
-            fail(e);
-            return null;
-        }
-    }
-
-    private static String getFileContent(final String filename) {
-        try {
-            final URL resource = requireNonNull(FileParserTest.class.getResource(filename));
-            final Path path = Paths.get(resource.toURI());
-            assertThat(path).exists();
-            return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-        } catch (final Exception e) {
             fail(e);
             return null;
         }

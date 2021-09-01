@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FilenamePattern;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
@@ -48,7 +47,12 @@ class MessageDataPopulatorTest {
             .setFileMetadata(FileMetadata.builder()//
                     .setProductIdentifier("testproduct")//
                     .setFileModified(Instant.parse("2000-01-02T03:05:34Z"))//
-                    .setFilenamePattern(new FilenamePattern("taf.txt", MessagePopulatorTests.FILE_NAME_PATTERN, ZoneOffset.UTC)))//
+                    .setFilename("taf.txt")//
+                    .mutateFileConfig(fileConfig -> fileConfig//
+                            .setFormat(MessagePopulatorTests.FormatId.TAC.getFormat())//
+                            .setFormatId(MessagePopulatorTests.FormatId.TAC.getId())//
+                            .setPattern(MessagePopulatorTests.FILE_NAME_PATTERN)//
+                            .setNameTimeZone(ZoneOffset.UTC)))//
             .setMessage(GenericAviationWeatherMessageImpl.builder()//
                     .setTranslated(false)//
                     .setMessageFormat(GenericAviationWeatherMessage.Format.TAC)//
@@ -129,8 +133,9 @@ class MessageDataPopulatorTest {
     void populates_messageTime_when_exists(@Nullable final PartialDateTime partialIssueTime, @Nullable final ZonedDateTime completeIssueTime,
             final String filename, final Instant fileModified, final Instant expectedTime) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(filedata -> filedata.setFileModified(fileModified)//
-                        .setFilenamePattern(new FilenamePattern(filename, MessagePopulatorTests.FILE_NAME_PATTERN, ZoneOffset.UTC)))//
+                .mutateFileMetadata(filedata -> filedata//
+                        .setFilename(filename)//
+                        .setFileModified(fileModified))//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
                         .setIssueTime(PartialOrCompleteTimeInstant.builder()//
                                 .setNullablePartialTime(partialIssueTime)//
@@ -173,8 +178,8 @@ class MessageDataPopulatorTest {
             @Nullable final Instant expectedValidFrom, @Nullable final Instant expectedValidTo) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(fileData -> fileData//
-                        .setFileModified(fileModified)//
-                        .setFilenamePattern(new FilenamePattern(filename, MessagePopulatorTests.FILE_NAME_PATTERN, ZoneOffset.UTC)))
+                        .setFilename(filename)//
+                        .setFileModified(fileModified))//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
                         .setValidityTime(PartialOrCompleteTimePeriod.builder()//
                                 .setStartTime(partialOrCompleteTimeInstant(partialStartTime, completeStartTime))//

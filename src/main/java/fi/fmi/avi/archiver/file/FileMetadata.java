@@ -1,9 +1,9 @@
 package fi.fmi.avi.archiver.file;
 
-import org.inferred.freebuilder.FreeBuilder;
-
 import java.time.Instant;
 import java.util.Optional;
+
+import org.inferred.freebuilder.FreeBuilder;
 
 @FreeBuilder
 public abstract class FileMetadata {
@@ -26,7 +26,7 @@ public abstract class FileMetadata {
     public abstract String getProductIdentifier();
 
     public FilenameMatcher createFilenameMatcher() {
-        return new FilenameMatcher(getFilename(), getFileConfig().getPattern());
+        return new FilenameMatcher(getFilename(), getFileConfig().getPattern(), getFileConfig().getNameTimeZone());
     }
 
     public static class Builder extends FileMetadata_Builder {

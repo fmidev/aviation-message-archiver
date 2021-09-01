@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FilenamePattern;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
@@ -24,7 +23,12 @@ class FileMetadataPopulatorTest {
             .setFileMetadata(FileMetadata.builder()//
                     .setProductIdentifier("testproduct")//
                     .setFileModified(FILE_MODIFIED)//
-                    .setFilenamePattern(new FilenamePattern("taf.txt", MessagePopulatorTests.FILE_NAME_PATTERN, ZoneOffset.UTC)))//
+                    .setFilename("taf.txt")//
+                    .mutateFileConfig(fileConfig -> fileConfig//
+                            .setFormat(MessagePopulatorTests.FormatId.TAC.getFormat())//
+                            .setFormatId(MessagePopulatorTests.FormatId.TAC.getId())//
+                            .setPattern(MessagePopulatorTests.FILE_NAME_PATTERN)//
+                            .setNameTimeZone(ZoneOffset.UTC)))//
             .buildPartial();
 
     private FileMetadataPopulator populator;

@@ -168,8 +168,10 @@ public class MessageDataPopulator implements MessagePopulator {
 
     private List<PartialOrCompleteTimeInstant> withReferenceTimeCandidates(final FileMetadata inputFileMetadata,
             @Nullable final PartialOrCompleteTimeInstant instant) {
-        return Arrays.asList(instant, inputFileMetadata.getFilenamePattern().getTimestamp().orElse(null), //
-                PartialOrCompleteTimeInstant.of(inputFileMetadata.getFileModified().atZone(ZoneOffset.UTC)));
+        return Arrays.asList(instant, inputFileMetadata.createFilenameMatcher().getTimestamp().orElse(null), //
+                inputFileMetadata.getFileModified()//
+                        .map(fileModified -> PartialOrCompleteTimeInstant.of(fileModified.atZone(ZoneOffset.UTC)))//
+                        .orElse(null));
     }
 
     private Optional<String> getLocationIndicator(@Nullable final MessageType messageType, final Map<LocationIndicatorType, String> locationIndicators) {
