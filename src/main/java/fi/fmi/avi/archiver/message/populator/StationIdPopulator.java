@@ -20,6 +20,9 @@ public class StationIdPopulator implements MessagePopulator {
 
     @Override
     public void populate(InputAviationMessage inputAviationMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
+        requireNonNull(inputAviationMessage, "inputAviationMessage");
+        requireNonNull(aviationMessageBuilder, "aviationMessageBuilder");
+
         final Optional<Integer> stationId = databaseAccess.queryStationId(aviationMessageBuilder.getIcaoAirportCode());
         if (stationId.isPresent()) {
             aviationMessageBuilder.setStationId(stationId.get());

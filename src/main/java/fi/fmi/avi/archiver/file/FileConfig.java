@@ -13,6 +13,10 @@ public abstract class FileConfig {
     FileConfig() {
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
     public abstract Pattern getPattern();
 
     public abstract ZoneId getNameTimeZone();

@@ -127,6 +127,7 @@ public class DatabaseAccess {
     }
 
     public Optional<Integer> queryStationId(final String icaoAirportCode) {
+        requireNonNull(icaoAirportCode, "icaoAirportCode");
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("icao_code", icaoAirportCode);
         try {
@@ -159,4 +160,3 @@ public class DatabaseAccess {
     }
 
 }
-
