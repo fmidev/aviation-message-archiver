@@ -38,9 +38,9 @@ public class DatabaseAccess {
         this.insertAviationMessage = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate()).withTableName("avidb_messages")
                 .usingGeneratedKeyColumns("message_id");
         this.insertRejectedAviationMessage = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate()).withTableName("avidb_rejected_messages");
-        this.insertIwxxmDetails = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate()).withTableName("avidb_message_details_iwxxm");
+        this.insertIwxxmDetails = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate()).withTableName("avidb_message_iwxxm_details");
         this.insertIwxxmVersion = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate()).withTableName("avidb_iwxxm_version")
-                .usingGeneratedKeyColumns("iwxxm_version");
+                .usingGeneratedKeyColumns("version_id");
     }
 
     @VisibleForTesting
@@ -143,6 +143,7 @@ public class DatabaseAccess {
     }
 
     public Optional<Integer> queryOrInsertIwxxmVersion(final String iwxxmVersion) {
+        requireNonNull(iwxxmVersion, "iwxxmVersion");
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("iwxxm_version", iwxxmVersion);
         try {
