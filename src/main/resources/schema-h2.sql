@@ -60,7 +60,13 @@ CREATE TABLE public.avidb_message_details_iwxxm
 (
     message_id         bigint PRIMARY KEY NOT NULL,
     collect_identifier text,
-    iwxxm_version      text
+    iwxxm_version      int
+);
+
+CREATE TABLE public.avidb_iwxxm_version
+(
+    version_id    int PRIMARY KEY NOT NULL,
+    iwxxm_version text
 );
 
 CREATE
@@ -92,6 +98,11 @@ ALTER TABLE public.avidb_messages
 ALTER TABLE public.avidb_message_details_iwxxm
     ADD CONSTRAINT avidb_message_details_iwxxm_fk_message_id
         FOREIGN KEY (message_id)
+            REFERENCES public.avidb_messages (message_id);
+
+ALTER TABLE public.avidb_message_details_iwxxm
+    ADD CONSTRAINT avidb_message_details_iwxxm_fk_iwxxm_version
+        FOREIGN KEY (iwxxm_version)
             REFERENCES public.avidb_messages (message_id);
 
 CREATE
