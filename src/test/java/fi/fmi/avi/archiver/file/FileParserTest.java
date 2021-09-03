@@ -1,9 +1,18 @@
-package fi.fmi.avi.archiver.message.file;
+package fi.fmi.avi.archiver.file;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
+
+import fi.fmi.avi.archiver.config.ConverterConfig;
+import fi.fmi.avi.converter.AviMessageConverter;
+import fi.fmi.avi.model.MessageType;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

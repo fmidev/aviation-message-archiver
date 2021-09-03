@@ -1,10 +1,7 @@
 package fi.fmi.avi.archiver.database;
 
-import static java.util.Objects.requireNonNull;
-
-import java.time.Clock;
-import java.util.Optional;
-
+import com.google.common.annotations.VisibleForTesting;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -13,9 +10,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.retry.support.RetryTemplate;
 
-import com.google.common.annotations.VisibleForTesting;
+import java.time.Clock;
+import java.util.Optional;
 
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import static java.util.Objects.requireNonNull;
 
 public class DatabaseAccess {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseAccess.class);
@@ -91,6 +89,7 @@ public class DatabaseAccess {
     }
 
     public Optional<Integer> queryStationId(final String icaoAirportCode) {
+        requireNonNull(icaoAirportCode, "icaoAirportCode");
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("icao_code", icaoAirportCode);
         try {

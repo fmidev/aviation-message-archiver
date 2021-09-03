@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Holder for Aviation product builders.
  * This is required to let Spring Boot populate values from application config.
@@ -37,7 +39,7 @@ class AviationProductBuildersHolder {
     }
 
     public void setProducts(final List<AviationProduct.Builder> products) {
-        this.products = products;
+        this.products = requireNonNull(products, "products");
     }
 
     @PostConstruct
