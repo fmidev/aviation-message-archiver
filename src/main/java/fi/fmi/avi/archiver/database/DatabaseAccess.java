@@ -11,7 +11,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.retry.support.RetryTemplate;
 
-import javax.annotation.Nullable;
 import java.time.Clock;
 import java.util.Optional;
 
@@ -20,7 +19,6 @@ import static java.util.Objects.requireNonNull;
 public class DatabaseAccess {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseAccess.class);
     private static final String STATION_ID_QUERY = "select station_id from avidb_stations where icao_code = :icao_code";
-    private static final String IWXXM_VERSION_ID_QUERY = "select version_id from avidb_iwxxm_version where iwxxm_version = :iwxxm_version";
 
     private final Clock clock;
     private final NamedParameterJdbcTemplate jdbcTemplate;
@@ -28,7 +26,6 @@ public class DatabaseAccess {
     private final SimpleJdbcInsert insertAviationMessage;
     private final SimpleJdbcInsert insertRejectedAviationMessage;
     private final SimpleJdbcInsert insertIwxxmDetails;
-    private final SimpleJdbcInsert insertIwxxmVersion;
 
     public DatabaseAccess(final NamedParameterJdbcTemplate jdbcTemplate, final Clock clock, final RetryTemplate retryTemplate) {
         this.clock = requireNonNull(clock, "clock");
@@ -39,8 +36,6 @@ public class DatabaseAccess {
                 .usingGeneratedKeyColumns("message_id");
         this.insertRejectedAviationMessage = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate()).withTableName("avidb_rejected_messages");
         this.insertIwxxmDetails = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate()).withTableName("avidb_message_iwxxm_details");
-        this.insertIwxxmVersion = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate()).withTableName("avidb_iwxxm_version")
-                .usingGeneratedKeyColumns("version_id");
     }
 
     @VisibleForTesting
@@ -112,12 +107,10 @@ public class DatabaseAccess {
     }
 
     private int insertIwxxmDetails(final Number messageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails) {
-        @Nullable final Integer iwxxmVersionId = iwxxmDetails.getXMLNamespace().isPresent() ?
-                queryOrInsertIwxxmVersion(iwxxmDetails.getXMLNamespace().get()).orElse(null) : null;
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("message_id", messageId)
                 .addValue("collect_identifier", iwxxmDetails.getCollectIdentifier().orElse(null))
-                .addValue("iwxxm_version", iwxxmVersionId);
+                .addValue("iwxxm_version", iwxxmDetails.getXMLNamespace().orElse(null));
         try {
             return retryTemplate.execute(context -> insertIwxxmDetails.execute(parameters));
         } catch (final RuntimeException e) {
@@ -138,24 +131,6 @@ public class DatabaseAccess {
             // No station was found
         } catch (final RuntimeException e) {
             LOGGER.error("Querying station id with icao airport code {} failed", icaoAirportCode, e);
-        }
-        return Optional.empty();
-    }
-
-    public Optional<Integer> queryOrInsertIwxxmVersion(final String iwxxmVersion) {
-        requireNonNull(iwxxmVersion, "iwxxmVersion");
-        final MapSqlParameterSource parameters = new MapSqlParameterSource();
-        parameters.addValue("iwxxm_version", iwxxmVersion);
-        try {
-            final Integer iwxxmVersionId = retryTemplate.execute(context ->
-                    jdbcTemplate.queryForObject(IWXXM_VERSION_ID_QUERY, parameters, Integer.class));
-            return Optional.ofNullable(iwxxmVersionId);
-        } catch (final EmptyResultDataAccessException e) {
-            // No existing iwxxm version was found, attempt inserting one
-            final Number id = retryTemplate.execute(context -> insertIwxxmVersion.executeAndReturnKey(parameters));
-            return Optional.of(id.intValue());
-        } catch (final RuntimeException e) {
-            LOGGER.error("Querying or inserting IWXXM version with version {} failed", iwxxmVersion, e);
         }
         return Optional.empty();
     }

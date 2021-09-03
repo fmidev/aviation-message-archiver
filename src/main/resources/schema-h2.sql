@@ -60,12 +60,6 @@ CREATE TABLE public.avidb_message_iwxxm_details
 (
     message_id         bigint PRIMARY KEY NOT NULL,
     collect_identifier text,
-    iwxxm_version      int
-);
-
-CREATE TABLE public.avidb_iwxxm_version
-(
-    version_id    int auto_increment PRIMARY KEY NOT NULL,
     iwxxm_version text
 );
 
@@ -99,11 +93,6 @@ ALTER TABLE public.avidb_message_iwxxm_details
     ADD CONSTRAINT avidb_message_iwxxm_details_fk_message_id
         FOREIGN KEY (message_id)
             REFERENCES public.avidb_messages (message_id);
-
-ALTER TABLE public.avidb_message_iwxxm_details
-    ADD CONSTRAINT avidb_message_iwxxm_details_fk_iwxxm_version
-        FOREIGN KEY (iwxxm_version)
-            REFERENCES public.avidb_iwxxm_version (version_id);
 
 CREATE
     INDEX avidb_messages_new_station_id_idx ON public.avidb_messages (station_id);

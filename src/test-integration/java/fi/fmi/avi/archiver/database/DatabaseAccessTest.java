@@ -40,12 +40,10 @@ public class DatabaseAccessTest {
 
     private static final String SELECT_AVIATION_MESSAGES = "select message_time, station_id, type_id, " +
             "route_id, message, valid_from, valid_to, created, file_modified, flag, messir_heading, version, format_id, " +
-            "avidb_message_iwxxm_details.collect_identifier, avidb_iwxxm_version.iwxxm_version " +
+            "collect_identifier, iwxxm_version " +
             "from avidb_messages " +
             "left join avidb_message_iwxxm_details " +
-            "on avidb_messages.message_id = avidb_message_iwxxm_details.message_id " +
-            "left join avidb_iwxxm_version " +
-            "on avidb_message_iwxxm_details.iwxxm_version = avidb_iwxxm_version.version_id";
+            "on avidb_messages.message_id = avidb_message_iwxxm_details.message_id";
     private static final String SELECT_REJECTED_MESSAGES = "select icao_code, message_time, type_id, route_id, message, "
             + "valid_from, valid_to, created, file_modified, flag, messir_heading, reject_reason, version from avidb_rejected_messages";
     private static final Instant NOW = Instant.now();
@@ -173,18 +171,6 @@ public class DatabaseAccessTest {
     public void test_query_nonexistent_station() {
         final Optional<Integer> testId = databaseAccess.queryStationId("XXXX");
         assertThat(testId).isEmpty();
-    }
-
-    @Test
-    public void test_query_iwxxm_version() {
-        final Optional<Integer> versionId = databaseAccess.queryOrInsertIwxxmVersion(IWXXM_2_1_NAMESPACE);
-        assertThat(versionId).contains(1);
-    }
-
-    @Test
-    public void test_insert_iwxxm_version() {
-        final Optional<Integer> versionId = databaseAccess.queryOrInsertIwxxmVersion("test");
-        assertThat(versionId).contains(2);
     }
 
     private void assertAvidbMessagesContains(final ArchiveAviationMessage archiveAviationMessage) {
