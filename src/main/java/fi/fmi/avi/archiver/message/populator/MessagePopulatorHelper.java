@@ -120,6 +120,8 @@ public class MessagePopulatorHelper {
      */
     public PartialOrCompleteTimePeriod tryCompletePeriod(final PartialOrCompleteTimePeriod periodToComplete,
             final @Nullable PartialOrCompleteTimeInstant primaryReferenceTime, final FileMetadata inputFileMetadata) {
+        requireNonNull(periodToComplete, "periodToComplete");
+        requireNonNull(inputFileMetadata, "inputFileMetadata");
         @Nullable
         final ZonedDateTime completeStartTime = periodToComplete.getStartTime().flatMap(PartialOrCompleteTimeInstant::getCompleteTime).orElse(null);
         @Nullable

@@ -37,6 +37,7 @@ public class FilenameMatcher {
     }
 
     public Optional<String> getString(final String groupName) {
+        requireNonNull(groupName, "groupName");
         try {
             return Optional.ofNullable(matcher.group(groupName));
         } catch (final RuntimeException ignored) {
@@ -45,6 +46,7 @@ public class FilenameMatcher {
     }
 
     public OptionalInt getInt(final String groupName) {
+        requireNonNull(groupName, "groupName");
         try {
             return OptionalInt.of(Integer.parseInt(matcher.group(groupName)));
         } catch (final RuntimeException ignored) {

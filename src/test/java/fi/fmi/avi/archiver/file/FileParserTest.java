@@ -5,15 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import fi.fmi.avi.archiver.config.ConverterConfig;
-import fi.fmi.avi.converter.AviMessageConverter;
-import fi.fmi.avi.model.MessageType;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -31,10 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import fi.fmi.avi.archiver.config.ConverterConfig;
-import fi.fmi.avi.archiver.file.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileParser;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
