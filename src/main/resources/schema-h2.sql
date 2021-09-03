@@ -60,7 +60,7 @@ CREATE TABLE public.avidb_message_iwxxm_details
 (
     message_id         bigint PRIMARY KEY NOT NULL,
     collect_identifier text,
-    iwxxm_version text
+    iwxxm_version      text
 );
 
 CREATE
