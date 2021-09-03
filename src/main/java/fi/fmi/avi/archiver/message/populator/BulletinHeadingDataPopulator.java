@@ -2,8 +2,6 @@ package fi.fmi.avi.archiver.message.populator;
 
 import static java.util.Objects.requireNonNull;
 
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
@@ -15,10 +13,8 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
-import fi.fmi.avi.archiver.util.TimeUtil;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
-import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.bulletin.BulletinHeading;
 import fi.fmi.avi.model.bulletin.DataTypeDesignatorT1;
 
@@ -49,12 +45,14 @@ import fi.fmi.avi.model.bulletin.DataTypeDesignatorT1;
  * </ul>
  */
 public class BulletinHeadingDataPopulator implements MessagePopulator {
+    private final MessagePopulatorHelper helper;
     private final Map<GenericAviationWeatherMessage.Format, Integer> formatIds;
     private final Map<MessageType, Integer> typeIds;
     private final List<BulletinHeadingSource> bulletinHeadingSources;
 
-    public BulletinHeadingDataPopulator(final Map<GenericAviationWeatherMessage.Format, Integer> formatIds, final Map<MessageType, Integer> typeIds,
-            final List<BulletinHeadingSource> bulletinHeadingSources) {
+    public BulletinHeadingDataPopulator(final MessagePopulatorHelper helper, final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
+            final Map<MessageType, Integer> typeIds, final List<BulletinHeadingSource> bulletinHeadingSources) {
+        this.helper = requireNonNull(helper, "helper");
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");
         this.bulletinHeadingSources = requireNonNull(bulletinHeadingSources, "bulletinHeadingSources");
@@ -75,7 +73,8 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
                 .map(typeIds::get))//
                 .ifPresent(builder::setType);
         getFirstNonNullFromBulletinHeading(input, inputHeading -> inputHeading.getBulletinHeading()//
-                .flatMap(heading -> resolveCompleteInstant(heading.getIssueTime(), input)))//
+                .flatMap(heading -> helper.resolveCompleteTime(heading.getIssueTime(), input.getFileMetadata()))//
+                .map(ZonedDateTime::toInstant))//
                 .ifPresent(builder::setMessageTime);
         getFirstNonNullFromBulletinHeading(input, inputHeading -> inputHeading.getBulletinHeading()//
                 .map(BulletinHeading::getLocationIndicator))//
@@ -92,21 +91,6 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
         input.getCollectIdentifier()//
                 .getBulletinHeadingString()//
                 .ifPresent(collectIdentifier -> builder.getIWXXMDetailsBuilder().setCollectIdentifier(collectIdentifier));
-    }
-
-    private Optional<Instant> resolveCompleteInstant(final PartialOrCompleteTimeInstant messageTime, final InputAviationMessage input) {
-        return resolveCompleteTime(messageTime, input).map(ZonedDateTime::toInstant);
-    }
-
-    private Optional<ZonedDateTime> resolveCompleteTime(final PartialOrCompleteTimeInstant messageTime, final InputAviationMessage input) {
-        final PartialOrCompleteTimeInstant zonedMessageTime = messageTime.toBuilder()//
-                .mapPartialTime(partialDateTime -> partialDateTime.withZone(partialDateTime.getZone().orElse(ZoneOffset.UTC)))//
-                .build();
-        return TimeUtil.toCompleteTime(zonedMessageTime, //
-                input.getFileMetadata().createFilenameMatcher().getTimestamp().orElse(null), //
-                input.getFileMetadata().getFileModified()//
-                        .map(fileModified -> PartialOrCompleteTimeInstant.of(fileModified.atZone(ZoneOffset.UTC)))//
-                        .orElse(null));
     }
 
     private <T> Optional<T> getFirstNonNullFromBulletinHeading(final InputAviationMessage input, final Function<InputBulletinHeading, Optional<T>> fn) {

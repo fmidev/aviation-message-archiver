@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.message.populator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -53,7 +54,8 @@ class BulletinHeadingDataPopulatorTest {
 
     @BeforeEach
     void setUp() {
-        populator = new BulletinHeadingDataPopulator(MessagePopulatorTests.FORMAT_IDS, MessagePopulatorTests.TYPE_IDS, BULLETIN_HEADING_SOURCES);
+        populator = new BulletinHeadingDataPopulator(new MessagePopulatorHelper(Clock.systemUTC()), MessagePopulatorTests.FORMAT_IDS,
+                MessagePopulatorTests.TYPE_IDS, BULLETIN_HEADING_SOURCES);
     }
 
     @Test

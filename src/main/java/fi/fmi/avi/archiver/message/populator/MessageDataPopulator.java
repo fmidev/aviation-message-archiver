@@ -2,9 +2,7 @@ package fi.fmi.avi.archiver.message.populator;
 
 import static java.util.Objects.requireNonNull;
 
-import java.time.Instant;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.chrono.ChronoZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,7 +18,6 @@ import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
-import fi.fmi.avi.archiver.util.TimeUtil;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage.LocationIndicatorType;
 import fi.fmi.avi.model.MessageType;
@@ -31,12 +28,15 @@ import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
  * Populate {@link ArchiveAviationMessage.Builder} properties from message data in {@link InputAviationMessage}.
  *
  * <p>
- * Format and type are mapped from object to id by mappings provided as {@link #MessageDataPopulator(Map, Map)} constructor parameters.
+ * Format and type are mapped from object to id by mappings provided as {@link #MessageDataPopulator(MessagePopulatorHelper, Map, Map)} constructor parameters.
  * </p>
  *
  * <p>
  * If time properties are complete, they are used as is. Partial times are completed primarily near to timestamp in file name, if exists. If timestamp in
- * file name is partial, it is first completed near to file modification time. (See {@link TimeUtil#toCompleteTime(Iterable)} for more information on
+ * file name is partial, it is first completed near to file modification time if exists, or current clock time. Partial validity period is primarily
+ * completed near to resolved message time. (See
+ * {@link MessagePopulatorHelper#resolveCompleteTime(PartialOrCompleteTimeInstant, FileMetadata)} and
+ * {@link MessagePopulatorHelper#tryCompletePeriod(PartialOrCompleteTimePeriod, PartialOrCompleteTimeInstant, FileMetadata)} for more information on
  * completion algorithm.) Populated time properties are {@link ArchiveAviationMessage#getMessageTime()}, {@link ArchiveAviationMessage#getValidFrom()} and
  * {@link ArchiveAviationMessage#getValidTo()}.
  * </p>
@@ -63,6 +63,7 @@ public class MessageDataPopulator implements MessagePopulator {
             = createDefaultMessageTypeLocationIndicatorTypes();
     private static final PartialOrCompleteTimePeriod EMPTY_PARTIAL_OR_COMPLETE_TIME_PERIOD = PartialOrCompleteTimePeriod.builder().build();
 
+    private final MessagePopulatorHelper helper;
     private final Map<GenericAviationWeatherMessage.Format, Integer> formatIds;
     private final Map<MessageType, Integer> typeIds;
 
@@ -70,7 +71,9 @@ public class MessageDataPopulator implements MessagePopulator {
     private boolean forceCustomMessageTypeLocationIndicatorTypes; // = false;
     private List<LocationIndicatorType> defaultLocationIndicatorTypes = DEFAULT_LOCATION_INDICATOR_TYPES;
 
-    public MessageDataPopulator(final Map<GenericAviationWeatherMessage.Format, Integer> formatIds, final Map<MessageType, Integer> typeIds) {
+    public MessageDataPopulator(final MessagePopulatorHelper helper, final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
+            final Map<MessageType, Integer> typeIds) {
+        this.helper = requireNonNull(helper, "helper");
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");
     }
@@ -107,12 +110,13 @@ public class MessageDataPopulator implements MessagePopulator {
                 .map(typeIds::get)//
                 .ifPresent(builder::setType);
         inputMessage.getIssueTime()//
-                .flatMap(issueTime -> resolveCompleteInstant(issueTime, input.getFileMetadata()))//
+                .flatMap(issueTime -> helper.resolveCompleteTime(issueTime, input.getFileMetadata()))//
+                .map(ChronoZonedDateTime::toInstant)//
                 .ifPresent(builder::setMessageTime);
         getLocationIndicator(inputMessage.getMessageType().orElse(null), inputMessage.getLocationIndicators())//
                 .ifPresent(builder::setIcaoAirportCode);
         final PartialOrCompleteTimePeriod validityTime = inputMessage.getValidityTime()//
-                .map(period -> tryCompletePeriod(period, input.getFileMetadata()))//
+                .map(period -> helper.tryCompletePeriod(period, getNullablePartialOrCompleteMessageTime(builder, inputMessage), input.getFileMetadata()))//
                 .orElse(EMPTY_PARTIAL_OR_COMPLETE_TIME_PERIOD);
         validityTime.getStartTime()//
                 .flatMap(PartialOrCompleteTimeInstant::getCompleteTime)//
@@ -127,50 +131,12 @@ public class MessageDataPopulator implements MessagePopulator {
         builder.setMessage(inputMessage.getOriginalMessage());
     }
 
-    private Optional<Instant> resolveCompleteInstant(final PartialOrCompleteTimeInstant messageTime, final FileMetadata inputFileMetadata) {
-        final PartialOrCompleteTimeInstant zonedMessageTime = messageTime.toBuilder()//
-                .mapPartialTime(partialDateTime -> partialDateTime.withZone(partialDateTime.getZone().orElse(ZoneOffset.UTC)))//
-                .build();
-        return TimeUtil.toCompleteTime(withReferenceTimeCandidates(inputFileMetadata, zonedMessageTime))//
-                .map(ZonedDateTime::toInstant);
-    }
-
-    private PartialOrCompleteTimePeriod tryCompletePeriod(final PartialOrCompleteTimePeriod period, final FileMetadata inputFileMetadata) {
-        @Nullable
-        final ZonedDateTime completeStartTime = period.getStartTime().flatMap(PartialOrCompleteTimeInstant::getCompleteTime).orElse(null);
-        @Nullable
-        final ZonedDateTime completeEndTime = period.getEndTime().flatMap(PartialOrCompleteTimeInstant::getCompleteTime).orElse(null);
-        try {
-            if (completeStartTime != null && completeEndTime != null) {
-                return period;
-            } else if (completeStartTime != null) {
-                return period.toBuilder()//
-                        .mapEndTime(time -> time.toBuilder()//
-                                .completePartial(partial -> partial.toZonedDateTimeAfter(completeStartTime))//
-                                .build())//
-                        .build();
-            } else if (completeEndTime != null) {
-                return period.toBuilder()//
-                        .mapStartTime(time -> time.toBuilder()//
-                                .completePartial(partial -> partial.toZonedDateTimeBefore(completeEndTime))//
-                                .build())//
-                        .build();
-            } else {
-                return TimeUtil.toCompleteTime(withReferenceTimeCandidates(inputFileMetadata, null))//
-                        .map(referenceTime -> period.toBuilder().completePartialStartingNear(referenceTime).build())//
-                        .orElse(period);
-            }
-        } catch (final RuntimeException ignored) {
-            return period;
-        }
-    }
-
-    private List<PartialOrCompleteTimeInstant> withReferenceTimeCandidates(final FileMetadata inputFileMetadata,
-            @Nullable final PartialOrCompleteTimeInstant instant) {
-        return Arrays.asList(instant, inputFileMetadata.createFilenameMatcher().getTimestamp().orElse(null), //
-                inputFileMetadata.getFileModified()//
-                        .map(fileModified -> PartialOrCompleteTimeInstant.of(fileModified.atZone(ZoneOffset.UTC)))//
-                        .orElse(null));
+    @Nullable
+    private PartialOrCompleteTimeInstant getNullablePartialOrCompleteMessageTime(final ArchiveAviationMessage.Builder builder,
+            final GenericAviationWeatherMessage inputMessage) {
+        return MessagePopulatorHelper.tryGet(builder, ArchiveAviationMessage.Builder::getMessageTime)//
+                .map(messageTime -> PartialOrCompleteTimeInstant.of(messageTime.atZone(ZoneOffset.UTC)))//
+                .orElse(inputMessage.getIssueTime().orElse(null));
     }
 
     private Optional<String> getLocationIndicator(@Nullable final MessageType messageType, final Map<LocationIndicatorType, String> locationIndicators) {

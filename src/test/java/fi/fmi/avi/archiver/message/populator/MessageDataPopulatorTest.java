@@ -4,6 +4,7 @@ import static fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.EMPTY_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -25,7 +26,6 @@ import org.junit.jupiter.params.converter.ArgumentConversionException;
 import org.junit.jupiter.params.converter.ConvertWith;
 import org.junit.jupiter.params.converter.SimpleArgumentConverter;
 import org.junit.jupiter.params.provider.CsvFileSource;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import com.google.common.collect.ImmutableList;
@@ -69,13 +69,22 @@ class MessageDataPopulatorTest {
             return Optional.empty();
         }
         return Optional.of(PartialOrCompleteTimeInstant.builder()//
-                .setNullablePartialTime(partialTime).setNullableCompleteTime(completeTime)//
+                .setNullablePartialTime(partialTime)//
+                .setNullableCompleteTime(completeTime)//
                 .build());
     }
 
     @BeforeEach
     void setUp() {
-        populator = new MessageDataPopulator(MessagePopulatorTests.FORMAT_IDS, MessagePopulatorTests.TYPE_IDS);
+        populator = newPopulator(Clock.systemUTC());
+    }
+
+    private MessageDataPopulator newPopulator(final Clock clock) {
+        return newPopulator(new MessagePopulatorHelper(clock));
+    }
+
+    private MessageDataPopulator newPopulator(final MessagePopulatorHelper helper) {
+        return new MessageDataPopulator(helper, MessagePopulatorTests.FORMAT_IDS, MessagePopulatorTests.TYPE_IDS);
     }
 
     @Test
@@ -120,23 +129,14 @@ class MessageDataPopulatorTest {
     }
 
     @ParameterizedTest
-    @CsvSource({//
-            // Return native complete time when available
-            ", 2000-01-02T03:04:01Z, taf_2000-01-02T03:05.txt, 2005-01-02T03:05:06Z, 2000-01-02T03:04:01Z", //
-            "--02T03:04Z, 2000-01-02T03:04:05Z, taf_2000-01-02T03:05.txt, 2005-01-02T03:05:06Z, 2000-01-02T03:04:05Z", //
-            // Complete partial time with filename time
-            "--02T03:04Z, , taf_2000-01-02T03:05.txt, 2005-01-02T03:05:06Z, 2000-01-02T03:04:00Z", //
-            // Complete partial time with filename time completed with file time when filename time is partial
-            "--T03:04Z, , taf_02T03:05.txt, 2005-01-07T03:05:06Z, 2005-01-02T03:04:00Z", //
-            // Complete partial time with file time when filename time is not available
-            "--02T03:04Z, , taf.txt, 2000-01-02T03:05:06Z, 2000-01-02T03:04:00Z", //
-    })
+    @CsvFileSource(resources = "MessageDataPopulatorTest_populates_messageTime_when_exists.csv", numLinesToSkip = 1)
     void populates_messageTime_when_exists(@Nullable final PartialDateTime partialIssueTime, @Nullable final ZonedDateTime completeIssueTime,
-            final String filename, final Instant fileModified, final Instant expectedTime) {
+            final String filename, @Nullable final Instant fileModified, final ZonedDateTime clock, final Instant expectedTime) {
+        populator = newPopulator(Clock.fixed(clock.toInstant(), clock.getZone()));
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(filedata -> filedata//
                         .setFilename(filename)//
-                        .setFileModified(fileModified))//
+                        .setNullableFileModified(fileModified))//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
                         .setIssueTime(PartialOrCompleteTimeInstant.builder()//
                                 .setNullablePartialTime(partialIssueTime)//
@@ -175,13 +175,16 @@ class MessageDataPopulatorTest {
     void populates_validFrom_and_validTo_when_exists(//
             @Nullable final PartialDateTime partialStartTime, @Nullable final ZonedDateTime completeStartTime, //
             @Nullable final PartialDateTime partialEndTime, @Nullable final ZonedDateTime completeEndTime, //
-            final String filename, final Instant fileModified, //
+            @Nullable final PartialDateTime partialPrimaryReference, @Nullable final ZonedDateTime completePrimaryReference, //
+            final String filename, @Nullable final Instant fileModified, final ZonedDateTime clock, //
             @Nullable final Instant expectedValidFrom, @Nullable final Instant expectedValidTo) {
+        populator = newPopulator(Clock.fixed(clock.toInstant(), clock.getZone()));
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(fileData -> fileData//
                         .setFilename(filename)//
-                        .setFileModified(fileModified))//
+                        .setNullableFileModified(fileModified))//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
+                        .setIssueTime(partialOrCompleteTimeInstant(partialPrimaryReference, completePrimaryReference))//
                         .setValidityTime(PartialOrCompleteTimePeriod.builder()//
                                 .setStartTime(partialOrCompleteTimeInstant(partialStartTime, completeStartTime))//
                                 .setEndTime(partialOrCompleteTimeInstant(partialEndTime, completeEndTime))//
@@ -194,6 +197,48 @@ class MessageDataPopulatorTest {
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
                 .setValidFrom(initialValidFrom)//
                 .setValidTo(initialValidTo);
+        populator.populate(inputMessage, builder);
+        assertSoftly(softly -> {
+            softly.assertThat(builder.getValidFrom()).as("validFrom").hasValue(Optional.ofNullable(expectedValidFrom).orElse(initialValidFrom));
+            softly.assertThat(builder.getValidTo()).as("validTo").hasValue(Optional.ofNullable(expectedValidTo).orElse(initialValidTo));
+        });
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "MessageDataPopulatorTest_populates_validFrom_and_validTo_when_exists.csv", numLinesToSkip = 1)
+    void populates_validFrom_and_validTo_when_exists_referencing_already_set_message_time(//
+            @Nullable final PartialDateTime partialStartTime, @Nullable final ZonedDateTime completeStartTime, //
+            @Nullable final PartialDateTime partialEndTime, @Nullable final ZonedDateTime completeEndTime, //
+            @Nullable final PartialDateTime partialPrimaryReference, @Nullable final ZonedDateTime completePrimaryReference, //
+            final String filename, @Nullable final Instant fileModified, final ZonedDateTime clock, //
+            @Nullable final Instant expectedValidFrom, @Nullable final Instant expectedValidTo) {
+        final MessagePopulatorHelper helper = new MessagePopulatorHelper(Clock.fixed(clock.toInstant(), clock.getZone()));
+        populator = newPopulator(helper);
+        final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
+                .mutateFileMetadata(fileData -> fileData//
+                        .setFilename(filename)//
+                        .setNullableFileModified(fileModified))//
+                .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
+                        // Omitting issue time
+                        .setValidityTime(PartialOrCompleteTimePeriod.builder()//
+                                .setStartTime(partialOrCompleteTimeInstant(partialStartTime, completeStartTime))//
+                                .setEndTime(partialOrCompleteTimeInstant(partialEndTime, completeEndTime))//
+                                .build())//
+                        .build())//
+                .buildPartial();
+
+        final Instant initialValidFrom = Instant.EPOCH;
+        final Instant initialValidTo = initialValidFrom.plus(1, ChronoUnit.DAYS);
+        @Nullable
+        final ZonedDateTime initialMessageTime = partialOrCompleteTimeInstant(partialPrimaryReference, completePrimaryReference)//
+                .flatMap(time -> helper.resolveCompleteTime(time, inputMessage.getFileMetadata()))//
+                .orElse(null);
+        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
+                .setValidFrom(initialValidFrom)//
+                .setValidTo(initialValidTo);
+        if (initialMessageTime != null) {
+            builder.setMessageTime(initialMessageTime.toInstant());
+        }
         populator.populate(inputMessage, builder);
         assertSoftly(softly -> {
             softly.assertThat(builder.getValidFrom()).as("validFrom").hasValue(Optional.ofNullable(expectedValidFrom).orElse(initialValidFrom));

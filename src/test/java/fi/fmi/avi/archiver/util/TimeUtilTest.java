@@ -31,7 +31,7 @@ import fi.fmi.avi.model.PartialDateTime;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 
 class TimeUtilTest {
-    static Stream<Arguments> testToCompleteTime() {
+    static Stream<Arguments> testToCompleteTime_Iterable() {
         return Stream.of(//
                 Arguments.of(partialOrCompleteInstants(), null), //
                 Arguments.of(partialOrCompleteInstants("--02T03:04:Z", "--03T04:05:Z"), null), //
@@ -42,6 +42,25 @@ class TimeUtilTest {
                 Arguments.of(partialOrCompleteInstants("--T03:04:Z", "--03T04:05:Z", "2002-03-04T05:06:07Z"), //
                         ZonedDateTime.parse("2002-03-03T03:04Z"))//
         );
+    }
+
+    @SuppressWarnings("unchecked")
+    static Stream<Arguments> testToCompleteTime_PartialDateTime_Iterable() {
+        return testToCompleteTime_Iterable()//
+                .filter(arguments -> {
+                    final List<PartialOrCompleteTimeInstant> times = (List<PartialOrCompleteTimeInstant>) arguments.get()[0];
+                    return times.stream().findFirst()//
+                            .map(time -> time.getPartialTime().isPresent() && !time.getCompleteTime().isPresent())//
+                            .orElse(false);
+                })//
+                .map(arguments -> {
+                    final List<PartialOrCompleteTimeInstant> times = (List<PartialOrCompleteTimeInstant>) arguments.get()[0];
+                    final ZonedDateTime expected = (ZonedDateTime) arguments.get()[1];
+                    return Arguments.of(//
+                            times.get(0).getPartialTime().orElseThrow(IllegalStateException::new), //
+                            times.subList(1, times.size()), //
+                            expected);
+                });
     }
 
     private static List<PartialOrCompleteTimeInstant> partialOrCompleteInstants(final String... source) {
@@ -113,8 +132,15 @@ class TimeUtilTest {
 
     @ParameterizedTest
     @MethodSource
-    void testToCompleteTime(final List<PartialOrCompleteTimeInstant> input, @Nullable final ZonedDateTime expectedResult) {
-        assertThat(TimeUtil.toCompleteTime(input)).isEqualTo(Optional.ofNullable(expectedResult));
+    void testToCompleteTime_Iterable(final List<PartialOrCompleteTimeInstant> times, @Nullable final ZonedDateTime expectedResult) {
+        assertThat(TimeUtil.toCompleteTime(times)).isEqualTo(Optional.ofNullable(expectedResult));
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testToCompleteTime_PartialDateTime_Iterable(final PartialDateTime partial, final List<PartialOrCompleteTimeInstant> times,
+            @Nullable final ZonedDateTime expectedResult) {
+        assertThat(TimeUtil.toCompleteTime(partial, times)).isEqualTo(Optional.ofNullable(expectedResult));
     }
 
     static final class ZonedChronoFieldValues {

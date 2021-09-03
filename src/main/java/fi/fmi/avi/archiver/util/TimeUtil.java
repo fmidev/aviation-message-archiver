@@ -5,7 +5,6 @@ import static java.util.Objects.requireNonNull;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -120,23 +119,8 @@ public final class TimeUtil {
     }
 
     /**
-     * Attempts to resolve complete time for the first of {@code times} returning the complete value if present, or completing the partial time using the
-     * next appropriate in {@code times} for reference.
-     * In case the reference is not complete but partial, reference completion is attempted recursively using following elements in {@code times} as reference.
-     *
-     * @param times
-     *         times for completion
-     *
-     * @return the complete time if resolved, otherwise empty
-     */
-    public static Optional<ZonedDateTime> toCompleteTime(final PartialOrCompleteTimeInstant... times) {
-        requireNonNull(times, "times");
-        return toCompleteTime(Arrays.asList(times));
-    }
-
-    /**
-     * Attempts to resolve complete time for the first of {@code times} returning the complete value if present, or completing the partial time using the
-     * next appropriate in {@code times} for reference.
+     * Attempts to resolve complete time of the first of {@code times}, returning existing complete value if present, or completing the partial time using the
+     * next appropriate in {@code times} as reference.
      * In case the reference is not complete but partial, reference completion is attempted recursively using following elements in {@code times} as reference.
      *
      * @param times
@@ -149,6 +133,24 @@ public final class TimeUtil {
         return toCompleteTime(times.iterator());
     }
 
+    /**
+     * Attempts to resolve complete time of provided {@code partial} using the first appropriate value in {@code referenceTimes} as reference.
+     * In case the reference is not complete but partial, reference completion is attempted recursively using following elements in {@code referenceTimes} as
+     * reference.
+     *
+     * @param partial
+     *         partial time to complete
+     * @param referenceTimes
+     *         reference times for completion
+     *
+     * @return the complete time if resolved, otherwise empty
+     */
+    public static Optional<ZonedDateTime> toCompleteTime(final PartialDateTime partial, final Iterable<PartialOrCompleteTimeInstant> referenceTimes) {
+        requireNonNull(partial, "partial");
+        requireNonNull(referenceTimes, "times");
+        return toCompleteTime(partial, referenceTimes.iterator());
+    }
+
     private static Optional<ZonedDateTime> toCompleteTime(final Iterator<PartialOrCompleteTimeInstant> times) {
         requireNonNull(times, "times");
         final PartialOrCompleteTimeInstant toResolve = nextNonNullOrNull(times);
@@ -159,9 +161,11 @@ public final class TimeUtil {
         if (completeTimeOptional.isPresent()) {
             return completeTimeOptional;
         }
-        return toResolve.getPartialTime()//
-                .flatMap(partial -> toCompleteTime(times)//
-                        .map(partial::toZonedDateTimeNear));
+        return toResolve.getPartialTime().flatMap(partial -> toCompleteTime(partial, times));
+    }
+
+    private static Optional<ZonedDateTime> toCompleteTime(final PartialDateTime partial, final Iterator<PartialOrCompleteTimeInstant> times) {
+        return toCompleteTime(times).map(partial::toZonedDateTimeNear);
     }
 
     @Nullable
