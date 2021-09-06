@@ -40,9 +40,7 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
 @SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.populator.FailingPopulatorTest" })
-@Sql(scripts = { "classpath:/schema-h2.sql", "classpath:/h2-data/avidb_message_types_test.sql", "classpath:/h2-data/avidb_message_format_test.sql",
-        "classpath:/h2-data/avidb_message_routes_test.sql",
-        "classpath:/h2-data/avidb_stations_test.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = { "classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, FailingPopulatorTest.FailingPopulatorConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
