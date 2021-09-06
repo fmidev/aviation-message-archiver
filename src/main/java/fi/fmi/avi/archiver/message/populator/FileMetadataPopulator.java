@@ -1,19 +1,18 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.Map;
-
 import com.google.common.base.Preconditions;
-
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
+import java.util.Map;
+
+import static java.util.Objects.requireNonNull;
+
 /**
  * Populate {@link ArchiveAviationMessage.Builder} properties from file metadata in {@link InputAviationMessage}, including product information related to
- * file, such as route and format. Populated file-specific metadata is file modification time.
+ * the file, such as route and format. Populated file-specific metadata is the file modification time.
  */
 public class FileMetadataPopulator implements MessagePopulator {
     private final Map<String, AviationProductsHolder.AviationProduct> products;

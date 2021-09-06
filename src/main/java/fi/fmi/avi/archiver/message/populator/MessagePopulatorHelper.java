@@ -1,7 +1,12 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.util.TimeUtil;
+import fi.fmi.avi.model.PartialDateTime;
+import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
+import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
 
+import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -11,16 +16,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import javax.annotation.Nullable;
-
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.util.TimeUtil;
-import fi.fmi.avi.model.PartialDateTime;
-import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
-import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
+import static java.util.Objects.requireNonNull;
 
 /**
- * A helper class to be used by {@link MessagePopulator} implementations primarily.
+ * A helper class primarily used by {@link MessagePopulator} implementations.
  */
 public class MessagePopulatorHelper {
     private final Clock clock;
@@ -31,17 +30,12 @@ public class MessagePopulatorHelper {
 
     /**
      * Attempt to read a mandatory value from a FreeBuilder builder class that may not yet have been set.
-     * This method catches any {@link IllegalStateException} possibly thrown by the property getter and returns an empty Optional instead.
+     * This method catches the {@link IllegalStateException} possibly thrown by the property getter and returns an empty Optional.
      *
-     * @param input
-     *         input builder
-     * @param reader
-     *         function to read a property from the provided {@code builder}
-     * @param <F>
-     *         builder type
-     * @param <T>
-     *         return value type
-     *
+     * @param input  input builder
+     * @param reader function to read a property from the provided {@code builder}
+     * @param <F>    builder type
+     * @param <T>    return value type
      * @return value returned by {@code reader} of {@link Optional#empty()} if value could not be read
      */
     public static <F, T> Optional<T> tryGet(final F input, final Function<F, T> reader) {
@@ -53,24 +47,21 @@ public class MessagePopulatorHelper {
     }
 
     /**
-     * Attempts to resolve complete time for provided {@code instantToComplete}.
+     * Attempts to resolve the given {@code instantToComplete} into a complete time.
      * If {@code instantToComplete} already has {@link PartialOrCompleteTimeInstant#getCompleteTime() complete time}, it is returned. Otherwise, the
-     * {@link PartialOrCompleteTimeInstant#getPartialTime() partial time} is completed nearest to reference times declared below. Any missing reference time
-     * is skipped over. If reference time is partial time, it is completed nearest to next reference time. The reference times used are in this order:
+     * {@link PartialOrCompleteTimeInstant#getPartialTime() partial time} is completed nearest to the reference times declared below. Missing reference times
+     * are skipped over. If a reference time is partial time, it is completed nearest to the next reference time. The reference times are used in this order:
      *
      * <ul>
      *     <li>timestamp parsed from file name</li>
      *     <li>file modification time</li>
      *     <li>current time of clock</li>
      * </ul>
+     * <p>
+     * The partial time is assumed to be in {@link ZoneOffset#UTC UTC} if it has no zone information.
      *
-     * The partial time is assumed in {@link ZoneOffset#UTC UTC} if it has no zone information.
-     *
-     * @param instantToComplete
-     *         partial or complete time instant to complete
-     * @param inputFileMetadata
-     *         input file metadata
-     *
+     * @param instantToComplete partial or complete time instant to complete
+     * @param inputFileMetadata input file metadata
      * @return the complete time or empty if no complete time could be resolved
      */
     public Optional<ZonedDateTime> resolveCompleteTime(final PartialOrCompleteTimeInstant instantToComplete, final FileMetadata inputFileMetadata) {
@@ -79,8 +70,7 @@ public class MessagePopulatorHelper {
         if (instantToComplete.getCompleteTime().isPresent()) {
             return instantToComplete.getCompleteTime();
         }
-        @Nullable
-        final PartialDateTime zonedPartial = instantToComplete.getPartialTime()//
+        @Nullable final PartialDateTime zonedPartial = instantToComplete.getPartialTime()//
                 .map(partial -> partial.withZone(partial.getZone().orElse(ZoneOffset.UTC)))//
                 .orElse(null);
         if (zonedPartial == null) {
@@ -90,13 +80,13 @@ public class MessagePopulatorHelper {
     }
 
     /**
-     * Attempts to complete provided {@code periodToComplete}.
-     * If {@code periodToComplete} already has complete start and end time, it is returned as is. Otherwise, if it has either complete start or end time, it
-     * is used as reference for completion.
-     *
-     * If {@code periodToComplete} already has complete start and end time, it is returned as is. Otherwise, the
-     * partial period is completed nearest to reference times declared below. Any missing reference time is skipped over. If reference time is partial
-     * time, it is completed nearest to next reference time. The reference times used are in this order:
+     * Attempts to complete the provided {@code periodToComplete}.
+     * If {@code periodToComplete} already has complete start and end time, it is returned as is. Otherwise, if it has either a complete start or end time, it
+     * is used as a reference for completion.
+     * <p>
+     * If {@code periodToComplete} already has a complete start and end time, it is returned as is. Otherwise, the
+     * partial period is completed nearest to the reference times declared below. Missing reference times are skipped over. If the reference time is a partial
+     * time, it is completed nearest to the next reference time. The reference times are used in this order:
      *
      * <ul>
      *     <li>complete start time (ensuring end time is completed after start time)</li>
@@ -106,26 +96,20 @@ public class MessagePopulatorHelper {
      *     <li>file modification time</li>
      *     <li>current time of clock</li>
      * </ul>
+     * <p>
+     * The partial time is assumed to be in {@link ZoneOffset#UTC UTC} if it has no zone information.
      *
-     * The partial time is assumed in {@link ZoneOffset#UTC UTC} if it has no zone information.
-     *
-     * @param periodToComplete
-     *         partial or complete time period to complete
-     * @param primaryReferenceTime
-     *         primary reference time
-     * @param inputFileMetadata
-     *         in put file metadata
-     *
-     * @return result of completion, which contains complete times only if completion was successful
+     * @param periodToComplete     partial or complete time period to complete
+     * @param primaryReferenceTime primary reference time
+     * @param inputFileMetadata    in put file metadata
+     * @return result of completion, which contains complete times only if the completion was successful
      */
     public PartialOrCompleteTimePeriod tryCompletePeriod(final PartialOrCompleteTimePeriod periodToComplete,
-            final @Nullable PartialOrCompleteTimeInstant primaryReferenceTime, final FileMetadata inputFileMetadata) {
+                                                         final @Nullable PartialOrCompleteTimeInstant primaryReferenceTime, final FileMetadata inputFileMetadata) {
         requireNonNull(periodToComplete, "periodToComplete");
         requireNonNull(inputFileMetadata, "inputFileMetadata");
-        @Nullable
-        final ZonedDateTime completeStartTime = periodToComplete.getStartTime().flatMap(PartialOrCompleteTimeInstant::getCompleteTime).orElse(null);
-        @Nullable
-        final ZonedDateTime completeEndTime = periodToComplete.getEndTime().flatMap(PartialOrCompleteTimeInstant::getCompleteTime).orElse(null);
+        @Nullable final ZonedDateTime completeStartTime = periodToComplete.getStartTime().flatMap(PartialOrCompleteTimeInstant::getCompleteTime).orElse(null);
+        @Nullable final ZonedDateTime completeEndTime = periodToComplete.getEndTime().flatMap(PartialOrCompleteTimeInstant::getCompleteTime).orElse(null);
         try {
             if (completeStartTime != null && completeEndTime != null) {
                 return periodToComplete;
@@ -142,8 +126,7 @@ public class MessagePopulatorHelper {
                                 .build())//
                         .build();
             } else {
-                @Nullable
-                final ZonedDateTime referenceTime = TimeUtil.toCompleteTime(referenceTimeCandidates(primaryReferenceTime, inputFileMetadata)).orElse(null);
+                @Nullable final ZonedDateTime referenceTime = TimeUtil.toCompleteTime(referenceTimeCandidates(primaryReferenceTime, inputFileMetadata)).orElse(null);
                 if (referenceTime == null) {
                     return periodToComplete;
                 }
@@ -161,7 +144,7 @@ public class MessagePopulatorHelper {
     }
 
     private List<PartialOrCompleteTimeInstant> referenceTimeCandidates(@Nullable final PartialOrCompleteTimeInstant primaryInstant,
-            final FileMetadata inputFileMetadata) {
+                                                                       final FileMetadata inputFileMetadata) {
         final List<PartialOrCompleteTimeInstant> builder = new ArrayList<>();
         builder.add(primaryInstant);
         builder.add(inputFileMetadata.createFilenameMatcher().getTimestamp().orElse(null));

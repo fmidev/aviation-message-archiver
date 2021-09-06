@@ -1,14 +1,5 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Function;
-
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
@@ -18,13 +9,22 @@ import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.bulletin.BulletinHeading;
 import fi.fmi.avi.model.bulletin.DataTypeDesignatorT1;
 
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
+
+import static java.util.Objects.requireNonNull;
+
 /**
  * Populate {@link ArchiveAviationMessage.Builder} properties from bulletin heading data in {@link InputAviationMessage}.
- * Input source can be GTS bulletin heading, IWXXM collect identifier or both in selected order.
+ * Input source can be a GTS bulletin heading, an IWXXM collect identifier or both in selected order.
  *
  * <p>
- * The input source is selected in the order of provided {@link BulletinHeadingSource} list. The selection is made individually for each property, not based
- * on existence of specified source. If a value cannot be obtained from primary source (source is either missing or does not contain a specific value), then
+ * The input source is selected in the order of the provided {@link BulletinHeadingSource} list. The selection is made individually for each property, not based
+ * on the existence of the specified source. If a value cannot be obtained from the primary source (source is either missing or does not contain a specific value),
  * following sources are attempted until a value is found or the list is out of sources.
  * </p>
  *

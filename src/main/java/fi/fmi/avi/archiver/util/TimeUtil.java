@@ -1,21 +1,15 @@
 package fi.fmi.avi.archiver.util;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.model.PartialDateTime;
+import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 
+import javax.annotation.Nullable;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
-import javax.annotation.Nullable;
-
-import fi.fmi.avi.model.PartialDateTime;
-import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
+import static java.util.Objects.requireNonNull;
 
 public final class TimeUtil {
     private static final Set<ChronoField> DATE_FIELDS = Collections.unmodifiableSet(
@@ -26,8 +20,8 @@ public final class TimeUtil {
     }
 
     /**
-     * Construct a {@link ZonedDateTime} from provided {@code temporalFieldValues} and {@code zoneId}.
-     * Only following temporal fields are supported:
+     * Construct a {@link ZonedDateTime} from the provided {@code temporalFieldValues} and {@code zoneId}.
+     * Only the following temporal fields are supported:
      * {@link ChronoField#YEAR YEAR},
      * {@link ChronoField#MONTH_OF_YEAR MONTH_OF_YEAR},
      * {@link ChronoField#DAY_OF_MONTH DAY_OF_MONTH},
@@ -39,11 +33,8 @@ public final class TimeUtil {
      * All date fields must be present to construct a {@code ZonedDateTime} instance. Any missing time field values are replaced with zero ({@code 0}).
      * If an instance cannot be constructed, an empty {@code Optional} is returned.
      *
-     * @param temporalFieldValues
-     *         temporal field values
-     * @param zoneId
-     *         zone id
-     *
+     * @param temporalFieldValues temporal field values
+     * @param zoneId              zone id
      * @return constructed {@code ZonedDateTime} or empty if value cannot be constructed
      */
     public static Optional<ZonedDateTime> toZonedDateTime(final Map<ChronoField, Integer> temporalFieldValues, final ZoneId zoneId) {
@@ -65,15 +56,12 @@ public final class TimeUtil {
     }
 
     /**
-     * Construct a {@link PartialDateTime} from provided {@code temporalFieldValues} and {@code zoneId}.
+     * Construct a {@link PartialDateTime} from the provided {@code temporalFieldValues} and {@code zoneId}.
      * Supports temporal fields available in {@code PartialDateTime}. All unsupported fields are simply ignored.
-     * If no {@code temporalFieldValues} contains no supported field values, an empty {@code Optional} is returned.
+     * If {@code temporalFieldValues} contains no supported field values, an empty {@code Optional} is returned.
      *
-     * @param temporalFieldValues
-     *         temporal field values
-     * @param zoneId
-     *         zone id or {@code null}
-     *
+     * @param temporalFieldValues temporal field values
+     * @param zoneId              zone id or {@code null}
      * @return constructed {@code PartialDateTime} or empty if value cannot be constructed
      */
     public static Optional<PartialDateTime> toPartialDateTime(final Map<ChronoField, Integer> temporalFieldValues, @Nullable final ZoneId zoneId) {
@@ -92,19 +80,16 @@ public final class TimeUtil {
     }
 
     /**
-     * Construct a {@link PartialOrCompleteTimeInstant} from provided {@code temporalFieldValues} and {@code zoneId}.
+     * Construct a {@link PartialOrCompleteTimeInstant} from the provided {@code temporalFieldValues} and {@code zoneId}.
      * Rules of {@link #toZonedDateTime(Map, ZoneId)} and {@link #toPartialDateTime(Map, ZoneId)} apply when constructing property values.
-     * If resulting instance contains neither partial or complete time, an empty {@code Optional} is returned.
+     * If the resulting instance does not contain a partial or a complete time, an empty {@code Optional} is returned.
      *
-     * @param temporalFieldValues
-     *         temporal field values
-     * @param zoneId
-     *         zone id or {@code null}
-     *
+     * @param temporalFieldValues temporal field values
+     * @param zoneId              zone id or {@code null}
      * @return constructed {@code PartialOrCompleteTimeInstant} or empty if value cannot be constructed
      */
     public static Optional<PartialOrCompleteTimeInstant> toPartialOrCompleteTimeInstant(final Map<ChronoField, Integer> temporalFieldValues,
-            @Nullable final ZoneId zoneId) {
+                                                                                        @Nullable final ZoneId zoneId) {
         requireNonNull(temporalFieldValues, "temporalFieldValues");
         final PartialOrCompleteTimeInstant.Builder builder = PartialOrCompleteTimeInstant.builder()//
                 .setPartialTime(toPartialDateTime(temporalFieldValues, zoneId));
@@ -119,13 +104,11 @@ public final class TimeUtil {
     }
 
     /**
-     * Attempts to resolve complete time of the first of {@code times}, returning existing complete value if present, or completing the partial time using the
-     * next appropriate in {@code times} as reference.
+     * Attempts to resolve a complete time from the given {@code times}, returning an existing complete value if present, or completing the partial time using the
+     * next appropriate value in {@code times} as reference.
      * In case the reference is not complete but partial, reference completion is attempted recursively using following elements in {@code times} as reference.
      *
-     * @param times
-     *         times for completion
-     *
+     * @param times times for completion
      * @return the complete time if resolved, otherwise empty
      */
     public static Optional<ZonedDateTime> toCompleteTime(final Iterable<PartialOrCompleteTimeInstant> times) {
@@ -138,11 +121,8 @@ public final class TimeUtil {
      * In case the reference is not complete but partial, reference completion is attempted recursively using following elements in {@code referenceTimes} as
      * reference.
      *
-     * @param partial
-     *         partial time to complete
-     * @param referenceTimes
-     *         reference times for completion
-     *
+     * @param partial        partial time to complete
+     * @param referenceTimes reference times for completion
      * @return the complete time if resolved, otherwise empty
      */
     public static Optional<ZonedDateTime> toCompleteTime(final PartialDateTime partial, final Iterable<PartialOrCompleteTimeInstant> referenceTimes) {

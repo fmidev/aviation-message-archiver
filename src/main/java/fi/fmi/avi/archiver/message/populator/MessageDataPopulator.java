@@ -1,19 +1,5 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.time.ZoneOffset;
-import java.time.chrono.ChronoZonedDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
-import javax.annotation.Nullable;
-
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
@@ -24,6 +10,13 @@ import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
 
+import javax.annotation.Nullable;
+import java.time.ZoneOffset;
+import java.time.chrono.ChronoZonedDateTime;
+import java.util.*;
+
+import static java.util.Objects.requireNonNull;
+
 /**
  * Populate {@link ArchiveAviationMessage.Builder} properties from message data in {@link InputAviationMessage}.
  *
@@ -32,19 +25,19 @@ import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
  * </p>
  *
  * <p>
- * If time properties are complete, they are used as is. Partial times are completed primarily near to timestamp in file name, if exists. If timestamp in
- * file name is partial, it is first completed near to file modification time if exists, or current clock time. Partial validity period is primarily
- * completed near to resolved message time. (See
+ * If the time properties are complete, they are used as is. Partial times are primarily completed using the file name timestamp if it exists. If the timestamp in
+ * the file name is partial, it is first completed near the file modification time if it exists, otherwise near current time. Partial validity period is primarily
+ * completed near the resolved message time. (See
  * {@link MessagePopulatorHelper#resolveCompleteTime(PartialOrCompleteTimeInstant, FileMetadata)} and
  * {@link MessagePopulatorHelper#tryCompletePeriod(PartialOrCompleteTimePeriod, PartialOrCompleteTimeInstant, FileMetadata)} for more information on
- * completion algorithm.) Populated time properties are {@link ArchiveAviationMessage#getMessageTime()}, {@link ArchiveAviationMessage#getValidFrom()} and
+ * the completion algorithm.) Populated time properties are {@link ArchiveAviationMessage#getMessageTime()}, {@link ArchiveAviationMessage#getValidFrom()} and
  * {@link ArchiveAviationMessage#getValidTo()}.
  * </p>
  *
  * <p>
- * The {@link GenericAviationWeatherMessage#getLocationIndicators() location indicator} used to populate the
- * {@link ArchiveAviationMessage#getIcaoAirportCode()} is chosen using the first match in a configured list of location indicator types. Multiple lists may
- * be configured for each message type. The list of location indicator types is chosen by following rules:
+ * The {@link GenericAviationWeatherMessage#getLocationIndicators() location indicator} used to populate
+ * {@link ArchiveAviationMessage#getIcaoAirportCode()} is chosen using the first match in a configured list of location indicator types.
+ * A list can be configured for each message type. The list of location indicator types is chosen by following rules:
  * </p>
  * <ol>
  *     <li>The list of location indicator types is read from {@link #setMessageTypeLocationIndicatorTypes(Map)} map, if it has been set and an entry with
@@ -53,7 +46,7 @@ import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
  *     searched. (See {@link #setMessageTypeLocationIndicatorTypes(Map)}.)</li>
  *     <li>If no match by message type is found, the default list {@link #setDefaultLocationIndicatorTypes(List)} is used.</li>
  * </ol>
- *
+ * <p>
  * {@link ArchiveAviationMessage#getMessage()} and {@link ArchiveAviationMessageIWXXMDetails#getXMLNamespace()} are also populated.
  */
 public class MessageDataPopulator implements MessagePopulator {
@@ -72,7 +65,7 @@ public class MessageDataPopulator implements MessagePopulator {
     private List<LocationIndicatorType> defaultLocationIndicatorTypes = DEFAULT_LOCATION_INDICATOR_TYPES;
 
     public MessageDataPopulator(final MessagePopulatorHelper helper, final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
-            final Map<MessageType, Integer> typeIds) {
+                                final Map<MessageType, Integer> typeIds) {
         this.helper = requireNonNull(helper, "helper");
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");
@@ -133,7 +126,7 @@ public class MessageDataPopulator implements MessagePopulator {
 
     @Nullable
     private PartialOrCompleteTimeInstant getNullablePartialOrCompleteMessageTime(final ArchiveAviationMessage.Builder builder,
-            final GenericAviationWeatherMessage inputMessage) {
+                                                                                 final GenericAviationWeatherMessage inputMessage) {
         return MessagePopulatorHelper.tryGet(builder, ArchiveAviationMessage.Builder::getMessageTime)//
                 .map(messageTime -> PartialOrCompleteTimeInstant.of(messageTime.atZone(ZoneOffset.UTC)))//
                 .orElse(inputMessage.getIssueTime().orElse(null));
@@ -177,15 +170,14 @@ public class MessageDataPopulator implements MessagePopulator {
      *     <li><strong>Omit</strong> completely for Space weather advisory, Tropical cyclone advisory and Volcanic ash advisory</li>
      * </ul>
      *
-     * @param messageTypeLocationIndicatorTypes
-     *         location indicator types for specified message types
+     * @param messageTypeLocationIndicatorTypes location indicator types for specified message types
      */
     public void setMessageTypeLocationIndicatorTypes(final Map<MessageType, List<LocationIndicatorType>> messageTypeLocationIndicatorTypes) {
         this.messageTypeLocationIndicatorTypes = requireNonNull(messageTypeLocationIndicatorTypes, "messageTypeLocationIndicators");
     }
 
     /**
-     * Specify, whether {@link #setMessageTypeLocationIndicatorTypes(Map)} shall override completely default message type specific configuration.
+     * Specify whether {@link #setMessageTypeLocationIndicatorTypes(Map)} shall completely override default message type specific configuration.
      * If set to {@code true}, default mappings are overridden and location indicator types for message types missing from custom map are resolved using the
      * {@link #setDefaultLocationIndicatorTypes(List)} list. If set to {@code false}, custom configuration is effectively merged with default mappings,
      * meaning that message types not specified in custom configuration will use default configuration when exists.
@@ -194,8 +186,7 @@ public class MessageDataPopulator implements MessagePopulator {
      * The default value is {@code false}.
      * </p>
      *
-     * @param forceCustomMessageTypeLocationIndicatorTypes
-     *         whether to force use of custom message type location indicator types
+     * @param forceCustomMessageTypeLocationIndicatorTypes whether to force use of custom message type location indicator types
      */
     public void setForceCustomMessageTypeLocationIndicatorTypes(final boolean forceCustomMessageTypeLocationIndicatorTypes) {
         this.forceCustomMessageTypeLocationIndicatorTypes = forceCustomMessageTypeLocationIndicatorTypes;
@@ -212,8 +203,7 @@ public class MessageDataPopulator implements MessagePopulator {
      *     <li>{@link LocationIndicatorType#ISSUING_AIR_TRAFFIC_SERVICES_REGION}</li>
      * </ul>
      *
-     * @param defaultLocationIndicatorTypes
-     *         default location indicator type preference list
+     * @param defaultLocationIndicatorTypes default location indicator type preference list
      */
     public void setDefaultLocationIndicatorTypes(final List<LocationIndicatorType> defaultLocationIndicatorTypes) {
         this.defaultLocationIndicatorTypes = requireNonNull(defaultLocationIndicatorTypes, "locationIndicatorOrderOfPreference");
