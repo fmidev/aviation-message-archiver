@@ -1,16 +1,15 @@
 package fi.fmi.avi.archiver.config;
 
-import static java.util.Objects.requireNonNull;
-
-import java.time.Clock;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-
+import fi.fmi.avi.archiver.database.DatabaseAccess;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileParser;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
+import fi.fmi.avi.archiver.message.populator.*;
+import fi.fmi.avi.converter.AviMessageConverter;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import fi.fmi.avi.model.MessageType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,23 +21,15 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
 
-import fi.fmi.avi.archiver.database.DatabaseAccess;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileParser;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
-import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.BulletinHeadingDataPopulator;
-import fi.fmi.avi.archiver.message.populator.FileMetadataPopulator;
-import fi.fmi.avi.archiver.message.populator.MessageDataPopulator;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorService;
-import fi.fmi.avi.archiver.message.populator.StationIdPopulator;
-import fi.fmi.avi.converter.AviMessageConverter;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import fi.fmi.avi.model.MessageType;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import java.time.Clock;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static java.util.Objects.requireNonNull;
 
 @Configuration
 public class ParserConfig {
@@ -96,7 +87,7 @@ public class ParserConfig {
     public IntegrationFlow parserFlow() {
         return IntegrationFlows.from(parserChannel)//
                 .handle(fileParserService())//
-                .<List<ArchiveAviationMessage>> filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))//
+                .<List<InputAviationMessage>>filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))//
                 .channel(populatorChannel)//
                 .handle(messagePopulatorService())//
                 .channel(databaseChannel)//

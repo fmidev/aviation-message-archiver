@@ -3,7 +3,6 @@ package fi.fmi.avi.archiver.initializing;
 import fi.fmi.avi.archiver.file.FileConfig;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.channel.PublishSubscribeChannel;
@@ -21,7 +20,6 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
 
 import javax.annotation.PostConstruct;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -39,6 +37,7 @@ import static java.util.Objects.requireNonNull;
 public class MessageFileMonitorInitializer {
     public static final String FILE_METADATA = "file_metadata";
     public static final String FAILED_MESSAGES = "processing_failures";
+    public static final String DISCARDED_MESSAGES = "processing_discards";
     public static final String FILE_PARSE_ERRORS = "file_parsed_partially";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageFileMonitorInitializer.class);
@@ -56,8 +55,8 @@ public class MessageFileMonitorInitializer {
     private final MessageChannel errorMessageChannel;
 
     public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
-            final MessageChannel processingChannel, final MessageChannel successChannel, final MessageChannel failChannel,
-            final MessageChannel errorMessageChannel) {
+                                         final MessageChannel processingChannel, final MessageChannel successChannel, final MessageChannel failChannel,
+                                         final MessageChannel errorMessageChannel) {
         this.context = requireNonNull(context, "context");
         this.registerations = new HashSet<>();
         this.aviationProductsHolder = requireNonNull(aviationProductsHolder, "aviationProductsHolder");

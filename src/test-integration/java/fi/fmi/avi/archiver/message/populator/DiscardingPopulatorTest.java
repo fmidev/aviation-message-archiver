@@ -7,6 +7,7 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.DiscardedMessageException;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -40,14 +41,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.populator.FailingPopulatorTest"})
+@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.populator.DiscardingPopulatorTest"})
 @Sql(scripts = {"classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class},//
+@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, DiscardingPopulatorTest.DiscardingPopulatorConfig.class},//
         loader = AnnotationConfigContextLoader.class,//
         initializers = {ConfigDataApplicationContextInitializer.class})
-@ActiveProfiles("failingPopulatorTest")
-public class FailingPopulatorTest {
+@ActiveProfiles("discardingPopulatorTest")
+public class DiscardingPopulatorTest {
 
     private static final int WAIT_MILLIS = 100;
     private static final int TIMEOUT_MILLIS = 1000;
@@ -67,24 +68,31 @@ public class FailingPopulatorTest {
     private AviationProductsHolder aviationProductsHolder;
 
     @Captor
-    private ArgumentCaptor<Message<?>> failChannelCaptor;
+    private ArgumentCaptor<Message<?>> messageCaptor;
 
     @Captor
     private ArgumentCaptor<ArchiveAviationMessage> databaseMessageCaptor;
 
     @Test
-    public void test_failing_populator() throws URISyntaxException, IOException, InterruptedException {
+    public void test_discarding_populator() throws URISyntaxException, IOException, InterruptedException {
         final AviationProductsHolder.AviationProduct product = getProduct(aviationProductsHolder);
         Files.copy(getInputFile(), Paths.get(product.getInputDir().getPath() + "/" + FILENAME));
         waitUntilFileExists(new File(product.getFailDir().getPath() + "/" + FILENAME));
 
-        verify(successChannel, times(0)).send(any(Message.class));
-        verify(failChannel).send(failChannelCaptor.capture());
-        @SuppressWarnings("unchecked") final List<InputAviationMessage> failures = (List<InputAviationMessage>) failChannelCaptor.getValue()
-                .getHeaders()
-                .get(MessageFileMonitorInitializer.FAILED_MESSAGES);
-        assertThat(failures).hasSize(1);
-        assertThat(failures.get(0).getMessage().getLocationIndicators().get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME)).isEqualTo("EFYY");
+        verify(successChannel).send(messageCaptor.capture());
+        @SuppressWarnings("unchecked") final List<ArchiveAviationMessage> successes = (List<ArchiveAviationMessage>) messageCaptor.getValue().getPayload();
+        assertThat(successes).hasSize(1);
+        assertThat(successes.get(0).getIcaoAirportCode()).isEqualTo("EFXX");
+
+        verify(failChannel, times(0)).send(any(Message.class));
+        @SuppressWarnings("unchecked") final List<InputAviationMessage> failures = (List<InputAviationMessage>) messageCaptor.getValue()
+                .getHeaders().get(MessageFileMonitorInitializer.FAILED_MESSAGES);
+        assertThat(failures).isEmpty();
+
+        @SuppressWarnings("unchecked") final List<InputAviationMessage> discards = (List<InputAviationMessage>) messageCaptor.getValue()
+                .getHeaders().get(MessageFileMonitorInitializer.DISCARDED_MESSAGES);
+        assertThat(discards).hasSize(1);
+        assertThat(discards.get(0).getMessage().getLocationIndicators().get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME)).isEqualTo("EFYY");
 
         verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture());
         assertThat(databaseMessageCaptor.getValue().getIcaoAirportCode()).isEqualTo("EFXX");
@@ -111,16 +119,16 @@ public class FailingPopulatorTest {
     }
 
     @Configuration
-    @Profile("failingPopulatorTest")
-    static class FailingPopulatorConfig {
+    @Profile("discardingPopulatorTest")
+    static class DiscardingPopulatorConfig {
         @Bean
-        public MessagePopulator failingPopulator() {
+        public MessagePopulator discardingPopulator() {
             return (inputAviationMessage, aviationMessageBuilder) -> {
                 final String airportIcaoCode = inputAviationMessage.getMessage()
                         .getLocationIndicators()
                         .get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME);
                 if (airportIcaoCode.equals("EFYY")) {
-                    throw new RuntimeException("fail");
+                    throw new DiscardedMessageException("Discarded a message with location indicator: " + airportIcaoCode);
                 }
             };
         }

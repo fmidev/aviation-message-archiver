@@ -3,6 +3,7 @@ package fi.fmi.avi.archiver.message.populator;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.DiscardedMessageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -34,12 +35,16 @@ public class MessagePopulatorService {
 
         final List<ArchiveAviationMessage> populatedMessages = new ArrayList<>();
         final List<InputAviationMessage> failures = new ArrayList<>();
-        for (InputAviationMessage inputMessage : inputMessages) {
+        final List<InputAviationMessage> discards = new ArrayList<>();
+        for (final InputAviationMessage inputMessage : inputMessages) {
             try {
                 final ArchiveAviationMessage archiveAviationMessage = populateMessage(inputMessage);
                 populatedMessages.add(archiveAviationMessage);
+            } catch (final DiscardedMessageException e) {
+                LOGGER.info("Message was discarded", e); // TODO Logging
+                discards.add(inputMessage);
             } catch (final Exception e) {
-                LOGGER.error("Populating an archive message failed: {}", inputMessage, e);
+                LOGGER.error("Populating an archive message failed: {}", inputMessage, e); // TODO Logging
                 failures.add(inputMessage);
             }
         }
@@ -47,10 +52,11 @@ public class MessagePopulatorService {
                 .withPayload(Collections.unmodifiableList(populatedMessages))
                 .copyHeaders(headers)
                 .setHeader(MessageFileMonitorInitializer.FAILED_MESSAGES, Collections.unmodifiableList(failures))
+                .setHeader(MessageFileMonitorInitializer.DISCARDED_MESSAGES, Collections.unmodifiableList(discards))
                 .build();
     }
 
-    private ArchiveAviationMessage populateMessage(final InputAviationMessage inputAviationMessage) {
+    private ArchiveAviationMessage populateMessage(final InputAviationMessage inputAviationMessage) throws DiscardedMessageException {
         final ArchiveAviationMessage.Builder messageBuilder = ArchiveAviationMessage.builder();
         for (final MessagePopulator messagePopulator : messagePopulators) {
             messagePopulator.populate(inputAviationMessage, messageBuilder);
