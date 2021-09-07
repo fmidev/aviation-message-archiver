@@ -3,6 +3,7 @@ package fi.fmi.avi.archiver.initializing;
 import fi.fmi.avi.archiver.file.FileConfig;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.channel.PublishSubscribeChannel;
@@ -20,6 +21,7 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
 
 import javax.annotation.PostConstruct;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,8 +56,8 @@ public class MessageFileMonitorInitializer {
     private final MessageChannel errorMessageChannel;
 
     public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
-                                         final MessageChannel processingChannel, final MessageChannel successChannel, final MessageChannel failChannel,
-                                         final MessageChannel errorMessageChannel) {
+            final MessageChannel processingChannel, final MessageChannel successChannel, final MessageChannel failChannel,
+            final MessageChannel errorMessageChannel) {
         this.context = requireNonNull(context, "context");
         this.registerations = new HashSet<>();
         this.aviationProductsHolder = requireNonNull(aviationProductsHolder, "aviationProductsHolder");
@@ -63,6 +65,28 @@ public class MessageFileMonitorInitializer {
         this.successChannel = requireNonNull(successChannel, "archiveChannel");
         this.failChannel = requireNonNull(failChannel, "failChannel");
         this.errorMessageChannel = requireNonNull(errorMessageChannel, "errorMessageChannel");
+    }
+
+    private static FileMetadata createFileMetadata(final Message<?> message, final FileConfig fileConfig, final String productIdentifier) {
+        final String filename = message.getHeaders().get(FileHeaders.FILENAME, String.class);
+        return FileMetadata.builder()
+                .setFilename(filename)
+                .setFileConfig(fileConfig)
+                .setProductIdentifier(productIdentifier)
+                .setFileModified(getFileModified(message))
+                .build();
+    }
+
+    private static Optional<Instant> getFileModified(final Message<?> message) {
+        final File file = message.getHeaders().get(FileHeaders.ORIGINAL_FILE, File.class);
+        if (file != null) {
+            try {
+                return Optional.of(Files.getLastModifiedTime(file.toPath()).toInstant());
+            } catch (final IOException e) {
+                LOGGER.error("Unable to get file last modified time: {}", file.getName(), e);
+            }
+        }
+        return Optional.empty();
     }
 
     @PostConstruct
@@ -123,29 +147,6 @@ public class MessageFileMonitorInitializer {
 
     public void dispose() {
         registerations.forEach(registration -> context.remove(registration.getId()));
-    }
-
-    private static FileMetadata createFileMetadata(final Message<?> message, final FileConfig fileConfig,
-                                                   final String productIdentifier) {
-        final String filename = message.getHeaders().get(FileHeaders.FILENAME, String.class);
-        return FileMetadata.builder()
-                .setFilename(filename)
-                .setFileConfig(fileConfig)
-                .setProductIdentifier(productIdentifier)
-                .setFileModified(getFileModified(message))
-                .build();
-    }
-
-    private static Optional<Instant> getFileModified(final Message<?> message) {
-        final File file = message.getHeaders().get(FileHeaders.ORIGINAL_FILE, File.class);
-        if (file != null) {
-            try {
-                return Optional.of(Files.getLastModifiedTime(file.toPath()).toInstant());
-            } catch (final IOException e) {
-                LOGGER.error("Unable to get file last modified time: {}", file.getName(), e);
-            }
-        }
-        return Optional.empty();
     }
 
 }

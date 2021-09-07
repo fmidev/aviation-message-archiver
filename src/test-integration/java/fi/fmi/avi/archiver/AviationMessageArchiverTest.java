@@ -1,15 +1,7 @@
 package fi.fmi.avi.archiver;
 
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
-import org.inferred.freebuilder.FreeBuilder;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,21 +12,30 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
-import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.inferred.freebuilder.FreeBuilder;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.AviationMessageArchiverTest"})
-@Sql(scripts = {"classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+
+@SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.AviationMessageArchiverTest" })
+@Sql(scripts = { "classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class},//
+@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = {ConfigDataApplicationContextInitializer.class})
-public class AviationMessageArchiverTest {
+        initializers = { ConfigDataApplicationContextInitializer.class })
+class AviationMessageArchiverTest {
 
     @Autowired
     private AviationProductsHolder aviationProductsHolder;
 
-    private static Stream<AviationMessageArchiverTestCase> test_file_flow() {
+    static Stream<AviationMessageArchiverTestCase> test_file_flow() {
         return Stream.of(//
                 AviationMessageArchiverTestCase.builder()//
                         .setName("Minimal TAC TAF")//
@@ -56,7 +57,6 @@ public class AviationMessageArchiverTest {
                         .setName("TAC TAF without GTS heading")//
                         .setProductName("test_taf")//
                         .setInputFileName("taf-missing-gts-heading.txt")//
-                        .expectFail()//
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
                         .setName("TAC TAF GTS Bulletin")//
@@ -67,7 +67,7 @@ public class AviationMessageArchiverTest {
                         .setName("Partially valid TAC TAF GTS Bulletin")//
                         .setProductName("test_taf_bulletin")//
                         .setInputFileName("taf-tac-bulletin-partially-valid.bul")//
-                        .expectFail()
+                        .expectFail()//
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF")//
@@ -94,7 +94,7 @@ public class AviationMessageArchiverTest {
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource
-    public void test_file_flow(final AviationMessageArchiverTestCase testCase) throws IOException, InterruptedException, URISyntaxException {
+    void test_file_flow(final AviationMessageArchiverTestCase testCase) throws IOException, InterruptedException, URISyntaxException {
         final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
         Files.copy(testCase.getInputFile(), Paths.get(product.getInputDir().getPath() + "/" + testCase.getInputFileName()));
         testCase.assertInputAndOutputFilesEquals(product);
@@ -162,8 +162,6 @@ public class AviationMessageArchiverTest {
             public Builder expectFail() {
                 return super.setExpectFail(true);
             }
-
         }
     }
-
 }

@@ -1,13 +1,12 @@
 package fi.fmi.avi.archiver.file;
 
-import fi.fmi.avi.archiver.config.ConverterConfig;
-import fi.fmi.avi.converter.AviMessageConverter;
-import fi.fmi.avi.model.MessageType;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -17,12 +16,15 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.regex.Pattern;
 
-import static fi.fmi.avi.model.GenericAviationWeatherMessage.Format.IWXXM;
-import static fi.fmi.avi.model.GenericAviationWeatherMessage.Format.TAC;
-import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+
+import fi.fmi.avi.archiver.config.ConverterConfig;
+import fi.fmi.avi.converter.AviMessageConverter;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import fi.fmi.avi.model.MessageType;
 
 @SpringJUnitConfig(ConverterConfig.class)
 public class FileParserTest {
@@ -30,14 +32,14 @@ public class FileParserTest {
     private static final String DEFAULT_FILENAME = "test_file";
     private static final Instant FILE_MODIFIED = Instant.now();
     private static final String PRODUCT_IDENTIFIER = "test";
-    private static final FileConfig TAC_FILECONFIG = new FileConfig.Builder()
-            .setFormat(TAC)
+    private static final FileConfig TAC_FILECONFIG = FileConfig.builder()
+            .setFormat(GenericAviationWeatherMessage.Format.TAC)
             .setFormatId(0)
             .setNameTimeZone(ZoneId.of("Z"))
             .setPattern(Pattern.compile("test_file"))
             .build();
-    private static final FileConfig IWXXM_FILECONFIG = new FileConfig.Builder()
-            .setFormat(IWXXM)
+    private static final FileConfig IWXXM_FILECONFIG = FileConfig.builder()
+            .setFormat(GenericAviationWeatherMessage.Format.IWXXM)
             .setFormatId(1)
             .setNameTimeZone(ZoneId.of("Z"))
             .setPattern(Pattern.compile("test_file"))
@@ -54,6 +56,18 @@ public class FileParserTest {
 
     private FileParser fileParser;
 
+    private static String getFileContent(final String filename) {
+        try {
+            final URL resource = requireNonNull(FileParserTest.class.getResource(filename));
+            final Path path = Paths.get(resource.toURI());
+            assertThat(path).exists();
+            return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+        } catch (final RuntimeException | URISyntaxException | IOException e) {
+            fail(e);
+            return null;
+        }
+    }
+
     @BeforeEach
     public void setUp() {
         fileParser = new FileParser(aviMessageConverter);
@@ -61,14 +75,12 @@ public class FileParserTest {
 
     @Test
     public void empty_content() {
-        assertThrows(IllegalStateException.class, () -> fileParser.parse("",
-                DEFAULT_METADATA.toBuilder().setFileConfig(TAC_FILECONFIG).build()));
+        assertThrows(IllegalStateException.class, () -> fileParser.parse("", DEFAULT_METADATA.toBuilder().setFileConfig(TAC_FILECONFIG).build()));
     }
 
     @Test
     public void whitespace_content() {
-        assertThrows(IllegalStateException.class, () -> fileParser.parse("\r\r\n ",
-                DEFAULT_METADATA.toBuilder().setFileConfig(TAC_FILECONFIG).build()));
+        assertThrows(IllegalStateException.class, () -> fileParser.parse("\r\r\n ", DEFAULT_METADATA.toBuilder().setFileConfig(TAC_FILECONFIG).build()));
     }
 
     @Test
@@ -177,10 +189,10 @@ public class FileParserTest {
             assertThat(message.getCollectIdentifier().getBulletinHeadingString()).isEmpty();
         });
 
-        assertThat(result.getInputAviationMessages().subList(0, 2)).allSatisfy(message ->
-                assertThat(message.getGtsBulletinHeading().getBulletinHeadingString()).contains("FTYU31 YUDO 160000"));
-        assertThat(result.getInputAviationMessages().subList(2, 4)).allSatisfy(message ->
-                assertThat(message.getGtsBulletinHeading().getBulletinHeadingString()).contains("FTYU31 YUDO 180000"));
+        assertThat(result.getInputAviationMessages().subList(0, 2)).allSatisfy(
+                message -> assertThat(message.getGtsBulletinHeading().getBulletinHeadingString()).contains("FTYU31 YUDO 160000"));
+        assertThat(result.getInputAviationMessages().subList(2, 4)).allSatisfy(
+                message -> assertThat(message.getGtsBulletinHeading().getBulletinHeadingString()).contains("FTYU31 YUDO 180000"));
 
         assertThat(result.getInputAviationMessages().get(0).getMessage().getOriginalMessage()).isEqualTo("TAF YUDO 160000Z NIL=");
         assertThat(result.getInputAviationMessages().get(1).getMessage().getOriginalMessage()).isEqualTo("TAF YUDD 160000Z NIL=");
@@ -309,18 +321,6 @@ public class FileParserTest {
         final String filename = "taf-iwxxm-in-gts-bulletin-with-invalid-heading.bul";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
         assertThrows(IllegalStateException.class, () -> fileParser.parse(getFileContent(filename), metadata));
-    }
-
-    private static String getFileContent(final String filename) {
-        try {
-            final URL resource = requireNonNull(FileParserTest.class.getResource(filename));
-            final Path path = Paths.get(resource.toURI());
-            assertThat(path).exists();
-            return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-        } catch (final Exception e) {
-            fail(e);
-            return null;
-        }
     }
 
 }

@@ -1,0 +1,13 @@
+partialIssueTime,completeIssueTime,filename,fileModified,clock,expectedTime
+# Return native complete time when available,,,,,
+,2000-01-02T03:04:01Z,taf_2000-01-02T03:05.txt,2005-01-02T03:05:06Z,2000-02-03T04:07:08Z,2000-01-02T03:04:01Z
+--02T03:04Z,2000-01-02T03:04:05Z,taf_2000-01-02T03:05.txt,2005-01-02T03:05:06Z,2000-02-03T04:07:08Z,2000-01-02T03:04:05Z
+# Complete partial time with filename time,,,,,
+--02T03:04Z,,taf_2000-01-02T03:05.txt,2005-01-02T03:05:06Z,2000-02-03T04:07:08Z,2000-01-02T03:04:00Z
+# Complete partial time with filename time completed with file time when filename time is partial,,,,,
+--T03:04Z,,taf_02T03:05.txt,2005-01-07T03:05:06Z,2000-02-03T04:07:08Z,2005-01-02T03:04:00Z
+# Complete partial time with file time when filename time is not available,,,,,
+--02T03:04Z,,taf.txt,2000-01-02T03:05:06Z,2000-02-03T04:07:08Z,2000-01-02T03:04:00Z
+# Complete partial time with clock when file nor filename time is not available,,,,,
+--02T03:04Z,,taf.txt,,2000-02-03T04:07:08Z,2000-02-02T03:04:00Z
+--02T03:04Z,,taf.txt,,2000-02-03T05:07:08+01:00,2000-02-02T03:04:00Z

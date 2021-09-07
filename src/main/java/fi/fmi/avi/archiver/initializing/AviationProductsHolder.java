@@ -1,18 +1,20 @@
 package fi.fmi.avi.archiver.initializing;
 
-import com.google.common.collect.ImmutableMap;
-import fi.fmi.avi.archiver.file.FileConfig;
-import org.inferred.freebuilder.FreeBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
+import org.inferred.freebuilder.FreeBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.google.common.collect.ImmutableMap;
+
+import fi.fmi.avi.archiver.file.FileConfig;
 
 /**
  * Holder for Aviation products.
@@ -82,8 +84,10 @@ public class AviationProductsHolder {
 
         public abstract List<FileConfig> getFileConfigs();
 
+        public abstract Builder toBuilder();
+
         public static class Builder extends AviationProductsHolder_AviationProduct_Builder {
-            public Builder() {
+            Builder() {
             }
 
             @Override
