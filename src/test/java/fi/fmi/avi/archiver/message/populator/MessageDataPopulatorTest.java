@@ -280,44 +280,34 @@ class MessageDataPopulatorTest {
             public void accept(final MessageDataPopulator populator) {
             }
         }, //
-        MERGED_MESSAGE_TYPES {
+        CUSTOM_MESSAGE_TYPE_SPECIFIC_LOCATION_INDICATORS {
             @Override
             public void accept(final MessageDataPopulator populator) {
                 populator.setMessageTypeLocationIndicatorTypes(ALT_MESSAGE_TYPE_LOCATION_INDICATOR_TYPES);
-                populator.setForceCustomMessageTypeLocationIndicatorTypes(false);
             }
         }, //
-        FORCED_MESSAGE_TYPES {
-            @Override
-            public void accept(final MessageDataPopulator populator) {
-                populator.setMessageTypeLocationIndicatorTypes(ALT_MESSAGE_TYPE_LOCATION_INDICATOR_TYPES);
-                populator.setForceCustomMessageTypeLocationIndicatorTypes(true);
-            }
-        }, //
-        CUSTOM_GLOBAL_DEFAULTS {
+        CUSTOM_GLOBAL_LOCATION_INDICATORS {
             @Override
             public void accept(final MessageDataPopulator populator) {
                 populator.setDefaultLocationIndicatorTypes(ALT_DEFAULT_LOCATION_INDICATORS);
             }
         }, //
-        ALL_TYPES_AS_GLOBAL_DEFAULTS {
+        ALL_LOCATION_INDICATOR_TYPES_AS_GLOBAL_DEFAULTS {
             @Override
             public void accept(final MessageDataPopulator populator) {
                 populator.setDefaultLocationIndicatorTypes(Collections.unmodifiableList(Arrays.asList(LocationIndicatorType.values())));
             }
         }, //
-        ONLY_GLOBAL_DEFAULTS {
+        ONLY_GLOBAL_LOCATION_INDICATORS {
             @Override
             public void accept(final MessageDataPopulator populator) {
                 populator.setMessageTypeLocationIndicatorTypes(Collections.emptyMap());
-                populator.setForceCustomMessageTypeLocationIndicatorTypes(true);
             }
         }, //
-        NOTHING {
+        NO_LOCATION_INDICATORS {
             @Override
             public void accept(final MessageDataPopulator populator) {
                 populator.setMessageTypeLocationIndicatorTypes(Collections.emptyMap());
-                populator.setForceCustomMessageTypeLocationIndicatorTypes(true);
                 populator.setDefaultLocationIndicatorTypes(Collections.emptyList());
             }
         }, //

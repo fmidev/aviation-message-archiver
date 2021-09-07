@@ -1,5 +1,19 @@
 package fi.fmi.avi.archiver.message.populator;
 
+import static java.util.Objects.requireNonNull;
+
+import java.time.ZoneOffset;
+import java.time.chrono.ChronoZonedDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import javax.annotation.Nullable;
+
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
@@ -9,13 +23,6 @@ import fi.fmi.avi.model.GenericAviationWeatherMessage.LocationIndicatorType;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
-
-import javax.annotation.Nullable;
-import java.time.ZoneOffset;
-import java.time.chrono.ChronoZonedDateTime;
-import java.util.*;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Populate {@link ArchiveAviationMessage.Builder} properties from message data in {@link InputAviationMessage}.
@@ -36,16 +43,9 @@ import static java.util.Objects.requireNonNull;
  *
  * <p>
  * The {@link GenericAviationWeatherMessage#getLocationIndicators() location indicator} used to populate
- * {@link ArchiveAviationMessage#getIcaoAirportCode()} is chosen using the first match in a configured list of location indicator types.
- * A list can be configured for each message type. The list of location indicator types is chosen by following rules:
- * </p>
- * <ol>
- *     <li>The list of location indicator types is read from {@link #setMessageTypeLocationIndicatorTypes(Map)} map, if it has been set and an entry with
- *     message type in question exists.</li>
- *     <li>If {@link #setForceCustomMessageTypeLocationIndicatorTypes(boolean)} is {@code false}, the default map indexed by message types is
- *     searched. (See {@link #setMessageTypeLocationIndicatorTypes(Map)}.)</li>
- *     <li>If no match by message type is found, the default list {@link #setDefaultLocationIndicatorTypes(List)} is used.</li>
- * </ol>
+ * {@link ArchiveAviationMessage#getIcaoAirportCode()} is chosen by looking for first existing value in order of a
+ * {@link #setMessageTypeLocationIndicatorTypes(Map) message type-specific location indicator list}, if exists for message type in question, or else in order
+ * of a {@link #setDefaultLocationIndicatorTypes(List) default list} of location indicator types.
  * <p>
  * {@link ArchiveAviationMessage#getMessage()} and {@link ArchiveAviationMessageIWXXMDetails#getXMLNamespace()} are also populated.
  */
@@ -60,12 +60,11 @@ public class MessageDataPopulator implements MessagePopulator {
     private final Map<GenericAviationWeatherMessage.Format, Integer> formatIds;
     private final Map<MessageType, Integer> typeIds;
 
-    private Map<MessageType, List<LocationIndicatorType>> messageTypeLocationIndicatorTypes = Collections.emptyMap();
-    private boolean forceCustomMessageTypeLocationIndicatorTypes; // = false;
+    private Map<MessageType, List<LocationIndicatorType>> messageTypeLocationIndicatorTypes = DEFAULT_MESSAGE_TYPE_LOCATION_INDICATOR_TYPES;
     private List<LocationIndicatorType> defaultLocationIndicatorTypes = DEFAULT_LOCATION_INDICATOR_TYPES;
 
     public MessageDataPopulator(final MessagePopulatorHelper helper, final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
-                                final Map<MessageType, Integer> typeIds) {
+            final Map<MessageType, Integer> typeIds) {
         this.helper = requireNonNull(helper, "helper");
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");
@@ -126,7 +125,7 @@ public class MessageDataPopulator implements MessagePopulator {
 
     @Nullable
     private PartialOrCompleteTimeInstant getNullablePartialOrCompleteMessageTime(final ArchiveAviationMessage.Builder builder,
-                                                                                 final GenericAviationWeatherMessage inputMessage) {
+            final GenericAviationWeatherMessage inputMessage) {
         return MessagePopulatorHelper.tryGet(builder, ArchiveAviationMessage.Builder::getMessageTime)//
                 .map(messageTime -> PartialOrCompleteTimeInstant.of(messageTime.atZone(ZoneOffset.UTC)))//
                 .orElse(inputMessage.getIssueTime().orElse(null));
@@ -143,67 +142,53 @@ public class MessageDataPopulator implements MessagePopulator {
     }
 
     private List<LocationIndicatorType> getLocationIndicatorTypes(final @Nullable MessageType messageType) {
-        List<LocationIndicatorType> types = messageTypeLocationIndicatorTypes.get(messageType);
-        if (types != null) {
-            return types;
-        }
-        if (!forceCustomMessageTypeLocationIndicatorTypes) {
-            types = DEFAULT_MESSAGE_TYPE_LOCATION_INDICATOR_TYPES.get(messageType);
-            if (types != null) {
-                return types;
-            }
-        }
-        return defaultLocationIndicatorTypes;
+        final List<LocationIndicatorType> types = messageTypeLocationIndicatorTypes.get(messageType);
+        return types != null ? types : defaultLocationIndicatorTypes;
     }
 
     /**
      * Set a custom location indicator type preference order for specified message types.
-     * See {@link MessageDataPopulator class documentation} for overall description of selecting the location indicator. The provided map is effectively merged
-     * with the default configuration, unless {@link #setForceCustomMessageTypeLocationIndicatorTypes(boolean)} is set to {@code true}.
+     * See {@link MessageDataPopulator class documentation} for overall description of selecting the location indicator.
      *
      * <p>
      * The default mappings are
      * </p>
      * <ul>
-     *     <li>{@link LocationIndicatorType#AERODROME} for METAR, SPECI and TAF</li>
-     *     <li>{@link LocationIndicatorType#ISSUING_AIR_TRAFFIC_SERVICES_REGION} for AIRMET and SIGMET</li>
-     *     <li><strong>Omit</strong> completely for Space weather advisory, Tropical cyclone advisory and Volcanic ash advisory</li>
+     *     <li>METAR, SPECI and TAF:</li>
+     *     <ol>
+     *         <li>{@link LocationIndicatorType#AERODROME}</li>
+     *     </ol>
+     *     <li>AIRMET and SIGMET:</li>
+     *     <ol>
+     *         <li>{@link LocationIndicatorType#ISSUING_AIR_TRAFFIC_SERVICES_REGION}</li>
+     *     </ol>
+     *     <li>Space weather advisory, Tropical cyclone advisory and Volcanic ash advisory:</li>
+     *     <ol>
+     *         <li>An empty list (omitting location indicator completely)</li>
+     *     </ol>
      * </ul>
      *
-     * @param messageTypeLocationIndicatorTypes location indicator types for specified message types
+     * @param messageTypeLocationIndicatorTypes
+     *         location indicator types for specified message types
      */
     public void setMessageTypeLocationIndicatorTypes(final Map<MessageType, List<LocationIndicatorType>> messageTypeLocationIndicatorTypes) {
         this.messageTypeLocationIndicatorTypes = requireNonNull(messageTypeLocationIndicatorTypes, "messageTypeLocationIndicators");
     }
 
     /**
-     * Specify whether {@link #setMessageTypeLocationIndicatorTypes(Map)} shall completely override default message type specific configuration.
-     * If set to {@code true}, default mappings are overridden and location indicator types for message types missing from custom map are resolved using the
-     * {@link #setDefaultLocationIndicatorTypes(List)} list. If set to {@code false}, custom configuration is effectively merged with default mappings,
-     * meaning that message types not specified in custom configuration will use default configuration when exists.
-     *
-     * <p>
-     * The default value is {@code false}.
-     * </p>
-     *
-     * @param forceCustomMessageTypeLocationIndicatorTypes whether to force use of custom message type location indicator types
-     */
-    public void setForceCustomMessageTypeLocationIndicatorTypes(final boolean forceCustomMessageTypeLocationIndicatorTypes) {
-        this.forceCustomMessageTypeLocationIndicatorTypes = forceCustomMessageTypeLocationIndicatorTypes;
-    }
-
-    /**
-     * Set the location indicator type preference order for message types not explicitly specified in configuration.
+     * Set the location indicator type preference order for message types not {@link #setMessageTypeLocationIndicatorTypes(Map) explicitly configured}.
+     * See {@link MessageDataPopulator class documentation} for overall description of selecting the location indicator.
      *
      * <p>
      * The default list is
      * </p>
-     * <ul>
+     * <ol>
      *     <li>{@link LocationIndicatorType#AERODROME}</li>
      *     <li>{@link LocationIndicatorType#ISSUING_AIR_TRAFFIC_SERVICES_REGION}</li>
-     * </ul>
+     * </ol>
      *
-     * @param defaultLocationIndicatorTypes default location indicator type preference list
+     * @param defaultLocationIndicatorTypes
+     *         default location indicator type preference list
      */
     public void setDefaultLocationIndicatorTypes(final List<LocationIndicatorType> defaultLocationIndicatorTypes) {
         this.defaultLocationIndicatorTypes = requireNonNull(defaultLocationIndicatorTypes, "locationIndicatorOrderOfPreference");
