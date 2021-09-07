@@ -92,19 +92,19 @@ message-static-values:
     TAC: 1
     IWXXM: 2
   typeIds:
+    METAR: 1
     TAF: 2
-    METAR: -1
-    SPECI: -1
-    SIGMET: -1
-    GAFOR: -1
-    AIRMET: -1
-    TROPICAL_CYCLONE_ADVISORY: -1
-    VOLCANIC_ASH_ADVISORY: -1
-    BULLETIN: -1
-    GENERIC: -1
-    LOW_WIND: -1
-    WX_WARNING: -1
-    SPECIAL_AIR_REPORT: -1
-    WXREP: -1
-    SPACE_WEATHER_ADVISORY: -1
+    SPECI: 3
+    SIGMET: 4
+    GAFOR: 5
+    AIRMET: 6
+    TROPICAL_CYCLONE_ADVISORY: 7
+    VOLCANIC_ASH_ADVISORY: 8
+    BULLETIN: 9
+    GENERIC: 10
+    LOW_WIND: 11
+    WX_WARNING: 12
+    SPECIAL_AIR_REPORT: 13
+    WXREP: 14
+    SPACE_WEATHER_ADVISORY: 15
 # END SNIPPET: Message static values

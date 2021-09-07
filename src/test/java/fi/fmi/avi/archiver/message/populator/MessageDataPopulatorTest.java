@@ -152,19 +152,41 @@ class MessageDataPopulatorTest {
 
     @ParameterizedTest
     @CsvFileSource(resources = "MessageDataPopulatorTest_populates_icaoAirportCode_when_exists.csv", numLinesToSkip = 1)
-    void populates_icaoAirportCode_when_exists(final PopulatorConfig populatorConfig, final MessageType messageType,
+    void populates_icaoAirportCode_when_exists(final PopulatorConfig populatorConfig, final MessagePopulatorTests.TypeId messageType,
             @ConvertWith(ToLocationIndicatorMap.class) final Map<LocationIndicatorType, String> locationIndicators,
             @Nullable final String expectedIcaoAirportCode) {
         populatorConfig.accept(populator);
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
-                        .setMessageType(messageType)//
+                        .setMessageType(messageType.getType())//
                         .putAllLocationIndicators(locationIndicators)//
                         .build())//
                 .buildPartial();
 
         final String initialIcaoAirportCode = "NULL";
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
+                .setIcaoAirportCode(initialIcaoAirportCode);
+        populator.populate(inputMessage, builder);
+        assertThat(builder.getIcaoAirportCode()).isEqualTo(Optional.ofNullable(expectedIcaoAirportCode).orElse(initialIcaoAirportCode));
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "MessageDataPopulatorTest_populates_icaoAirportCode_when_exists.csv", numLinesToSkip = 1)
+    void populates_icaoAirportCode_when_exists_and_message_type_is_already_set(final PopulatorConfig populatorConfig,
+            final MessagePopulatorTests.TypeId messageType,
+            @ConvertWith(ToLocationIndicatorMap.class) final Map<LocationIndicatorType, String> locationIndicators,
+            @Nullable final String expectedIcaoAirportCode) {
+        populatorConfig.accept(populator);
+        final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
+                .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
+                        // Omitting message type
+                        .putAllLocationIndicators(locationIndicators)//
+                        .build())//
+                .buildPartial();
+
+        final String initialIcaoAirportCode = "NULL";
+        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
+                .setType(messageType.getId())//
                 .setIcaoAirportCode(initialIcaoAirportCode);
         populator.populate(inputMessage, builder);
         assertThat(builder.getIcaoAirportCode()).isEqualTo(Optional.ofNullable(expectedIcaoAirportCode).orElse(initialIcaoAirportCode));

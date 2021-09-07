@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.message.populator;
 
+import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.tryGet;
 import static java.util.Objects.requireNonNull;
 
 import java.time.ZoneOffset;
@@ -11,12 +12,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage.Builder;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage.LocationIndicatorType;
@@ -25,7 +28,7 @@ import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
 
 /**
- * Populate {@link ArchiveAviationMessage.Builder} properties from message data in {@link InputAviationMessage}.
+ * Populate {@link Builder} properties from message data in {@link InputAviationMessage}.
  *
  * <p>
  * Format and type are mapped from object to id by mappings provided as {@link #MessageDataPopulator(MessagePopulatorHelper, Map, Map)} constructor parameters.
@@ -60,7 +63,7 @@ public class MessageDataPopulator implements MessagePopulator {
     private final Map<GenericAviationWeatherMessage.Format, Integer> formatIds;
     private final Map<MessageType, Integer> typeIds;
 
-    private Map<MessageType, List<LocationIndicatorType>> messageTypeLocationIndicatorTypes = DEFAULT_MESSAGE_TYPE_LOCATION_INDICATOR_TYPES;
+    private Map<Integer, List<LocationIndicatorType>> messageTypeLocationIndicatorTypes;
     private List<LocationIndicatorType> defaultLocationIndicatorTypes = DEFAULT_LOCATION_INDICATOR_TYPES;
 
     public MessageDataPopulator(final MessagePopulatorHelper helper, final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
@@ -68,6 +71,7 @@ public class MessageDataPopulator implements MessagePopulator {
         this.helper = requireNonNull(helper, "helper");
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");
+        setMessageTypeLocationIndicatorTypes(DEFAULT_MESSAGE_TYPE_LOCATION_INDICATOR_TYPES);
     }
 
     private static Map<MessageType, List<LocationIndicatorType>> createDefaultMessageTypeLocationIndicatorTypes() {
@@ -92,7 +96,7 @@ public class MessageDataPopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final InputAviationMessage input, final ArchiveAviationMessage.Builder builder) {
+    public void populate(final InputAviationMessage input, final Builder builder) {
         requireNonNull(input, "input");
         requireNonNull(builder, "builder");
         final GenericAviationWeatherMessage inputMessage = input.getMessage();
@@ -105,7 +109,8 @@ public class MessageDataPopulator implements MessagePopulator {
                 .flatMap(issueTime -> helper.resolveCompleteTime(issueTime, input.getFileMetadata()))//
                 .map(ChronoZonedDateTime::toInstant)//
                 .ifPresent(builder::setMessageTime);
-        getLocationIndicator(inputMessage.getMessageType().orElse(null), inputMessage.getLocationIndicators())//
+        // Note invocation order: message type is already set before getLocationIndicator(Builder.getType(), ...)
+        getLocationIndicator(tryGet(builder, Builder::getType).orElse(Integer.MIN_VALUE), inputMessage.getLocationIndicators())//
                 .ifPresent(builder::setIcaoAirportCode);
         final PartialOrCompleteTimePeriod validityTime = inputMessage.getValidityTime()//
                 .map(period -> helper.tryCompletePeriod(period, getNullablePartialOrCompleteMessageTime(builder, inputMessage), input.getFileMetadata()))//
@@ -124,26 +129,25 @@ public class MessageDataPopulator implements MessagePopulator {
     }
 
     @Nullable
-    private PartialOrCompleteTimeInstant getNullablePartialOrCompleteMessageTime(final ArchiveAviationMessage.Builder builder,
-            final GenericAviationWeatherMessage inputMessage) {
-        return MessagePopulatorHelper.tryGet(builder, ArchiveAviationMessage.Builder::getMessageTime)//
+    private PartialOrCompleteTimeInstant getNullablePartialOrCompleteMessageTime(final Builder builder, final GenericAviationWeatherMessage inputMessage) {
+        return tryGet(builder, Builder::getMessageTime)//
                 .map(messageTime -> PartialOrCompleteTimeInstant.of(messageTime.atZone(ZoneOffset.UTC)))//
                 .orElse(inputMessage.getIssueTime().orElse(null));
     }
 
-    private Optional<String> getLocationIndicator(@Nullable final MessageType messageType, final Map<LocationIndicatorType, String> locationIndicators) {
+    private Optional<String> getLocationIndicator(final int messageTypeId, final Map<LocationIndicatorType, String> locationIndicators) {
         if (locationIndicators.isEmpty()) {
             return Optional.empty();
         }
-        return getLocationIndicatorTypes(messageType).stream()//
+        return getLocationIndicatorTypes(messageTypeId).stream()//
                 .map(locationIndicators::get)//
                 .filter(Objects::nonNull)//
                 .findFirst();
     }
 
-    private List<LocationIndicatorType> getLocationIndicatorTypes(final @Nullable MessageType messageType) {
-        final List<LocationIndicatorType> types = messageTypeLocationIndicatorTypes.get(messageType);
-        return types != null ? types : defaultLocationIndicatorTypes;
+    private List<LocationIndicatorType> getLocationIndicatorTypes(final int messageTypeId) {
+        final List<LocationIndicatorType> types = messageTypeLocationIndicatorTypes.get(messageTypeId);
+        return types == null ? defaultLocationIndicatorTypes : types;
     }
 
     /**
@@ -172,7 +176,10 @@ public class MessageDataPopulator implements MessagePopulator {
      *         location indicator types for specified message types
      */
     public void setMessageTypeLocationIndicatorTypes(final Map<MessageType, List<LocationIndicatorType>> messageTypeLocationIndicatorTypes) {
-        this.messageTypeLocationIndicatorTypes = requireNonNull(messageTypeLocationIndicatorTypes, "messageTypeLocationIndicators");
+        requireNonNull(messageTypeLocationIndicatorTypes, "messageTypeLocationIndicators");
+        this.messageTypeLocationIndicatorTypes = Collections.unmodifiableMap(messageTypeLocationIndicatorTypes.entrySet().stream()//
+                .filter(entry -> typeIds.containsKey(entry.getKey()))//
+                .collect(Collectors.toMap(entry -> typeIds.get(entry.getKey()), Map.Entry::getValue)));
     }
 
     /**

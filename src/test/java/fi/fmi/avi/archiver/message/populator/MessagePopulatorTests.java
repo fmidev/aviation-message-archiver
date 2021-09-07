@@ -66,6 +66,7 @@ public final class MessagePopulatorTests {
         TCA(MessageType.TROPICAL_CYCLONE_ADVISORY, 6), //
         VAA(MessageType.VOLCANIC_ASH_ADVISORY, 7), //
         SWX(MessageType.SPACE_WEATHER_ADVISORY, 8), //
+        CUSTOM(new MessageType("CUSTOM"), 9), //
         ;
 
         private final MessageType type;
