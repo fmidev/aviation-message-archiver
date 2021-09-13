@@ -7,7 +7,7 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.DiscardedMessageException;
+import fi.fmi.avi.archiver.message.MessageDiscardedException;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -128,7 +128,7 @@ public class DiscardingPopulatorTest {
                         .getLocationIndicators()
                         .get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME);
                 if (airportIcaoCode.equals("EFYY")) {
-                    throw new DiscardedMessageException("Discarded a message with location indicator: " + airportIcaoCode);
+                    throw new MessageDiscardedException("Discarded a message with location indicator: " + airportIcaoCode);
                 }
             };
         }

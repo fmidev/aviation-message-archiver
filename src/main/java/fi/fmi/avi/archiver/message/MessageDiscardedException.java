@@ -2,23 +2,23 @@ package fi.fmi.avi.archiver.message;
 
 import static java.util.Objects.requireNonNull;
 
-public class DiscardedMessageException extends Exception {
+public class MessageDiscardedException extends Exception {
 
     private static final long serialVersionUID = 4599599829314600414L;
 
-    public DiscardedMessageException() {
+    public MessageDiscardedException() {
         super();
     }
 
-    public DiscardedMessageException(final String message) {
+    public MessageDiscardedException(final String message) {
         super(requireNonNull(message, "message"));
     }
 
-    public DiscardedMessageException(final String message, final Throwable cause) {
+    public MessageDiscardedException(final String message, final Throwable cause) {
         super(requireNonNull(message, "message"), requireNonNull(cause, "cause"));
     }
 
-    public DiscardedMessageException(final Throwable cause) {
+    public MessageDiscardedException(final Throwable cause) {
         super(requireNonNull(cause, "cause"));
     }
 

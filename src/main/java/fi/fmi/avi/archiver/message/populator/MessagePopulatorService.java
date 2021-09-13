@@ -3,7 +3,7 @@ package fi.fmi.avi.archiver.message.populator;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.DiscardedMessageException;
+import fi.fmi.avi.archiver.message.MessageDiscardedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -40,7 +40,7 @@ public class MessagePopulatorService {
             try {
                 final ArchiveAviationMessage archiveAviationMessage = populateMessage(inputMessage);
                 populatedMessages.add(archiveAviationMessage);
-            } catch (final DiscardedMessageException e) {
+            } catch (final MessageDiscardedException e) {
                 LOGGER.info("Message was discarded", e); // TODO Logging
                 discards.add(inputMessage);
             } catch (final Exception e) {
@@ -56,7 +56,7 @@ public class MessagePopulatorService {
                 .build();
     }
 
-    private ArchiveAviationMessage populateMessage(final InputAviationMessage inputAviationMessage) throws DiscardedMessageException {
+    private ArchiveAviationMessage populateMessage(final InputAviationMessage inputAviationMessage) throws MessageDiscardedException {
         final ArchiveAviationMessage.Builder messageBuilder = ArchiveAviationMessage.builder();
         for (final MessagePopulator messagePopulator : messagePopulators) {
             messagePopulator.populate(inputAviationMessage, messageBuilder);
