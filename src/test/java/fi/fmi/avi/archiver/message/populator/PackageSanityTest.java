@@ -1,21 +1,19 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static org.mockito.Mockito.mock;
-
-import java.time.Clock;
-import java.time.Instant;
-import java.util.Collections;
-
-import org.springframework.messaging.MessageHeaders;
-
 import com.google.common.testing.AbstractPackageSanityTests;
-
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
+import org.springframework.messaging.MessageHeaders;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.util.Collections;
+
+import static org.mockito.Mockito.mock;
 
 public class PackageSanityTest extends AbstractPackageSanityTests {
 
@@ -23,6 +21,7 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
     public void setUp() throws Exception {
         super.setUp();
         setDefault(ArchiveAviationMessage.Builder.class, ArchiveAviationMessage.builder());
+        setDefault(ArchiveAviationMessage.class, ArchiveAviationMessage.builder().buildPartial());
         setDefault(Clock.class, Clock.systemUTC());
         setDefault(DatabaseAccess.class, mock(DatabaseAccess.class));
         setDefault(FileMetadata.class, FileMetadata.builder().buildPartial());
