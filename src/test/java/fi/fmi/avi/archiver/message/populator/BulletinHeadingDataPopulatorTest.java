@@ -55,7 +55,7 @@ class BulletinHeadingDataPopulatorTest {
     @BeforeEach
     void setUp() {
         populator = new BulletinHeadingDataPopulator(new MessagePopulatorHelper(Clock.systemUTC()), MessagePopulatorTests.FORMAT_IDS,
-                MessagePopulatorTests.TYPE_IDS, BULLETIN_HEADING_SOURCES);
+                MessagePopulatorTests.TYPE_IDS);
     }
 
     @Test

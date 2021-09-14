@@ -76,6 +76,24 @@ production-line-initialization:
 
 ##############################################
 #
+#  Message populator chain configuration
+#
+##############################################
+# START SNIPPET: messagepopulators
+message-populators:
+  executionChain:
+    - name: FileMetadataPopulator
+    - name: BulletinHeadingDataPopulator
+      config:
+        bulletinHeadingSources:
+          - GTS_BULLETIN_HEADING
+          - COLLECT_IDENTIFIER
+    - name: MessageDataPopulator
+# END SNIPPET: messagepopulators
+---
+
+##############################################
+#
 #  File handling
 #
 ##############################################
