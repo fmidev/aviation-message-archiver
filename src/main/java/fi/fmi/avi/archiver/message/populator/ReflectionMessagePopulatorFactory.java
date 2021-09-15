@@ -23,19 +23,21 @@ public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> exten
 
     private static String listOfClasses(final Object... objects) {
         return Arrays.stream(objects)//
-                .map(obj -> obj == null ? "null" : obj.getClass().toString())//
+                .map(obj -> obj == null ? "null" : obj.getClass().getName())//
                 .collect(Collectors.joining(", ", "[", "]"));
     }
 
     private Constructor<T> resolveConstructor(final Class<T> type, final Object[] constructorArgs) {
         final List<Constructor<?>> constructors = Arrays.stream(type.getConstructors())//
                 .filter(constructor -> areAssignable(constructor.getParameterTypes(), constructorArgs))//
+                .limit(2)//
                 .collect(Collectors.toList());
         if (constructors.isEmpty()) {
-            throw new IllegalArgumentException("No suitable constructor found for type " + type + " with args " + listOfClasses(constructorArgs));
+            throw new IllegalArgumentException(
+                    "No suitable public constructor found for " + type + " with args assignable from " + listOfClasses(constructorArgs));
         }
         if (constructors.size() > 1) {
-            throw new IllegalArgumentException("Multiple constructors found for type " + type + " with args " + listOfClasses(constructorArgs));
+            throw new IllegalArgumentException("Multiple constructors found for " + type + " with args assignable from " + listOfClasses(constructorArgs));
         }
         //noinspection unchecked
         return (Constructor<T>) constructors.get(0);

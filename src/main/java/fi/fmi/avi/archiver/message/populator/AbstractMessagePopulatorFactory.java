@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -11,6 +12,10 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public abstract class AbstractMessagePopulatorFactory<T extends MessagePopulator> implements MessagePopulatorFactory<T> {
+    private static String classString(final Object object) {
+        return object == null ? "null" : object.getClass().toString();
+    }
+
     protected abstract PropertyConverter getPropertyConverter();
 
     protected abstract T newInstance();
@@ -24,26 +29,28 @@ public abstract class AbstractMessagePopulatorFactory<T extends MessagePopulator
 
     private void configure(final T instance, final Map<String, Object> config) {
         final Map<String, Method> setters = getSettersByName(getType());
-        config.forEach((propertyName, propertyConfigValue) -> configure(instance, setters, propertyName, propertyConfigValue));
+        config.forEach((propertyName, propertyConfigValue) -> setProperty(propertyName, propertyConfigValue, instance, setters));
     }
 
-    private void configure(final T instance, final Map<String, Method> setters, final String propertyName, final Object propertyConfigValue) {
+    private void setProperty(final String propertyName, final Object propertyConfigValue, final T instance, final Map<String, Method> setters) {
         final Method setterMethod = setters.get(setterName(propertyName));
         if (setterMethod == null) {
-            throw new IllegalArgumentException("Unknown property: " + propertyName);
+            throw new IllegalArgumentException(String.format(Locale.ROOT, "Unknown property '%s' for [%s]", propertyName, getType()));
         }
         final Object propertyValue;
         try {
             propertyValue = getPropertyConverter().convert(propertyConfigValue, setterMethod);
         } catch (final RuntimeException e) {
-            throw new IllegalStateException("Unable to convert property '" + propertyName + "' value", e);
+            throw new IllegalStateException(
+                    String.format(Locale.ROOT, "Unable to convert [%s] property '%s' value of from [%s] to [%s]", getType(), propertyName,
+                            classString(propertyConfigValue), setterMethod.getParameterTypes()[0]), e);
         }
         try {
             setterMethod.invoke(instance, propertyValue);
         } catch (final IllegalAccessException e) {
-            throw new IllegalStateException("Unable to set property '" + propertyName + "'", e);
+            throw new IllegalStateException(String.format(Locale.ROOT, "Unable to set [%s] property '%s'", getType(), propertyName), e);
         } catch (final InvocationTargetException e) {
-            throw new IllegalStateException("Error while setting property '" + propertyName + "'", e.getCause());
+            throw new IllegalStateException(String.format(Locale.ROOT, "Error while setting [%s] property '%s'", getType(), propertyName), e.getCause());
         }
     }
 
