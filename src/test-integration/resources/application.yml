@@ -110,18 +110,11 @@ message-static-values:
     IWXXM: 2
   typeIds:
     METAR: 1
-    TAF: 2
-    SPECI: 3
+    SPECI: 2
+    TAF: 3
     SIGMET: 4
-    GAFOR: 5
-    AIRMET: 6
+    AIRMET: 5
+    VOLCANIC_ASH_ADVISORY: 6
     TROPICAL_CYCLONE_ADVISORY: 7
-    VOLCANIC_ASH_ADVISORY: 8
-    BULLETIN: 9
-    GENERIC: 10
-    LOW_WIND: 11
-    WX_WARNING: 12
-    SPECIAL_AIR_REPORT: 13
-    WXREP: 14
-    SPACE_WEATHER_ADVISORY: 15
+    SPACE_WEATHER_ADVISORY: 8
 # END SNIPPET: Message static values
