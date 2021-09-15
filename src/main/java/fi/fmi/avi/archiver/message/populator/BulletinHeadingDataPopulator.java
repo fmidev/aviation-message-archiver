@@ -4,6 +4,8 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
+import fi.fmi.avi.archiver.util.BulletinHeadingSource;
+import fi.fmi.avi.archiver.util.BulletinUtil;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.bulletin.BulletinHeading;
@@ -12,7 +14,6 @@ import fi.fmi.avi.model.bulletin.DataTypeDesignatorT1;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -51,7 +52,7 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
     private final List<BulletinHeadingSource> bulletinHeadingSources;
 
     public BulletinHeadingDataPopulator(final MessagePopulatorHelper helper, final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
-            final Map<MessageType, Integer> typeIds, final List<BulletinHeadingSource> bulletinHeadingSources) {
+                                        final Map<MessageType, Integer> typeIds, final List<BulletinHeadingSource> bulletinHeadingSources) {
         this.helper = requireNonNull(helper, "helper");
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");
@@ -86,7 +87,7 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
                 .flatMap(heading -> heading.getType() == BulletinHeading.Type.NORMAL //
                         ? Optional.empty() //
                         : heading.getAugmentationNumber()//
-                                .map(augmentationNumber -> heading.getType().getPrefix() + String.valueOf(Character.toChars('A' + augmentationNumber - 1)))))//
+                        .map(augmentationNumber -> heading.getType().getPrefix() + String.valueOf(Character.toChars('A' + augmentationNumber - 1)))))//
                 .ifPresent(builder::setVersion);
         input.getCollectIdentifier()//
                 .getBulletinHeadingString()//
@@ -94,25 +95,7 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
     }
 
     private <T> Optional<T> getFirstNonNullFromBulletinHeading(final InputAviationMessage input, final Function<InputBulletinHeading, Optional<T>> fn) {
-        return bulletinHeadingSources.stream()//
-                .map(source -> fn.apply(source.get(input)).orElse(null))//
-                .filter(Objects::nonNull)//
-                .findFirst();
+        return BulletinUtil.getFirstNonNullFromBulletinHeading(bulletinHeadingSources, input, fn);
     }
 
-    public enum BulletinHeadingSource {
-        GTS_BULLETIN_HEADING {
-            @Override
-            InputBulletinHeading get(final InputAviationMessage inputAviationMessage) {
-                return inputAviationMessage.getGtsBulletinHeading();
-            }
-        }, COLLECT_IDENTIFIER {
-            @Override
-            InputBulletinHeading get(final InputAviationMessage inputAviationMessage) {
-                return inputAviationMessage.getCollectIdentifier();
-            }
-        };
-
-        abstract InputBulletinHeading get(final InputAviationMessage inputAviationMessage);
-    }
 }

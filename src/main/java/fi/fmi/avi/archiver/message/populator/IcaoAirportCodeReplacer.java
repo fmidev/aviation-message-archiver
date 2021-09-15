@@ -6,6 +6,7 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import javax.annotation.Nullable;
 import java.util.regex.Pattern;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -21,6 +22,8 @@ public class IcaoAirportCodeReplacer implements MessagePopulator {
     }
 
     public void setReplacement(final String replacement) {
+        requireNonNull(replacement, "replacement");
+        checkArgument(!replacement.isEmpty(), "replacement cannot be empty");
         this.replacement = requireNonNull(replacement, "replacement");
     }
 

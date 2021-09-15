@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 import static java.util.Objects.requireNonNull;
 
 /**
- * When the message aerodrome matches the given pattern, validate that the bulletin location indicator matches the given pattern.
+ * When message aerodrome matches the given pattern, validate that the bulletin location indicator matches the given pattern.
  */
 public class BulletinLocationIndicatorValidator implements MessagePopulator {
 

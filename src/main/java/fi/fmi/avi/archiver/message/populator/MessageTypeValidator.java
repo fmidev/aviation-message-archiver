@@ -6,6 +6,7 @@ import fi.fmi.avi.archiver.message.ProcessingResult;
 
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 public class MessageTypeValidator implements MessagePopulator {
@@ -14,11 +15,15 @@ public class MessageTypeValidator implements MessagePopulator {
     private Set<Integer> typeIdentifiers;
 
     public void setProductIdentifier(final String productIdentifier) {
-        this.productIdentifier = requireNonNull(productIdentifier, "productIdentifier");
+        requireNonNull(productIdentifier, "productIdentifier");
+        checkArgument(!productIdentifier.isEmpty(), "productIdentifier cannot be empty");
+        this.productIdentifier = productIdentifier;
     }
 
     public void setTypeIdentifiers(final Set<Integer> typeIdentifiers) {
-        this.typeIdentifiers = requireNonNull(typeIdentifiers, "typeIdentifiers");
+        requireNonNull(typeIdentifiers, "typeIdentifiers");
+        checkArgument(!typeIdentifiers.isEmpty(), "typeIdentifiers cannot be empty");
+        this.typeIdentifiers = typeIdentifiers;
     }
 
     @Override

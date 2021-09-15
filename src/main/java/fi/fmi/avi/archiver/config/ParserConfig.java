@@ -7,6 +7,7 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.archiver.message.populator.*;
+import fi.fmi.avi.archiver.util.BulletinHeadingSource;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
@@ -104,8 +105,8 @@ public class ParserConfig {
         messagePopulators.addAll(0, Arrays.asList(//
                 new FileMetadataPopulator(aviationProductsHolder.getProducts()), //
                 new BulletinHeadingDataPopulator(messagePopulatorHelper(), messageFormatIds, messageTypeIds,
-                        Arrays.asList(BulletinHeadingDataPopulator.BulletinHeadingSource.GTS_BULLETIN_HEADING,
-                                BulletinHeadingDataPopulator.BulletinHeadingSource.COLLECT_IDENTIFIER)), // TODO: make configurable in application.yml
+                        Arrays.asList(BulletinHeadingSource.GTS_BULLETIN_HEADING,
+                                BulletinHeadingSource.COLLECT_IDENTIFIER)), // TODO: make configurable in application.yml
                 new MessageDataPopulator(messagePopulatorHelper(), messageFormatIds, messageTypeIds)));
         messagePopulators.add(new StationIdPopulator(databaseAccess));
     }
