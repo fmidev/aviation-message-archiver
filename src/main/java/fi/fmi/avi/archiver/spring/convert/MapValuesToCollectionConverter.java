@@ -13,11 +13,18 @@ import org.springframework.core.convert.converter.ConditionalGenericConverter;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.convert.support.DefaultConversionService;
 
-public class MapToListGenericConverter implements GenericConverter, ConditionalGenericConverter, ConversionServiceAware {
+public class MapValuesToCollectionConverter implements GenericConverter, ConditionalGenericConverter, ConversionServiceAware {
     private static final Set<ConvertiblePair> CONVERTIBLE_TYPES = Collections.singleton(new ConvertiblePair(Map.class, Collection.class));
-    private static final ConversionService DEFAULT_CONVERSION_SERVICE = new DefaultConversionService();
+    private ConversionService conversionService;
 
-    private ConversionService conversionService = DEFAULT_CONVERSION_SERVICE;
+    public MapValuesToCollectionConverter() {
+        this(new DefaultConversionService());
+        ((DefaultConversionService) this.conversionService).addConverter(this);
+    }
+
+    public MapValuesToCollectionConverter(final ConversionService conversionService) {
+        this.conversionService = requireNonNull(conversionService, "conversionService");
+    }
 
     private static TypeDescriptor mapValuesTypeDescriptor(final TypeDescriptor mapType) {
         return TypeDescriptor.collection(Collection.class, mapType.getMapValueTypeDescriptor());
