@@ -8,15 +8,25 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> extends AbstractMessagePopulatorFactory<T> {
     private final PropertyConverter propertyConverter;
     private final Class<T> type;
+    @Nullable
+    private final String name;
     private final Object[] constructorArgs;
     private final Constructor<T> constructor;
 
     public ReflectionMessagePopulatorFactory(final PropertyConverter propertyConverter, final Class<T> type, final Object... constructorArgs) {
+        this(propertyConverter, type, null, constructorArgs);
+    }
+
+    public ReflectionMessagePopulatorFactory(final PropertyConverter propertyConverter, final Class<T> type, @Nullable final String name,
+            final Object... constructorArgs) {
         this.propertyConverter = requireNonNull(propertyConverter, "propertyConverter");
         this.type = requireNonNull(type, "type");
+        this.name = name;
         this.constructorArgs = requireNonNull(constructorArgs, "constructorArgs").clone();
         this.constructor = resolveConstructor(type, constructorArgs);
     }
@@ -63,6 +73,11 @@ public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> exten
     @Override
     public Class<T> getType() {
         return type;
+    }
+
+    @Override
+    public String getName() {
+        return name == null ? super.getName() : name;
     }
 
     @Override
