@@ -15,13 +15,10 @@ import static java.util.Objects.requireNonNull;
 public class MessageFutureTimeValidator implements MessagePopulator {
 
     private final Clock clock;
-    private Duration maximumFutureTime;
+    private final Duration maximumFutureTime;
 
-    public MessageFutureTimeValidator(final Clock clock) {
+    public MessageFutureTimeValidator(final Clock clock, final Duration maximumFutureTime) {
         this.clock = requireNonNull(clock, "clock");
-    }
-
-    public void setMaximumFutureTime(final Duration maximumFutureTime) {
         requireNonNull(maximumFutureTime, "maximumFutureTime");
         checkArgument(!maximumFutureTime.isNegative() && !maximumFutureTime.isZero(),
                 "maximumFutureTime must have a positive duration");

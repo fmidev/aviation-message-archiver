@@ -15,13 +15,10 @@ import static java.util.Objects.requireNonNull;
 public class MessageMaximumAgeValidator implements MessagePopulator {
 
     private final Clock clock;
-    private Duration maximumAge;
+    private final Duration maximumAge;
 
-    public MessageMaximumAgeValidator(final Clock clock) {
+    public MessageMaximumAgeValidator(final Clock clock, final Duration maximumAge) {
         this.clock = requireNonNull(clock, "clock");
-    }
-
-    public void setMaximumAge(final Duration maximumAge) {
         requireNonNull(maximumAge, "maximumAge");
         checkArgument(!maximumAge.isNegative() && !maximumAge.isZero(),
                 "maximumAge must have a positive duration");

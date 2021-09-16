@@ -16,24 +16,23 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class MessageFutureTimeValidatorTest {
 
+    private static final Clock clock = Clock.fixed(Instant.parse("2019-05-10T00:00:00Z"), ZoneId.of("UTC"));
     private MessageFutureTimeValidator messageFutureTimeValidator;
     private final InputAviationMessage inputAviationMessage = InputAviationMessage.builder().buildPartial();
 
     @BeforeEach
     public void setUp() {
-        final Clock clock = Clock.fixed(Instant.parse("2019-05-10T00:00:00Z"), ZoneId.of("UTC"));
-        messageFutureTimeValidator = new MessageFutureTimeValidator(clock);
-        messageFutureTimeValidator.setMaximumFutureTime(Duration.ofHours(12));
+        messageFutureTimeValidator = new MessageFutureTimeValidator(clock, Duration.ofHours(12));
     }
 
     @Test
     public void invalid_configuration_zero_duration() {
-        assertThrows(IllegalArgumentException.class, () -> messageFutureTimeValidator.setMaximumFutureTime(Duration.ZERO));
+        assertThrows(IllegalArgumentException.class, () -> new MessageFutureTimeValidator(clock, Duration.ZERO));
     }
 
     @Test
     public void invalid_configuration_negative_duration() {
-        assertThrows(IllegalArgumentException.class, () -> messageFutureTimeValidator.setMaximumFutureTime(Duration.ofDays(-1)));
+        assertThrows(IllegalArgumentException.class, () -> new MessageFutureTimeValidator(clock, Duration.ofDays(-1)));
     }
 
     @Test

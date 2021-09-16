@@ -23,9 +23,7 @@ public class MessageAerodromeValidatorTest {
 
     @BeforeEach
     public void setUp() {
-        messageAerodromeValidator = new MessageAerodromeValidator();
-        messageAerodromeValidator.setBulletinLocationIndicatorPattern(Pattern.compile("^TE..$"));
-        messageAerodromeValidator.setMessageAerodromePattern(Pattern.compile("^XXXX$"));
+        messageAerodromeValidator = new MessageAerodromeValidator(Pattern.compile("^TE..$"), Pattern.compile("^XXXX$"));
     }
 
     @Test

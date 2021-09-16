@@ -10,6 +10,7 @@ import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
 import org.springframework.messaging.MessageHeaders;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 
@@ -31,6 +32,8 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
         setDefault(PartialOrCompleteTimeInstant.class, PartialOrCompleteTimeInstant.builder().buildPartial());
         setDefault(PartialOrCompleteTimePeriod.class, PartialOrCompleteTimePeriod.builder().buildPartial());
         setDistinctValues(Instant.class, Instant.now(), Instant.now().plusSeconds(1));
+        setDefault(String.class, "test");
+        setDefault(Duration.class, Duration.ofHours(1));
     }
 
 }

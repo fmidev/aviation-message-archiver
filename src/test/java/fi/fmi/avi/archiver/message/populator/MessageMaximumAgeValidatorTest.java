@@ -16,24 +16,23 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class MessageMaximumAgeValidatorTest {
 
+    private static final Clock clock = Clock.fixed(Instant.parse("2019-05-10T00:00:00Z"), ZoneId.of("UTC"));
     private MessageMaximumAgeValidator messageMaximumAgeValidator;
     private final InputAviationMessage inputAviationMessage = InputAviationMessage.builder().buildPartial();
 
     @BeforeEach
     public void setUp() {
-        final Clock clock = Clock.fixed(Instant.parse("2019-05-10T00:00:00Z"), ZoneId.of("UTC"));
-        messageMaximumAgeValidator = new MessageMaximumAgeValidator(clock);
-        messageMaximumAgeValidator.setMaximumAge(Duration.ofDays(3));
+        messageMaximumAgeValidator = new MessageMaximumAgeValidator(clock, Duration.ofDays(3));
     }
 
     @Test
     public void invalid_configuration_zero_duration() {
-        assertThrows(IllegalArgumentException.class, () -> messageMaximumAgeValidator.setMaximumAge(Duration.ZERO));
+        assertThrows(IllegalArgumentException.class, () -> new MessageMaximumAgeValidator(clock, Duration.ZERO));
     }
 
     @Test
     public void invalid_configuration_negative_duration() {
-        assertThrows(IllegalArgumentException.class, () -> messageMaximumAgeValidator.setMaximumAge(Duration.ofDays(-1)));
+        assertThrows(IllegalArgumentException.class, () -> new MessageMaximumAgeValidator(clock, Duration.ofDays(-1)));
     }
 
     @Test

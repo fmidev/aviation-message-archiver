@@ -26,8 +26,7 @@ public class DataDesignatorDiscarderTest {
 
     @BeforeEach
     public void setUp() {
-        dataDesignatorDiscarder = new DataDesignatorDiscarder();
-        dataDesignatorDiscarder.setDataDesignatorPattern(Pattern.compile("XX42"));
+        dataDesignatorDiscarder = new DataDesignatorDiscarder(Pattern.compile("XX42"));
         dataDesignatorDiscarder.setBulletinHeadingSources(ImmutableList.of(GTS_BULLETIN_HEADING, COLLECT_IDENTIFIER));
     }
 

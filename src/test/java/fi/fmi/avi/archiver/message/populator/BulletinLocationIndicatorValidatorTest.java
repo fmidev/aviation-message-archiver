@@ -23,9 +23,7 @@ public class BulletinLocationIndicatorValidatorTest {
 
     @BeforeEach
     public void setUp() {
-        bulletinLocationIndicatorValidator = new BulletinLocationIndicatorValidator();
-        bulletinLocationIndicatorValidator.setBulletinLocationIndicatorPattern(Pattern.compile("^XXXX$"));
-        bulletinLocationIndicatorValidator.setMessageAerodromePattern(Pattern.compile("^TE..$"));
+        bulletinLocationIndicatorValidator = new BulletinLocationIndicatorValidator(Pattern.compile("^XXXX$"), Pattern.compile("^TE..$"));
     }
 
     @Test

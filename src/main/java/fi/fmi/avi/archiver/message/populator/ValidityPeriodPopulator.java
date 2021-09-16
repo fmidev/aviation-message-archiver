@@ -11,27 +11,25 @@ import static java.util.Objects.requireNonNull;
 
 public class ValidityPeriodPopulator implements MessagePopulator {
 
-    private int typeId;
-    private Duration validToOffset;
+    private final int messageTypeId;
+    private final Duration validityEndOffset;
 
-    public void setTypeId(final int typeId) {
-        checkArgument(typeId > 0, "typeId must be positive");
-        this.typeId = typeId;
-    }
+    public ValidityPeriodPopulator(final int messageTypeId, final Duration validityEndOffset) {
+        checkArgument(messageTypeId > 0, "typeId must be positive");
+        this.messageTypeId = messageTypeId;
 
-    public void setValidToOffset(final Duration validToOffset) {
-        requireNonNull(validToOffset, "validToOffset");
-        checkArgument(!validToOffset.isNegative() && !validToOffset.isZero(),
-                "validToOffset must have a positive duration");
-        this.validToOffset = validToOffset;
+        requireNonNull(validityEndOffset, "validityEndOffset");
+        checkArgument(!validityEndOffset.isNegative() && !validityEndOffset.isZero(),
+                "validityEndOffset must have a positive duration");
+        this.validityEndOffset = validityEndOffset;
     }
 
     @Override
     public void populate(@Nullable final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder builder) {
         requireNonNull(builder, "builder");
-        if (builder.getType() == typeId) {
+        if (builder.getType() == messageTypeId) {
             builder.setValidFrom(builder.getMessageTime());
-            builder.setValidTo(builder.getMessageTime().plus(validToOffset));
+            builder.setValidTo(builder.getMessageTime().plus(validityEndOffset));
         }
     }
 

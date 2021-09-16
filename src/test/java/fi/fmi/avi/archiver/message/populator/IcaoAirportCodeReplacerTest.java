@@ -16,9 +16,7 @@ public class IcaoAirportCodeReplacerTest {
 
     @BeforeEach
     public void setUp() {
-        icaoAirportCodeReplacer = new IcaoAirportCodeReplacer();
-        icaoAirportCodeReplacer.setPattern(Pattern.compile("^YU..$"));
-        icaoAirportCodeReplacer.setReplacement("XXXX");
+        icaoAirportCodeReplacer = new IcaoAirportCodeReplacer(Pattern.compile("^YU..$"), "XXXX");
     }
 
     @Test

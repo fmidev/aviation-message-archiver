@@ -21,22 +21,19 @@ import static java.util.Objects.requireNonNull;
  */
 public class BulletinLocationIndicatorValidator implements MessagePopulator {
 
+    private final Pattern bulletinLocationIndicatorPattern;
+    private final Pattern messageAerodromePattern;
     private List<BulletinHeadingSource> bulletinHeadingSources = DEFAULT_BULLETIN_HEADING_SOURCES;
-    private Pattern bulletinLocationIndicatorPattern;
-    private Pattern messageAerodromePattern;
+
+    public BulletinLocationIndicatorValidator(final Pattern bulletinLocationIndicatorPattern, final Pattern messageAerodromePattern) {
+        this.bulletinLocationIndicatorPattern = requireNonNull(bulletinLocationIndicatorPattern, "bulletinLocationIndicatorPattern");
+        this.messageAerodromePattern = requireNonNull(messageAerodromePattern, "messageAerodromePattern");
+    }
 
     public void setBulletinHeadingSources(final List<BulletinHeadingSource> bulletinHeadingSources) {
         requireNonNull(bulletinHeadingSources, "bulletinHeadingSources");
         checkArgument(!bulletinHeadingSources.isEmpty(), "bulletinHeadingSources cannot be empty");
         this.bulletinHeadingSources = bulletinHeadingSources;
-    }
-
-    public void setBulletinLocationIndicatorPattern(final Pattern bulletinLocationIndicatorPattern) {
-        this.bulletinLocationIndicatorPattern = requireNonNull(bulletinLocationIndicatorPattern, "bulletinLocationIndicatorPattern");
-    }
-
-    public void setMessageAerodromePattern(final Pattern messageAerodromePattern) {
-        this.messageAerodromePattern = requireNonNull(messageAerodromePattern, "messageAerodromePattern");
     }
 
     @Override

@@ -20,17 +20,17 @@ import static java.util.Objects.requireNonNull;
  */
 public class DataDesignatorDiscarder implements MessagePopulator {
 
+    private final Pattern pattern;
     private List<BulletinHeadingSource> bulletinHeadingSources = DEFAULT_BULLETIN_HEADING_SOURCES;
-    private Pattern dataDesignatorPattern;
+
+    public DataDesignatorDiscarder(final Pattern pattern) {
+        this.pattern = requireNonNull(pattern, "pattern");
+    }
 
     public void setBulletinHeadingSources(final List<BulletinHeadingSource> bulletinHeadingSources) {
         requireNonNull(bulletinHeadingSources, "bulletinHeadingSources");
         checkArgument(!bulletinHeadingSources.isEmpty(), "bulletinHeadingSources cannot be empty");
         this.bulletinHeadingSources = bulletinHeadingSources;
-    }
-
-    public void setDataDesignatorPattern(final Pattern dataDesignatorPattern) {
-        this.dataDesignatorPattern = requireNonNull(dataDesignatorPattern, "dataDesignatorPattern");
     }
 
     @Override
@@ -39,7 +39,7 @@ public class DataDesignatorDiscarder implements MessagePopulator {
         requireNonNull(inputAviationMessage, "inputAviationMessage");
         final Optional<String> dataDesignators = MessagePopulatorHelper.getFirstNonNullFromBulletinHeading(bulletinHeadingSources, inputAviationMessage,
                 InputBulletinHeading::getBulletinHeading).map(BulletinHeading::getDataDesignatorsForTAC);
-        if (dataDesignators.isPresent() && dataDesignatorPattern.matcher(dataDesignators.get()).find()) {
+        if (dataDesignators.isPresent() && pattern.matcher(dataDesignators.get()).find()) {
             throw new MessageDiscardedException("Discarded message with dataDesignators: " + dataDesignators.get());
         }
     }

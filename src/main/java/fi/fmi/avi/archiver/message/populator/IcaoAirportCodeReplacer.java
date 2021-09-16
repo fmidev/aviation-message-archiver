@@ -14,17 +14,14 @@ import static java.util.Objects.requireNonNull;
  */
 public class IcaoAirportCodeReplacer implements MessagePopulator {
 
-    private Pattern pattern;
-    private String replacement;
+    private final Pattern pattern;
+    private final String replacement;
 
-    public void setPattern(final Pattern pattern) {
+    public IcaoAirportCodeReplacer(final Pattern pattern, final String replacement) {
         this.pattern = requireNonNull(pattern, "pattern");
-    }
-
-    public void setReplacement(final String replacement) {
         requireNonNull(replacement, "replacement");
         checkArgument(!replacement.isEmpty(), "replacement cannot be empty");
-        this.replacement = requireNonNull(replacement, "replacement");
+        this.replacement = replacement;
     }
 
     @Override
