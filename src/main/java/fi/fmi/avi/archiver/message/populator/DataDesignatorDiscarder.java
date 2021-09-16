@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -19,7 +20,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class DataDesignatorDiscarder implements MessagePopulator {
 
-    private List<BulletinHeadingSource> bulletinHeadingSources;
+    private List<BulletinHeadingSource> bulletinHeadingSources = DEFAULT_BULLETIN_HEADING_SOURCES;
     private Pattern dataDesignatorPattern;
 
     public void setBulletinHeadingSources(final List<BulletinHeadingSource> bulletinHeadingSources) {

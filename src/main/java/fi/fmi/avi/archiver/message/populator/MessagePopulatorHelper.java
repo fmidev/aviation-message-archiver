@@ -21,6 +21,9 @@ import static java.util.Objects.requireNonNull;
  * A helper class primarily used by {@link MessagePopulator} implementations.
  */
 public class MessagePopulatorHelper {
+    public static final List<BulletinHeadingSource> DEFAULT_BULLETIN_HEADING_SOURCES = Collections.unmodifiableList(
+            Arrays.asList(BulletinHeadingSource.values()));
+
     private final Clock clock;
 
     public MessagePopulatorHelper(final Clock clock) {

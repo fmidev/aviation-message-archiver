@@ -10,8 +10,11 @@ import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.regex.Pattern;
 
+import static fi.fmi.avi.archiver.message.populator.BulletinHeadingSource.COLLECT_IDENTIFIER;
+import static fi.fmi.avi.archiver.message.populator.BulletinHeadingSource.GTS_BULLETIN_HEADING;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class BulletinLocationIndicatorValidatorTest {
@@ -26,17 +29,32 @@ public class BulletinLocationIndicatorValidatorTest {
     }
 
     @Test
-    public void valid() {
-        final InputAviationMessage inputAviationMessage = createInputAviationMessage("XXXX", "TEST");
+    public void valid_tac_message() {
+        final InputAviationMessage inputAviationMessage = createTacMessage("XXXX", "TEST");
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
-
         bulletinLocationIndicatorValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
-    public void invalid() {
-        final InputAviationMessage inputAviationMessage = createInputAviationMessage("YYYY", "TEXX");
+    public void valid_iwxxm_message() {
+        final InputAviationMessage inputAviationMessage = createIwxxmMessage("XXXX", "TEST");
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
+        bulletinLocationIndicatorValidator.populate(inputAviationMessage, builder);
+        assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
+    }
+
+    @Test
+    public void invalid_tac_message() {
+        final InputAviationMessage inputAviationMessage = createTacMessage("YYYY", "TEXX");
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
+        bulletinLocationIndicatorValidator.populate(inputAviationMessage, builder);
+        assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.INVALID_BULLETIN_LOCATION_INDICATOR);
+    }
+
+    @Test
+    public void invalid_iwxxm_message() {
+        final InputAviationMessage inputAviationMessage = createIwxxmMessage("YYYY", "TEXX");
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
         bulletinLocationIndicatorValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.INVALID_BULLETIN_LOCATION_INDICATOR);
@@ -44,21 +62,54 @@ public class BulletinLocationIndicatorValidatorTest {
 
     @Test
     public void non_matching_message_aerodrome() {
-        final InputAviationMessage inputAviationMessage = createInputAviationMessage("YYYY", "XXXX");
+        final InputAviationMessage inputAviationMessage = createTacMessage("YYYY", "XXXX");
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
         bulletinLocationIndicatorValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
-    private static InputAviationMessage createInputAviationMessage(final String bulletinLocationIndicator, final String messageAerodrome) {
+    @Test
+    public void valid_without_collect_identifier_source() {
+        bulletinLocationIndicatorValidator.setBulletinHeadingSources(Collections.singletonList(GTS_BULLETIN_HEADING));
+        final InputAviationMessage inputAviationMessage = createIwxxmMessage("YYYY", "TEXX");
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
+        bulletinLocationIndicatorValidator.populate(inputAviationMessage, builder);
+        assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
+    }
+
+    @Test
+    public void valid_without_gts_heading_source() {
+        bulletinLocationIndicatorValidator.setBulletinHeadingSources(Collections.singletonList(COLLECT_IDENTIFIER));
+        final InputAviationMessage inputAviationMessage = createTacMessage("YYYY", "TEXX");
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
+        bulletinLocationIndicatorValidator.populate(inputAviationMessage, builder);
+        assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
+    }
+
+    private static InputAviationMessage createTacMessage(final String locationIndicator, final String messageAerodrome) {
         return InputAviationMessage.builder()
-                .setGtsBulletinHeading(InputBulletinHeading.builder()
-                        .setBulletinHeading(BulletinHeadingImpl.builder()
-                                .setLocationIndicator(bulletinLocationIndicator)
-                                .buildPartial())
-                        .buildPartial())
-                .setMessage(GenericAviationWeatherMessageImpl.builder()
-                        .putLocationIndicators(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME, messageAerodrome)
+                .setGtsBulletinHeading(createInputBulletinHeading(locationIndicator))
+                .setMessage(createMessage(messageAerodrome))
+                .buildPartial();
+    }
+
+    private static InputAviationMessage createIwxxmMessage(final String locationIndicator, final String messageAerodrome) {
+        return InputAviationMessage.builder()
+                .setCollectIdentifier(createInputBulletinHeading(locationIndicator))
+                .setMessage(createMessage(messageAerodrome))
+                .buildPartial();
+    }
+
+    private static GenericAviationWeatherMessage createMessage(final String messageAerodrome) {
+        return GenericAviationWeatherMessageImpl.builder()
+                .putLocationIndicators(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME, messageAerodrome)
+                .buildPartial();
+    }
+
+    private static InputBulletinHeading createInputBulletinHeading(final String locationIndicator) {
+        return InputBulletinHeading.builder()
+                .setBulletinHeading(BulletinHeadingImpl.builder()
+                        .setLocationIndicator(locationIndicator)
                         .buildPartial())
                 .buildPartial();
     }

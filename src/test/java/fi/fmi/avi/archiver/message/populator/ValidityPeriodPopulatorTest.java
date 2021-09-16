@@ -28,7 +28,7 @@ public class ValidityPeriodPopulatorTest {
                 .setMessageTime(Instant.parse("2019-05-10T00:00:00Z"))
                 .setType(14);
         validityPeriodPopulator.populate(inputAviationMessage, aviationMessage);
-        assertThat(aviationMessage.getValidTo().get()).isEqualTo(Instant.parse("2019-05-11T06:00:00Z"));
+        assertThat(aviationMessage.getValidTo()).contains(Instant.parse("2019-05-11T06:00:00Z"));
     }
 
     @Test
@@ -39,7 +39,7 @@ public class ValidityPeriodPopulatorTest {
                 .setValidTo(Instant.parse("2019-05-11T00:00:00Z"))
                 .setType(2);
         validityPeriodPopulator.populate(inputAviationMessage, aviationMessage);
-        assertThat(aviationMessage.getValidTo().get()).isEqualTo(Instant.parse("2019-05-11T00:00:00Z"));
+        assertThat(aviationMessage.getValidTo()).contains(Instant.parse("2019-05-11T00:00:00Z"));
     }
 
     @Test
