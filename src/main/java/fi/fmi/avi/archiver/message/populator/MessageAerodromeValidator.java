@@ -30,7 +30,6 @@ public class MessageAerodromeValidator implements MessagePopulator {
         this.messageAerodromePattern = requireNonNull(messageAerodromePattern, "messageAerodromePattern");
     }
 
-
     public void setBulletinHeadingSources(final List<BulletinHeadingSource> bulletinHeadingSources) {
         requireNonNull(bulletinHeadingSources, "bulletinHeadingSources");
         checkArgument(!bulletinHeadingSources.isEmpty(), "bulletinHeadingSources cannot be empty");
