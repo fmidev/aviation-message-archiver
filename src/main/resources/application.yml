@@ -84,7 +84,7 @@ message-populators:
   executionChain:
     - name: FileMetadataPopulator
     - name: BulletinHeadingDataPopulator
-      config:
+      options:
         bulletinHeadingSources:
           - GTS_BULLETIN_HEADING
           - COLLECT_IDENTIFIER

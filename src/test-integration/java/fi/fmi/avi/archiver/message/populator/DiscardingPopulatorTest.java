@@ -147,7 +147,7 @@ public class DiscardingPopulatorTest {
 
         @Bean
         public MessagePopulatorFactory<DiscardingPopulator> discardingPopulatorFactory() {
-            return new ReflectionMessagePopulatorFactory<>(messagePopulatorFactoryPropertyConverter, DiscardingPopulator.class);
+            return ReflectionMessagePopulatorFactory.builder(DiscardingPopulator.class, messagePopulatorFactoryPropertyConverter).build();
         }
     }
 }

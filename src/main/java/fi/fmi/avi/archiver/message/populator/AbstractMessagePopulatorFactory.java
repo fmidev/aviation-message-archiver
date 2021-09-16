@@ -1,5 +1,8 @@
 package fi.fmi.avi.archiver.message.populator;
 
+import static java.util.Objects.requireNonNull;
+
+import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -18,28 +21,30 @@ public abstract class AbstractMessagePopulatorFactory<T extends MessagePopulator
 
     protected abstract PropertyConverter getPropertyConverter();
 
-    protected abstract T newInstance();
+    protected abstract T newInstance(final Map<String, ?> arguments);
 
     @Override
-    public T newInstance(final Map<String, Object> config) {
-        final T instance = newInstance();
-        configure(instance, config);
+    public T newInstance(final Map<String, Object> arguments, final Map<String, Object> options) {
+        requireNonNull(arguments, "arguments");
+        requireNonNull(options, "options");
+        final T instance = newInstance(arguments);
+        setOptions(instance, options);
         return instance;
     }
 
-    private void configure(final T instance, final Map<String, Object> config) {
+    private void setOptions(final T instance, final Map<String, Object> config) {
         final Map<String, Method> setters = getSettersByName(getType());
-        config.forEach((propertyName, propertyConfigValue) -> setProperty(propertyName, propertyConfigValue, instance, setters));
+        config.forEach((propertyName, propertyConfigValue) -> setOption(propertyName, propertyConfigValue, instance, setters));
     }
 
-    private void setProperty(final String propertyName, final Object propertyConfigValue, final T instance, final Map<String, Method> setters) {
+    private void setOption(final String propertyName, final Object propertyConfigValue, final T instance, final Map<String, Method> setters) {
         final Method setterMethod = setters.get(setterName(propertyName));
         if (setterMethod == null) {
             throw new IllegalArgumentException(String.format(Locale.ROOT, "Unknown property '%s' for [%s]", propertyName, getType()));
         }
         final Object propertyValue;
         try {
-            propertyValue = getPropertyConverter().convert(propertyConfigValue, setterMethod);
+            propertyValue = getPropertyConverter().convert(propertyConfigValue, setterMethod, 0);
         } catch (final RuntimeException e) {
             throw new IllegalStateException(
                     String.format(Locale.ROOT, "Unable to convert [%s] property '%s' value of from [%s] to [%s]", getType(), propertyName,
@@ -77,6 +82,6 @@ public abstract class AbstractMessagePopulatorFactory<T extends MessagePopulator
     @FunctionalInterface
     public interface PropertyConverter {
         @Nullable
-        Object convert(@Nullable final Object propertyConfigValue, final Method setterMethod);
+        Object convert(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex);
     }
 }

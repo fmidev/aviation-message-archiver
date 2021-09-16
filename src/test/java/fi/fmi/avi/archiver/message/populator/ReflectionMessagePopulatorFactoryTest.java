@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import java.lang.reflect.Method;
+import java.lang.reflect.Executable;
 
 import javax.annotation.Nullable;
 
@@ -21,15 +21,15 @@ class ReflectionMessagePopulatorFactoryTest {
         final NullPointerTester.Visibility minimalVisibility = NullPointerTester.Visibility.PROTECTED;
         tester.testStaticMethods(classUnderTest, minimalVisibility);
         tester.testConstructors(classUnderTest, minimalVisibility);
-        final ReflectionMessagePopulatorFactory<TestMessagePopulator> instance = new ReflectionMessagePopulatorFactory<>(new TestPropertyConverter(),
-                TestMessagePopulator.class);
+        final ReflectionMessagePopulatorFactory<TestMessagePopulator> instance = ReflectionMessagePopulatorFactory.builder(TestMessagePopulator.class,
+                new TestPropertyConverter()).build();
         tester.testInstanceMethods(instance, minimalVisibility);
     }
 
     private static class TestPropertyConverter implements AbstractMessagePopulatorFactory.PropertyConverter {
         @Nullable
         @Override
-        public Object convert(@Nullable final Object propertyConfigValue, final Method setterMethod) {
+        public Object convert(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
             return null;
         }
     }

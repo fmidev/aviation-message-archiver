@@ -34,7 +34,7 @@ public class MessagePopulatorConfig {
         final Map<String, MessagePopulatorFactory<?>> factoriesByName = messagePopulatorFactories.stream()//
                 .collect(Collectors.toMap(MessagePopulatorFactory::getName, Function.identity()));
         final ArrayList<MessagePopulator> populators = messagePopulatorExecutionChainHolder.getExecutionChain().stream()//
-                .map(spec -> factoriesByName.get(spec.getName()).newInstance(spec.getConfig()))//
+                .map(spec -> factoriesByName.get(spec.getName()).newInstance(spec.getArguments(), spec.getOptions()))//
                 .collect(Collectors.toCollection(ArrayList::new));
         populators.add(new StationIdPopulator(databaseAccess));
         populators.trimToSize();

@@ -9,6 +9,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+@SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
 @Component
 @ConfigurationProperties(prefix = "message-populators")
 public class MessagePopulatorExecutionChainHolder {
@@ -22,9 +23,11 @@ public class MessagePopulatorExecutionChainHolder {
         this.executionChain = requireNonNull(executionChain, "executionChain");
     }
 
+    @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
     public static class PopulatorInstanceSpec {
         private String name = "";
-        private Map<String, Object> config = Collections.emptyMap();
+        private Map<String, Object> arguments = Collections.emptyMap();
+        private Map<String, Object> options = Collections.emptyMap();
 
         public String getName() {
             return name;
@@ -34,17 +37,25 @@ public class MessagePopulatorExecutionChainHolder {
             this.name = requireNonNull(name, "name");
         }
 
-        public Map<String, Object> getConfig() {
-            return config;
+        public Map<String, Object> getArguments() {
+            return arguments;
         }
 
-        public void setConfig(final Map<String, Object> config) {
-            this.config = requireNonNull(config, "config");
+        public void setArguments(final Map<String, Object> arguments) {
+            this.arguments = requireNonNull(arguments, "arguments");
+        }
+
+        public Map<String, Object> getOptions() {
+            return options;
+        }
+
+        public void setOptions(final Map<String, Object> options) {
+            this.options = requireNonNull(options, "config");
         }
 
         @Override
         public String toString() {
-            return "PopulatorInstanceSpec{" + "name='" + name + '\'' + ", config=" + config + '}';
+            return "PopulatorInstanceSpec{" + "name='" + name + '\'' + ", arguments=" + arguments + ", options=" + options + '}';
         }
     }
 }

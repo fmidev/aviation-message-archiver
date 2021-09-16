@@ -3,7 +3,10 @@ package fi.fmi.avi.archiver.initializing;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +77,7 @@ class MessagePopulatorExecutionChainHolderTest {
                 .setMessage("testMessage")//
                 .setValidFrom(Instant.parse("2001-02-04T05:06:07.029Z"))//
                 .setValidTo(Instant.parse("2001-02-05T06:07:08.041Z"))//
+                .setFileModified(Instant.parse("2001-02-02T17:53:54.289Z"))//
                 .build();
         assertThat(result).containsExactly(expected);
     }
@@ -136,8 +140,12 @@ class MessagePopulatorExecutionChainHolderTest {
     }
 
     public static class FixedValueTestPopulator2 implements MessagePopulator {
-        private String station = "";
+        private final String station;
         private String message = "";
+
+        public FixedValueTestPopulator2(final String station) {
+            this.station = requireNonNull(station, "station");
+        }
 
         @Override
         public void populate(final InputAviationMessage input, final ArchiveAviationMessage.Builder builder) {
@@ -151,10 +159,6 @@ class MessagePopulatorExecutionChainHolderTest {
             }
         }
 
-        public void setStation(final String station) {
-            this.station = requireNonNull(station, "station");
-        }
-
         public void setMessage(final String message) {
             this.message = requireNonNull(message, "message");
         }
@@ -165,6 +169,27 @@ class MessagePopulatorExecutionChainHolderTest {
         }
     }
 
+    public static class FixedValueTestPopulator3 implements MessagePopulator {
+        private final Clock clock;
+        private final Duration fileModifiedFromNow;
+
+        public FixedValueTestPopulator3(final Clock clock, final Duration fileModifiedFromNow) {
+            this.clock = requireNonNull(clock, "clock");
+            this.fileModifiedFromNow = requireNonNull(fileModifiedFromNow, "fileModified");
+        }
+
+        public FixedValueTestPopulator3(final Duration fileModifiedFromNow, final Clock clock) {
+            throw new AssertionError("Not expecting FixedValueTestPopulator3(Duration, Clock) to be invoked");
+        }
+
+        @Override
+        public void populate(final InputAviationMessage input, final ArchiveAviationMessage.Builder builder) {
+            requireNonNull(input, "input");
+            requireNonNull(builder, "builder");
+            builder.setFileModified(clock.instant().minus(fileModifiedFromNow));
+        }
+    }
+
     @Configuration
     @Profile("MessagePopulatorExecutionChainHolderTest")
     static class MessagePopulatorExecutionChainHolderTestConfig {
@@ -172,13 +197,23 @@ class MessagePopulatorExecutionChainHolderTest {
         private AbstractMessagePopulatorFactory.PropertyConverter messagePopulatorFactoryPropertyConverter;
 
         @Bean
-        public MessagePopulatorFactory<FixedValueTestPopulator1> fixedRouteFormatTypeTestPopulatorFactory() {
-            return new ReflectionMessagePopulatorFactory<>(messagePopulatorFactoryPropertyConverter, FixedValueTestPopulator1.class);
+        public MessagePopulatorFactory<FixedValueTestPopulator1> fixedValueTestPopulator1() {
+            return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator1.class, messagePopulatorFactoryPropertyConverter).build();
         }
 
         @Bean
-        public MessagePopulatorFactory<FixedValueTestPopulator2> fixedStationTestPopulatorFactory() {
-            return new ReflectionMessagePopulatorFactory<>(messagePopulatorFactoryPropertyConverter, FixedValueTestPopulator2.class);
+        public MessagePopulatorFactory<FixedValueTestPopulator2> fixedValueTestPopulator2() {
+            return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator2.class, messagePopulatorFactoryPropertyConverter)//
+                    .addArgument("station", String.class)//
+                    .build();
+        }
+
+        @Bean
+        public MessagePopulatorFactory<FixedValueTestPopulator3> fixedValueTestPopulator3() {
+            return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator3.class, messagePopulatorFactoryPropertyConverter)//
+                    .addDependency(Clock.fixed(Instant.parse("2001-02-03T04:05:06.789Z"), ZoneOffset.UTC))//
+                    .addArgument("fileModifiedFromNow", Duration.class)//
+                    .build();
         }
     }
 }

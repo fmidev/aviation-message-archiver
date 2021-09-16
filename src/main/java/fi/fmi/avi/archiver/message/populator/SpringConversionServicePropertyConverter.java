@@ -2,7 +2,7 @@ package fi.fmi.avi.archiver.message.populator;
 
 import static java.util.Objects.requireNonNull;
 
-import java.lang.reflect.Method;
+import java.lang.reflect.Executable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -21,12 +21,12 @@ public class SpringConversionServicePropertyConverter implements AbstractMessage
 
     @Nullable
     @Override
-    public Object convert(@Nullable final Object propertyConfigValue, final Method setterMethod) {
-        requireNonNull(setterMethod, "setterMethod");
+    public Object convert(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
+        requireNonNull(targetExecutable, "targetExecutable");
         return propertyConfigValue == null
                 ? null
                 : conversionService.convert(propertyConfigValue, typeDescriptorForObject(propertyConfigValue),
-                        new TypeDescriptor(new MethodParameter(setterMethod, 0)));
+                        new TypeDescriptor(MethodParameter.forExecutable(targetExecutable, parameterIndex)));
     }
 
     @Nullable

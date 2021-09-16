@@ -50,22 +50,28 @@ public class MessagePopulatorFactoryConfig {
         return new SpringConversionServicePropertyConverter(conversionService);
     }
 
-    private <T extends MessagePopulator> MessagePopulatorFactory<T> newFactory(final Class<T> type, final Object... constructorArgs) {
-        return new ReflectionMessagePopulatorFactory<>(messagePopulatorFactoryPropertyConverter(), type, constructorArgs);
+    private <T extends MessagePopulator> ReflectionMessagePopulatorFactory.Builder<T> builder(final Class<T> type) {
+        return ReflectionMessagePopulatorFactory.builder(type, messagePopulatorFactoryPropertyConverter());
     }
 
     @Bean
     public MessagePopulatorFactory<FileMetadataPopulator> fileMetadataPopulatorFactory() {
-        return newFactory(FileMetadataPopulator.class, aviationProductsHolder.getProducts());
+        return builder(FileMetadataPopulator.class)//
+                .addDependency(aviationProductsHolder.getProducts())//
+                .build();
     }
 
     @Bean
     public MessagePopulatorFactory<BulletinHeadingDataPopulator> bulletinHeadingDataPopulatorFactory() {
-        return newFactory(BulletinHeadingDataPopulator.class, messagePopulatorHelper(), messageFormatIds, messageTypeIds);
+        return builder(BulletinHeadingDataPopulator.class)//
+                .addDependencies(messagePopulatorHelper(), messageFormatIds, messageTypeIds)//
+                .build();
     }
 
     @Bean
     public MessagePopulatorFactory<MessageDataPopulator> messageDataPopulatorFactory() {
-        return newFactory(MessageDataPopulator.class, messagePopulatorHelper(), messageFormatIds, messageTypeIds);
+        return builder(MessageDataPopulator.class)//
+                .addDependencies(messagePopulatorHelper(), messageFormatIds, messageTypeIds)//
+                .build();
     }
 }

@@ -40,7 +40,6 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.MessageDiscardedException;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
 @SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.populator.FailingPopulatorTest" })
@@ -116,8 +115,7 @@ public class FailingPopulatorTest {
 
     public static class FailingPopulator implements MessagePopulator {
         @Override
-        public void populate(final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder aviationMessageBuilder)
-                throws MessageDiscardedException {
+        public void populate(final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder aviationMessageBuilder) {
             final String airportIcaoCode = inputAviationMessage.getMessage()
                     .getLocationIndicators()
                     .get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME);
@@ -135,7 +133,7 @@ public class FailingPopulatorTest {
 
         @Bean
         public MessagePopulatorFactory<FailingPopulator> failingPopulatorFactory() {
-            return new ReflectionMessagePopulatorFactory<>(messagePopulatorFactoryPropertyConverter, FailingPopulator.class);
+            return ReflectionMessagePopulatorFactory.builder(FailingPopulator.class, messagePopulatorFactoryPropertyConverter).build();
         }
     }
 }
