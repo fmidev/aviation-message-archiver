@@ -7,7 +7,6 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.archiver.message.populator.*;
-import fi.fmi.avi.archiver.util.BulletinHeadingSource;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;

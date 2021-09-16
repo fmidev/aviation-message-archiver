@@ -4,8 +4,7 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
-import fi.fmi.avi.archiver.util.BulletinHeadingSource;
-import fi.fmi.avi.archiver.util.BulletinUtil;
+import fi.fmi.avi.model.bulletin.BulletinHeading;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -16,12 +15,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Discard a message if the given pattern is found in its bulletin heading string.
+ * Discard a message if the given pattern is found in its bulletin heading data designator.
  */
-public class BulletinHeadingDiscarder implements MessagePopulator {
+public class DataDesignatorDiscarder implements MessagePopulator {
 
     private List<BulletinHeadingSource> bulletinHeadingSources;
-    private Pattern headingPattern;
+    private Pattern dataDesignatorPattern;
 
     public void setBulletinHeadingSources(final List<BulletinHeadingSource> bulletinHeadingSources) {
         requireNonNull(bulletinHeadingSources, "bulletinHeadingSources");
@@ -29,19 +28,20 @@ public class BulletinHeadingDiscarder implements MessagePopulator {
         this.bulletinHeadingSources = bulletinHeadingSources;
     }
 
-    public void setHeadingPattern(final Pattern headingPattern) {
-        this.headingPattern = requireNonNull(headingPattern, "headingPattern");
+    public void setDataDesignatorPattern(final Pattern dataDesignatorPattern) {
+        this.dataDesignatorPattern = requireNonNull(dataDesignatorPattern, "dataDesignatorPattern");
     }
 
     @Override
     public void populate(final InputAviationMessage inputAviationMessage, @Nullable final ArchiveAviationMessage.Builder builder)
             throws MessageDiscardedException {
         requireNonNull(inputAviationMessage, "inputAviationMessage");
-        final Optional<String> heading = BulletinUtil.getFirstNonNullFromBulletinHeading(bulletinHeadingSources, inputAviationMessage,
-                InputBulletinHeading::getBulletinHeadingString);
-        if (heading.isPresent() && headingPattern.matcher(heading.get()).find()) {
-            throw new MessageDiscardedException("Discarded message with heading: " + heading.get());
+        final Optional<String> dataDesignators = MessagePopulatorHelper.getFirstNonNullFromBulletinHeading(bulletinHeadingSources, inputAviationMessage,
+                InputBulletinHeading::getBulletinHeading).map(BulletinHeading::getDataDesignatorsForTAC);
+        if (dataDesignators.isPresent() && dataDesignatorPattern.matcher(dataDesignators.get()).find()) {
+            throw new MessageDiscardedException("Discarded message with dataDesignators: " + dataDesignators.get());
         }
     }
+
 
 }

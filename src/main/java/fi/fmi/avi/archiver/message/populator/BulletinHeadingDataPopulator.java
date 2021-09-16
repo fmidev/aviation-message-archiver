@@ -4,8 +4,6 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
-import fi.fmi.avi.archiver.util.BulletinHeadingSource;
-import fi.fmi.avi.archiver.util.BulletinUtil;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.bulletin.BulletinHeading;
@@ -95,7 +93,7 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
     }
 
     private <T> Optional<T> getFirstNonNullFromBulletinHeading(final InputAviationMessage input, final Function<InputBulletinHeading, Optional<T>> fn) {
-        return BulletinUtil.getFirstNonNullFromBulletinHeading(bulletinHeadingSources, input, fn);
+        return MessagePopulatorHelper.getFirstNonNullFromBulletinHeading(bulletinHeadingSources, input, fn);
     }
 
 }

@@ -1,6 +1,8 @@
 package fi.fmi.avi.archiver.message.populator;
 
 import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.util.TimeUtil;
 import fi.fmi.avi.model.PartialDateTime;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
@@ -10,10 +12,7 @@ import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -44,6 +43,26 @@ public class MessagePopulatorHelper {
         } catch (final IllegalStateException ignored) {
             return Optional.empty();
         }
+    }
+
+    /**
+     * Get the first non-null value from the input aviation message's bulletin heading using the given bulletin heading sources.
+     *
+     * @param bulletinHeadingSources bulletin heading sources
+     * @param input                  input aviation message
+     * @param fn                     function to get an optional value from the input heading
+     * @param <T>                    return value type
+     * @return non-null value if present
+     */
+    public static <T> Optional<T> getFirstNonNullFromBulletinHeading(final Collection<BulletinHeadingSource> bulletinHeadingSources,
+                                                                     final InputAviationMessage input, final Function<InputBulletinHeading, Optional<T>> fn) {
+        requireNonNull(bulletinHeadingSources, "bulletinHeadingSources");
+        requireNonNull(input, "input");
+        requireNonNull(fn, "fn");
+        return bulletinHeadingSources.stream()
+                .map(source -> fn.apply(source.get(input)).orElse(null))
+                .filter(Objects::nonNull)
+                .findFirst();
     }
 
     /**
