@@ -9,30 +9,30 @@ import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class IcaoAirportCodeReplacerTest {
+public class StationIcaoCodeReplacerTest {
 
-    private IcaoAirportCodeReplacer icaoAirportCodeReplacer;
+    private StationIcaoCodeReplacer stationIcaoCodeReplacer;
     private final InputAviationMessage inputAviationMessage = InputAviationMessage.builder().buildPartial();
 
     @BeforeEach
     public void setUp() {
-        icaoAirportCodeReplacer = new IcaoAirportCodeReplacer(Pattern.compile("^YU..$"), "XXXX");
+        stationIcaoCodeReplacer = new StationIcaoCodeReplacer(Pattern.compile("^YU..$"), "XXXX");
     }
 
     @Test
     public void replace() {
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
-                .setIcaoAirportCode("YUDO");
-        icaoAirportCodeReplacer.populate(inputAviationMessage, aviationMessage);
-        assertThat(aviationMessage.getIcaoAirportCode()).isEqualTo("XXXX");
+                .setStationIcaoCode("YUDO");
+        stationIcaoCodeReplacer.populate(inputAviationMessage, aviationMessage);
+        assertThat(aviationMessage.getStationIcaoCode()).isEqualTo("XXXX");
     }
 
     @Test
     public void no_match() {
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
-                .setIcaoAirportCode("YADO");
-        icaoAirportCodeReplacer.populate(inputAviationMessage, aviationMessage);
-        assertThat(aviationMessage.getIcaoAirportCode()).isEqualTo("YADO");
+                .setStationIcaoCode("YADO");
+        stationIcaoCodeReplacer.populate(inputAviationMessage, aviationMessage);
+        assertThat(aviationMessage.getStationIcaoCode()).isEqualTo("YADO");
     }
 
 }

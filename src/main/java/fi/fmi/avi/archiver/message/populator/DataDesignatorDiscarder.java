@@ -34,12 +34,12 @@ public class DataDesignatorDiscarder implements MessagePopulator {
     }
 
     @Override
-    public void populate(final InputAviationMessage inputAviationMessage, @Nullable final ArchiveAviationMessage.Builder builder)
+    public void populate(final InputAviationMessage inputAviationMessage, @Nullable final ArchiveAviationMessage.Builder ignored)
             throws MessageDiscardedException {
         requireNonNull(inputAviationMessage, "inputAviationMessage");
         final Optional<String> dataDesignators = MessagePopulatorHelper.getFirstNonNullFromBulletinHeading(bulletinHeadingSources, inputAviationMessage,
                 InputBulletinHeading::getBulletinHeading).map(BulletinHeading::getDataDesignatorsForTAC);
-        if (dataDesignators.isPresent() && pattern.matcher(dataDesignators.get()).find()) {
+        if (dataDesignators.isPresent() && pattern.matcher(dataDesignators.get()).matches()) {
             throw new MessageDiscardedException("Discarded message with dataDesignators: " + dataDesignators.get());
         }
     }

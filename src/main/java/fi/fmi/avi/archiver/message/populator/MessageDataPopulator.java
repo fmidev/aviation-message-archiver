@@ -1,21 +1,5 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.tryGet;
-import static java.util.Objects.requireNonNull;
-
-import java.time.ZoneOffset;
-import java.time.chrono.ChronoZonedDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
-
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
@@ -26,6 +10,15 @@ import fi.fmi.avi.model.GenericAviationWeatherMessage.LocationIndicatorType;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
+
+import javax.annotation.Nullable;
+import java.time.ZoneOffset;
+import java.time.chrono.ChronoZonedDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.tryGet;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Populate {@link Builder} properties from message data in {@link InputAviationMessage}.
@@ -46,7 +39,7 @@ import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
  *
  * <p>
  * The {@link GenericAviationWeatherMessage#getLocationIndicators() location indicator} used to populate
- * {@link ArchiveAviationMessage#getIcaoAirportCode()} is chosen by looking for first existing value in order of a
+ * {@link ArchiveAviationMessage#getStationIcaoCode()} is chosen by looking for first existing value in order of a
  * {@link #setMessageTypeLocationIndicatorTypes(Map) message type-specific location indicator list}, if exists for message type in question, or else in order
  * of a {@link #setDefaultLocationIndicatorTypes(List) default list} of location indicator types.
  * <p>
@@ -111,7 +104,7 @@ public class MessageDataPopulator implements MessagePopulator {
                 .ifPresent(builder::setMessageTime);
         // Note invocation order: message type is already set before getLocationIndicator(Builder.getType(), ...)
         getLocationIndicator(tryGet(builder, Builder::getType).orElse(Integer.MIN_VALUE), inputMessage.getLocationIndicators())//
-                .ifPresent(builder::setIcaoAirportCode);
+                .ifPresent(builder::setStationIcaoCode);
         final PartialOrCompleteTimePeriod validityTime = inputMessage.getValidityTime()//
                 .map(period -> helper.tryCompletePeriod(period, getNullablePartialOrCompleteMessageTime(builder, inputMessage), input.getFileMetadata()))//
                 .orElse(EMPTY_PARTIAL_OR_COMPLETE_TIME_PERIOD);

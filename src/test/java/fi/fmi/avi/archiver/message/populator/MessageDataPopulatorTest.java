@@ -1,24 +1,13 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.EMPTY_RESULT;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.SoftAssertions.assertSoftly;
-
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
-import javax.annotation.Nullable;
-
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.model.*;
+import fi.fmi.avi.model.GenericAviationWeatherMessage.LocationIndicatorType;
+import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,19 +17,19 @@ import org.junit.jupiter.params.converter.SimpleArgumentConverter;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import javax.annotation.Nullable;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import fi.fmi.avi.model.GenericAviationWeatherMessage.LocationIndicatorType;
-import fi.fmi.avi.model.MessageType;
-import fi.fmi.avi.model.PartialDateTime;
-import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
-import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
-import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
+import static fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.EMPTY_RESULT;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 @SuppressWarnings("UnnecessaryLocalVariable")
 class MessageDataPopulatorTest {
@@ -165,9 +154,9 @@ class MessageDataPopulatorTest {
 
         final String initialIcaoAirportCode = "NULL";
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
-                .setIcaoAirportCode(initialIcaoAirportCode);
+                .setStationIcaoCode(initialIcaoAirportCode);
         populator.populate(inputMessage, builder);
-        assertThat(builder.getIcaoAirportCode()).isEqualTo(Optional.ofNullable(expectedIcaoAirportCode).orElse(initialIcaoAirportCode));
+        assertThat(builder.getStationIcaoCode()).isEqualTo(Optional.ofNullable(expectedIcaoAirportCode).orElse(initialIcaoAirportCode));
     }
 
     @ParameterizedTest
@@ -187,9 +176,9 @@ class MessageDataPopulatorTest {
         final String initialIcaoAirportCode = "NULL";
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
                 .setType(messageType.getId())//
-                .setIcaoAirportCode(initialIcaoAirportCode);
+                .setStationIcaoCode(initialIcaoAirportCode);
         populator.populate(inputMessage, builder);
-        assertThat(builder.getIcaoAirportCode()).isEqualTo(Optional.ofNullable(expectedIcaoAirportCode).orElse(initialIcaoAirportCode));
+        assertThat(builder.getStationIcaoCode()).isEqualTo(Optional.ofNullable(expectedIcaoAirportCode).orElse(initialIcaoAirportCode));
     }
 
     @ParameterizedTest

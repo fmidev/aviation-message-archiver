@@ -3,27 +3,30 @@ package fi.fmi.avi.archiver.message.populator;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
+import fi.fmi.avi.model.MessageType;
 
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
-public class MessageTypeValidator implements MessagePopulator {
+public class ProductMessageTypesValidator implements MessagePopulator {
 
-    private String productIdentifier;
-    private Set<Integer> typeIdentifiers;
+    private final String productIdentifier;
+    private final Set<Integer> typeIdentifiers;
 
-    public void setProductIdentifier(final String productIdentifier) {
+    public ProductMessageTypesValidator(final Map<MessageType, Integer> typeIds, final String productIdentifier, final Set<MessageType> messageTypes) {
+        requireNonNull(typeIds, "typeIds");
         requireNonNull(productIdentifier, "productIdentifier");
         checkArgument(!productIdentifier.isEmpty(), "productIdentifier cannot be empty");
         this.productIdentifier = productIdentifier;
-    }
 
-    public void setTypeIdentifiers(final Set<Integer> typeIdentifiers) {
-        requireNonNull(typeIdentifiers, "typeIdentifiers");
-        checkArgument(!typeIdentifiers.isEmpty(), "typeIdentifiers cannot be empty");
-        this.typeIdentifiers = typeIdentifiers;
+        requireNonNull(messageTypes, "messageTypes");
+        checkArgument(!messageTypes.isEmpty(), "messageTypes cannot be empty");
+        checkArgument(messageTypes.stream().allMatch(typeIds::containsKey), "messageTypes must have configured type ids");
+        this.typeIdentifiers = messageTypes.stream().map(typeIds::get).collect(Collectors.toSet());
     }
 
     @Override
@@ -32,7 +35,7 @@ public class MessageTypeValidator implements MessagePopulator {
         requireNonNull(builder, "builder");
         if (inputAviationMessage.getFileMetadata().getProductIdentifier().equals(productIdentifier)
                 && !typeIdentifiers.contains(builder.getType())) {
-            builder.setProcessingResult(ProcessingResult.INVALID_MESSAGE_TYPE);
+            builder.setProcessingResult(ProcessingResult.FORBIDDEN_MESSAGE_TYPE);
         }
     }
 

@@ -51,7 +51,7 @@ public class DatabaseAccessTest {
     private static final ArchiveAviationMessage TEST_MESSAGE = ArchiveAviationMessage.builder()
             .setMessageTime(NOW)
             .setStationId(1)
-            .setIcaoAirportCode("EFXX")
+            .setStationIcaoCode("EFXX")
             .setFormat(1)
             .setType(2)
             .setRoute(1)
@@ -153,7 +153,7 @@ public class DatabaseAccessTest {
     @Test
     public void test_insert_rejected_aviation_message() {
         final ArchiveAviationMessage archiveAviationMessage = TEST_MESSAGE.toBuilder()
-                .setProcessingResult(ProcessingResult.UNKNOWN_ICAO_CODE)//
+                .setProcessingResult(ProcessingResult.UNKNOWN_STATION_ICAO_CODE)//
                 .build();
 
         final int affectedRows = databaseAccess.insertRejectedAviationMessage(archiveAviationMessage);
@@ -202,7 +202,7 @@ public class DatabaseAccessTest {
 
     private void assertAvidbRejectedMessagesContains(final ArchiveAviationMessage archiveAviationMessage) {
         databaseAccess.getJdbcTemplate().queryForObject(SELECT_REJECTED_MESSAGES, Collections.emptyMap(), (RowMapper<ArchiveAviationMessage>) (rs, rowNum) -> {
-            assertThat(rs.getString(1)).isEqualTo(archiveAviationMessage.getIcaoAirportCode());
+            assertThat(rs.getString(1)).isEqualTo(archiveAviationMessage.getStationIcaoCode());
             assertThat(rs.getObject(2, Instant.class)).isEqualTo(archiveAviationMessage.getMessageTime());
             assertThat(rs.getInt(3)).isEqualTo(archiveAviationMessage.getType());
             assertThat(rs.getInt(4)).isEqualTo(archiveAviationMessage.getRoute());

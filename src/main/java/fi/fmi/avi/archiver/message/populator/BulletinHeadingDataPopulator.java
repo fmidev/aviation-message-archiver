@@ -37,7 +37,7 @@ import static java.util.Objects.requireNonNull;
  * </p>
  * <ul>
  *     <li>{@link BulletinHeading#getIssueTime()} as {@link ArchiveAviationMessage#getMessageTime()}</li>
- *     <li>{@link BulletinHeading#getLocationIndicator()} as {@link ArchiveAviationMessage#getIcaoAirportCode()}</li>
+ *     <li>{@link BulletinHeading#getLocationIndicator()} as {@link ArchiveAviationMessage#getStationIcaoCode()}</li>
  *     <li>{@link ArchiveAviationMessage#getHeading()}</li>
  *     <li>{@link ArchiveAviationMessageIWXXMDetails#getCollectIdentifier()}</li>
  *     <li>{@link ArchiveAviationMessage#getVersion()}</li>
@@ -77,7 +77,7 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
                 .ifPresent(builder::setMessageTime);
         getFirstNonNullFromBulletinHeading(input, inputHeading -> inputHeading.getBulletinHeading()//
                 .map(BulletinHeading::getLocationIndicator))//
-                .ifPresent(builder::setIcaoAirportCode);
+                .ifPresent(builder::setStationIcaoCode);
         input.getGtsBulletinHeading()//
                 .getBulletinHeadingString()//
                 .ifPresent(builder::setHeading);

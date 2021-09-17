@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.message.populator;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.testing.AbstractPackageSanityTests;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.FileMetadata;
@@ -13,6 +14,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.Map;
 
 import static org.mockito.Mockito.mock;
 
@@ -34,6 +36,7 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
         setDistinctValues(Instant.class, Instant.now(), Instant.now().plusSeconds(1));
         setDefault(String.class, "test");
         setDefault(Duration.class, Duration.ofHours(1));
+        setDefault(Map.class, ImmutableMap.of());
     }
 
 }

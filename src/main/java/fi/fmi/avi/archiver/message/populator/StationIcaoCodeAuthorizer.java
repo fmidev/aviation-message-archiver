@@ -4,7 +4,6 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.bulletin.BulletinHeading;
 
 import javax.annotation.Nullable;
@@ -17,17 +16,18 @@ import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.DEFAU
 import static java.util.Objects.requireNonNull;
 
 /**
- * When the bulletin location indicator matches the given pattern, validate that the message aerodrome matches the given pattern.
+ * When the bulletin originator (location indicator) matches the given pattern, validate that the message station
+ * icao codematches the given pattern.
  */
-public class MessageAerodromeValidator implements MessagePopulator {
+public class StationIcaoCodeAuthorizer implements MessagePopulator {
 
-    private final Pattern bulletinLocationIndicatorPattern;
-    private final Pattern messageAerodromePattern;
+    private final Pattern originatorPattern;
+    private final Pattern stationPattern;
     private List<BulletinHeadingSource> bulletinHeadingSources = DEFAULT_BULLETIN_HEADING_SOURCES;
 
-    public MessageAerodromeValidator(final Pattern bulletinLocationIndicatorPattern, final Pattern messageAerodromePattern) {
-        this.bulletinLocationIndicatorPattern = requireNonNull(bulletinLocationIndicatorPattern, "bulletinLocationIndicatorPattern");
-        this.messageAerodromePattern = requireNonNull(messageAerodromePattern, "messageAerodromePattern");
+    public StationIcaoCodeAuthorizer(final Pattern originatorPattern, final Pattern stationPattern) {
+        this.originatorPattern = requireNonNull(originatorPattern, "originatorPattern");
+        this.stationPattern = requireNonNull(stationPattern, "stationPattern");
     }
 
     public void setBulletinHeadingSources(final List<BulletinHeadingSource> bulletinHeadingSources) {
@@ -41,15 +41,12 @@ public class MessageAerodromeValidator implements MessagePopulator {
         requireNonNull(inputAviationMessage, "inputAviationMessage");
         requireNonNull(builder, "builder");
 
-        final Optional<String> optIndicator = MessagePopulatorHelper.getFirstNonNullFromBulletinHeading(bulletinHeadingSources,
+        final Optional<String> originator = MessagePopulatorHelper.getFirstNonNullFromBulletinHeading(bulletinHeadingSources,
                 inputAviationMessage, InputBulletinHeading::getBulletinHeading).map(BulletinHeading::getLocationIndicator);
-        if (optIndicator.isPresent()
-                && inputAviationMessage.getMessage().getLocationIndicators().containsKey(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME)) {
-            final String locationIndicator = optIndicator.get();
-            final String aerodrome = inputAviationMessage.getMessage().getLocationIndicators().get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME);
-            if (bulletinLocationIndicatorPattern.matcher(locationIndicator).matches()
-                    && !messageAerodromePattern.matcher(aerodrome).matches()) {
-                builder.setProcessingResult(ProcessingResult.INVALID_MESSAGE_AERODROME);
+        final Optional<String> stationIcaoCode = MessagePopulatorHelper.tryGet(builder, reader -> reader.getStationIcaoCode());
+        if (originator.isPresent() && stationIcaoCode.isPresent()) {
+            if (originatorPattern.matcher(originator.get()).matches() && !stationPattern.matcher(stationIcaoCode.get()).matches()) {
+                builder.setProcessingResult(ProcessingResult.FORBIDDEN_MESSAGE_STATION_ICAO_CODE);
             }
         }
     }

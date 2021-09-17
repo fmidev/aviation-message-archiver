@@ -82,7 +82,7 @@ public class DiscardingPopulatorTest {
         verify(successChannel).send(messageCaptor.capture());
         @SuppressWarnings("unchecked") final List<ArchiveAviationMessage> successes = (List<ArchiveAviationMessage>) messageCaptor.getValue().getPayload();
         assertThat(successes).hasSize(1);
-        assertThat(successes.get(0).getIcaoAirportCode()).isEqualTo("EFXX");
+        assertThat(successes.get(0).getStationIcaoCode()).isEqualTo("EFXX");
 
         verify(failChannel, times(0)).send(any(Message.class));
         @SuppressWarnings("unchecked") final List<InputAviationMessage> failures = (List<InputAviationMessage>) messageCaptor.getValue()
@@ -95,7 +95,7 @@ public class DiscardingPopulatorTest {
         assertThat(discards.get(0).getMessage().getLocationIndicators().get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME)).isEqualTo("EFYY");
 
         verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture());
-        assertThat(databaseMessageCaptor.getValue().getIcaoAirportCode()).isEqualTo("EFXX");
+        assertThat(databaseMessageCaptor.getValue().getStationIcaoCode()).isEqualTo("EFXX");
         verify(databaseAccess, times(0)).insertRejectedAviationMessage(any());
     }
 

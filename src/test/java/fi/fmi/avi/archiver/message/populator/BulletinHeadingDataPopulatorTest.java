@@ -187,7 +187,7 @@ class BulletinHeadingDataPopulatorTest {
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
-        assertThat(builder.getIcaoAirportCode()).isEqualTo(expectedIcaoAirportCode);
+        assertThat(builder.getStationIcaoCode()).isEqualTo(expectedIcaoAirportCode);
     }
 
     @ParameterizedTest

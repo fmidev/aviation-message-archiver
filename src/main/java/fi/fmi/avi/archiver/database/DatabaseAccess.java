@@ -85,7 +85,7 @@ public class DatabaseAccess {
      */
     public int insertRejectedAviationMessage(final ArchiveAviationMessage archiveAviationMessage) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
-        parameters.addValue("icao_code", archiveAviationMessage.getIcaoAirportCode())
+        parameters.addValue("icao_code", archiveAviationMessage.getStationIcaoCode())
                 .addValue("message_time", archiveAviationMessage.getMessageTime())
                 .addValue("type_id", archiveAviationMessage.getType())
                 .addValue("route_id", archiveAviationMessage.getRoute())

@@ -10,14 +10,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Replace ICAO airport code using a regex pattern.
+ * Replace station ICAO code using a regex pattern.
  */
-public class IcaoAirportCodeReplacer implements MessagePopulator {
+public class StationIcaoCodeReplacer implements MessagePopulator {
 
     private final Pattern pattern;
     private final String replacement;
 
-    public IcaoAirportCodeReplacer(final Pattern pattern, final String replacement) {
+    public StationIcaoCodeReplacer(final Pattern pattern, final String replacement) {
         this.pattern = requireNonNull(pattern, "pattern");
         requireNonNull(replacement, "replacement");
         checkArgument(!replacement.isEmpty(), "replacement cannot be empty");
@@ -27,8 +27,8 @@ public class IcaoAirportCodeReplacer implements MessagePopulator {
     @Override
     public void populate(@Nullable final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder builder) {
         requireNonNull(builder, "builder");
-        final String airportCode = pattern.matcher(builder.getIcaoAirportCode()).replaceAll(replacement);
-        builder.setIcaoAirportCode(airportCode);
+        final String stationIcaoCode = pattern.matcher(builder.getStationIcaoCode()).replaceAll(replacement);
+        builder.setStationIcaoCode(stationIcaoCode);
     }
 
 }
