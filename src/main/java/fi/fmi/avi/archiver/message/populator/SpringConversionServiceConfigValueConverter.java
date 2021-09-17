@@ -12,10 +12,10 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 
-public class SpringConversionServicePropertyConverter implements AbstractMessagePopulatorFactory.PropertyConverter {
+public class SpringConversionServiceConfigValueConverter implements AbstractMessagePopulatorFactory.ConfigValueConverter {
     private final ConversionService conversionService;
 
-    public SpringConversionServicePropertyConverter(final ConversionService conversionService) {
+    public SpringConversionServiceConfigValueConverter(final ConversionService conversionService) {
         this.conversionService = requireNonNull(conversionService, "conversionService");
     }
 

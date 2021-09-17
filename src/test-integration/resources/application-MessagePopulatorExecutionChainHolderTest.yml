@@ -1,33 +1,32 @@
 message-populators:
   executionChain:
     - name: FixedValueTestPopulator1
-      options:
+      config:
         ids:
           ROUTE: 1
           FORMAT: 2
           TYPE: 3
         validityPeriod: [ ]
     - name: FixedValueTestPopulator1
-      options:
+      config:
         ids: { }
         validityPeriod: 2001-02-04T05:06:07.021Z
     - name: FixedValueTestPopulator1
-      options:
+      config:
         validityPeriod: 2001-02-04T05:06:07.029Z, 2001-02-05T06:07:08.039Z
     - name: FixedValueTestPopulator2
-      arguments:
+      config:
         station: EFQQ
-      options:
         message: testMessage
     - name: FixedValueTestPopulator2
-      arguments:
+      config:
         station: EFXX
     - name: FixedValueTestPopulator1
     - name: FixedValueTestPopulator3
-      arguments:
+      config:
         fileModifiedFromNow: PT10H11M12.5S
     - name: FixedValueTestPopulator1
-      options:
+      config:
         ids:
           TYPE: 4
         messageTime: 2001-02-03T04:05:06.019Z

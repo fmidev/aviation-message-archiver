@@ -129,11 +129,11 @@ public class FailingPopulatorTest {
     @Profile("failingPopulatorTest")
     static class FailingPopulatorConfig {
         @Autowired
-        private AbstractMessagePopulatorFactory.PropertyConverter messagePopulatorFactoryPropertyConverter;
+        private AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter;
 
         @Bean
         public MessagePopulatorFactory<FailingPopulator> failingPopulatorFactory() {
-            return ReflectionMessagePopulatorFactory.builder(FailingPopulator.class, messagePopulatorFactoryPropertyConverter).build();
+            return ReflectionMessagePopulatorFactory.builder(FailingPopulator.class, messagePopulatorConfigValueConverter).build();
         }
     }
 }

@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
@@ -19,43 +20,60 @@ public abstract class AbstractMessagePopulatorFactory<T extends MessagePopulator
         return object == null ? "null" : object.getClass().toString();
     }
 
-    protected abstract PropertyConverter getPropertyConverter();
+    protected abstract ConfigValueConverter getConfigValueConverter();
 
-    protected abstract T newInstance(final Map<String, ?> arguments);
+    protected abstract T createInstance(final Map<String, ?> instantiationConfig);
+
+    protected boolean isInstantiationConfigOption(final String configOptionName) {
+        requireNonNull(configOptionName, "configOptionName");
+        return false;
+    }
 
     @Override
-    public T newInstance(final Map<String, Object> arguments, final Map<String, Object> options) {
-        requireNonNull(arguments, "arguments");
-        requireNonNull(options, "options");
-        final T instance = newInstance(arguments);
-        setOptions(instance, options);
+    public T newInstance(final Map<String, Object> config) {
+        requireNonNull(config, "config");
+
+        final Map<Boolean, Map<String, Object>> partitionedConfig = config.entrySet().stream()//
+                .collect(Collectors.partitioningBy(entry -> isInstantiationConfigOption(entry.getKey()), //
+                        Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        final Map<String, Object> instantiationConfig = partitionedConfig.getOrDefault(true, Collections.emptyMap());
+        final Map<String, Object> propertyConfig = partitionedConfig.getOrDefault(false, Collections.emptyMap());
+
+        final T instance = createInstance(instantiationConfig);
+        applyPropertyConfig(instance, propertyConfig);
         return instance;
     }
 
-    private void setOptions(final T instance, final Map<String, Object> config) {
+    protected void applyPropertyConfig(final T instance, final Map<String, Object> propertyConfig) {
+        requireNonNull(instance, "instance");
+        requireNonNull(propertyConfig, "propertyConfig");
         final Map<String, Method> setters = getSettersByName(getType());
-        config.forEach((propertyName, propertyConfigValue) -> setOption(propertyName, propertyConfigValue, instance, setters));
+        propertyConfig.forEach((propertyName, propertyConfigValue) -> setConfigProperty(propertyName, propertyConfigValue, instance, setters));
     }
 
-    private void setOption(final String propertyName, final Object propertyConfigValue, final T instance, final Map<String, Method> setters) {
+    private void setConfigProperty(final String propertyName, final Object propertyConfigValue, final T instance, final Map<String, Method> setters) {
         final Method setterMethod = setters.get(setterName(propertyName));
         if (setterMethod == null) {
-            throw new IllegalArgumentException(String.format(Locale.ROOT, "Unknown property '%s' for [%s]", propertyName, getType()));
+            throw new IllegalArgumentException(
+                    String.format(Locale.ROOT, "Unknown config option '%s' for MessagePopulator '%s' (%s)", propertyName, getName(), getType()));
         }
         final Object propertyValue;
         try {
-            propertyValue = getPropertyConverter().convert(propertyConfigValue, setterMethod, 0);
+            propertyValue = getConfigValueConverter().convert(propertyConfigValue, setterMethod, 0);
         } catch (final RuntimeException e) {
             throw new IllegalStateException(
-                    String.format(Locale.ROOT, "Unable to convert [%s] property '%s' value of from [%s] to [%s]", getType(), propertyName,
-                            classString(propertyConfigValue), setterMethod.getParameterTypes()[0]), e);
+                    String.format(Locale.ROOT, "Unable to convert MessagePopulator '%s' (%s) config option '%s' value of from [%s] to [%s]", getName(),
+                            getType(), propertyName, classString(propertyConfigValue), setterMethod.getParameterTypes()[0]), e);
         }
         try {
             setterMethod.invoke(instance, propertyValue);
         } catch (final IllegalAccessException e) {
-            throw new IllegalStateException(String.format(Locale.ROOT, "Unable to set [%s] property '%s'", getType(), propertyName), e);
+            throw new IllegalStateException(
+                    String.format(Locale.ROOT, "Unable to set MessagePopulator '%s' (%s) config option '%s'", getName(), getType(), propertyName), e);
         } catch (final InvocationTargetException e) {
-            throw new IllegalStateException(String.format(Locale.ROOT, "Error while setting [%s] property '%s'", getType(), propertyName), e.getCause());
+            throw new IllegalStateException(
+                    String.format(Locale.ROOT, "Error while setting MessagePopulator '%s' (%s) config option '%s'", getName(), getType(), propertyName),
+                    e.getCause());
         }
     }
 
@@ -80,7 +98,7 @@ public abstract class AbstractMessagePopulatorFactory<T extends MessagePopulator
     }
 
     @FunctionalInterface
-    public interface PropertyConverter {
+    public interface ConfigValueConverter {
         @Nullable
         Object convert(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex);
     }

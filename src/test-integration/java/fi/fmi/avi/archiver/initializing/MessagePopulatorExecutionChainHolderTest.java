@@ -188,31 +188,36 @@ class MessagePopulatorExecutionChainHolderTest {
             requireNonNull(builder, "builder");
             builder.setFileModified(clock.instant().minus(fileModifiedFromNow));
         }
+
+        @Override
+        public String toString() {
+            return "FixedValueTestPopulator3{" + "clock=" + clock + ", fileModifiedFromNow=" + fileModifiedFromNow + '}';
+        }
     }
 
     @Configuration
     @Profile("MessagePopulatorExecutionChainHolderTest")
     static class MessagePopulatorExecutionChainHolderTestConfig {
         @Autowired
-        private AbstractMessagePopulatorFactory.PropertyConverter messagePopulatorFactoryPropertyConverter;
+        private AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter;
 
         @Bean
         public MessagePopulatorFactory<FixedValueTestPopulator1> fixedValueTestPopulator1() {
-            return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator1.class, messagePopulatorFactoryPropertyConverter).build();
+            return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator1.class, messagePopulatorConfigValueConverter).build();
         }
 
         @Bean
         public MessagePopulatorFactory<FixedValueTestPopulator2> fixedValueTestPopulator2() {
-            return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator2.class, messagePopulatorFactoryPropertyConverter)//
-                    .addArgument("station", String.class)//
+            return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator2.class, messagePopulatorConfigValueConverter)//
+                    .addConfigArg("station", String.class)//
                     .build();
         }
 
         @Bean
         public MessagePopulatorFactory<FixedValueTestPopulator3> fixedValueTestPopulator3() {
-            return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator3.class, messagePopulatorFactoryPropertyConverter)//
-                    .addDependency(Clock.fixed(Instant.parse("2001-02-03T04:05:06.789Z"), ZoneOffset.UTC))//
-                    .addArgument("fileModifiedFromNow", Duration.class)//
+            return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator3.class, messagePopulatorConfigValueConverter)//
+                    .addDependencyArg(Clock.fixed(Instant.parse("2001-02-03T04:05:06.789Z"), ZoneOffset.UTC))//
+                    .addConfigArg("fileModifiedFromNow", Duration.class)//
                     .build();
         }
     }

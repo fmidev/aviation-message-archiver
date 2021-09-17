@@ -19,7 +19,7 @@ import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
 import fi.fmi.avi.archiver.message.populator.ReflectionMessagePopulatorFactory;
-import fi.fmi.avi.archiver.message.populator.SpringConversionServicePropertyConverter;
+import fi.fmi.avi.archiver.message.populator.SpringConversionServiceConfigValueConverter;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 
@@ -46,32 +46,32 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
-    public AbstractMessagePopulatorFactory.PropertyConverter messagePopulatorFactoryPropertyConverter() {
-        return new SpringConversionServicePropertyConverter(conversionService);
+    public AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter() {
+        return new SpringConversionServiceConfigValueConverter(conversionService);
     }
 
     private <T extends MessagePopulator> ReflectionMessagePopulatorFactory.Builder<T> builder(final Class<T> type) {
-        return ReflectionMessagePopulatorFactory.builder(type, messagePopulatorFactoryPropertyConverter());
+        return ReflectionMessagePopulatorFactory.builder(type, messagePopulatorConfigValueConverter());
     }
 
     @Bean
     public MessagePopulatorFactory<FileMetadataPopulator> fileMetadataPopulatorFactory() {
         return builder(FileMetadataPopulator.class)//
-                .addDependency(aviationProductsHolder.getProducts())//
+                .addDependencyArg(aviationProductsHolder.getProducts())//
                 .build();
     }
 
     @Bean
     public MessagePopulatorFactory<BulletinHeadingDataPopulator> bulletinHeadingDataPopulatorFactory() {
         return builder(BulletinHeadingDataPopulator.class)//
-                .addDependencies(messagePopulatorHelper(), messageFormatIds, messageTypeIds)//
+                .addDependencyArgs(messagePopulatorHelper(), messageFormatIds, messageTypeIds)//
                 .build();
     }
 
     @Bean
     public MessagePopulatorFactory<MessageDataPopulator> messageDataPopulatorFactory() {
         return builder(MessageDataPopulator.class)//
-                .addDependencies(messagePopulatorHelper(), messageFormatIds, messageTypeIds)//
+                .addDependencyArgs(messagePopulatorHelper(), messageFormatIds, messageTypeIds)//
                 .build();
     }
 }

@@ -9,5 +9,5 @@ public interface MessagePopulatorFactory<T extends MessagePopulator> {
         return getType().getSimpleName();
     }
 
-    T newInstance(final Map<String, Object> arguments, final Map<String, Object> options);
+    T newInstance(final Map<String, Object> config);
 }

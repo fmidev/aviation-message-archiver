@@ -143,11 +143,11 @@ public class DiscardingPopulatorTest {
     @Profile("discardingPopulatorTest")
     static class DiscardingPopulatorConfig {
         @Autowired
-        private AbstractMessagePopulatorFactory.PropertyConverter messagePopulatorFactoryPropertyConverter;
+        private AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter;
 
         @Bean
         public MessagePopulatorFactory<DiscardingPopulator> discardingPopulatorFactory() {
-            return ReflectionMessagePopulatorFactory.builder(DiscardingPopulator.class, messagePopulatorFactoryPropertyConverter).build();
+            return ReflectionMessagePopulatorFactory.builder(DiscardingPopulator.class, messagePopulatorConfigValueConverter).build();
         }
     }
 }

@@ -22,11 +22,11 @@ class ReflectionMessagePopulatorFactoryTest {
         tester.testStaticMethods(classUnderTest, minimalVisibility);
         tester.testConstructors(classUnderTest, minimalVisibility);
         final ReflectionMessagePopulatorFactory<TestMessagePopulator> instance = ReflectionMessagePopulatorFactory.builder(TestMessagePopulator.class,
-                new TestPropertyConverter()).build();
+                new TestConfigValueConverter()).build();
         tester.testInstanceMethods(instance, minimalVisibility);
     }
 
-    private static class TestPropertyConverter implements AbstractMessagePopulatorFactory.PropertyConverter {
+    private static class TestConfigValueConverter implements AbstractMessagePopulatorFactory.ConfigValueConverter {
         @Nullable
         @Override
         public Object convert(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {

@@ -26,8 +26,7 @@ public class MessagePopulatorExecutionChainHolder {
     @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
     public static class PopulatorInstanceSpec {
         private String name = "";
-        private Map<String, Object> arguments = Collections.emptyMap();
-        private Map<String, Object> options = Collections.emptyMap();
+        private Map<String, Object> config = Collections.emptyMap();
 
         public String getName() {
             return name;
@@ -37,25 +36,17 @@ public class MessagePopulatorExecutionChainHolder {
             this.name = requireNonNull(name, "name");
         }
 
-        public Map<String, Object> getArguments() {
-            return arguments;
+        public Map<String, Object> getConfig() {
+            return config;
         }
 
-        public void setArguments(final Map<String, Object> arguments) {
-            this.arguments = requireNonNull(arguments, "arguments");
-        }
-
-        public Map<String, Object> getOptions() {
-            return options;
-        }
-
-        public void setOptions(final Map<String, Object> options) {
-            this.options = requireNonNull(options, "config");
+        public void setConfig(final Map<String, Object> config) {
+            this.config = requireNonNull(config, "config");
         }
 
         @Override
         public String toString() {
-            return "PopulatorInstanceSpec{" + "name='" + name + '\'' + ", arguments=" + arguments + ", options=" + options + '}';
+            return "PopulatorInstanceSpec{" + "name='" + name + '\'' + ", config=" + config + '}';
         }
     }
 }
