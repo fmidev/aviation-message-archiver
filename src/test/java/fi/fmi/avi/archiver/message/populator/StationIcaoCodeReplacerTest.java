@@ -35,4 +35,13 @@ public class StationIcaoCodeReplacerTest {
         assertThat(aviationMessage.getStationIcaoCode()).isEqualTo("YADO");
     }
 
+    @Test
+    public void backreference_capture_group() {
+        stationIcaoCodeReplacer = new StationIcaoCodeReplacer(Pattern.compile("^YU(..)$"), "XX$1");
+        final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
+                .setStationIcaoCode("XXDO");
+        stationIcaoCodeReplacer.populate(inputAviationMessage, aviationMessage);
+        assertThat(aviationMessage.getStationIcaoCode()).isEqualTo("XXDO");
+    }
+
 }

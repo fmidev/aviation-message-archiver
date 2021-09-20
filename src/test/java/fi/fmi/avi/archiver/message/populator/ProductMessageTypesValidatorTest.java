@@ -13,15 +13,14 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 import java.util.Set;
 
-import static fi.fmi.avi.model.MessageType.METAR;
-import static fi.fmi.avi.model.MessageType.SPECI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ProductMessageTypesValidatorTest {
 
     private static final String TEST_PRODUCT_IDENTIFIER = "test_product";
     private static final String ANOTHER_PRODUCT_IDENTIFIER = "another_product";
-    private static final Set<MessageType> TYPE_IDENTIFIERS = ImmutableSet.of(SPECI, METAR);
+    private static final Set<MessageType> TYPE_IDENTIFIERS = ImmutableSet.of(MessagePopulatorTests.TypeId.SPECI.getType(),
+            MessagePopulatorTests.TypeId.METAR.getType());
     private static final FileMetadata TEST_METADATA = FileMetadata.builder()
             .setProductIdentifier(TEST_PRODUCT_IDENTIFIER)
             .buildPartial();
@@ -37,35 +36,35 @@ public class ProductMessageTypesValidatorTest {
     }
 
     @Test
-    public void valid() {
-        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(1);
+    public void valid_speci() {
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.SPECI.getId());
         productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(TEST_METADATA).buildPartial(), builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
-    public void valid_2() {
-        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(2);
+    public void valid_metar() {
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.METAR.getId());
         productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(TEST_METADATA).buildPartial(), builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
-    public void another_product_identifier() {
-        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(3);
+    public void another_product_identifier_with_taf() {
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.TAF.getId());
         productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(ANOTHER_METADATA).buildPartial(), builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
-    public void invalid() {
-        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(3);
+    public void invalid_taf() {
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.TAF.getId());
         productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(TEST_METADATA).buildPartial(), builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.FORBIDDEN_MESSAGE_TYPE);
     }
 
     @Test
-    public void invalid_2() {
+    public void invalid_type() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(-1);
         productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(TEST_METADATA).buildPartial(), builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.FORBIDDEN_MESSAGE_TYPE);
@@ -75,14 +74,15 @@ public class ProductMessageTypesValidatorTest {
     public void testNulls() {
         final Class<?> classUnderTest = ProductMessageTypesValidator.class;
         final NullPointerTester tester = new NullPointerTester();
+        final NullPointerTester.Visibility minimalVisibility = NullPointerTester.Visibility.PACKAGE;
         tester.setDefault(ArchiveAviationMessage.Builder.class, ArchiveAviationMessage.builder());
         tester.setDefault(String.class, "test");
         tester.setDefault(Map.class, MessagePopulatorTests.TYPE_IDS);
         tester.setDefault(InputAviationMessage.class, InputAviationMessage.builder().buildPartial());
 
-        tester.testAllPublicStaticMethods(classUnderTest);
-        tester.testAllPublicConstructors(classUnderTest);
-        tester.testAllPublicInstanceMethods(productMessageTypesValidator);
+        tester.testStaticMethods(classUnderTest, minimalVisibility);
+        tester.testConstructors(classUnderTest, minimalVisibility);
+        tester.testInstanceMethods(productMessageTypesValidator, minimalVisibility);
     }
 
 }

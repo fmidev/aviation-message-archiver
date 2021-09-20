@@ -12,6 +12,11 @@ import java.time.Instant;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * Validates that the message time is not too far in the past.
+ * <p>
+ * The calculated validity period start is inclusive.
+ */
 public class MessageMaximumAgeValidator implements MessagePopulator {
 
     private final Clock clock;

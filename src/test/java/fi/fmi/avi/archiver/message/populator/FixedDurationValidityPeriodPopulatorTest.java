@@ -26,30 +26,36 @@ public class FixedDurationValidityPeriodPopulatorTest {
 
     @Test
     public void swx_validity_end() {
+        final Instant messageTime = Instant.parse("2019-05-10T00:00:00Z");
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
-                .setMessageTime(Instant.parse("2019-05-10T00:00:00Z"))
-                .setType(MessagePopulatorTests.TYPE_IDS.get(MessageType.SPACE_WEATHER_ADVISORY));
+                .setMessageTime(messageTime)
+                .setType(MessagePopulatorTests.TypeId.SWX.getId());
         fixedDurationValidityPeriodPopulator.populate(inputAviationMessage, aviationMessage);
+        assertThat(aviationMessage.getValidFrom()).contains(messageTime);
         assertThat(aviationMessage.getValidTo()).contains(Instant.parse("2019-05-11T06:00:00Z"));
     }
 
     @Test
     public void taf_validity_end() {
+        final Instant validFrom = Instant.parse("2019-05-10T00:00:00Z");
+        final Instant validTo = Instant.parse("2019-05-11T00:00:00Z");
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
                 .setMessageTime(Instant.parse("2019-05-09T23:35:00Z"))
-                .setValidFrom(Instant.parse("2019-05-10T00:00:00Z"))
-                .setValidTo(Instant.parse("2019-05-11T00:00:00Z"))
-                .setType(MessagePopulatorTests.TYPE_IDS.get(MessageType.TAF));
+                .setValidFrom(validFrom)
+                .setValidTo(validTo)
+                .setType(MessagePopulatorTests.TypeId.TAF.getId());
         fixedDurationValidityPeriodPopulator.populate(inputAviationMessage, aviationMessage);
-        assertThat(aviationMessage.getValidTo()).contains(Instant.parse("2019-05-11T00:00:00Z"));
+        assertThat(aviationMessage.getValidFrom()).contains(validFrom);
+        assertThat(aviationMessage.getValidTo()).contains(validTo);
     }
 
     @Test
     public void metar_validity_end() {
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
                 .setMessageTime(Instant.parse("2019-05-10T00:00:00Z"))
-                .setType(MessagePopulatorTests.TYPE_IDS.get(MessageType.METAR));
+                .setType(MessagePopulatorTests.TypeId.METAR.getId());
         fixedDurationValidityPeriodPopulator.populate(inputAviationMessage, aviationMessage);
+        assertThat(aviationMessage.getValidFrom()).isNotPresent();
         assertThat(aviationMessage.getValidTo()).isNotPresent();
     }
 
@@ -57,10 +63,12 @@ public class FixedDurationValidityPeriodPopulatorTest {
     public void testNulls() {
         final Class<?> classUnderTest = FixedDurationValidityPeriodPopulator.class;
         final NullPointerTester tester = new NullPointerTester();
+        final NullPointerTester.Visibility minimalVisibility = NullPointerTester.Visibility.PACKAGE;
         tester.setDefault(Map.class, MessagePopulatorTests.TYPE_IDS);
-        tester.testAllPublicStaticMethods(classUnderTest);
-        tester.testAllPublicConstructors(classUnderTest);
-        tester.testAllPublicInstanceMethods(fixedDurationValidityPeriodPopulator);
+
+        tester.testStaticMethods(classUnderTest, minimalVisibility);
+        tester.testConstructors(classUnderTest, minimalVisibility);
+        tester.testInstanceMethods(fixedDurationValidityPeriodPopulator, minimalVisibility);
     }
 
 }

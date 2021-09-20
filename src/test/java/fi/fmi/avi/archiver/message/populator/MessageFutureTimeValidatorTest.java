@@ -10,6 +10,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -50,15 +51,24 @@ public class MessageFutureTimeValidatorTest {
     }
 
     @Test
-    public void twelve_hours_in_the_future() {
-        final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(Instant.parse("2019-05-10T12:00:00Z"));
+    public void twelve_hours_minus_nanosecond_in_the_future() {
+        final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(Instant.parse("2019-05-10T12:00:00Z")
+                .minusNanos(1));
         messageFutureTimeValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
-    public void twelve_hours_and_one_second_in_the_future() {
-        final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(Instant.parse("2019-05-10T12:00:01Z"));
+    public void twelve_hours_in_the_future() {
+        final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(Instant.parse("2019-05-10T12:00:00Z"));
+        messageFutureTimeValidator.populate(inputAviationMessage, builder);
+        assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.MESSAGE_TIME_IN_FUTURE);
+    }
+
+    @Test
+    public void twelve_hours_and_one_nanosecond_in_the_future() {
+        final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(clock.instant()
+                .plus(12, ChronoUnit.HOURS).plusNanos(1));
         messageFutureTimeValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.MESSAGE_TIME_IN_FUTURE);
     }
