@@ -60,6 +60,25 @@ public class FixedDurationValidityPeriodPopulatorTest {
     }
 
     @Test
+    public void missing_message_type() {
+        final Instant messageTime = Instant.parse("2019-05-10T00:00:00Z");
+        final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
+                .setMessageTime(messageTime);
+        fixedDurationValidityPeriodPopulator.populate(inputAviationMessage, aviationMessage);
+        assertThat(aviationMessage.getValidFrom()).isNotPresent();
+        assertThat(aviationMessage.getValidTo()).isNotPresent();
+    }
+
+    @Test
+    public void missing_message_time() {
+        final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
+                .setType(MessagePopulatorTests.TypeId.SWX.getId());
+        fixedDurationValidityPeriodPopulator.populate(inputAviationMessage, aviationMessage);
+        assertThat(aviationMessage.getValidFrom()).isNotPresent();
+        assertThat(aviationMessage.getValidTo()).isNotPresent();
+    }
+
+    @Test
     public void testNulls() {
         final Class<?> classUnderTest = FixedDurationValidityPeriodPopulator.class;
         final NullPointerTester tester = new NullPointerTester();

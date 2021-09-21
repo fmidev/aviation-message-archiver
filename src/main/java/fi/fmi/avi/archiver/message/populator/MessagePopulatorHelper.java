@@ -38,13 +38,30 @@ public class MessagePopulatorHelper {
      * @param reader function to read a property from the provided {@code builder}
      * @param <F>    builder type
      * @param <T>    return value type
-     * @return value returned by {@code reader} of {@link Optional#empty()} if value could not be read
+     * @return value returned by {@code reader} or {@link Optional#empty()} if value could not be read
      */
     public static <F, T> Optional<T> tryGet(final F input, final Function<F, T> reader) {
         try {
             return Optional.ofNullable(reader.apply(input));
         } catch (final IllegalStateException ignored) {
             return Optional.empty();
+        }
+    }
+
+    /**
+     * Attempt to read a mandatory integer value from a FreeBuilder builder class that may not yet have been set.
+     * This method catches the {@link IllegalStateException} possibly thrown by the property getter and returns an empty OptionalInt.
+     *
+     * @param input  input builder
+     * @param reader function to read an integer property from the provided {@code builder}
+     * @param <F>    builder type
+     * @return value returned by {@code reader} or {@link OptionalInt#empty()} if value could not be read
+     */
+    public static <F> OptionalInt tryGetInt(final F input, final Function<F, Integer> reader) {
+        try {
+            return OptionalInt.of(reader.apply(input));
+        } catch (final IllegalStateException ignored) {
+            return OptionalInt.empty();
         }
     }
 

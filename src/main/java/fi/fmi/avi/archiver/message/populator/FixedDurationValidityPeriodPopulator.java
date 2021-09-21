@@ -6,7 +6,10 @@ import fi.fmi.avi.model.MessageType;
 
 import javax.annotation.Nullable;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalInt;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
@@ -32,13 +35,15 @@ public class FixedDurationValidityPeriodPopulator implements MessagePopulator {
     @Override
     public void populate(@Nullable final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder builder) {
         requireNonNull(builder, "builder");
-        MessagePopulatorHelper.tryGet(builder, ArchiveAviationMessage.Builder::getMessageTime)//
-                .ifPresent(messageTime -> {
-                    if (builder.getType() == messageTypeId) {
-                        builder.setValidFrom(messageTime);
-                        builder.setValidTo(messageTime.plus(validityEndOffset));
-                    }
-                });
+        final OptionalInt messageType = MessagePopulatorHelper.tryGetInt(builder, ArchiveAviationMessage.Builder::getType);
+        final Optional<Instant> messageTime = MessagePopulatorHelper.tryGet(builder, ArchiveAviationMessage.Builder::getMessageTime);
+        if (messageType.isPresent() && messageTime.isPresent()) {
+            if (messageType.getAsInt() == messageTypeId) {
+                final Instant time = messageTime.get();
+                builder.setValidFrom(time);
+                builder.setValidTo(time.plus(validityEndOffset));
+            }
+        }
     }
 
 }
