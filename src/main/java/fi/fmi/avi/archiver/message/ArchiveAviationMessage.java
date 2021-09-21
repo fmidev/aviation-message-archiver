@@ -1,10 +1,10 @@
 package fi.fmi.avi.archiver.message;
 
+import org.inferred.freebuilder.FreeBuilder;
+
 import java.time.Instant;
 import java.util.Optional;
 import java.util.OptionalInt;
-
-import org.inferred.freebuilder.FreeBuilder;
 
 /**
  * Model representing an aviation message in the database.
@@ -29,7 +29,7 @@ public abstract class ArchiveAviationMessage {
 
     public abstract Instant getMessageTime();
 
-    public abstract String getIcaoAirportCode();
+    public abstract String getStationIcaoCode();
 
     public abstract OptionalInt getStationId();
 

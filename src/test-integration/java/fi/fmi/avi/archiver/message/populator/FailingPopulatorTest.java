@@ -90,7 +90,7 @@ public class FailingPopulatorTest {
         assertThat(failures.get(0).getMessage().getLocationIndicators().get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME)).isEqualTo("EFYY");
 
         verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture());
-        assertThat(databaseMessageCaptor.getValue().getIcaoAirportCode()).isEqualTo("EFXX");
+        assertThat(databaseMessageCaptor.getValue().getStationIcaoCode()).isEqualTo("EFXX");
         verify(databaseAccess, times(0)).insertRejectedAviationMessage(any());
     }
 

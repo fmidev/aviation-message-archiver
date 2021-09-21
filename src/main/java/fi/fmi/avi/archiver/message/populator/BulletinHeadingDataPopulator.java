@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -40,7 +39,7 @@ import fi.fmi.avi.model.bulletin.DataTypeDesignatorT1;
  * </p>
  * <ul>
  *     <li>{@link BulletinHeading#getIssueTime()} as {@link ArchiveAviationMessage#getMessageTime()}</li>
- *     <li>{@link BulletinHeading#getLocationIndicator()} as {@link ArchiveAviationMessage#getIcaoAirportCode()}</li>
+ *     <li>{@link BulletinHeading#getLocationIndicator()} as {@link ArchiveAviationMessage#getStationIcaoCode()}</li>
  *     <li>{@link ArchiveAviationMessage#getHeading()}</li>
  *     <li>{@link ArchiveAviationMessageIWXXMDetails#getCollectIdentifier()}</li>
  *     <li>{@link ArchiveAviationMessage#getVersion()}</li>
@@ -82,7 +81,7 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
                 .ifPresent(builder::setMessageTime);
         getFirstNonNullFromBulletinHeading(input, inputHeading -> inputHeading.getBulletinHeading()//
                 .map(BulletinHeading::getLocationIndicator))//
-                .ifPresent(builder::setIcaoAirportCode);
+                .ifPresent(builder::setStationIcaoCode);
         input.getGtsBulletinHeading()//
                 .getBulletinHeadingString()//
                 .ifPresent(builder::setHeading);
@@ -98,29 +97,10 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
     }
 
     private <T> Optional<T> getFirstNonNullFromBulletinHeading(final InputAviationMessage input, final Function<InputBulletinHeading, Optional<T>> fn) {
-        return bulletinHeadingSources.stream()//
-                .map(source -> fn.apply(source.get(input)).orElse(null))//
-                .filter(Objects::nonNull)//
-                .findFirst();
+        return MessagePopulatorHelper.getFirstNonNullFromBulletinHeading(bulletinHeadingSources, input, fn);
     }
 
     public void setBulletinHeadingSources(final List<BulletinHeadingSource> bulletinHeadingSources) {
         this.bulletinHeadingSources = requireNonNull(bulletinHeadingSources, "bulletinHeadingSources");
-    }
-
-    public enum BulletinHeadingSource {
-        GTS_BULLETIN_HEADING {
-            @Override
-            InputBulletinHeading get(final InputAviationMessage inputAviationMessage) {
-                return inputAviationMessage.getGtsBulletinHeading();
-            }
-        }, COLLECT_IDENTIFIER {
-            @Override
-            InputBulletinHeading get(final InputAviationMessage inputAviationMessage) {
-                return inputAviationMessage.getCollectIdentifier();
-            }
-        };
-
-        abstract InputBulletinHeading get(final InputAviationMessage inputAviationMessage);
     }
 }

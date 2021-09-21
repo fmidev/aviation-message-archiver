@@ -1,6 +1,8 @@
 package fi.fmi.avi.archiver.message.populator;
 
 import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.util.TimeUtil;
 import fi.fmi.avi.model.PartialDateTime;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
@@ -10,10 +12,7 @@ import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -22,6 +21,9 @@ import static java.util.Objects.requireNonNull;
  * A helper class primarily used by {@link MessagePopulator} implementations.
  */
 public class MessagePopulatorHelper {
+    public static final List<BulletinHeadingSource> DEFAULT_BULLETIN_HEADING_SOURCES = Collections.unmodifiableList(
+            Arrays.asList(BulletinHeadingSource.values()));
+
     private final Clock clock;
 
     public MessagePopulatorHelper(final Clock clock) {
@@ -36,7 +38,7 @@ public class MessagePopulatorHelper {
      * @param reader function to read a property from the provided {@code builder}
      * @param <F>    builder type
      * @param <T>    return value type
-     * @return value returned by {@code reader} of {@link Optional#empty()} if value could not be read
+     * @return value returned by {@code reader} or {@link Optional#empty()} if value could not be read
      */
     public static <F, T> Optional<T> tryGet(final F input, final Function<F, T> reader) {
         try {
@@ -44,6 +46,43 @@ public class MessagePopulatorHelper {
         } catch (final IllegalStateException ignored) {
             return Optional.empty();
         }
+    }
+
+    /**
+     * Attempt to read a mandatory integer value from a FreeBuilder builder class that may not yet have been set.
+     * This method catches the {@link IllegalStateException} possibly thrown by the property getter and returns an empty OptionalInt.
+     *
+     * @param input  input builder
+     * @param reader function to read an integer property from the provided {@code builder}
+     * @param <F>    builder type
+     * @return value returned by {@code reader} or {@link OptionalInt#empty()} if value could not be read
+     */
+    public static <F> OptionalInt tryGetInt(final F input, final Function<F, Integer> reader) {
+        try {
+            return OptionalInt.of(reader.apply(input));
+        } catch (final IllegalStateException ignored) {
+            return OptionalInt.empty();
+        }
+    }
+
+    /**
+     * Get the first non-null value from the input aviation message's bulletin heading using the given bulletin heading sources.
+     *
+     * @param bulletinHeadingSources bulletin heading sources
+     * @param input                  input aviation message
+     * @param fn                     function to get an optional value from the input heading
+     * @param <T>                    return value type
+     * @return non-null value if present
+     */
+    public static <T> Optional<T> getFirstNonNullFromBulletinHeading(final Collection<BulletinHeadingSource> bulletinHeadingSources,
+                                                                     final InputAviationMessage input, final Function<InputBulletinHeading, Optional<T>> fn) {
+        requireNonNull(bulletinHeadingSources, "bulletinHeadingSources");
+        requireNonNull(input, "input");
+        requireNonNull(fn, "fn");
+        return bulletinHeadingSources.stream()
+                .map(source -> fn.apply(source.get(input)).orElse(null))
+                .filter(Objects::nonNull)
+                .findFirst();
     }
 
     /**

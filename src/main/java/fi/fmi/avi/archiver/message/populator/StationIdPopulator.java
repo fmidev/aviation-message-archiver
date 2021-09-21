@@ -23,12 +23,12 @@ public class StationIdPopulator implements MessagePopulator {
         requireNonNull(inputAviationMessage, "inputAviationMessage");
         requireNonNull(aviationMessageBuilder, "aviationMessageBuilder");
 
-        final Optional<Integer> stationId = databaseAccess.queryStationId(aviationMessageBuilder.getIcaoAirportCode());
+        final Optional<Integer> stationId = databaseAccess.queryStationId(aviationMessageBuilder.getStationIcaoCode());
         if (stationId.isPresent()) {
             aviationMessageBuilder.setStationId(stationId.get());
         } else {
             aviationMessageBuilder.setStationId(OptionalInt.empty());
-            aviationMessageBuilder.setProcessingResult(ProcessingResult.UNKNOWN_ICAO_CODE);
+            aviationMessageBuilder.setProcessingResult(ProcessingResult.UNKNOWN_STATION_ICAO_CODE);
         }
     }
 
