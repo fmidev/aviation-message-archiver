@@ -7,7 +7,6 @@ import fi.fmi.avi.archiver.message.ProcessingResult;
 import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
@@ -20,24 +19,25 @@ import static java.util.Objects.requireNonNull;
 public class MessageFutureTimeValidator implements MessagePopulator {
 
     private final Clock clock;
-    private final Duration maximumFutureTime;
+    private final Duration acceptInFuture;
 
-    public MessageFutureTimeValidator(final Clock clock, final Duration maximumFutureTime) {
+    public MessageFutureTimeValidator(final Clock clock, final Duration acceptInFuture) {
         this.clock = requireNonNull(clock, "clock");
-        requireNonNull(maximumFutureTime, "maximumFutureTime");
-        checkArgument(!maximumFutureTime.isNegative() && !maximumFutureTime.isZero(),
-                "maximumFutureTime must have a positive duration");
-        this.maximumFutureTime = maximumFutureTime;
+        requireNonNull(acceptInFuture, "acceptInFuture");
+        checkArgument(!acceptInFuture.isNegative() && !acceptInFuture.isZero(),
+                "acceptInFuture must have a positive duration");
+        this.acceptInFuture = acceptInFuture;
     }
 
     @Override
     public void populate(@Nullable final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder builder) {
         requireNonNull(builder, "builder");
-        final Instant now = clock.instant();
-        final Instant future = now.plus(maximumFutureTime);
-        if (builder.getMessageTime().equals(future) || builder.getMessageTime().isAfter(future)) {
-            builder.setProcessingResult(ProcessingResult.MESSAGE_TIME_IN_FUTURE);
-        }
+        MessagePopulatorHelper.tryGet(builder, ArchiveAviationMessage.Builder::getMessageTime)//
+                .ifPresent(messageTime -> {
+                    if (Duration.between(clock.instant(), messageTime).compareTo(acceptInFuture) >= 0) {
+                        builder.setProcessingResult(ProcessingResult.MESSAGE_TIME_IN_FUTURE);
+                    }
+                });
     }
 
 }

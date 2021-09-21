@@ -7,7 +7,6 @@ import fi.fmi.avi.archiver.message.ProcessingResult;
 import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
@@ -33,10 +32,13 @@ public class MessageMaximumAgeValidator implements MessagePopulator {
     @Override
     public void populate(@Nullable final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder builder) {
         requireNonNull(builder, "builder");
-        final Instant now = clock.instant();
-        if (builder.getMessageTime().isBefore(now.minus(maximumAge))) {
-            builder.setProcessingResult(ProcessingResult.MESSAGE_TOO_OLD);
-        }
+        MessagePopulatorHelper.tryGet(builder, ArchiveAviationMessage.Builder::getMessageTime)//
+                .ifPresent(messageTime -> {
+                    if (Duration.between(messageTime, clock.instant()).compareTo(maximumAge) > 0) {
+                        builder.setProcessingResult(ProcessingResult.MESSAGE_TOO_OLD);
+                    }
+                });
     }
+
 
 }
