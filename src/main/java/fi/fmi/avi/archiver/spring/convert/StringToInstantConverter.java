@@ -4,7 +4,7 @@ import java.time.Instant;
 
 import javax.annotation.Nullable;
 
-public class StringToInstantConverter implements NonEmptyStringConverter<Instant> {
+public class StringToInstantConverter extends AbstractNonEmptyStringConverter<Instant> {
     @Nullable
     @Override
     public Instant convertNonEmpty(final String source) {

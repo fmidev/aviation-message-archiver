@@ -12,6 +12,9 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 
+/**
+ * A {@code ConfigValueConverter} implementation delegating conversion to Spring {@link ConversionService}.
+ */
 public class SpringConversionServiceConfigValueConverter implements AbstractMessagePopulatorFactory.ConfigValueConverter {
     private final ConversionService conversionService;
 

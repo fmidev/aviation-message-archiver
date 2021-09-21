@@ -16,6 +16,23 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+/**
+ * A {@code MessagePopulatorFactory} constructing and populating any config properties using Java reflection API.
+ *
+ * <p>
+ * A new factory instance is built with a {@link Builder}, storing constant constructor parameter values, called <em>dependency args</em>, and names and
+ * types of configuration options, called <em>config args</em>, in the order of declared constructor parameters. The {@code MessagePopulator} to construct
+ * must be accessible (public in most cases) and must have a <em>public</em> constructor matching configured constructor parameters.
+ * </p>
+ *
+ * <p>
+ * The factory instance name is by default the name provided by {@link MessagePopulatorFactory#getName()}, but may be set to custom value in the
+ * {@link Builder#setName(String) builder}.
+ * </p>
+ *
+ * @param <T>
+ *         target {@code MessagePopulator} type this factory constructs
+ */
 public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> extends AbstractMessagePopulatorFactory<T> {
     private final Class<T> type;
     private final ConfigValueConverter configValueConverter;
@@ -36,6 +53,18 @@ public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> exten
 
     }
 
+    /**
+     * Create a new {@code Builder} for a factory creating instances of provided {@code type}.
+     *
+     * @param type
+     *         type of {@code MessagePopulator} this factory will construct
+     * @param configValueConverter
+     *         configuration value converter
+     * @param <T>
+     *         type of {@code MessagePopulator} this factory will construct
+     *
+     * @return new builder instance
+     */
     public static <T extends MessagePopulator> Builder<T> builder(final Class<T> type, final ConfigValueConverter configValueConverter) {
         return new Builder<>(type, configValueConverter);
     }
@@ -64,8 +93,9 @@ public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> exten
     @Override
     protected T createInstance(final Map<String, ?> instantiationConfig) {
         requireNonNull(instantiationConfig, "instantiationConfig");
+        final Object[] constructorArgs = constructorArgs(instantiationConfig);
         try {
-            return constructor.newInstance(constructorArgs(instantiationConfig));
+            return constructor.newInstance(constructorArgs);
         } catch (final InstantiationException | IllegalAccessException e) {
             throw new IllegalStateException(String.format(Locale.ROOT, "Unable to construct MessagePopulator '%s' (%s)", getName(), type), e);
         } catch (final InvocationTargetException e) {
@@ -75,13 +105,19 @@ public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> exten
 
     private Object[] constructorArgs(final Map<String, ?> config) {
         final Object[] args = constructorArgsTemplate.clone();
-        configConstructorArgIndicesByName.forEach((name, index) -> {
-            final Object configValue = config.get(name);
-            if (configValue == null && !config.containsKey(name)) {
+        configConstructorArgIndicesByName.forEach((configOptionName, constructorArgIndex) -> {
+            final Object configValue = config.get(configOptionName);
+            if (configValue == null && !config.containsKey(configOptionName)) {
                 throw new IllegalArgumentException(
-                        String.format(Locale.ROOT, "Missing required config option [%s] for MessagePopulator '%s' (%s)", name, getName(), type));
+                        String.format(Locale.ROOT, "Missing required config option [%s] for MessagePopulator '%s' (%s)", configOptionName, getName(), type));
             }
-            args[index] = configValueConverter.convert(configValue, constructor, index);
+            try {
+                args[constructorArgIndex] = configValueConverter.convert(configValue, constructor, constructorArgIndex);
+            } catch (final RuntimeException e) {
+                throw new IllegalArgumentException(
+                        String.format(Locale.ROOT, "Unable to convert config option [%s] value for MessagePopulator '%s' (%s)", configOptionName, getName(),
+                                type), e);
+            }
         });
         return args;
     }
@@ -110,6 +146,8 @@ public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> exten
         }
 
         public ReflectionMessagePopulatorFactory<T> build() {
+            assert constructorArgsTemplate.size() == constructorParameterTypes.size() //
+                    : "constructorArgsTemplate mismatches constructorParameterTypes in size";
             constructor = resolveConstructor();
             return new ReflectionMessagePopulatorFactory<>(this);
         }
@@ -146,24 +184,11 @@ public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> exten
         }
 
         public Builder<T> clear() {
-            return clearConstructorParameters()//
+            return clearAllArgs()//
                     .clearName();
         }
 
-        public Builder<T> clearName() {
-            return setNullableName(null);
-        }
-
-        public Builder<T> setName(final String name) {
-            return setNullableName(requireNonNull(name, "name"));
-        }
-
-        public Builder<T> setNullableName(@Nullable final String name) {
-            this.name = name;
-            return this;
-        }
-
-        public Builder<T> clearConstructorParameters() {
+        public Builder<T> clearAllArgs() {
             clearConstructor();
             constructorArgsTemplate.clear();
             constructorParameterTypes.clear();
@@ -204,11 +229,28 @@ public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> exten
         public Builder<T> addConfigArg(final String name, final Class<?> type) {
             requireNonNull(name, "name");
             requireNonNull(type, "type");
+            if (configConstructorArgIndicesByName.containsKey(name)) {
+                throw new IllegalArgumentException(String.format(Locale.ROOT, "Duplicate config arg name [%s]", name));
+            }
+
             clearConstructor();
             final int argumentIndex = constructorArgsTemplate.size();
             configConstructorArgIndicesByName.put(name, argumentIndex);
             constructorArgsTemplate.add(name); // placeholder for config option value
             constructorParameterTypes.add(type);
+            return this;
+        }
+
+        public Builder<T> clearName() {
+            return setNullableName(null);
+        }
+
+        public Builder<T> setName(final String name) {
+            return setNullableName(requireNonNull(name, "name"));
+        }
+
+        public Builder<T> setNullableName(@Nullable final String name) {
+            this.name = name;
             return this;
         }
     }

@@ -15,20 +15,64 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+/**
+ * A skeletal {@code MessagePopulatorFactory} implementation.
+ * It separates config entries to instantiation config (constructor parameters) and property config (bean setter parameters). After a new instance is
+ * created, it sets all property config values by invoking corresponding setters via reflection, converting config values to appropriate types.
+ *
+ * @param <T>
+ *         {@code MessagePopulator} type this factory produces
+ */
 public abstract class AbstractMessagePopulatorFactory<T extends MessagePopulator> implements MessagePopulatorFactory<T> {
     private static String classString(final Object object) {
         return object == null ? "null" : object.getClass().toString();
     }
 
+    /**
+     * Provides a converter implementation for automatic conversion of property values.
+     *
+     * @return converter
+     */
     protected abstract ConfigValueConverter getConfigValueConverter();
 
+    /**
+     * Creates a new MessagePopulator instance.
+     *
+     * @param instantiationConfig
+     *         instantiation config values flagged by {@link #isInstantiationConfigOption(String)}.
+     *
+     * @return a new MessagePopulator instance
+     */
     protected abstract T createInstance(final Map<String, ?> instantiationConfig);
 
+    /**
+     * Returns {@code true} if provided configuration option is required for instantiation. Otherwise, returns {@code false}, denoting that provided
+     * configuration option value is injected using a setter.
+     *
+     * <p>
+     * This default implementation returns always {@code false}. Subclasses may override this method and provide own rules to distinguish instantiation
+     * configuration options from property options.
+     * </p>
+     *
+     * @param configOptionName
+     *         name of configuration option
+     *
+     * @return {@code true} if provided configuration option is required for instantiation, {@code false} otherwise
+     */
     protected boolean isInstantiationConfigOption(final String configOptionName) {
         requireNonNull(configOptionName, "configOptionName");
         return false;
     }
 
+    /**
+     * Create a new {@code MessagePopulator} instance, applying provided configuration.
+     * Typically there is no need ot override this method.
+     *
+     * @param config
+     *         configuration
+     *
+     * @return new configured instance
+     */
     @Override
     public T newInstance(final Map<String, Object> config) {
         requireNonNull(config, "config");
@@ -99,6 +143,19 @@ public abstract class AbstractMessagePopulatorFactory<T extends MessagePopulator
 
     @FunctionalInterface
     public interface ConfigValueConverter {
+        /**
+         * Convert provided {@code propertyConfigValue} to type of {@code targetExecutable} parameter at index {@code parameterIndex}.
+         * May throw any type of {@code RuntimeException} if conversion fails.
+         *
+         * @param propertyConfigValue
+         *         value to convert
+         * @param targetExecutable
+         *         an {@code Executable} holding target type as its parameter
+         * @param parameterIndex
+         *         index of {@code Executable} parameter for target type
+         *
+         * @return converted value
+         */
         @Nullable
         Object convert(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex);
     }
