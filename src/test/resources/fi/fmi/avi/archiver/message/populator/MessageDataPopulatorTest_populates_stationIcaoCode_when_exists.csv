@@ -1,4 +1,4 @@
-populatorConfig,messageType,locationIndicators,expectedIcaoAirportCode
+populatorConfig,messageType,locationIndicators,expectedStationIcaoCode
 # Empty indicators cause no action,,,
 DEFAULT,CUSTOM,,
 # Single indicator is used when exists in preference list,,,

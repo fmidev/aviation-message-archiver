@@ -72,7 +72,7 @@ class MessagePopulatorExecutionChainHolderTest {
                 .setFormat(2)//
                 .setType(4)//
                 .setMessageTime(Instant.parse("2001-02-03T04:05:06.019Z"))//
-                .setIcaoAirportCode("EFXX")//
+                .setStationIcaoCode("EFXX")//
                 .setStationId(1)//
                 .setMessage("testMessage")//
                 .setValidFrom(Instant.parse("2001-02-04T05:06:07.029Z"))//
@@ -152,7 +152,7 @@ class MessagePopulatorExecutionChainHolderTest {
             requireNonNull(input, "input");
             requireNonNull(builder, "builder");
             if (!station.isEmpty()) {
-                builder.setIcaoAirportCode(station);
+                builder.setStationIcaoCode(station);
             }
             if (!message.isEmpty()) {
                 builder.setMessage(message);

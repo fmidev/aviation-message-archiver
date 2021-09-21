@@ -1,8 +1,10 @@
 package fi.fmi.avi.archiver.database;
 
-import com.google.common.annotations.VisibleForTesting;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
+import static java.util.Objects.requireNonNull;
+
+import java.time.Clock;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -11,10 +13,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.retry.support.RetryTemplate;
 
-import java.time.Clock;
-import java.util.Optional;
+import com.google.common.annotations.VisibleForTesting;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
 
 public class DatabaseAccess {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseAccess.class);
@@ -46,7 +48,9 @@ public class DatabaseAccess {
     /**
      * Insert aviation message into the main message table. Returns the generated id.
      *
-     * @param archiveAviationMessage aviation message to archive
+     * @param archiveAviationMessage
+     *         aviation message to archive
+     *
      * @return the generated id
      */
     public Number insertAviationMessage(final ArchiveAviationMessage archiveAviationMessage) {
@@ -80,7 +84,9 @@ public class DatabaseAccess {
     /**
      * Insert aviation message into the rejected messages table. Returns the affected row count.
      *
-     * @param archiveAviationMessage aviation message to archive in the rejected messages table
+     * @param archiveAviationMessage
+     *         aviation message to archive in the rejected messages table
+     *
      * @return affected row count
      */
     public int insertRejectedAviationMessage(final ArchiveAviationMessage archiveAviationMessage) {
@@ -119,18 +125,17 @@ public class DatabaseAccess {
         }
     }
 
-    public Optional<Integer> queryStationId(final String icaoAirportCode) {
-        requireNonNull(icaoAirportCode, "icaoAirportCode");
+    public Optional<Integer> queryStationId(final String stationIcaoCode) {
+        requireNonNull(stationIcaoCode, "stationIcaoCode");
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
-        parameters.addValue("icao_code", icaoAirportCode);
+        parameters.addValue("icao_code", stationIcaoCode);
         try {
-            final Integer stationId = retryTemplate.execute(context ->
-                    jdbcTemplate.queryForObject(STATION_ID_QUERY, parameters, Integer.class));
+            final Integer stationId = retryTemplate.execute(context -> jdbcTemplate.queryForObject(STATION_ID_QUERY, parameters, Integer.class));
             return Optional.ofNullable(stationId);
         } catch (final EmptyResultDataAccessException ignored) {
             // No station was found
         } catch (final RuntimeException e) {
-            LOGGER.error("Querying station id with icao airport code {} failed", icaoAirportCode, e);
+            LOGGER.error("Querying station id with icao airport code {} failed", stationIcaoCode, e);
         }
         return Optional.empty();
     }
