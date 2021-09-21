@@ -32,11 +32,11 @@ public class FixedDurationValidityPeriodPopulator implements MessagePopulator {
     @Override
     public void populate(@Nullable final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder builder) {
         requireNonNull(builder, "builder");
-        MessagePopulatorHelper.tryGet(builder, ArchiveAviationMessage.Builder::getType)//
-                .ifPresent(messageType -> {
-                    if (messageType == messageTypeId) {
-                        builder.setValidFrom(builder.getMessageTime());
-                        builder.setValidTo(builder.getMessageTime().plus(validityEndOffset));
+        MessagePopulatorHelper.tryGet(builder, ArchiveAviationMessage.Builder::getMessageTime)//
+                .ifPresent(messageTime -> {
+                    if (builder.getType() == messageTypeId) {
+                        builder.setValidFrom(messageTime);
+                        builder.setValidTo(messageTime.plus(validityEndOffset));
                     }
                 });
     }
