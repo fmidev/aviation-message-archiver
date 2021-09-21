@@ -27,8 +27,10 @@ public class StationIcaoCodeReplacer implements MessagePopulator {
     @Override
     public void populate(@Nullable final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder builder) {
         requireNonNull(builder, "builder");
-        final String stationIcaoCode = pattern.matcher(builder.getStationIcaoCode()).replaceAll(replacement);
-        builder.setStationIcaoCode(stationIcaoCode);
+        MessagePopulatorHelper.tryGet(builder, reader -> reader.getStationIcaoCode()).ifPresent(icaoCode -> {
+            final String stationIcaoCode = pattern.matcher(icaoCode).replaceAll(replacement);
+            builder.setStationIcaoCode(stationIcaoCode);
+        });
     }
 
 }

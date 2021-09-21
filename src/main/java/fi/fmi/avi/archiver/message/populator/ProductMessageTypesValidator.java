@@ -33,10 +33,12 @@ public class ProductMessageTypesValidator implements MessagePopulator {
     public void populate(final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder builder) {
         requireNonNull(inputAviationMessage, "inputAviationMessage");
         requireNonNull(builder, "builder");
-        if (inputAviationMessage.getFileMetadata().getProductIdentifier().equals(productIdentifier)
-                && !typeIdentifiers.contains(builder.getType())) {
-            builder.setProcessingResult(ProcessingResult.FORBIDDEN_MESSAGE_TYPE);
-        }
+        MessagePopulatorHelper.tryGetInt(builder, ArchiveAviationMessage.Builder::getType).ifPresent(type -> {
+            if (inputAviationMessage.getFileMetadata().getProductIdentifier().equals(productIdentifier)
+                    && !typeIdentifiers.contains(type)) {
+                builder.setProcessingResult(ProcessingResult.FORBIDDEN_MESSAGE_TYPE);
+            }
+        });
     }
 
 }
