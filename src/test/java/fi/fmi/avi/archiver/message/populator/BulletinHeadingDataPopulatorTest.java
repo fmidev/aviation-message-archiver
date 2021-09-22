@@ -1,19 +1,7 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.model.PartialDateTime;
-import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
-import fi.fmi.avi.model.bulletin.BulletinHeading;
-import fi.fmi.avi.model.bulletin.DataTypeDesignatorT2;
-import fi.fmi.avi.model.bulletin.immutable.BulletinHeadingImpl;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -22,7 +10,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import javax.annotation.Nullable;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.model.PartialDateTime;
+import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
+import fi.fmi.avi.model.bulletin.BulletinHeading;
+import fi.fmi.avi.model.bulletin.DataTypeDesignatorT2;
+import fi.fmi.avi.model.bulletin.immutable.BulletinHeadingImpl;
 
 @SuppressWarnings("UnnecessaryLocalVariable")
 class BulletinHeadingDataPopulatorTest {
@@ -52,7 +54,7 @@ class BulletinHeadingDataPopulatorTest {
     @BeforeEach
     void setUp() {
         populator = new BulletinHeadingDataPopulator(new MessagePopulatorHelper(Clock.systemUTC()), MessagePopulatorTests.FORMAT_IDS,
-                MessagePopulatorTests.TYPE_IDS, BULLETIN_HEADING_SOURCES);
+                MessagePopulatorTests.TYPE_IDS);
     }
 
     @Test
@@ -172,8 +174,8 @@ class BulletinHeadingDataPopulatorTest {
             ", YUDO, YUDO", //
             "YUDO, XXXX, YUDO", //
     })
-    void populates_icaoAirportCode_when_exists(@Nullable final String gtsLocationIndicator, @Nullable final String collectLocationIndicator,
-            final String expectedIcaoAirportCode) {
+    void populates_stationIcaoCode_when_exists(@Nullable final String gtsLocationIndicator, @Nullable final String collectLocationIndicator,
+            final String expectedStationIcaoCode) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder();
         if (gtsLocationIndicator != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(
@@ -187,7 +189,7 @@ class BulletinHeadingDataPopulatorTest {
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
-        assertThat(builder.getStationIcaoCode()).isEqualTo(expectedIcaoAirportCode);
+        assertThat(builder.getStationIcaoCode()).isEqualTo(expectedStationIcaoCode);
     }
 
     @ParameterizedTest

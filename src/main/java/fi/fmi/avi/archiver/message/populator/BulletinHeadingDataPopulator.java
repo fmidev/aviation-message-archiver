@@ -1,5 +1,15 @@
 package fi.fmi.avi.archiver.message.populator;
 
+import static java.util.Objects.requireNonNull;
+
+import java.time.ZonedDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
@@ -8,14 +18,6 @@ import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.bulletin.BulletinHeading;
 import fi.fmi.avi.model.bulletin.DataTypeDesignatorT1;
-
-import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Populate {@link ArchiveAviationMessage.Builder} properties from bulletin heading data in {@link InputAviationMessage}.
@@ -44,17 +46,19 @@ import static java.util.Objects.requireNonNull;
  * </ul>
  */
 public class BulletinHeadingDataPopulator implements MessagePopulator {
+    private static final List<BulletinHeadingSource> DEFAULT_BULLETIN_HEADING_SOURCES = Collections.unmodifiableList(
+            Arrays.asList(BulletinHeadingSource.values()));
+
     private final MessagePopulatorHelper helper;
     private final Map<GenericAviationWeatherMessage.Format, Integer> formatIds;
     private final Map<MessageType, Integer> typeIds;
-    private final List<BulletinHeadingSource> bulletinHeadingSources;
+    private List<BulletinHeadingSource> bulletinHeadingSources = DEFAULT_BULLETIN_HEADING_SOURCES;
 
     public BulletinHeadingDataPopulator(final MessagePopulatorHelper helper, final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
-                                        final Map<MessageType, Integer> typeIds, final List<BulletinHeadingSource> bulletinHeadingSources) {
+            final Map<MessageType, Integer> typeIds) {
         this.helper = requireNonNull(helper, "helper");
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");
-        this.bulletinHeadingSources = requireNonNull(bulletinHeadingSources, "bulletinHeadingSources");
     }
 
     @Override
@@ -85,7 +89,7 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
                 .flatMap(heading -> heading.getType() == BulletinHeading.Type.NORMAL //
                         ? Optional.empty() //
                         : heading.getAugmentationNumber()//
-                        .map(augmentationNumber -> heading.getType().getPrefix() + String.valueOf(Character.toChars('A' + augmentationNumber - 1)))))//
+                                .map(augmentationNumber -> heading.getType().getPrefix() + String.valueOf(Character.toChars('A' + augmentationNumber - 1)))))//
                 .ifPresent(builder::setVersion);
         input.getCollectIdentifier()//
                 .getBulletinHeadingString()//
@@ -96,4 +100,7 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
         return MessagePopulatorHelper.getFirstNonNullFromBulletinHeading(bulletinHeadingSources, input, fn);
     }
 
+    public void setBulletinHeadingSources(final List<BulletinHeadingSource> bulletinHeadingSources) {
+        this.bulletinHeadingSources = requireNonNull(bulletinHeadingSources, "bulletinHeadingSources");
+    }
 }

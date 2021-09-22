@@ -22,12 +22,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
+import fi.fmi.avi.archiver.config.ConversionConfig;
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 
 @SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.AviationMessageArchiverTest" })
 @Sql(scripts = { "classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class },//
+@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
         initializers = { ConfigDataApplicationContextInitializer.class })
 class AviationMessageArchiverTest {
