@@ -56,13 +56,6 @@ class MessagePopulatorExecutionChainHolderTest {
 
     @Test
     void testMessagePopulatorExecutionChain() {
-        // TODO: Remove debug output
-        System.out.println("*** EXECUTION CHAIN ***");
-        messagePopulatorExecutionChainHolder.getExecutionChain().forEach(System.out::println);
-        System.out.println("*** POPULATORS ***");
-        messagePopulators.forEach(System.out::println);
-        // End debug output
-
         final List<InputAviationMessage> inputMessages = Collections.singletonList(InputAviationMessage.builder().buildPartial());
         final List<ArchiveAviationMessage> result = messagePopulatorService.populateMessages(inputMessages, new MessageHeaders(Collections.emptyMap()))//
                 .getPayload();
