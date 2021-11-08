@@ -39,6 +39,20 @@ datasource:
     # Set to zero to retry infinitely. Set a positive duration for time limited retries.
     timeout: PT0S
 ---
+
+##############################################
+#
+#  Actuator config
+#
+##############################################
+# START SNIPPET: actuators
+health-indicator:
+  directoryPermission:
+    tempFilePrefix: .temp
+    tempFileSuffix: .healthindicator
+---
+# END SNIPPET: actuators
+
 ##############################################
 #
 #  Product specific properties
@@ -128,3 +142,5 @@ message-static-values:
     TROPICAL_CYCLONE_ADVISORY: 7
     SPACE_WEATHER_ADVISORY: 8
 # END SNIPPET: Message static values
+
+
