@@ -83,6 +83,7 @@ production-line-initialization:
 message-populators:
   executionChain:
     - name: FileMetadataPopulator
+    - name: FileNameDataPopulator
     - name: BulletinHeadingDataPopulator
       config:
         bulletinHeadingSources:
