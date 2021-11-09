@@ -31,7 +31,7 @@ public class FilenameMatcher {
         this.timestampZone = requireNonNull(timestampZone, "timestampZone");
 
         this.matcher = pattern.matcher(filename);
-        if (!matcher.find()) {
+        if (!matcher.matches()) {
             throw new IllegalArgumentException("No match found in filename " + filename + " with pattern " + pattern);
         }
     }
