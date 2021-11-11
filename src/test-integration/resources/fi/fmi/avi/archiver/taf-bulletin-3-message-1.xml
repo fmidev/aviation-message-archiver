@@ -1,5 +1,3 @@
-LTFI31 EFKL 301115
-        <?xml version="1.0" encoding="UTF-8"?>
 <iwxxm:TAF xmlns:gml="http://www.opengis.net/gml/3.2"
            xmlns:aixm="http://www.aixm.aero/schema/5.1.1"
            xmlns:iwxxm="http://icao.int/iwxxm/2.1"
@@ -9,6 +7,7 @@ LTFI31 EFKL 301115
            xmlns:sams="http://www.opengis.net/samplingSpatial/2.0"
            xmlns:xlink="http://www.w3.org/1999/xlink"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://icao.int/iwxxm/2.1 https://schemas.wmo.int/iwxxm/2.1.1/iwxxm.xsd http://def.wmo.int/metce/2013 http://schemas.wmo.int/metce/1.2/metce.xsd http://www.opengis.net/samplingSpatial/2.0 http://schemas.opengis.net/samplingSpatial/2.0/spatialSamplingFeature.xsd"
            gml:id="taf-d285e06a-6786-448b-af15-128c303e1aa0"
            permissibleUsage="NON-OPERATIONAL"
            permissibleUsageReason="TEST"
@@ -26,8 +25,9 @@ LTFI31 EFKL 301115
     </iwxxm:validTime>
     <iwxxm:baseForecast>
         <om:OM_Observation gml:id="bfct-c340b09a-a278-4438-9027-afb2852a0828">
-            <om:type xlink:href="http://codes.wmo.int/49-2/observation-type/iwxxm/2.1/MeteorologicalAerodromeForecast"
-                     xlink:title="Aerodrome Base Forecast"/>
+            <om:type
+                    xlink:href="http://codes.wmo.int/49-2/observation-type/iwxxm/2.1/MeteorologicalAerodromeForecast"
+                    xlink:title="Aerodrome Base Forecast"/>
             <om:phenomenonTime xlink:href="#time-2dd0b516-8ed6-463b-862e-1d2f13009497"
                                xlink:title="Valid time period of the TAF"/>
             <om:resultTime xlink:href="#time-b7c71fa9-f76b-49ae-97f2-0a6164ae289a"
@@ -36,9 +36,7 @@ LTFI31 EFKL 301115
                           xlink:title="Valid time period of the TAF"/>
             <om:procedure>
                 <metce:Process gml:id="process-9958ae19-a15c-4f99-9d0b-9bf1a112c808">
-                    <gml:description>WMO No. 49 Volume 2 Meteorological Service for International Air Navigation
-                        APPENDIX 5 TECHNICAL SPECIFICATIONS RELATED TO FORECASTS
-                    </gml:description>
+                    <gml:description>WMO No. 49 Volume 2 Meteorological Service for International Air Navigation APPENDIX 5 TECHNICAL SPECIFICATIONS RELATED TO FORECASTS</gml:description>
                 </metce:Process>
             </om:procedure>
             <om:observedProperty
@@ -46,12 +44,14 @@ LTFI31 EFKL 301115
                     xlink:title="TAF forecast properties"/>
             <om:featureOfInterest>
                 <sams:SF_SpatialSamplingFeature gml:id="foi-c2dab068-3285-4691-8181-a3656d2b3899">
-                    <sam:type xlink:href="http://www.opengis.net/def/samplingFeatureType/OGC-OM/2.0/SF_SamplingPoint"
-                              xlink:title="Sampling point"/>
+                    <sam:type
+                            xlink:href="http://www.opengis.net/def/samplingFeatureType/OGC-OM/2.0/SF_SamplingPoint"
+                            xlink:title="Sampling point"/>
                     <sam:sampledFeature>
                         <aixm:AirportHeliport gml:id="ad-0e5641b5-fba2-441d-8ced-f76e05700a5a">
                             <aixm:timeSlice>
-                                <aixm:AirportHeliportTimeSlice gml:id="aerodrome-6b3ae165-e4e7-49e2-8d10-d76270f4d231">
+                                <aixm:AirportHeliportTimeSlice
+                                        gml:id="aerodrome-6b3ae165-e4e7-49e2-8d10-d76270f4d231">
                                     <gml:validTime/>
                                     <aixm:interpretation>SNAPSHOT</aixm:interpretation>
                                     <aixm:designator>EETN</aixm:designator>
@@ -135,8 +135,9 @@ LTFI31 EFKL 301115
     </iwxxm:baseForecast>
     <iwxxm:changeForecast>
         <om:OM_Observation gml:id="chfct-70bb3052-10aa-4b12-bfd0-e0086956f3cd">
-            <om:type xlink:href="http://codes.wmo.int/49-2/observation-type/iwxxm/2.1/MeteorologicalAerodromeForecast"
-                     xlink:title="Aerodrome Forecast"/>
+            <om:type
+                    xlink:href="http://codes.wmo.int/49-2/observation-type/iwxxm/2.1/MeteorologicalAerodromeForecast"
+                    xlink:title="Aerodrome Forecast"/>
             <om:phenomenonTime>
                 <gml:TimePeriod gml:id="time-2288b91f-23f0-4356-90d7-1b3f2c34e9df">
                     <gml:beginPosition>2017-07-30T12:00:00Z</gml:beginPosition>
@@ -180,8 +181,9 @@ LTFI31 EFKL 301115
     </iwxxm:changeForecast>
     <iwxxm:changeForecast>
         <om:OM_Observation gml:id="chfct-77f87927-8be7-40c9-a790-d87628fed229">
-            <om:type xlink:href="http://codes.wmo.int/49-2/observation-type/iwxxm/2.1/MeteorologicalAerodromeForecast"
-                     xlink:title="Aerodrome Forecast"/>
+            <om:type
+                    xlink:href="http://codes.wmo.int/49-2/observation-type/iwxxm/2.1/MeteorologicalAerodromeForecast"
+                    xlink:title="Aerodrome Forecast"/>
             <om:phenomenonTime>
                 <gml:TimePeriod gml:id="time-1f98694b-de76-4cf9-9673-3b8cd823440c">
                     <gml:beginPosition>2017-07-30T18:00:00Z</gml:beginPosition>
@@ -219,8 +221,9 @@ LTFI31 EFKL 301115
                                             xlink:href="http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome/SCT"
                                             xlink:title="SCT, from codelist http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome"/>
                                     <iwxxm:base uom="[ft_i]">1500.0</iwxxm:base>
-                                    <iwxxm:cloudType xlink:href="http://codes.wmo.int/49-2/SigConvectiveCloudType/CB"
-                                                     xlink:title="CB, from codelist http://codes.wmo.int/49-2/SigConvectiveCloudType"/>
+                                    <iwxxm:cloudType
+                                            xlink:href="http://codes.wmo.int/49-2/SigConvectiveCloudType/CB"
+                                            xlink:title="CB, from codelist http://codes.wmo.int/49-2/SigConvectiveCloudType"/>
                                 </iwxxm:CloudLayer>
                             </iwxxm:layer>
                         </iwxxm:AerodromeCloudForecast>
@@ -231,8 +234,9 @@ LTFI31 EFKL 301115
     </iwxxm:changeForecast>
     <iwxxm:changeForecast>
         <om:OM_Observation gml:id="chfct-c73773d5-452e-4988-9255-e402232b2591">
-            <om:type xlink:href="http://codes.wmo.int/49-2/observation-type/iwxxm/2.1/MeteorologicalAerodromeForecast"
-                     xlink:title="Aerodrome Forecast"/>
+            <om:type
+                    xlink:href="http://codes.wmo.int/49-2/observation-type/iwxxm/2.1/MeteorologicalAerodromeForecast"
+                    xlink:title="Aerodrome Forecast"/>
             <om:phenomenonTime>
                 <gml:TimePeriod gml:id="time-d4ff6c5a-1a6b-40a2-9c75-64f1cd20e693">
                     <gml:beginPosition>2017-07-31T02:00:00Z</gml:beginPosition>
@@ -273,8 +277,9 @@ LTFI31 EFKL 301115
                                             xlink:href="http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome/BKN"
                                             xlink:title="BKN, from codelist http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome"/>
                                     <iwxxm:base uom="[ft_i]">1500.0</iwxxm:base>
-                                    <iwxxm:cloudType xlink:href="http://codes.wmo.int/49-2/SigConvectiveCloudType/CB"
-                                                     xlink:title="CB, from codelist http://codes.wmo.int/49-2/SigConvectiveCloudType"/>
+                                    <iwxxm:cloudType
+                                            xlink:href="http://codes.wmo.int/49-2/SigConvectiveCloudType/CB"
+                                            xlink:title="CB, from codelist http://codes.wmo.int/49-2/SigConvectiveCloudType"/>
                                 </iwxxm:CloudLayer>
                             </iwxxm:layer>
                         </iwxxm:AerodromeCloudForecast>
@@ -285,8 +290,9 @@ LTFI31 EFKL 301115
     </iwxxm:changeForecast>
     <iwxxm:changeForecast>
         <om:OM_Observation gml:id="chfct-171f994d-6a32-46f6-a43b-fcc421351663">
-            <om:type xlink:href="http://codes.wmo.int/49-2/observation-type/iwxxm/2.1/MeteorologicalAerodromeForecast"
-                     xlink:title="Aerodrome Forecast"/>
+            <om:type
+                    xlink:href="http://codes.wmo.int/49-2/observation-type/iwxxm/2.1/MeteorologicalAerodromeForecast"
+                    xlink:title="Aerodrome Forecast"/>
             <om:phenomenonTime>
                 <gml:TimePeriod gml:id="time-f1376575-d194-46dd-af52-ce3b8f7423d9">
                     <gml:beginPosition>2017-07-31T04:00:00Z</gml:beginPosition>
