@@ -266,8 +266,43 @@ class AviationMessageArchiverTest {
                         .expectFail()//
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
+                        .setName("Partially rejected TAC TAF GTS Bulletin")//
+                        .setProductName("test_taf_bulletin")//
+                        .setInputFileName("taf-tac-bulletin-partially-rejected.bul")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2020-05-16T00:00:00Z"))
+                                .setStationId(2)
+                                .setStationIcaoCode("YUDO")
+                                .setFormat(1)
+                                .setType(3)
+                                .setRoute(1)
+                                .setMessage("TAF YUDO 160000Z NIL=")
+                                .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                                .setHeading("FTYU31 YUDO 160000")
+                                .build()
+                        ).addRejectedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2020-05-16T00:00:00Z"))
+                                .setStationIcaoCode("XYZW")
+                                .setFormat(1)
+                                .setType(3)
+                                .setRoute(1)
+                                .setMessage("TAF XYZW 160000Z NIL=")
+                                .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                                .setHeading("FTYU31 YUDO 160000")
+                                .setProcessingResult(ProcessingResult.UNKNOWN_STATION_ICAO_CODE)
+                                .build())
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("TAF TAC GTS Bulletin cut off")//
+                        .setProductName("test_taf_bulletin")//
+                        .setInputFileName("taf-tac-bulletin-cut-off.bul")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF")//
-                        .setProductName("test_iwxxm_taf")//
+                        .setProductName("test_iwxxm")//
                         .setInputFileName("taf-1.xml")//
                         .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                         .addArchivedMessages(ArchiveAviationMessage.builder()
@@ -289,7 +324,7 @@ class AviationMessageArchiverTest {
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF with unknown station ICAO code")//
-                        .setProductName("test_iwxxm_taf")//
+                        .setProductName("test_iwxxm")//
                         .setInputFileName("taf-rejected-6.xml")//
                         .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                         .addRejectedMessages(ArchiveAviationMessage.builder()
@@ -309,7 +344,7 @@ class AviationMessageArchiverTest {
                 // TODO Fails due to missing namespace declarations in TAF elements
                 AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF Collect bulletin")//
-                        .setProductName("test_iwxxm_taf")//
+                        .setProductName("test_iwxxm")//
                         .setInputFileName("taf-bulletin-2.xml")//
                         .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                         .addArchivedMessages(ArchiveAviationMessage.builder()
@@ -348,7 +383,7 @@ class AviationMessageArchiverTest {
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF Collect bulletin with namespace declarations in TAF elements")//
-                        .setProductName("test_iwxxm_taf")//
+                        .setProductName("test_iwxxm")//
                         .setInputFileName("taf-bulletin-3.xml")//
                         .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                         .addArchivedMessages(ArchiveAviationMessage.builder()
@@ -386,8 +421,15 @@ class AviationMessageArchiverTest {
                         )
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM TAF Collect bulletin cut off")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("taf-bulletin-7-cut-off.xml")//
+                        .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
+                        .expectFail()
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF with GTS heading")//
-                        .setProductName("test_iwxxm_taf")//
+                        .setProductName("test_iwxxm")//
                         .setInputFileName("taf-gts-heading-4.xml")//
                         .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                         .addArchivedMessages(ArchiveAviationMessage.builder()
@@ -411,7 +453,7 @@ class AviationMessageArchiverTest {
                 // TODO Fails due to missing namespace declarations in TAF elements
                 AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF Collect bulletin with GTS heading")//
-                        .setProductName("test_iwxxm_taf")//
+                        .setProductName("test_iwxxm")//
                         .setInputFileName("taf-gts-heading-bulletin-5.xml")//
                         .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                         .addArchivedMessages(ArchiveAviationMessage.builder()
@@ -449,7 +491,124 @@ class AviationMessageArchiverTest {
                                                 .build())
                                         .build()
                         )
-                        .build()//
+                        .build(),
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM 3.0 METAR")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("metar-iwxxm-30.xml")//
+                        .setFileModified(Instant.parse("2012-08-22T15:30:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2012-08-22T16:30:00Z"))
+                                .setStationId(2)
+                                .setStationIcaoCode("YUDO")
+                                .setFormat(2)
+                                .setType(1)
+                                .setRoute(1)
+                                .setMessage(fileContent("metar-iwxxm-30-message.xml"))
+                                .setFileModified(Instant.parse("2012-08-22T15:30:00Z"))
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                        .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                        .build())
+                                .build()
+                        )
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM 3.0 TAF")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("taf-iwxxm-30.xml")//
+                        .setFileModified(Instant.parse("2012-08-15T17:00:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2012-08-15T18:00:00Z"))
+                                .setStationId(2)
+                                .setStationIcaoCode("YUDO")
+                                .setFormat(2)
+                                .setType(3)
+                                .setRoute(1)
+                                .setValidFrom(Instant.parse("2012-08-16T00:00:00Z"))
+                                .setValidTo(Instant.parse("2012-08-16T18:00:00Z"))
+                                .setMessage(fileContent("taf-iwxxm-30-message-1.xml"))
+                                .setFileModified(Instant.parse("2012-08-15T17:00:00Z"))
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                        .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                        .build())
+                                .build()
+                        )
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Space Weather Advisory with GTS heading")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("spacewx-gts-heading-1.xml")//
+                        .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2016-11-08T00:00:00Z"))
+                                .setStationId(2)
+                                .setStationIcaoCode("YUDO")
+                                .setFormat(2)
+                                .setType(8)
+                                .setRoute(1)
+                                .setMessage(fileContent("spacewx-gts-heading-1-message-1.xml"))
+                                .setHeading("LNXX01 YUDO 110715")
+                                .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))
+                                .setValidFrom(Instant.parse("2016-11-08T00:00:00Z"))
+                                .setValidTo(Instant.parse("2016-11-09T06:00:00Z"))
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                        .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                        .build())
+                                .build()
+                        )
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Space Weather Advisory with GTS bulletin")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("spacewx-bulletin-2.xml")//
+                        .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2016-11-08T00:00:00Z"))
+                                .setStationId(2)
+                                .setStationIcaoCode("YUDO")
+                                .setFormat(2)
+                                .setType(8)
+                                .setRoute(1)
+                                .setMessage(fileContent("spacewx-bulletin-2-message-1.xml"))
+                                .setHeading("LNXX01 YUDO 110715")
+                                .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))
+                                .setValidFrom(Instant.parse("2016-11-08T00:00:00Z"))
+                                .setValidTo(Instant.parse("2016-11-09T06:00:00Z"))
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                        .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                        .build())
+                                .build()
+                        )
+                        .build(),
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Invalid Space Weather Advisory")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("spacewx-translation-failed.xml")//
+                        .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))
+                        .expectFail()
+                        .build(),
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM 3.0 VA SIGMET")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("sigmet-iwxxm-30.xml")//
+                        .setFileModified(Instant.parse("2018-07-10T11:00:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2018-07-10T12:00:00Z"))
+                                .setStationId(3)
+                                .setStationIcaoCode("YUDD")
+                                .setFormat(2)
+                                .setType(4)
+                                .setRoute(1)
+                                .setMessage(fileContent("sigmet-iwxxm-30-message.xml"))
+                                .setValidFrom(Instant.parse("2018-07-10T12:00:00Z"))
+                                .setValidTo(Instant.parse("2018-07-10T18:00:00Z"))
+                                .setFileModified(Instant.parse("2018-07-10T11:00:00Z"))
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                        .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                        .build())
+                                .build()
+                        )
+                        .build()////
         );
     }
 
