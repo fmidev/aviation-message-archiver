@@ -14,6 +14,20 @@ testclass:
 
 ##############################################
 #
+#  Server config
+#
+##############################################
+# START SNIPPET: server
+server:
+  shutdown: graceful
+#spring:
+#  lifecycle:
+#    timeout-per-shutdown-phase: "30s"
+---
+# END SNIPPET: server
+
+##############################################
+#
 #  Actuator config
 #
 ##############################################
