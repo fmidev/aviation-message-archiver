@@ -114,6 +114,8 @@ public class DataSourceConfig {
                 super.onError(context, callback, throwable);
                 if (!NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
                     LOGGER.error("Database operation failed. Retry attempt " + context.getRetryCount(), throwable);
+                } else {
+                    LOGGER.error("Database operation failed. Not retrying", throwable);
                 }
             }
         });

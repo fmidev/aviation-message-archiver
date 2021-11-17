@@ -55,6 +55,11 @@ public class ChannelConfig {
         return new PublishSubscribeChannel(Executors.newCachedThreadPool(newThreadFactory("Error-")));
     }
 
+    @Bean
+    public MessageChannel errorLoggingChannel() {
+        return new PublishSubscribeChannel(Executors.newCachedThreadPool(newThreadFactory("Error-Log-")));
+    }
+
     private CustomizableThreadFactory newThreadFactory(final String threadNamePrefix) {
         final CustomizableThreadFactory threadFactory = new CustomizableThreadFactory(threadNamePrefix);
         threadFactory.setThreadGroup(aviationMessageArchiverThreadGroup);
