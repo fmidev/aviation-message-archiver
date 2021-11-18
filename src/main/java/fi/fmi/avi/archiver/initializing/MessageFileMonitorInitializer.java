@@ -1,12 +1,25 @@
 package fi.fmi.avi.archiver.initializing;
 
-import fi.fmi.avi.archiver.file.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
+import static java.util.Objects.requireNonNull;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.core.GenericSelector;
+import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.file.FileHeaders;
@@ -19,17 +32,12 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
 
-import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.time.Instant;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.ProcessingMetrics;
+import fi.fmi.avi.archiver.file.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
+import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
+import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 
 /**
  * Initializes Message file source directory reading, filename filtering and archiving of the files.
@@ -46,23 +54,30 @@ public class MessageFileMonitorInitializer {
     private static final String INPUT_CATEGORY = "input";
 
     private final IntegrationFlowContext context;
-    private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registerations;
+    private final CompoundLifecycle inputReadersLifecycle;
+    private final ProcessingMetrics processingMetrics;
 
     private final AviationProductsHolder aviationProductsHolder;
     private final MessageChannel processingChannel;
     private final MessageChannel successChannel;
     private final MessageChannel failChannel;
+    private final MessageChannel finishChannel;
     private final MessageChannel errorMessageChannel;
 
-    public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
-                                         final MessageChannel processingChannel, final MessageChannel successChannel, final MessageChannel failChannel,
-                                         final MessageChannel errorMessageChannel) {
+    private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registrations = new HashSet<>();
+
+    public MessageFileMonitorInitializer(final IntegrationFlowContext context, final CompoundLifecycle inputReadersLifecycle,
+            final ProcessingMetrics processingMetrics, final AviationProductsHolder aviationProductsHolder, final MessageChannel processingChannel,
+            final MessageChannel successChannel, final MessageChannel failChannel, final MessageChannel finishChannel,
+            final MessageChannel errorMessageChannel) {
         this.context = requireNonNull(context, "context");
-        this.registerations = new HashSet<>();
+        this.inputReadersLifecycle = requireNonNull(inputReadersLifecycle, "inputReadersLifecycle");
+        this.processingMetrics = requireNonNull(processingMetrics, "processingMetrics");
         this.aviationProductsHolder = requireNonNull(aviationProductsHolder, "aviationProductsHolder");
         this.processingChannel = requireNonNull(processingChannel, "processingChannel");
-        this.successChannel = requireNonNull(successChannel, "archiveChannel");
+        this.successChannel = requireNonNull(successChannel, "successChannel");
         this.failChannel = requireNonNull(failChannel, "failChannel");
+        this.finishChannel = requireNonNull(finishChannel, "finishChannel");
         this.errorMessageChannel = requireNonNull(errorMessageChannel, "errorMessageChannel");
     }
 
@@ -93,59 +108,67 @@ public class MessageFileMonitorInitializer {
         aviationProductsHolder.getProducts().values().forEach(product -> {
             final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
             sourceDirectory.setDirectory(product.getInputDir());
+            inputReadersLifecycle.add(sourceDirectory);
 
             final FileWritingMessageHandler archiveDirectory = new FileWritingMessageHandler(product.getArchiveDir());
             archiveDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
-            archiveDirectory.setExpectReply(false);
 
             final FileWritingMessageHandler failDirectory = new FileWritingMessageHandler(product.getFailDir());
-            archiveDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
-            archiveDirectory.setExpectReply(false);
+            failDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
 
             // Separate input channel needed in order to use multiple different
             // filters for the same source directory
             final PublishSubscribeChannel inputChannel = new PublishSubscribeChannel();
 
             // Initialize source directory polling. Uses poller bean
-            registerations.add(context.registration(IntegrationFlows.from(sourceDirectory)//
+            registerIntegrationFlow(IntegrationFlows.from(sourceDirectory)//
                     .channel(inputChannel)//
-                    .get()//
-            ).register());
+                    .get());
 
             // Integration flow for file name filtering
-            product.getFileConfigs().stream().map(fileConfig -> context.registration(IntegrationFlows.from(inputChannel)//
+            registerAllIntegrationFlows(product.getFileConfigs().stream()//
+                    .map(fileConfig -> IntegrationFlows.from(inputChannel)//
                             .filter(new RegexPatternFileListFilter(fileConfig.getPattern())::accept)//
                             .enrichHeaders(s -> s.header(PRODUCT_KEY, product)//
                                     .headerFunction(MessageHeaders.ERROR_CHANNEL, message -> errorMessageChannel)
                                     .headerFunction(FILE_METADATA, message -> createFileMetadata(message, fileConfig, product.getId())))
+                            .handle(ServiceActivators.peekHeader(FileMetadata.class, FILE_METADATA, processingMetrics::start))//
                             .log(Level.INFO, INPUT_CATEGORY)//
                             .channel(processingChannel)//
                             .get()//
-                    ).register()//
-            ).forEach(registerations::add);
+                    ));
 
             // Initialize file moving flows
             final GenericSelector<Message> productFilter = m -> Objects.equals(m.getHeaders().get(PRODUCT_KEY), product);
             final HeaderToFileTransformer headerToFileTransformer = new HeaderToFileTransformer();
 
-            registerations.add(context.registration(IntegrationFlows.from(successChannel)//
+            registerIntegrationFlow(IntegrationFlows.from(successChannel)//
                     .filter(Message.class, productFilter)//
                     .transform(headerToFileTransformer)//
                     .handle(archiveDirectory)//
-                    .get()//
-            ).register());
+                    .channel(finishChannel)//
+                    .get());
 
-            registerations.add(context.registration(IntegrationFlows.from(failChannel)//
+            registerIntegrationFlow(IntegrationFlows.from(failChannel)//
                     .filter(Message.class, productFilter)//
                     .transform(headerToFileTransformer)//
                     .handle(failDirectory)//
-                    .nullChannel()//
-            ).register());
+                    .channel(finishChannel)//
+                    .get());
         });
     }
 
+    private void registerIntegrationFlow(final IntegrationFlow integrationFlow) {
+        registrations.add(context.registration(integrationFlow).register());
+    }
+
+    private void registerAllIntegrationFlows(final Stream<IntegrationFlow> integrationFlows) {
+        integrationFlows.forEach(this::registerIntegrationFlow);
+    }
+
+    @PreDestroy
     public void dispose() {
-        registerations.forEach(registration -> context.remove(registration.getId()));
+        registrations.forEach(registration -> context.remove(registration.getId()));
     }
 
 }
