@@ -123,8 +123,9 @@ file-handler:
   charset: UTF-8
   retry:
     initial-interval: PT0.5S
+    max-interval: PT10S
     multiplier: 2
-    max-attempts: 3
+    timeout: PT0S
 # END SNIPPET: File handling
 
 ##############################################

@@ -8,6 +8,7 @@
            xmlns:sams="http://www.opengis.net/samplingSpatial/2.0"
            xmlns:xlink="http://www.w3.org/1999/xlink"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://icao.int/iwxxm/2.1 https://schemas.wmo.int/iwxxm/2.1.1/iwxxm.xsd http://def.wmo.int/metce/2013 http://schemas.wmo.int/metce/1.2/metce.xsd http://www.opengis.net/samplingSpatial/2.0 http://schemas.opengis.net/samplingSpatial/2.0/spatialSamplingFeature.xsd"
            gml:id="taf-d285e06a-6786-448b-af15-128c303e1aa0"
            permissibleUsage="NON-OPERATIONAL"
            permissibleUsageReason="TEST"
@@ -53,9 +54,9 @@
                                 <aixm:AirportHeliportTimeSlice gml:id="aerodrome-6b3ae165-e4e7-49e2-8d10-d76270f4d231">
                                     <gml:validTime/>
                                     <aixm:interpretation>SNAPSHOT</aixm:interpretation>
-                                    <aixm:designator>EETN</aixm:designator>
+                                    <aixm:designator>XYZW</aixm:designator>
                                     <aixm:name>TALLINN AIRPORT</aixm:name>
-                                    <aixm:locationIndicatorICAO>EETN</aixm:locationIndicatorICAO>
+                                    <aixm:locationIndicatorICAO>XYZW</aixm:locationIndicatorICAO>
                                     <aixm:designatorIATA xsi:nil="true"/>
                                     <aixm:fieldElevation uom="M">40</aixm:fieldElevation>
                                     <aixm:ARP>

@@ -3,6 +3,7 @@ package fi.fmi.avi.archiver.config;
 import java.time.Clock;
 import java.time.Duration;
 
+import org.aopalliance.aop.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -38,6 +39,9 @@ public class DirectoryInspectionConfig {
     private AviationProductsHolder aviationProductsHolder;
 
     @Autowired
+    private Clock clock;
+
+    @Autowired
     private MessageChannel processingChannel;
 
     @Autowired
@@ -53,10 +57,16 @@ public class DirectoryInspectionConfig {
     private MessageChannel errorMessageChannel;
 
     @Autowired
-    private MessageChannel finishChannel;
+    private Advice archiveRetryAdvice;
 
     @Autowired
-    private Clock clock;
+    private Advice failRetryAdvice;
+
+    @Autowired
+    private Advice exceptionTrapAdvice;
+
+    @Autowired
+    private MessageChannel finishChannel;
 
     @Bean
     public CompoundLifecycle inputReadersLifecycle() {
@@ -85,8 +95,8 @@ public class DirectoryInspectionConfig {
 
     @Bean
     public MessageFileMonitorInitializer messageFileMonitorInitializer() {
-        return new MessageFileMonitorInitializer(flowContext, inputReadersLifecycle(), processingMetrics(), aviationProductsHolder, processingChannel,
-                successChannel, failChannel, finishChannel, errorMessageChannel);
+        return new MessageFileMonitorInitializer(flowContext, inputReadersLifecycle(), processingMetrics(), aviationProductsHolder, clock, processingChannel,
+                successChannel, failChannel, finishChannel, errorMessageChannel, archiveRetryAdvice, failRetryAdvice, exceptionTrapAdvice);
     }
 
     @Bean

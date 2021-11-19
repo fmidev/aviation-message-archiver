@@ -56,6 +56,11 @@ public class ChannelConfig {
     }
 
     @Bean
+    public MessageChannel errorLoggingChannel() {
+        return new PublishSubscribeChannel(Executors.newCachedThreadPool(newThreadFactory("Error-Log-")));
+    }
+
+    @Bean
     public MessageChannel finishChannel() {
         return new PublishSubscribeChannel(Executors.newSingleThreadExecutor(newThreadFactory("Finish-")));
     }

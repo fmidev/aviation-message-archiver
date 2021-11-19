@@ -5,8 +5,10 @@ import static java.util.Objects.requireNonNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -15,6 +17,7 @@ import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import org.aopalliance.aop.Advice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.channel.PublishSubscribeChannel;
@@ -23,6 +26,7 @@ import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.file.FileHeaders;
+import org.springframework.integration.file.FileNameGenerator;
 import org.springframework.integration.file.FileReadingMessageSource;
 import org.springframework.integration.file.FileWritingMessageHandler;
 import org.springframework.integration.file.filters.RegexPatternFileListFilter;
@@ -31,6 +35,8 @@ import org.springframework.integration.handler.LoggingHandler.Level;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
+
+import com.google.common.collect.ImmutableList;
 
 import fi.fmi.avi.archiver.ProcessingMetrics;
 import fi.fmi.avi.archiver.file.FileConfig;
@@ -58,27 +64,35 @@ public class MessageFileMonitorInitializer {
     private final ProcessingMetrics processingMetrics;
 
     private final AviationProductsHolder aviationProductsHolder;
+    private final Clock clock;
     private final MessageChannel processingChannel;
     private final MessageChannel successChannel;
     private final MessageChannel failChannel;
     private final MessageChannel finishChannel;
     private final MessageChannel errorMessageChannel;
+    private final Advice archiveRetryAdvice;
+    private final Advice failRetryAdvice;
+    private final Advice exceptionTrapAdvice;
 
     private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registrations = new HashSet<>();
 
     public MessageFileMonitorInitializer(final IntegrationFlowContext context, final CompoundLifecycle inputReadersLifecycle,
-            final ProcessingMetrics processingMetrics, final AviationProductsHolder aviationProductsHolder, final MessageChannel processingChannel,
-            final MessageChannel successChannel, final MessageChannel failChannel, final MessageChannel finishChannel,
-            final MessageChannel errorMessageChannel) {
+            final ProcessingMetrics processingMetrics, final AviationProductsHolder aviationProductsHolder, final Clock clock,
+            final MessageChannel processingChannel, final MessageChannel successChannel, final MessageChannel failChannel, final MessageChannel finishChannel,
+            final MessageChannel errorMessageChannel, final Advice archiveRetryAdvice, final Advice failRetryAdvice, final Advice exceptionTrapAdvice) {
         this.context = requireNonNull(context, "context");
         this.inputReadersLifecycle = requireNonNull(inputReadersLifecycle, "inputReadersLifecycle");
         this.processingMetrics = requireNonNull(processingMetrics, "processingMetrics");
         this.aviationProductsHolder = requireNonNull(aviationProductsHolder, "aviationProductsHolder");
+        this.clock = requireNonNull(clock, "clock");
         this.processingChannel = requireNonNull(processingChannel, "processingChannel");
         this.successChannel = requireNonNull(successChannel, "successChannel");
         this.failChannel = requireNonNull(failChannel, "failChannel");
         this.finishChannel = requireNonNull(finishChannel, "finishChannel");
         this.errorMessageChannel = requireNonNull(errorMessageChannel, "errorMessageChannel");
+        this.archiveRetryAdvice = requireNonNull(archiveRetryAdvice, "archiveRetryAdvice");
+        this.failRetryAdvice = requireNonNull(failRetryAdvice, "failRetryAdvice");
+        this.exceptionTrapAdvice = requireNonNull(exceptionTrapAdvice, "exceptionTrapAdvice");
     }
 
     private static FileMetadata createFileMetadata(final Message<?> message, final FileConfig fileConfig, final String productIdentifier) {
@@ -105,6 +119,10 @@ public class MessageFileMonitorInitializer {
 
     @PostConstruct
     private void initializeFilePatternFlows() {
+        final FileNameGenerator timestampAppender = msg -> msg.getHeaders().get(FileHeaders.FILENAME) + "." + clock.millis();
+        final List<Advice> archiveAdviceChain = ImmutableList.of(exceptionTrapAdvice, archiveRetryAdvice);
+        final List<Advice> failAdviceChain = ImmutableList.of(exceptionTrapAdvice, failRetryAdvice);
+
         aviationProductsHolder.getProducts().values().forEach(product -> {
             final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
             sourceDirectory.setDirectory(product.getInputDir());
@@ -112,9 +130,15 @@ public class MessageFileMonitorInitializer {
 
             final FileWritingMessageHandler archiveDirectory = new FileWritingMessageHandler(product.getArchiveDir());
             archiveDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
+            archiveDirectory.setDeleteSourceFiles(true);
+            archiveDirectory.setAdviceChain(archiveAdviceChain);
+            archiveDirectory.setFileNameGenerator(timestampAppender);
 
             final FileWritingMessageHandler failDirectory = new FileWritingMessageHandler(product.getFailDir());
             failDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
+            failDirectory.setDeleteSourceFiles(true);
+            failDirectory.setAdviceChain(failAdviceChain);
+            failDirectory.setFileNameGenerator(timestampAppender);
 
             // Separate input channel needed in order to use multiple different
             // filters for the same source directory
@@ -159,7 +183,9 @@ public class MessageFileMonitorInitializer {
     }
 
     private void registerIntegrationFlow(final IntegrationFlow integrationFlow) {
-        registrations.add(context.registration(integrationFlow).register());
+        registrations.add(context.registration(integrationFlow)//
+                .autoStartup(false)//
+                .register());
     }
 
     private void registerAllIntegrationFlows(final Stream<IntegrationFlow> integrationFlows) {

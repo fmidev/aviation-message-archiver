@@ -1,6 +1,7 @@
 package fi.fmi.avi.archiver.config;
 
 import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
+import org.aopalliance.aop.Advice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
+import org.springframework.integration.handler.advice.ExpressionEvaluatingRequestHandlerAdvice;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessagingException;
@@ -23,6 +25,9 @@ public class ErrorMessageConfig {
     private MessageChannel errorMessageChannel;
 
     @Autowired
+    private MessageChannel errorLoggingChannel;
+
+    @Autowired
     private MessageChannel failChannel;
 
     @Bean
@@ -33,6 +38,22 @@ public class ErrorMessageConfig {
                 .transform(toFile)//
                 .channel(failChannel)//
                 .get();
+    }
+
+    @Bean
+    public IntegrationFlow errorLoggingFlow() {
+        return IntegrationFlows.from(errorLoggingChannel)//
+                .handle(this)//
+                .nullChannel();
+    }
+
+    // Trap exceptions to avoid infinite looping when the error message flow itself results in exceptions
+    @Bean
+    public Advice exceptionTrapAdvice() {
+        final ExpressionEvaluatingRequestHandlerAdvice advice = new ExpressionEvaluatingRequestHandlerAdvice();
+        advice.setFailureChannel(errorLoggingChannel);
+        advice.setTrapException(true);
+        return advice;
     }
 
     @ServiceActivator
