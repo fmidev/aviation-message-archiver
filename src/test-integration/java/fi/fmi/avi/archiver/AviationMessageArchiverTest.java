@@ -463,7 +463,7 @@ class AviationMessageArchiverTest {
         Files.setLastModifiedTime(tempFile, FileTime.from(testCase.getFileModified()));
         Files.move(tempFile, testFile);
 
-        testCase.assertInputAndOutputFilesEquals(product);
+        testCase.assertInputAndOutputFilesEquals(product, clock.millis());
 
         if (!testCase.getArchivedMessages().isEmpty()) {
             assertThat(databaseAccessTestUtil.fetchArchiveMessages())
@@ -480,6 +480,8 @@ class AviationMessageArchiverTest {
         } else {
             databaseAccessTestUtil.assertRejectedMessagesEmpty();
         }
+
+        assertThat(testFile).doesNotExist();
     }
 
     @FreeBuilder
@@ -531,12 +533,14 @@ class AviationMessageArchiverTest {
             return requireNonNull(holder.getProducts().get(productName), productName);
         }
 
-        public void assertInputAndOutputFilesEquals(final AviationProductsHolder.AviationProduct product) throws InterruptedException, URISyntaxException {
-            final File expectedOutputFile = new File((getExpectFail() ? product.getFailDir() : product.getArchiveDir()) + "/" + getInputFileName());
+        public void assertInputAndOutputFilesEquals(final AviationProductsHolder.AviationProduct product, final long timestamp) throws InterruptedException {
+            final String expectedContent = fileContent(getInputFileName());
+            final File expectedOutputFile = new File((getExpectFail() ? product.getFailDir() :
+                    product.getArchiveDir()) + "/" + getInputFileName() + "." + timestamp);
             waitUntilFileExists(expectedOutputFile);
 
             assertThat(expectedOutputFile).exists();
-            assertThat(expectedOutputFile).hasSameTextualContentAs(getInputFile().toFile());
+            assertThat(expectedOutputFile).hasContent(expectedContent);
         }
 
         private void waitUntilFileExists(final File expectedOutputFile) throws InterruptedException {

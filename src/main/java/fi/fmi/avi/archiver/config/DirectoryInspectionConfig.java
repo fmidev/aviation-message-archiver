@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.config;
 
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
+import org.aopalliance.aop.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +14,8 @@ import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.scheduling.PollerMetadata;
 import org.springframework.messaging.MessageChannel;
 
+import java.time.Clock;
+
 @Configuration
 public class DirectoryInspectionConfig {
 
@@ -21,6 +24,9 @@ public class DirectoryInspectionConfig {
 
     @Autowired
     private AviationProductsHolder aviationProductsHolder;
+
+    @Autowired
+    private Clock clock;
 
     @Autowired
     private MessageChannel processingChannel;
@@ -37,6 +43,15 @@ public class DirectoryInspectionConfig {
     @Autowired
     private MessageChannel errorMessageChannel;
 
+    @Autowired
+    private Advice archiveRetryAdvice;
+
+    @Autowired
+    private Advice failRetryAdvice;
+
+    @Autowired
+    private Advice exceptionTrapAdvice;
+
     @Bean(name = PollerMetadata.DEFAULT_POLLER)
     public PollerMetadata poller(@Value("${polling.delay}") final int pollingDelay) {
         return Pollers.fixedDelay(pollingDelay).get();
@@ -44,7 +59,8 @@ public class DirectoryInspectionConfig {
 
     @Bean(destroyMethod = "dispose")
     public MessageFileMonitorInitializer messageFileMonitorInitializer() {
-        return new MessageFileMonitorInitializer(flowContext, aviationProductsHolder, processingChannel, successChannel, failChannel, errorMessageChannel);
+        return new MessageFileMonitorInitializer(flowContext, aviationProductsHolder, clock, processingChannel, successChannel,
+                failChannel, errorMessageChannel, archiveRetryAdvice, failRetryAdvice, exceptionTrapAdvice);
     }
 
     @Bean
