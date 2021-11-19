@@ -130,9 +130,65 @@ class AviationMessageArchiverTest {
                         )
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
-                        .setName("Non-convertible message goes to failed dir")//
+                        .setName("Empty file fails")//
+                        .setProductName("test_taf")//
+                        .setInputFileName("empty.txt")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Non-convertible message fails")//
                         .setProductName("test_taf")//
                         .setInputFileName("inconvertible.txt")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Binary data fails (TAC)")//
+                        .setProductName("test_taf")//
+                        .setInputFileName("binary.txt")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("TAF bulletin with binary data fails (TAC)")//
+                        .setProductName("test_taf_bulletin")//
+                        .setInputFileName("taf-tac-bulletin-binary.bul")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Binary data fails (IWXXM)")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("binary.xml")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("TAF with binary data fails (IWXXM)")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("taf-binary-8.xml")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Only GTS heading")//
+                        .setProductName("test_taf")//
+                        .setInputFileName("gts-heading.txt")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("NIL TAC bulletin")//
+                        .setProductName("test_taf_bulletin")//
+                        .setInputFileName("nil-bulletin.bul")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Empty collect document")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("empty-collect.xml")//
                         .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                         .expectFail()//
                         .build(),//
@@ -693,13 +749,13 @@ class AviationMessageArchiverTest {
         }
 
         public void assertInputAndOutputFilesEquals(final AviationProductsHolder.AviationProduct product, final long timestamp) throws InterruptedException {
-            final String expectedContent = fileContent(getInputFileName());
+            final byte[] expectedContent = fileContentAsByteArray(getInputFileName());
             final File expectedOutputFile = new File((getExpectFail() ? product.getFailDir() :
                     product.getArchiveDir()) + "/" + getInputFileName() + "." + timestamp);
             waitUntilFileExists(expectedOutputFile);
 
             assertThat(expectedOutputFile).exists();
-            assertThat(expectedOutputFile).hasContent(expectedContent);
+            assertThat(expectedOutputFile).hasBinaryContent(expectedContent);
         }
 
         private void waitUntilFileExists(final File expectedOutputFile) throws InterruptedException {
@@ -725,6 +781,14 @@ class AviationMessageArchiverTest {
     private static String fileContent(final String filename) {
         try {
             return Resources.toString(AviationMessageArchiverTest.class.getResource(filename), StandardCharsets.UTF_8);
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static byte[] fileContentAsByteArray(final String filename) {
+        try {
+            return Resources.toByteArray(AviationMessageArchiverTest.class.getResource(filename));
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }

@@ -1,0 +1,11 @@
+LTFI31 EFKL 301115
+        <?xml version="1.0" encoding="UTF-8"?>
+<collect:MeteorologicalBulletin xmlns:collect="http://def.wmo.int/collect/2014"
+                                xmlns:gml="http://www.opengis.net/gml/3.2"
+                                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                gml:id="bulletin-ba26e82e-a8ae-4656-ba77-a631b70edc80"
+                                xsi:schemaLocation="http://def.wmo.int/collect/2014 http://schemas.wmo.int/collect/1.2/collect.xsd">
+    <collect:meteorologicalInformation>
+    </collect:meteorologicalInformation>
+    <collect:bulletinIdentifier>A_LTFI31EFKL301115_C_EFKL_201902011315--.xml</collect:bulletinIdentifier>
+</collect:MeteorologicalBulletin>
