@@ -28,10 +28,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Objects.requireNonNull;
 
@@ -104,6 +101,8 @@ public class MessageFileMonitorInitializer {
     @PostConstruct
     private void initializeFilePatternFlows() {
         final FileNameGenerator timestampAppender = msg -> msg.getHeaders().get(FileHeaders.FILENAME) + "." + clock.millis();
+        final List<Advice> archiveAdviceChain = ImmutableList.of(exceptionTrapAdvice, archiveRetryAdvice);
+        final List<Advice> failAdviceChain = ImmutableList.of(exceptionTrapAdvice, failRetryAdvice);
 
         aviationProductsHolder.getProducts().values().forEach(product -> {
             final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
@@ -113,14 +112,14 @@ public class MessageFileMonitorInitializer {
             archiveDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
             archiveDirectory.setExpectReply(false);
             archiveDirectory.setDeleteSourceFiles(true);
-            archiveDirectory.setAdviceChain(ImmutableList.of(exceptionTrapAdvice, archiveRetryAdvice));
+            archiveDirectory.setAdviceChain(archiveAdviceChain);
             archiveDirectory.setFileNameGenerator(timestampAppender);
 
             final FileWritingMessageHandler failDirectory = new FileWritingMessageHandler(product.getFailDir());
             failDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
             failDirectory.setExpectReply(false);
             failDirectory.setDeleteSourceFiles(true);
-            failDirectory.setAdviceChain(ImmutableList.of(exceptionTrapAdvice, failRetryAdvice));
+            failDirectory.setAdviceChain(failAdviceChain);
             failDirectory.setFileNameGenerator(timestampAppender);
 
             // Separate input channel needed in order to use multiple different

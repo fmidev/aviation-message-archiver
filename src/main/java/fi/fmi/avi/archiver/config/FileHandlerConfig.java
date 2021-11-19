@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.spring.retry.RetryAdvice;
+import fi.fmi.avi.archiver.spring.retry.RetryAdviceFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,17 +39,17 @@ public class FileHandlerConfig {
 
     @Bean
     public RequestHandlerRetryAdvice fileReadingRetryAdvice() {
-        return new RetryAdvice("File reading", initialInterval, maxInterval, retryMultiplier, timeout);
+        return RetryAdviceFactory.create("File reading", initialInterval, maxInterval, retryMultiplier, timeout);
     }
 
     @Bean
     public RequestHandlerRetryAdvice archiveRetryAdvice() {
-        return new RetryAdvice("Writing to archive dir", initialInterval, maxInterval, retryMultiplier, timeout);
+        return RetryAdviceFactory.create("Writing to archive dir", initialInterval, maxInterval, retryMultiplier, timeout);
     }
 
     @Bean
     public RequestHandlerRetryAdvice failRetryAdvice() {
-        return new RetryAdvice("Writing to fail dir", initialInterval, maxInterval, retryMultiplier, timeout);
+        return RetryAdviceFactory.create("Writing to fail dir", initialInterval, maxInterval, retryMultiplier, timeout);
     }
 
 }

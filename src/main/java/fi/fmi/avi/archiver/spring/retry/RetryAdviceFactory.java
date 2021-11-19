@@ -13,12 +13,12 @@ import java.time.Duration;
 
 import static java.util.Objects.requireNonNull;
 
-public class RetryAdvice extends RequestHandlerRetryAdvice {
+public class RetryAdviceFactory extends RequestHandlerRetryAdvice {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RetryAdvice.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RetryAdviceFactory.class);
 
-    public RetryAdvice(final String description, final Duration initialInterval, final Duration maxInterval,
-                       final int multiplier, final Duration timeout) {
+    public static RequestHandlerRetryAdvice create(final String description, final Duration initialInterval, final Duration maxInterval,
+                                                   final int multiplier, final Duration timeout) {
         requireNonNull(description, "description");
         requireNonNull(initialInterval, "initialInterval");
         requireNonNull(maxInterval, "maxInterval");
@@ -53,7 +53,9 @@ public class RetryAdvice extends RequestHandlerRetryAdvice {
             }
         });
 
-        setRetryTemplate(retryTemplateBuilder.build());
+        final RequestHandlerRetryAdvice retryAdvice = new RequestHandlerRetryAdvice();
+        retryAdvice.setRetryTemplate(retryTemplateBuilder.build());
+        return retryAdvice;
     }
 }
 
