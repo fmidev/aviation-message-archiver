@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.spring.context;
 
 import static java.util.Objects.requireNonNull;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.Supplier;
@@ -17,13 +18,33 @@ public class GracefulShutdownManager implements ApplicationListener<ContextClose
 
     private final Lifecycle taskReception;
     private final Supplier<Boolean> tasksRunning;
+    private final Clock clock;
+    private final Sleeper sleeper;
 
     private Duration timeout = Duration.ofSeconds(20);
     private Duration pollingInterval = Duration.ofMillis(100);
 
     public GracefulShutdownManager(final Lifecycle taskReception, final Supplier<Boolean> tasksRunning) {
+        this(taskReception, tasksRunning, Clock.systemUTC(), Thread::sleep);
+    }
+
+    /**
+     * Constructor allowing to inject custom clock and sleep function for testing.
+     *
+     * @param taskReception
+     *         taskReception
+     * @param tasksRunning
+     *         tasksRunning
+     * @param clock
+     *         custom clock
+     * @param sleeper
+     *         custom sleep function
+     */
+    GracefulShutdownManager(final Lifecycle taskReception, final Supplier<Boolean> tasksRunning, final Clock clock, final Sleeper sleeper) {
         this.taskReception = requireNonNull(taskReception, "taskReception");
         this.tasksRunning = requireNonNull(tasksRunning, "tasksRunning");
+        this.clock = requireNonNull(clock, "clock");
+        this.sleeper = requireNonNull(sleeper, "sleeper");
     }
 
     @Override
@@ -40,15 +61,14 @@ public class GracefulShutdownManager implements ApplicationListener<ContextClose
         LOGGER.info("Task reception stopped");
     }
 
-    @SuppressWarnings("BusyWait")
     private void waitWhileTasksRunning() {
         if (tasksRunning.get()) {
             LOGGER.info("Waiting for running tasks to finish");
             final long pollingIntervalMillis = pollingInterval.toMillis();
-            final long waitUntil = System.currentTimeMillis() + timeout.toMillis();
-            while (tasksRunning.get() && System.currentTimeMillis() < waitUntil) {
+            final long waitUntil = clock.millis() + timeout.toMillis();
+            while (tasksRunning.get() && clock.millis() < waitUntil) {
                 try {
-                    Thread.sleep(pollingIntervalMillis);
+                    sleeper.sleep(pollingIntervalMillis);
                 } catch (final InterruptedException e) {
                     LOGGER.warn("Wait interrupted", e);
                     break;
@@ -72,9 +92,14 @@ public class GracefulShutdownManager implements ApplicationListener<ContextClose
 
     public void setPollingInterval(final Duration pollingInterval) {
         requireNonNull(pollingInterval, "pollingInterval");
-        if (pollingInterval.isNegative()) {
-            throw new IllegalArgumentException("pollingInterval must not be negative");
+        if (pollingInterval.isNegative() || pollingInterval.isZero()) {
+            throw new IllegalArgumentException("pollingInterval must be positive");
         }
         this.pollingInterval = pollingInterval;
+    }
+
+    @FunctionalInterface
+    interface Sleeper {
+        void sleep(long millis) throws InterruptedException;
     }
 }

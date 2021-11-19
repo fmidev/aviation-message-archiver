@@ -1,15 +1,14 @@
 package fi.fmi.avi.archiver;
 
-import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.Test;
+import org.threeten.extra.MutableClock;
 
 import fi.fmi.avi.archiver.file.FileMetadata;
 
@@ -84,54 +83,18 @@ class ProcessingMetricsTest {
 
     @Test
     void getRunningFileProcessingMaxElapsed_returns_maximum_time_elapsed_from_start_of_first_running_task() {
-        final MutableForwardingClock clock = new MutableForwardingClock(FIXED_EPOCH_CLOCK);
+        final MutableClock clock = MutableClock.of(FIXED_EPOCH_CLOCK.instant(), FIXED_EPOCH_CLOCK.getZone());
         final Duration timeAdvance = Duration.ofSeconds(10);
         final ProcessingMetrics metrics = new ProcessingMetrics(clock);
 
         metrics.start(FILE_METADATA_1);
-        clock.setFixedTime(clock.instant().plus(timeAdvance));
+        clock.add(timeAdvance);
         metrics.start(FILE_METADATA_2);
-        clock.setFixedTime(clock.instant().plus(timeAdvance));
+        clock.add(timeAdvance);
         metrics.start(FILE_METADATA_1);
-        clock.setFixedTime(clock.instant().plus(timeAdvance));
+        clock.add(timeAdvance);
         final Duration result = metrics.getRunningFileProcessingMaxElapsed();
 
         assertThat(result).isEqualTo(timeAdvance.multipliedBy(3));
-    }
-
-    private static class MutableForwardingClock extends Clock {
-        private Clock baseClock;
-
-        public MutableForwardingClock(final Clock baseClock) {
-            this.baseClock = requireNonNull(baseClock, "delegate");
-        }
-
-        public void setBaseClock(final Clock baseClock) {
-            this.baseClock = requireNonNull(baseClock, "delegate");
-        }
-
-        public void setFixedTime(final Instant instant) {
-            this.baseClock = Clock.fixed(requireNonNull(instant, "instant"), this.baseClock.getZone());
-        }
-
-        @Override
-        public ZoneId getZone() {
-            return baseClock.getZone();
-        }
-
-        @Override
-        public Clock withZone(final ZoneId zone) {
-            return new MutableForwardingClock(baseClock.withZone(zone));
-        }
-
-        @Override
-        public long millis() {
-            return baseClock.millis();
-        }
-
-        @Override
-        public Instant instant() {
-            return baseClock.instant();
-        }
     }
 }
