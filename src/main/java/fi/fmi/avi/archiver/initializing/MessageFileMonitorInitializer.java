@@ -128,9 +128,10 @@ public class MessageFileMonitorInitializer {
 
             // Initialize source directory polling. Uses poller bean
             registrations.add(context.registration(IntegrationFlows.from(sourceDirectory)//
-                    .channel(inputChannel)//
-                    .get()//
-            ).register());
+                            .channel(inputChannel)//
+                            .get())
+                    .autoStartup(false)
+                    .register());
 
             // Integration flow for file name filtering
             product.getFileConfigs().stream().map(fileConfig -> context.registration(IntegrationFlows.from(inputChannel)//
