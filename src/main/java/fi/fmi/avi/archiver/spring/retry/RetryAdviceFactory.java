@@ -15,6 +15,9 @@ import static java.util.Objects.requireNonNull;
 
 public class RetryAdviceFactory extends RequestHandlerRetryAdvice {
 
+    private RetryAdviceFactory() {
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RetryAdviceFactory.class);
 
     public static RequestHandlerRetryAdvice create(final String description, final Duration initialInterval, final Duration maxInterval,
