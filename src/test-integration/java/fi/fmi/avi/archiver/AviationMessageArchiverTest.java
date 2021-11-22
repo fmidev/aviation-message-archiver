@@ -71,7 +71,7 @@ class AviationMessageArchiverTest {
         databaseAccessTestUtil = new DatabaseAccessTestUtil(databaseAccess, clock.instant());
     }
 
-    static Stream<AviationMessageArchiverTestCase> test_file_flow() {
+    static Stream<AviationMessageArchiverTestCase> test_archival() {
         return Stream.of(//
                 AviationMessageArchiverTestCase.builder()//
                         .setName("Minimal TAC TAF")//
@@ -792,20 +792,8 @@ class AviationMessageArchiverTest {
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource
-    void test_file_flow(final AviationMessageArchiverTestCase testCase) throws IOException, InterruptedException, URISyntaxException {
-        final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
-        final Path testFile = Paths.get(product.getInputDir().getPath() + "/" + testCase.getInputFileName());
-        final Path tempFile = Paths.get(testFile + TEMP_FILE_SUFFIX);
-        Files.copy(testCase.getInputFile(), tempFile);
-        Files.setLastModifiedTime(tempFile, FileTime.from(testCase.getFileModified()));
-        Files.move(tempFile, testFile);
-
-        if (!testCase.getUnhandled()) {
-            testCase.assertInputAndOutputFilesEquals(product, clock.millis());
-            assertThat(testFile).doesNotExist();
-        } else {
-            assertThat(testFile).exists();
-        }
+    void test_archival(final AviationMessageArchiverTestCase testCase) {
+        assertFileFlow(testCase);
 
         if (!testCase.getArchivedMessages().isEmpty()) {
             assertThat(databaseAccessTestUtil.fetchArchiveMessages())
@@ -827,29 +815,8 @@ class AviationMessageArchiverTest {
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     public void test_all_at_once() {
-        final List<AviationMessageArchiverTestCase> cases = test_file_flow().collect(Collectors.toList());
-
-        cases.parallelStream().forEach(testCase -> {
-            final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
-            final Path testFile = Paths.get(product.getInputDir().getPath() + "/" + testCase.getInputFileName());
-            final Path tempFile = Paths.get(testFile + TEMP_FILE_SUFFIX);
-
-            try {
-                Files.copy(testCase.getInputFile(), tempFile);
-                Files.setLastModifiedTime(tempFile, FileTime.from(testCase.getFileModified()));
-                Files.move(tempFile, testFile);
-
-                if (!testCase.getUnhandled()) {
-                    testCase.assertInputAndOutputFilesEquals(product, clock.millis());
-                    assertThat(testFile).doesNotExist();
-                } else {
-                    assertThat(testFile).exists();
-                }
-            } catch (final Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-
+        final List<AviationMessageArchiverTestCase> cases = test_archival().collect(Collectors.toList());
+        cases.parallelStream().forEach(this::assertFileFlow);
         cases.parallelStream().forEach(testCase -> {
             if (!testCase.getArchivedMessages().isEmpty()) {
                 assertThat(databaseAccessTestUtil.fetchArchiveMessages())
@@ -862,6 +829,27 @@ class AviationMessageArchiverTest {
                         .containsAll(testCase.getRejectedMessages());
             }
         });
+    }
+
+    private void assertFileFlow(final AviationMessageArchiverTestCase testCase) {
+        final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
+        final Path testFile = Paths.get(product.getInputDir().getPath() + "/" + testCase.getInputFileName());
+        final Path tempFile = Paths.get(testFile + TEMP_FILE_SUFFIX);
+
+        try {
+            Files.copy(testCase.getInputFile(), tempFile);
+            Files.setLastModifiedTime(tempFile, FileTime.from(testCase.getFileModified()));
+            Files.move(tempFile, testFile);
+
+            if (!testCase.getUnhandled()) {
+                testCase.assertInputAndOutputFilesEquals(product, clock.millis());
+                assertThat(testFile).doesNotExist();
+            } else {
+                assertThat(testFile).exists();
+            }
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @FreeBuilder
