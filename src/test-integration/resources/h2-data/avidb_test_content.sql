@@ -30,4 +30,13 @@ VALUES (3, 'YUDD', 'YUDD Test Airport', NULL, 1, '1700-01-01 00:00:00', '9999-12
 INSERT INTO public.avidb_stations
 VALUES (4, 'EETN', 'EETN Test Airport', NULL, 1, '1700-01-01 00:00:00', '9999-12-31 00:00:00', '2021-06-03 00:00:00', NULL,
         'US');
+INSERT INTO public.avidb_stations
+VALUES (5, 'EFHA', 'EFKK Test Airport', NULL, 1, '1700-01-01 00:00:00', '9999-12-31 00:00:00', '2021-06-03 00:00:00', NULL,
+        'US');
+INSERT INTO public.avidb_stations
+VALUES (6, 'EFKK', 'EFPO Test Airport', NULL, 1, '1700-01-01 00:00:00', '9999-12-31 00:00:00', '2021-06-03 00:00:00', NULL,
+        'US');
+INSERT INTO public.avidb_stations
+VALUES (7, 'EFPO', 'EFJO Test Airport', NULL, 1, '1700-01-01 00:00:00', '9999-12-31 00:00:00', '2021-06-03 00:00:00', NULL,
+        'US');
 

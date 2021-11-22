@@ -549,6 +549,118 @@ class AviationMessageArchiverTest {
                         )
                         .build(),
                 AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM 3.0 TAF Collect bulletin within GTS envelopes")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("taf-gts-bulletin-collect-9.xml")//
+                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                        .setMessageTime(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setStationId(5)
+                                        .setStationIcaoCode("EFHA")
+                                        .setFormat(2)
+                                        .setType(3)
+                                        .setRoute(1)
+                                        .setMessage(fileContent("taf-gts-bulletin-collect-9-message-1.xml"))
+                                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setHeading("LCFI32 EFKL 211400")
+                                        .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                                .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                                .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
+                                                .build())
+                                        .build(),
+                                ArchiveAviationMessage.builder()
+                                        .setMessageTime(Instant.parse("2021-10-21T14:36:00Z"))
+                                        .setStationId(6)
+                                        .setStationIcaoCode("EFKK")
+                                        .setFormat(2)
+                                        .setType(3)
+                                        .setRoute(1)
+                                        .setMessage(fileContent("taf-gts-bulletin-collect-9-message-2.xml"))
+                                        .setValidFrom(Instant.parse("2021-10-21T15:00:00Z"))
+                                        .setValidTo(Instant.parse("2021-10-22T00:00:00Z"))
+                                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setHeading("LCFI32 EFKL 211400")
+                                        .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                                .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                                .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
+                                                .build())
+                                        .build(),
+                                ArchiveAviationMessage.builder()
+                                        .setMessageTime(Instant.parse("2021-10-21T14:37:00Z"))
+                                        .setStationId(7)
+                                        .setStationIcaoCode("EFPO")
+                                        .setFormat(2)
+                                        .setType(3)
+                                        .setRoute(1)
+                                        .setMessage(fileContent("taf-gts-bulletin-collect-9-message-3.xml"))
+                                        .setValidFrom(Instant.parse("2021-10-21T15:00:00Z"))
+                                        .setValidTo(Instant.parse("2021-10-21T18:00:00Z"))
+                                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setHeading("LCFI32 EFKL 211400")
+                                        .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                                .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                                .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
+                                                .build())
+                                        .build()
+                        )
+                        .build(),
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM 3.0 TAF Collect bulletin within GTS envelope")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("taf-gts-bulletin-collect-10.xml")//
+                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                        .setMessageTime(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setStationId(5)
+                                        .setStationIcaoCode("EFHA")
+                                        .setFormat(2)
+                                        .setType(3)
+                                        .setRoute(1)
+                                        .setMessage(fileContent("taf-gts-bulletin-collect-10-message-1.xml"))
+                                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setHeading("LCFI32 EFKL 211400")
+                                        .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                                .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                                .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
+                                                .build())
+                                        .build(),
+                                ArchiveAviationMessage.builder()
+                                        .setMessageTime(Instant.parse("2021-10-21T14:36:00Z"))
+                                        .setStationId(6)
+                                        .setStationIcaoCode("EFKK")
+                                        .setFormat(2)
+                                        .setType(3)
+                                        .setRoute(1)
+                                        .setMessage(fileContent("taf-gts-bulletin-collect-10-message-2.xml"))
+                                        .setValidFrom(Instant.parse("2021-10-21T15:00:00Z"))
+                                        .setValidTo(Instant.parse("2021-10-22T00:00:00Z"))
+                                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setHeading("LCFI32 EFKL 211400")
+                                        .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                                .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                                .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
+                                                .build())
+                                        .build(),
+                                ArchiveAviationMessage.builder()
+                                        .setMessageTime(Instant.parse("2021-10-21T14:37:00Z"))
+                                        .setStationId(7)
+                                        .setStationIcaoCode("EFPO")
+                                        .setFormat(2)
+                                        .setType(3)
+                                        .setRoute(1)
+                                        .setMessage(fileContent("taf-gts-bulletin-collect-10-message-3.xml"))
+                                        .setValidFrom(Instant.parse("2021-10-21T15:00:00Z"))
+                                        .setValidTo(Instant.parse("2021-10-21T18:00:00Z"))
+                                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setHeading("LCFI32 EFKL 211400")
+                                        .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                                .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                                .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
+                                                .build())
+                                        .build()
+                        )
+                        .build(),
+                AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM 3.0 METAR")//
                         .setProductName("test_iwxxm")//
                         .setInputFileName("metar-iwxxm-30.xml")//
@@ -802,6 +914,7 @@ class AviationMessageArchiverTest {
             } else {
                 try {
                     XMLUnit.setIgnoreWhitespace(true);
+                    XMLUnit.setIgnoreComments(true);
                     return XMLUnit.compareXML(left, right).identical();
                 } catch (final IOException | SAXException e) {
                     e.printStackTrace();
