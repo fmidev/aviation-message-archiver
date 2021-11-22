@@ -25,7 +25,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 class GracefulShutdownManagerTest {
-    private static final Duration POLLING_INTERVAL = Duration.ofMillis(20);
+    private static final Duration POLLING_INTERVAL = Duration.ofMillis(2);
     private static final Duration TIMEOUT = POLLING_INTERVAL.multipliedBy(5).plus(Duration.ofMillis(1));
 
     private MutableClock clock;
@@ -91,6 +91,18 @@ class GracefulShutdownManagerTest {
     }
 
     @Test
+    void setPollingInterval_accepts_positive_values() {
+        final GracefulShutdownManager shutdownManager = newGracefulShutdownManager(taskReception, () -> true);
+        final Duration pollingInterval = Duration.ofMillis(1);
+
+        shutdownManager.setPollingInterval(pollingInterval);
+        shutdownManager.setTimeout(pollingInterval);
+        final Duration executionTime = time(() -> shutdownManager.onApplicationEvent(newContextClosedEvent()));
+
+        assertThat(executionTime).isEqualTo(pollingInterval);
+    }
+
+    @Test
     void onApplicationEvent_invokes_taskReception_stop() {
         final Supplier<Boolean> tasksRunning = () -> false;
         final GracefulShutdownManager shutdownManager = newGracefulShutdownManager(taskReception, tasksRunning);
@@ -139,6 +151,26 @@ class GracefulShutdownManagerTest {
         final GracefulShutdownManager.Sleeper sleeper = millis -> {
             fakeSleep(millis);
             remainingSleepPeriods.decrementAndGet();
+        };
+        final GracefulShutdownManager shutdownManager = newGracefulShutdownManager(taskReception, tasksRunning, sleeper);
+
+        final Duration executionTime = time(() -> shutdownManager.onApplicationEvent(newContextClosedEvent()));
+
+        assertThat(executionTime).isEqualTo(POLLING_INTERVAL.multipliedBy(sleepPeriodsWhileRunning));
+    }
+
+    @Test
+    void onApplicationEvent_stops_waiting_if_interrupted() {
+        final int sleepPeriodsWhileRunning = 2;
+        final AtomicInteger remainingSleepPeriods = new AtomicInteger(sleepPeriodsWhileRunning);
+        final Supplier<Boolean> tasksRunning = () -> true;
+        final GracefulShutdownManager.Sleeper sleeper = millis -> {
+            final int remaining = remainingSleepPeriods.getAndDecrement();
+            if (remaining > 0) {
+                fakeSleep(millis);
+            } else {
+                throw new InterruptedException("Testing interruption");
+            }
         };
         final GracefulShutdownManager shutdownManager = newGracefulShutdownManager(taskReception, tasksRunning, sleeper);
 
