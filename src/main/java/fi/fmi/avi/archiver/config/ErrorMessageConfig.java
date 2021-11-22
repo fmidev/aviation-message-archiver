@@ -1,6 +1,7 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
+import javax.annotation.Nullable;
+
 import org.aopalliance.aop.Advice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,8 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.ErrorMessage;
 
+import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
+
 @Configuration
 public class ErrorMessageConfig {
 
@@ -29,6 +32,9 @@ public class ErrorMessageConfig {
 
     @Autowired
     private MessageChannel failChannel;
+
+    @Autowired
+    private MessageChannel finishChannel;
 
     @Bean
     public IntegrationFlow errorMessageFlow() {
@@ -44,7 +50,8 @@ public class ErrorMessageConfig {
     public IntegrationFlow errorLoggingFlow() {
         return IntegrationFlows.from(errorLoggingChannel)//
                 .handle(this)//
-                .nullChannel();
+                .channel(finishChannel)//
+                .get();
     }
 
     // Trap exceptions to avoid infinite looping when the error message flow itself results in exceptions
@@ -57,6 +64,7 @@ public class ErrorMessageConfig {
     }
 
     @ServiceActivator
+    @Nullable
     public Message<?> errorMessageToOriginalMessage(final ErrorMessage errorMessage) {
         final Message<?> failedMessage;
         if (errorMessage.getPayload() instanceof MessagingException) {

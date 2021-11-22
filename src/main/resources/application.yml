@@ -42,6 +42,24 @@ datasource:
 
 ##############################################
 #
+#  Shutdown config
+#
+##############################################
+# START SNIPPET: shutdown
+server:
+  shutdown: graceful
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: "20s"
+processing-flow:
+  gracefulShutdown:
+    timeout: PT20S
+    pollingInterval: PT0.1S
+---
+# END SNIPPET: shutdown
+
+##############################################
+#
 #  Actuator config
 #
 ##############################################

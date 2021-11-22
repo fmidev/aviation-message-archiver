@@ -1,7 +1,8 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
-import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
+import java.time.Clock;
+import java.time.Duration;
+
 import org.aopalliance.aop.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,10 +15,22 @@ import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.scheduling.PollerMetadata;
 import org.springframework.messaging.MessageChannel;
 
-import java.time.Clock;
+import fi.fmi.avi.archiver.ProcessingMetrics;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
+import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
+import fi.fmi.avi.archiver.spring.context.GracefulShutdownManager;
+import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
 
 @Configuration
 public class DirectoryInspectionConfig {
+
+    @Value("${processing-flow.gracefulShutdown.timeout:PT20S}")
+    private Duration gracefulShutdownTimeout;
+
+    @Value("${processing-flow.gracefulShutdown.pollingInterval:PT0.1S}")
+    private Duration gracefulShutdownPollingInterval;
 
     @Autowired
     private IntegrationFlowContext flowContext;
@@ -52,15 +65,38 @@ public class DirectoryInspectionConfig {
     @Autowired
     private Advice exceptionTrapAdvice;
 
+    @Autowired
+    private MessageChannel finishChannel;
+
+    @Bean
+    public CompoundLifecycle inputReadersLifecycle() {
+        return new CompoundLifecycle();
+    }
+
+    @Bean
+    public GracefulShutdownManager shutdownManager() {
+        final ProcessingMetrics processingMetrics = processingMetrics();
+        final GracefulShutdownManager shutdownManager = new GracefulShutdownManager(inputReadersLifecycle(),
+                () -> processingMetrics.getFileCountUnderProcessing() > 0);
+        shutdownManager.setTimeout(gracefulShutdownTimeout);
+        shutdownManager.setPollingInterval(gracefulShutdownPollingInterval);
+        return shutdownManager;
+    }
+
+    @Bean
+    public ProcessingMetrics processingMetrics() {
+        return new ProcessingMetrics(clock);
+    }
+
     @Bean(name = PollerMetadata.DEFAULT_POLLER)
     public PollerMetadata poller(@Value("${polling.delay}") final int pollingDelay) {
         return Pollers.fixedDelay(pollingDelay).get();
     }
 
-    @Bean(destroyMethod = "dispose")
+    @Bean
     public MessageFileMonitorInitializer messageFileMonitorInitializer() {
-        return new MessageFileMonitorInitializer(flowContext, aviationProductsHolder, clock, processingChannel, successChannel,
-                failChannel, errorMessageChannel, archiveRetryAdvice, failRetryAdvice, exceptionTrapAdvice);
+        return new MessageFileMonitorInitializer(flowContext, inputReadersLifecycle(), processingMetrics(), aviationProductsHolder, clock, processingChannel,
+                successChannel, failChannel, finishChannel, errorMessageChannel, archiveRetryAdvice, failRetryAdvice, exceptionTrapAdvice);
     }
 
     @Bean
@@ -70,12 +106,19 @@ public class DirectoryInspectionConfig {
 
     @Bean
     public IntegrationFlow archiveRouter() {
-        return IntegrationFlows.from(archiveChannel)
-                .route("headers." + MessageFileMonitorInitializer.FAILED_MESSAGES + ".isEmpty()" +
-                        " and !headers." + MessageFileMonitorInitializer.FILE_PARSE_ERRORS, r -> r//
-                        .channelMapping(true, successChannel)
-                        .channelMapping(false, failChannel)
+        return IntegrationFlows.from(archiveChannel)//
+                .route("headers." + MessageFileMonitorInitializer.FAILED_MESSAGES + ".isEmpty()" //
+                        + " and !headers." + MessageFileMonitorInitializer.FILE_PARSE_ERRORS, r -> r//
+                        .channelMapping(true, successChannel)//
+                        .channelMapping(false, failChannel)//
                 ).get();
     }
 
+    @Bean
+    public IntegrationFlow finishFlow() {
+        final ProcessingMetrics processingMetrics = processingMetrics();
+        return IntegrationFlows.from(finishChannel)//
+                .handle(ServiceActivators.peekHeader(FileMetadata.class, MessageFileMonitorInitializer.FILE_METADATA, processingMetrics::finish))//
+                .nullChannel();
+    }
 }

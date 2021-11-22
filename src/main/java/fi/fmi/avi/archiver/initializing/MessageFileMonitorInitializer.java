@@ -1,14 +1,28 @@
 package fi.fmi.avi.archiver.initializing;
 
-import com.google.common.collect.ImmutableList;
-import fi.fmi.avi.archiver.file.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
+import static java.util.Objects.requireNonNull;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
 import org.aopalliance.aop.Advice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.core.GenericSelector;
+import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.file.FileHeaders;
@@ -22,15 +36,14 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
 
-import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.*;
+import com.google.common.collect.ImmutableList;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.ProcessingMetrics;
+import fi.fmi.avi.archiver.file.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
+import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
+import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 
 /**
  * Initializes Message file source directory reading, filename filtering and archiving of the files.
@@ -47,29 +60,35 @@ public class MessageFileMonitorInitializer {
     private static final String INPUT_CATEGORY = "input";
 
     private final IntegrationFlowContext context;
-    private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registrations;
+    private final CompoundLifecycle inputReadersLifecycle;
+    private final ProcessingMetrics processingMetrics;
 
     private final AviationProductsHolder aviationProductsHolder;
     private final Clock clock;
     private final MessageChannel processingChannel;
     private final MessageChannel successChannel;
     private final MessageChannel failChannel;
+    private final MessageChannel finishChannel;
     private final MessageChannel errorMessageChannel;
     private final Advice archiveRetryAdvice;
     private final Advice failRetryAdvice;
     private final Advice exceptionTrapAdvice;
 
-    public MessageFileMonitorInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
-                                         final Clock clock, final MessageChannel processingChannel, final MessageChannel successChannel,
-                                         final MessageChannel failChannel, final MessageChannel errorMessageChannel, final Advice archiveRetryAdvice,
-                                         final Advice failRetryAdvice, final Advice exceptionTrapAdvice) {
+    private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registrations = new HashSet<>();
+
+    public MessageFileMonitorInitializer(final IntegrationFlowContext context, final CompoundLifecycle inputReadersLifecycle,
+            final ProcessingMetrics processingMetrics, final AviationProductsHolder aviationProductsHolder, final Clock clock,
+            final MessageChannel processingChannel, final MessageChannel successChannel, final MessageChannel failChannel, final MessageChannel finishChannel,
+            final MessageChannel errorMessageChannel, final Advice archiveRetryAdvice, final Advice failRetryAdvice, final Advice exceptionTrapAdvice) {
         this.context = requireNonNull(context, "context");
-        this.registrations = new HashSet<>();
+        this.inputReadersLifecycle = requireNonNull(inputReadersLifecycle, "inputReadersLifecycle");
+        this.processingMetrics = requireNonNull(processingMetrics, "processingMetrics");
         this.aviationProductsHolder = requireNonNull(aviationProductsHolder, "aviationProductsHolder");
         this.clock = requireNonNull(clock, "clock");
         this.processingChannel = requireNonNull(processingChannel, "processingChannel");
-        this.successChannel = requireNonNull(successChannel, "archiveChannel");
+        this.successChannel = requireNonNull(successChannel, "successChannel");
         this.failChannel = requireNonNull(failChannel, "failChannel");
+        this.finishChannel = requireNonNull(finishChannel, "finishChannel");
         this.errorMessageChannel = requireNonNull(errorMessageChannel, "errorMessageChannel");
         this.archiveRetryAdvice = requireNonNull(archiveRetryAdvice, "archiveRetryAdvice");
         this.failRetryAdvice = requireNonNull(failRetryAdvice, "failRetryAdvice");
@@ -107,17 +126,16 @@ public class MessageFileMonitorInitializer {
         aviationProductsHolder.getProducts().values().forEach(product -> {
             final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
             sourceDirectory.setDirectory(product.getInputDir());
+            inputReadersLifecycle.add(sourceDirectory);
 
             final FileWritingMessageHandler archiveDirectory = new FileWritingMessageHandler(product.getArchiveDir());
             archiveDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
-            archiveDirectory.setExpectReply(false);
             archiveDirectory.setDeleteSourceFiles(true);
             archiveDirectory.setAdviceChain(archiveAdviceChain);
             archiveDirectory.setFileNameGenerator(timestampAppender);
 
             final FileWritingMessageHandler failDirectory = new FileWritingMessageHandler(product.getFailDir());
             failDirectory.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
-            failDirectory.setExpectReply(false);
             failDirectory.setDeleteSourceFiles(true);
             failDirectory.setAdviceChain(failAdviceChain);
             failDirectory.setFileNameGenerator(timestampAppender);
@@ -127,44 +145,54 @@ public class MessageFileMonitorInitializer {
             final PublishSubscribeChannel inputChannel = new PublishSubscribeChannel();
 
             // Initialize source directory polling. Uses poller bean
-            registrations.add(context.registration(IntegrationFlows.from(sourceDirectory)//
-                            .channel(inputChannel)//
-                            .get())
-                    .autoStartup(false)
-                    .register());
+            registerIntegrationFlow(IntegrationFlows.from(sourceDirectory)//
+                    .channel(inputChannel)//
+                    .get());
 
             // Integration flow for file name filtering
-            product.getFileConfigs().stream().map(fileConfig -> context.registration(IntegrationFlows.from(inputChannel)//
+            registerAllIntegrationFlows(product.getFileConfigs().stream()//
+                    .map(fileConfig -> IntegrationFlows.from(inputChannel)//
                             .filter(new RegexPatternFileListFilter(fileConfig.getPattern())::accept)//
                             .enrichHeaders(s -> s.header(PRODUCT_KEY, product)//
                                     .headerFunction(MessageHeaders.ERROR_CHANNEL, message -> errorMessageChannel)
                                     .headerFunction(FILE_METADATA, message -> createFileMetadata(message, fileConfig, product.getId())))
+                            .handle(ServiceActivators.peekHeader(FileMetadata.class, FILE_METADATA, processingMetrics::start))//
                             .log(Level.INFO, INPUT_CATEGORY)//
                             .channel(processingChannel)//
                             .get()//
-                    ).register()//
-            ).forEach(registrations::add);
+                    ));
 
             // Initialize file moving flows
             final GenericSelector<Message> productFilter = m -> Objects.equals(m.getHeaders().get(PRODUCT_KEY), product);
             final HeaderToFileTransformer headerToFileTransformer = new HeaderToFileTransformer();
 
-            registrations.add(context.registration(IntegrationFlows.from(successChannel)//
+            registerIntegrationFlow(IntegrationFlows.from(successChannel)//
                     .filter(Message.class, productFilter)//
                     .transform(headerToFileTransformer)//
                     .handle(archiveDirectory)//
-                    .get()//
-            ).register());
+                    .channel(finishChannel)//
+                    .get());
 
-            registrations.add(context.registration(IntegrationFlows.from(failChannel)//
+            registerIntegrationFlow(IntegrationFlows.from(failChannel)//
                     .filter(Message.class, productFilter)//
                     .transform(headerToFileTransformer)//
                     .handle(failDirectory)//
-                    .get()
-            ).register());
+                    .channel(finishChannel)//
+                    .get());
         });
     }
 
+    private void registerIntegrationFlow(final IntegrationFlow integrationFlow) {
+        registrations.add(context.registration(integrationFlow)//
+                .autoStartup(false)//
+                .register());
+    }
+
+    private void registerAllIntegrationFlows(final Stream<IntegrationFlow> integrationFlows) {
+        integrationFlows.forEach(this::registerIntegrationFlow);
+    }
+
+    @PreDestroy
     public void dispose() {
         registrations.forEach(registration -> context.remove(registration.getId()));
     }
