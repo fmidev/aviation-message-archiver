@@ -13,11 +13,13 @@ import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguratio
 import org.custommonkey.xmlunit.XMLUnit;
 import org.inferred.freebuilder.FreeBuilder;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
@@ -36,6 +38,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
@@ -128,6 +131,13 @@ class AviationMessageArchiverTest {
                                 .setHeading("FTXX33 XXXX 181500")
                                 .build()
                         )
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Unhandled extension")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("taf-unhandled-extension.unknown")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectUnhandled()
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
                         .setName("Empty file fails")//
@@ -790,7 +800,12 @@ class AviationMessageArchiverTest {
         Files.setLastModifiedTime(tempFile, FileTime.from(testCase.getFileModified()));
         Files.move(tempFile, testFile);
 
-        testCase.assertInputAndOutputFilesEquals(product, clock.millis());
+        if (!testCase.getUnhandled()) {
+            testCase.assertInputAndOutputFilesEquals(product, clock.millis());
+            assertThat(testFile).doesNotExist();
+        } else {
+            assertThat(testFile).exists();
+        }
 
         if (!testCase.getArchivedMessages().isEmpty()) {
             assertThat(databaseAccessTestUtil.fetchArchiveMessages())
@@ -807,8 +822,46 @@ class AviationMessageArchiverTest {
         } else {
             databaseAccessTestUtil.assertRejectedMessagesEmpty();
         }
+    }
 
-        assertThat(testFile).doesNotExist();
+    @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    public void test_all_at_once() {
+        final List<AviationMessageArchiverTestCase> cases = test_file_flow().collect(Collectors.toList());
+
+        cases.parallelStream().forEach(testCase -> {
+            final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
+            final Path testFile = Paths.get(product.getInputDir().getPath() + "/" + testCase.getInputFileName());
+            final Path tempFile = Paths.get(testFile + TEMP_FILE_SUFFIX);
+
+            try {
+                Files.copy(testCase.getInputFile(), tempFile);
+                Files.setLastModifiedTime(tempFile, FileTime.from(testCase.getFileModified()));
+                Files.move(tempFile, testFile);
+
+                if (!testCase.getUnhandled()) {
+                    testCase.assertInputAndOutputFilesEquals(product, clock.millis());
+                    assertThat(testFile).doesNotExist();
+                } else {
+                    assertThat(testFile).exists();
+                }
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        cases.parallelStream().forEach(testCase -> {
+            if (!testCase.getArchivedMessages().isEmpty()) {
+                assertThat(databaseAccessTestUtil.fetchArchiveMessages())
+                        .usingRecursiveFieldByFieldElementComparator(archiveMessageComparisonConfiguration)
+                        .containsAll(testCase.getArchivedMessages());
+            }
+            if (!testCase.getRejectedMessages().isEmpty()) {
+                assertThat(databaseAccessTestUtil.fetchRejectedMessages(testCase.getFormat()))
+                        .usingRecursiveFieldByFieldElementComparator(archiveMessageComparisonConfiguration)
+                        .containsAll(testCase.getRejectedMessages());
+            }
+        });
     }
 
     @FreeBuilder
@@ -839,6 +892,8 @@ class AviationMessageArchiverTest {
         public abstract List<ArchiveAviationMessage> getRejectedMessages();
 
         public abstract boolean getExpectFail();
+
+        public abstract boolean getUnhandled();
 
         public int getFormat() {
             return Streams.concat(getArchivedMessages().stream(), getRejectedMessages().stream())
@@ -882,10 +937,15 @@ class AviationMessageArchiverTest {
 
             public Builder() {
                 setExpectFail(false);
+                setUnhandled(false);
             }
 
             public Builder expectFail() {
                 return super.setExpectFail(true);
+            }
+
+            public Builder expectUnhandled() {
+                return super.setUnhandled(true);
             }
         }
     }
