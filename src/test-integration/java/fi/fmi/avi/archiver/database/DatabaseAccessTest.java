@@ -150,8 +150,8 @@ public class DatabaseAccessTest {
         final ArchiveAviationMessage archiveAviationMessage = TEST_MESSAGE.toBuilder().setProcessingResult(ProcessingResult.UNKNOWN_STATION_ICAO_CODE)//
                 .build();
 
-        final int affectedRows = databaseAccess.insertRejectedAviationMessage(archiveAviationMessage);
-        assertThat(affectedRows).isEqualTo(1);
+        final Number generatedId = databaseAccess.insertRejectedAviationMessage(archiveAviationMessage);
+        assertThat(generatedId.longValue()).isPositive();
         databaseAccessTestUtil.assertRejectedMessagesContains(archiveAviationMessage);
     }
 

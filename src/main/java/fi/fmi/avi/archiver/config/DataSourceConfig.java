@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
@@ -40,6 +41,9 @@ public class DataSourceConfig {
     @Value("${datasource.retry.timeout:PT0S}")
     private Duration retryTimeout;
 
+    @Value("${datasource.schema}")
+    private String schema;
+
     @Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
 
@@ -54,7 +58,7 @@ public class DataSourceConfig {
 
     @Bean
     public DatabaseAccess databaseAccess() {
-        return new DatabaseAccess(jdbcTemplate, clock, databaseAccessRetryTemplate());
+        return new DatabaseAccess(jdbcTemplate, clock, databaseAccessRetryTemplate(), schema);
     }
 
     @Bean
@@ -114,6 +118,8 @@ public class DataSourceConfig {
                 super.onError(context, callback, throwable);
                 if (!NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
                     LOGGER.error("Database operation failed. Retry attempt " + context.getRetryCount(), throwable);
+                } else if (throwable instanceof EmptyResultDataAccessException) {
+                    LOGGER.debug("Empty result", throwable);
                 } else {
                     LOGGER.error("Database operation failed. Not retrying", throwable);
                 }

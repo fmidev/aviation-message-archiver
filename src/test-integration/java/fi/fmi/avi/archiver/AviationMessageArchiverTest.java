@@ -303,6 +303,9 @@ class AviationMessageArchiverTest {
                                 .setValidTo(Instant.parse("2017-07-31T12:00:00Z"))
                                 .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                                 .setProcessingResult(ProcessingResult.UNKNOWN_STATION_ICAO_CODE)
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                        .setXMLNamespace("http://icao.int/iwxxm/2.1")
+                                        .build())
                                 .build()
                         )
                         .build(),//
@@ -474,7 +477,7 @@ class AviationMessageArchiverTest {
         }
 
         if (!testCase.getRejectedMessages().isEmpty()) {
-            assertThat(databaseAccessTestUtil.fetchRejectedMessages(testCase.getFormat()))
+            assertThat(databaseAccessTestUtil.fetchRejectedMessages())
                     .usingRecursiveFieldByFieldElementComparator(archiveMessageComparisonConfiguration)
                     .containsExactlyInAnyOrderElementsOf(testCase.getRejectedMessages());
         } else {
