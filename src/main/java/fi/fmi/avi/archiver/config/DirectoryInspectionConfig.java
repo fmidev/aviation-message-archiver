@@ -1,8 +1,12 @@
 package fi.fmi.avi.archiver.config;
 
-import java.time.Clock;
-import java.time.Duration;
-
+import fi.fmi.avi.archiver.ProcessingMetrics;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
+import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
+import fi.fmi.avi.archiver.spring.context.GracefulShutdownManager;
+import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
 import org.aopalliance.aop.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,13 +19,8 @@ import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.scheduling.PollerMetadata;
 import org.springframework.messaging.MessageChannel;
 
-import fi.fmi.avi.archiver.ProcessingMetrics;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
-import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
-import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
-import fi.fmi.avi.archiver.spring.context.GracefulShutdownManager;
-import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
+import java.time.Clock;
+import java.time.Duration;
 
 @Configuration
 public class DirectoryInspectionConfig {
@@ -31,6 +30,9 @@ public class DirectoryInspectionConfig {
 
     @Value("${processing-flow.gracefulShutdown.pollingInterval:PT0.1S}")
     private Duration gracefulShutdownPollingInterval;
+
+    @Value("${polling.filter-queue-size}")
+    private int filterQueueSize;
 
     @Autowired
     private IntegrationFlowContext flowContext;
@@ -96,7 +98,7 @@ public class DirectoryInspectionConfig {
     @Bean
     public MessageFileMonitorInitializer messageFileMonitorInitializer() {
         return new MessageFileMonitorInitializer(flowContext, inputReadersLifecycle(), processingMetrics(), aviationProductsHolder, clock, processingChannel,
-                successChannel, failChannel, finishChannel, errorMessageChannel, archiveRetryAdvice, failRetryAdvice, exceptionTrapAdvice);
+                successChannel, failChannel, finishChannel, errorMessageChannel, archiveRetryAdvice, failRetryAdvice, exceptionTrapAdvice, filterQueueSize);
     }
 
     @Bean

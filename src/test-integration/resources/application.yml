@@ -11,6 +11,7 @@ testclass:
     parent: ${java.io.tmpdir}
     path: ${testclass.workdir.parent}/${testclass.name}
 # END SNIPPET: tests
+---
 
 ##############################################
 #
@@ -51,6 +52,7 @@ health-indicator:
 # START SNIPPET: products
 polling:
   delay: 50
+  filter-queue-size: 5000
 
 production-line-initialization:
   products:

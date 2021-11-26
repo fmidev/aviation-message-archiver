@@ -1,22 +1,13 @@
 package fi.fmi.avi.archiver.initializing;
 
-import static java.util.Objects.requireNonNull;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
+import com.google.common.collect.ImmutableList;
+import fi.fmi.avi.archiver.ProcessingMetrics;
+import fi.fmi.avi.archiver.file.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
+import fi.fmi.avi.archiver.spring.filter.AcceptOnceUnchangedFileListFilter;
+import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
+import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 import org.aopalliance.aop.Advice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +27,17 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
 
-import com.google.common.collect.ImmutableList;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.*;
+import java.util.stream.Stream;
 
-import fi.fmi.avi.archiver.ProcessingMetrics;
-import fi.fmi.avi.archiver.file.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
-import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
-import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Initializes Message file source directory reading, filename filtering and archiving of the files.
@@ -73,13 +67,15 @@ public class MessageFileMonitorInitializer {
     private final Advice archiveRetryAdvice;
     private final Advice failRetryAdvice;
     private final Advice exceptionTrapAdvice;
+    private final int filterQueueSize;
 
     private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registrations = new HashSet<>();
 
     public MessageFileMonitorInitializer(final IntegrationFlowContext context, final CompoundLifecycle inputReadersLifecycle,
-            final ProcessingMetrics processingMetrics, final AviationProductsHolder aviationProductsHolder, final Clock clock,
-            final MessageChannel processingChannel, final MessageChannel successChannel, final MessageChannel failChannel, final MessageChannel finishChannel,
-            final MessageChannel errorMessageChannel, final Advice archiveRetryAdvice, final Advice failRetryAdvice, final Advice exceptionTrapAdvice) {
+                                         final ProcessingMetrics processingMetrics, final AviationProductsHolder aviationProductsHolder, final Clock clock,
+                                         final MessageChannel processingChannel, final MessageChannel successChannel, final MessageChannel failChannel, final MessageChannel finishChannel,
+                                         final MessageChannel errorMessageChannel, final Advice archiveRetryAdvice, final Advice failRetryAdvice, final Advice exceptionTrapAdvice,
+                                         final int filterQueueSize) {
         this.context = requireNonNull(context, "context");
         this.inputReadersLifecycle = requireNonNull(inputReadersLifecycle, "inputReadersLifecycle");
         this.processingMetrics = requireNonNull(processingMetrics, "processingMetrics");
@@ -93,6 +89,7 @@ public class MessageFileMonitorInitializer {
         this.archiveRetryAdvice = requireNonNull(archiveRetryAdvice, "archiveRetryAdvice");
         this.failRetryAdvice = requireNonNull(failRetryAdvice, "failRetryAdvice");
         this.exceptionTrapAdvice = requireNonNull(exceptionTrapAdvice, "exceptionTrapAdvice");
+        this.filterQueueSize = filterQueueSize;
     }
 
     private static FileMetadata createFileMetadata(final Message<?> message, final FileConfig fileConfig, final String productIdentifier) {
@@ -126,6 +123,7 @@ public class MessageFileMonitorInitializer {
         aviationProductsHolder.getProducts().values().forEach(product -> {
             final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
             sourceDirectory.setDirectory(product.getInputDir());
+            sourceDirectory.setFilter(new AcceptOnceUnchangedFileListFilter(filterQueueSize));
             inputReadersLifecycle.add(sourceDirectory);
 
             final FileWritingMessageHandler archiveDirectory = new FileWritingMessageHandler(product.getArchiveDir());
