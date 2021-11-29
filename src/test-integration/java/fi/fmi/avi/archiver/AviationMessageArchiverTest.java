@@ -829,7 +829,7 @@ class AviationMessageArchiverTest {
                         .containsAll(testCase.getArchivedMessages());
             }
             if (!testCase.getRejectedMessages().isEmpty()) {
-                assertThat(databaseAccessTestUtil.fetchRejectedMessages(testCase.getFormat()))
+                assertThat(databaseAccessTestUtil.fetchRejectedMessages())
                         .usingRecursiveFieldByFieldElementComparator(archiveMessageComparisonConfiguration)
                         .containsAll(testCase.getRejectedMessages());
             }
