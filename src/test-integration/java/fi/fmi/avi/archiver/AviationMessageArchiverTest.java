@@ -13,11 +13,13 @@ import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguratio
 import org.custommonkey.xmlunit.XMLUnit;
 import org.inferred.freebuilder.FreeBuilder;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
@@ -36,6 +38,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
@@ -68,7 +71,7 @@ class AviationMessageArchiverTest {
         databaseAccessTestUtil = new DatabaseAccessTestUtil(databaseAccess, clock.instant());
     }
 
-    static Stream<AviationMessageArchiverTestCase> test_file_flow() {
+    static Stream<AviationMessageArchiverTestCase> test_archival() {
         return Stream.of(//
                 AviationMessageArchiverTestCase.builder()//
                         .setName("Minimal TAC TAF")//
@@ -130,9 +133,72 @@ class AviationMessageArchiverTest {
                         )
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
-                        .setName("Non-convertible message goes to failed dir")//
+                        .setName("Unhandled extension")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("taf-unhandled-extension.unknown")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectUnhandled()
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Empty file fails")//
+                        .setProductName("test_taf")//
+                        .setInputFileName("empty.txt")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Non-convertible message fails")//
                         .setProductName("test_taf")//
                         .setInputFileName("inconvertible.txt")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Binary data fails (TAC)")//
+                        .setProductName("test_taf")//
+                        .setInputFileName("binary.txt")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("TAF bulletin with binary data fails (TAC)")//
+                        .setProductName("test_taf_bulletin")//
+                        .setInputFileName("taf-tac-bulletin-binary.bul")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Binary data fails (IWXXM)")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("binary.xml")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("TAF with binary data fails (IWXXM)")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("taf-binary-8.xml")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Only GTS heading")//
+                        .setProductName("test_taf")//
+                        .setInputFileName("gts-heading.txt")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("NIL TAC bulletin")//
+                        .setProductName("test_taf_bulletin")//
+                        .setInputFileName("nil-bulletin.bul")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()//
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Empty collect document")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("empty-collect.xml")//
                         .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                         .expectFail()//
                         .build(),//
@@ -266,8 +332,43 @@ class AviationMessageArchiverTest {
                         .expectFail()//
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
+                        .setName("Partially rejected TAC TAF GTS Bulletin")//
+                        .setProductName("test_taf_bulletin")//
+                        .setInputFileName("taf-tac-bulletin-partially-rejected.bul")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2020-05-16T00:00:00Z"))
+                                .setStationId(2)
+                                .setStationIcaoCode("YUDO")
+                                .setFormat(1)
+                                .setType(3)
+                                .setRoute(1)
+                                .setMessage("TAF YUDO 160000Z NIL=")
+                                .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                                .setHeading("FTYU31 YUDO 160000")
+                                .build()
+                        ).addRejectedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2020-05-16T00:00:00Z"))
+                                .setStationIcaoCode("XYZW")
+                                .setFormat(1)
+                                .setType(3)
+                                .setRoute(1)
+                                .setMessage("TAF XYZW 160000Z NIL=")
+                                .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                                .setHeading("FTYU31 YUDO 160000")
+                                .setProcessingResult(ProcessingResult.UNKNOWN_STATION_ICAO_CODE)
+                                .build())
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("TAF TAC GTS Bulletin cut off")//
+                        .setProductName("test_taf_bulletin")//
+                        .setInputFileName("taf-tac-bulletin-cut-off.bul")//
+                        .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                        .expectFail()
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF")//
-                        .setProductName("test_iwxxm_taf")//
+                        .setProductName("test_iwxxm")//
                         .setInputFileName("taf-1.xml")//
                         .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                         .addArchivedMessages(ArchiveAviationMessage.builder()
@@ -289,7 +390,7 @@ class AviationMessageArchiverTest {
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF with unknown station ICAO code")//
-                        .setProductName("test_iwxxm_taf")//
+                        .setProductName("test_iwxxm")//
                         .setInputFileName("taf-rejected-6.xml")//
                         .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                         .addRejectedMessages(ArchiveAviationMessage.builder()
@@ -309,7 +410,7 @@ class AviationMessageArchiverTest {
                 // TODO Fails due to missing namespace declarations in TAF elements
                 AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF Collect bulletin")//
-                        .setProductName("test_iwxxm_taf")//
+                        .setProductName("test_iwxxm")//
                         .setInputFileName("taf-bulletin-2.xml")//
                         .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                         .addArchivedMessages(ArchiveAviationMessage.builder()
@@ -348,7 +449,7 @@ class AviationMessageArchiverTest {
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF Collect bulletin with namespace declarations in TAF elements")//
-                        .setProductName("test_iwxxm_taf")//
+                        .setProductName("test_iwxxm")//
                         .setInputFileName("taf-bulletin-3.xml")//
                         .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                         .addArchivedMessages(ArchiveAviationMessage.builder()
@@ -386,8 +487,15 @@ class AviationMessageArchiverTest {
                         )
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM TAF Collect bulletin cut off")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("taf-bulletin-7-cut-off.xml")//
+                        .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
+                        .expectFail()
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF with GTS heading")//
-                        .setProductName("test_iwxxm_taf")//
+                        .setProductName("test_iwxxm")//
                         .setInputFileName("taf-gts-heading-4.xml")//
                         .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                         .addArchivedMessages(ArchiveAviationMessage.builder()
@@ -411,7 +519,7 @@ class AviationMessageArchiverTest {
                 // TODO Fails due to missing namespace declarations in TAF elements
                 AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM TAF Collect bulletin with GTS heading")//
-                        .setProductName("test_iwxxm_taf")//
+                        .setProductName("test_iwxxm")//
                         .setInputFileName("taf-gts-heading-bulletin-5.xml")//
                         .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                         .addArchivedMessages(ArchiveAviationMessage.builder()
@@ -449,21 +557,243 @@ class AviationMessageArchiverTest {
                                                 .build())
                                         .build()
                         )
-                        .build()//
+                        .build(),
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM 3.0 TAF Collect bulletin within GTS envelopes")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("taf-gts-bulletin-collect-9.xml")//
+                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                        .setMessageTime(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setStationId(5)
+                                        .setStationIcaoCode("EFHA")
+                                        .setFormat(2)
+                                        .setType(3)
+                                        .setRoute(1)
+                                        .setMessage(fileContent("taf-gts-bulletin-collect-9-message-1.xml"))
+                                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setHeading("LCFI32 EFKL 211300")
+                                        .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                                .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                                .setCollectIdentifier("A_LCFI32EFKL211300_C_EFKL_20211021130000.xml")
+                                                .build())
+                                        .build(),
+                                ArchiveAviationMessage.builder()
+                                        .setMessageTime(Instant.parse("2021-10-21T14:36:00Z"))
+                                        .setStationId(6)
+                                        .setStationIcaoCode("EFKK")
+                                        .setFormat(2)
+                                        .setType(3)
+                                        .setRoute(1)
+                                        .setMessage(fileContent("taf-gts-bulletin-collect-9-message-2.xml"))
+                                        .setValidFrom(Instant.parse("2021-10-21T15:00:00Z"))
+                                        .setValidTo(Instant.parse("2021-10-22T00:00:00Z"))
+                                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setHeading("LCFI32 EFKL 211400")
+                                        .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                                .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                                .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
+                                                .build())
+                                        .build(),
+                                ArchiveAviationMessage.builder()
+                                        .setMessageTime(Instant.parse("2021-10-21T14:37:00Z"))
+                                        .setStationId(7)
+                                        .setStationIcaoCode("EFPO")
+                                        .setFormat(2)
+                                        .setType(3)
+                                        .setRoute(1)
+                                        .setMessage(fileContent("taf-gts-bulletin-collect-9-message-3.xml"))
+                                        .setValidFrom(Instant.parse("2021-10-21T15:00:00Z"))
+                                        .setValidTo(Instant.parse("2021-10-21T18:00:00Z"))
+                                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setHeading("LCFI32 EFKL 211400")
+                                        .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                                .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                                .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
+                                                .build())
+                                        .build()
+                        )
+                        .build(),
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM 3.0 TAF Collect bulletin within GTS envelope")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("taf-gts-bulletin-collect-10.xml")//
+                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                        .setMessageTime(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setStationId(5)
+                                        .setStationIcaoCode("EFHA")
+                                        .setFormat(2)
+                                        .setType(3)
+                                        .setRoute(1)
+                                        .setMessage(fileContent("taf-gts-bulletin-collect-10-message-1.xml"))
+                                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setHeading("LCFI32 EFKL 211400")
+                                        .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                                .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                                .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
+                                                .build())
+                                        .build(),
+                                ArchiveAviationMessage.builder()
+                                        .setMessageTime(Instant.parse("2021-10-21T14:36:00Z"))
+                                        .setStationId(6)
+                                        .setStationIcaoCode("EFKK")
+                                        .setFormat(2)
+                                        .setType(3)
+                                        .setRoute(1)
+                                        .setMessage(fileContent("taf-gts-bulletin-collect-10-message-2.xml"))
+                                        .setValidFrom(Instant.parse("2021-10-21T15:00:00Z"))
+                                        .setValidTo(Instant.parse("2021-10-22T00:00:00Z"))
+                                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setHeading("LCFI32 EFKL 211400")
+                                        .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                                .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                                .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
+                                                .build())
+                                        .build(),
+                                ArchiveAviationMessage.builder()
+                                        .setMessageTime(Instant.parse("2021-10-21T14:37:00Z"))
+                                        .setStationId(7)
+                                        .setStationIcaoCode("EFPO")
+                                        .setFormat(2)
+                                        .setType(3)
+                                        .setRoute(1)
+                                        .setMessage(fileContent("taf-gts-bulletin-collect-10-message-3.xml"))
+                                        .setValidFrom(Instant.parse("2021-10-21T15:00:00Z"))
+                                        .setValidTo(Instant.parse("2021-10-21T18:00:00Z"))
+                                        .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
+                                        .setHeading("LCFI32 EFKL 211400")
+                                        .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                                .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                                .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
+                                                .build())
+                                        .build()
+                        )
+                        .build(),
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM 3.0 METAR")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("metar-iwxxm-30.xml")//
+                        .setFileModified(Instant.parse("2012-08-22T15:30:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2012-08-22T16:30:00Z"))
+                                .setStationId(2)
+                                .setStationIcaoCode("YUDO")
+                                .setFormat(2)
+                                .setType(1)
+                                .setRoute(1)
+                                .setMessage(fileContent("metar-iwxxm-30-message.xml"))
+                                .setFileModified(Instant.parse("2012-08-22T15:30:00Z"))
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                        .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                        .build())
+                                .build()
+                        )
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM 3.0 TAF")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("taf-iwxxm-30.xml")//
+                        .setFileModified(Instant.parse("2012-08-15T17:00:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2012-08-15T18:00:00Z"))
+                                .setStationId(2)
+                                .setStationIcaoCode("YUDO")
+                                .setFormat(2)
+                                .setType(3)
+                                .setRoute(1)
+                                .setValidFrom(Instant.parse("2012-08-16T00:00:00Z"))
+                                .setValidTo(Instant.parse("2012-08-16T18:00:00Z"))
+                                .setMessage(fileContent("taf-iwxxm-30-message-1.xml"))
+                                .setFileModified(Instant.parse("2012-08-15T17:00:00Z"))
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                        .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                        .build())
+                                .build()
+                        )
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Space Weather Advisory with GTS heading")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("spacewx-gts-heading-1.xml")//
+                        .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2016-11-08T00:00:00Z"))
+                                .setStationId(2)
+                                .setStationIcaoCode("YUDO")
+                                .setFormat(2)
+                                .setType(8)
+                                .setRoute(1)
+                                .setMessage(fileContent("spacewx-gts-heading-1-message-1.xml"))
+                                .setHeading("LNXX01 YUDO 110715")
+                                .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))
+                                .setValidFrom(Instant.parse("2016-11-08T00:00:00Z"))
+                                .setValidTo(Instant.parse("2016-11-09T06:00:00Z"))
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                        .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                        .build())
+                                .build()
+                        )
+                        .build(),//
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Space Weather Advisory with GTS bulletin")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("spacewx-bulletin-2.xml")//
+                        .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2016-11-08T00:00:00Z"))
+                                .setStationId(2)
+                                .setStationIcaoCode("YUDO")
+                                .setFormat(2)
+                                .setType(8)
+                                .setRoute(1)
+                                .setMessage(fileContent("spacewx-bulletin-2-message-1.xml"))
+                                .setHeading("LNXX01 YUDO 110715")
+                                .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))
+                                .setValidFrom(Instant.parse("2016-11-08T00:00:00Z"))
+                                .setValidTo(Instant.parse("2016-11-09T06:00:00Z"))
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                        .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                        .build())
+                                .build()
+                        )
+                        .build(),
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Invalid Space Weather Advisory")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("spacewx-translation-failed.xml")//
+                        .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))
+                        .expectFail()
+                        .build(),
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM 3.0 VA SIGMET")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("sigmet-iwxxm-30.xml")//
+                        .setFileModified(Instant.parse("2018-07-10T11:00:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2018-07-10T12:00:00Z"))
+                                .setStationId(3)
+                                .setStationIcaoCode("YUDD")
+                                .setFormat(2)
+                                .setType(4)
+                                .setRoute(1)
+                                .setMessage(fileContent("sigmet-iwxxm-30-message.xml"))
+                                .setValidFrom(Instant.parse("2018-07-10T12:00:00Z"))
+                                .setValidTo(Instant.parse("2018-07-10T18:00:00Z"))
+                                .setFileModified(Instant.parse("2018-07-10T11:00:00Z"))
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
+                                        .setXMLNamespace("http://icao.int/iwxxm/3.0")
+                                        .build())
+                                .build()
+                        )
+                        .build()////
         );
     }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource
-    void test_file_flow(final AviationMessageArchiverTestCase testCase) throws IOException, InterruptedException, URISyntaxException {
-        final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
-        final Path testFile = Paths.get(product.getInputDir().getPath() + "/" + testCase.getInputFileName());
-        final Path tempFile = Paths.get(testFile + TEMP_FILE_SUFFIX);
-        Files.copy(testCase.getInputFile(), tempFile);
-        Files.setLastModifiedTime(tempFile, FileTime.from(testCase.getFileModified()));
-        Files.move(tempFile, testFile);
-
-        testCase.assertInputAndOutputFilesEquals(product, clock.millis());
+    void test_archival(final AviationMessageArchiverTestCase testCase) {
+        assertFileFlow(testCase);
 
         if (!testCase.getArchivedMessages().isEmpty()) {
             assertThat(databaseAccessTestUtil.fetchArchiveMessages())
@@ -480,8 +810,68 @@ class AviationMessageArchiverTest {
         } else {
             databaseAccessTestUtil.assertRejectedMessagesEmpty();
         }
+    }
 
-        assertThat(testFile).doesNotExist();
+    @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    public void test_all_at_once() {
+        final List<AviationMessageArchiverTestCase> cases = test_archival().collect(Collectors.toList());
+        cases.parallelStream().forEach(this::copyFileSetLastModified);
+        cases.parallelStream().forEach(this::renameTempFile);
+        cases.parallelStream().forEach(this::assertFileOperations);
+        cases.parallelStream().forEach(testCase -> {
+            if (!testCase.getArchivedMessages().isEmpty()) {
+                assertThat(databaseAccessTestUtil.fetchArchiveMessages())
+                        .usingRecursiveFieldByFieldElementComparator(archiveMessageComparisonConfiguration)
+                        .containsAll(testCase.getArchivedMessages());
+            }
+            if (!testCase.getRejectedMessages().isEmpty()) {
+                assertThat(databaseAccessTestUtil.fetchRejectedMessages(testCase.getFormat()))
+                        .usingRecursiveFieldByFieldElementComparator(archiveMessageComparisonConfiguration)
+                        .containsAll(testCase.getRejectedMessages());
+            }
+        });
+    }
+
+    private void assertFileFlow(final AviationMessageArchiverTestCase testCase) {
+        copyFileSetLastModified(testCase);
+        renameTempFile(testCase);
+        assertFileOperations(testCase);
+    }
+
+    private void copyFileSetLastModified(final AviationMessageArchiverTestCase testCase) {
+        final Path tempFile = testCase.getTempFile(testCase.getProduct(aviationProductsHolder));
+        try {
+            Files.copy(testCase.getInputFile(), tempFile);
+            Files.setLastModifiedTime(tempFile, FileTime.from(testCase.getFileModified()));
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void renameTempFile(final AviationMessageArchiverTestCase testCase) {
+        final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
+        try {
+            Files.move(testCase.getTempFile(product), testCase.getTestFile(product));
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void assertFileOperations(final AviationMessageArchiverTestCase testCase) {
+        final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
+        final Path testFile = testCase.getTestFile(product);
+
+        if (!testCase.getUnhandled()) {
+            try {
+                testCase.assertInputAndOutputFilesEquals(product, clock.millis());
+                assertThat(testFile).doesNotExist();
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            assertThat(testFile).exists();
+        }
     }
 
     @FreeBuilder
@@ -513,6 +903,8 @@ class AviationMessageArchiverTest {
 
         public abstract boolean getExpectFail();
 
+        public abstract boolean getUnhandled();
+
         public int getFormat() {
             return Streams.concat(getArchivedMessages().stream(), getRejectedMessages().stream())
                     .map(ArchiveAviationMessage::getFormat)
@@ -526,6 +918,14 @@ class AviationMessageArchiverTest {
             return path;
         }
 
+        public Path getTestFile(final AviationProductsHolder.AviationProduct product) {
+            return Paths.get(product.getInputDir().getPath() + "/" + getInputFileName());
+        }
+
+        public Path getTempFile(final AviationProductsHolder.AviationProduct product) {
+            return Paths.get(getTestFile(product) + TEMP_FILE_SUFFIX);
+        }
+
         public abstract String getProductName();
 
         public AviationProductsHolder.AviationProduct getProduct(final AviationProductsHolder holder) {
@@ -534,13 +934,13 @@ class AviationMessageArchiverTest {
         }
 
         public void assertInputAndOutputFilesEquals(final AviationProductsHolder.AviationProduct product, final long timestamp) throws InterruptedException {
-            final String expectedContent = fileContent(getInputFileName());
+            final byte[] expectedContent = fileContentAsByteArray(getInputFileName());
             final File expectedOutputFile = new File((getExpectFail() ? product.getFailDir() :
                     product.getArchiveDir()) + "/" + getInputFileName() + "." + timestamp);
             waitUntilFileExists(expectedOutputFile);
 
             assertThat(expectedOutputFile).exists();
-            assertThat(expectedOutputFile).hasContent(expectedContent);
+            assertThat(expectedOutputFile).hasBinaryContent(expectedContent);
         }
 
         private void waitUntilFileExists(final File expectedOutputFile) throws InterruptedException {
@@ -555,10 +955,15 @@ class AviationMessageArchiverTest {
 
             public Builder() {
                 setExpectFail(false);
+                setUnhandled(false);
             }
 
             public Builder expectFail() {
                 return super.setExpectFail(true);
+            }
+
+            public Builder expectUnhandled() {
+                return super.setUnhandled(true);
             }
         }
     }
@@ -566,6 +971,14 @@ class AviationMessageArchiverTest {
     private static String fileContent(final String filename) {
         try {
             return Resources.toString(AviationMessageArchiverTest.class.getResource(filename), StandardCharsets.UTF_8);
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static byte[] fileContentAsByteArray(final String filename) {
+        try {
+            return Resources.toByteArray(AviationMessageArchiverTest.class.getResource(filename));
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
@@ -579,6 +992,7 @@ class AviationMessageArchiverTest {
             } else {
                 try {
                     XMLUnit.setIgnoreWhitespace(true);
+                    XMLUnit.setIgnoreComments(true);
                     return XMLUnit.compareXML(left, right).identical();
                 } catch (final IOException | SAXException e) {
                     e.printStackTrace();

@@ -86,11 +86,11 @@ production-line-initialization:
         - pattern: ^.*\.another$
           nameTimeZone: Z
           format: TAC
-    - id: test_iwxxm_taf
+    - id: test_iwxxm
       route: TEST
-      input-dir: ${testclass.workdir.path}/src_iwxxm_taf
-      archive-dir: ${testclass.workdir.path}/dst_iwxxm_taf
-      fail-dir: ${testclass.workdir.path}/failed_iwxxm_taf
+      input-dir: ${testclass.workdir.path}/src_iwxxm
+      archive-dir: ${testclass.workdir.path}/dst_iwxxm
+      fail-dir: ${testclass.workdir.path}/failed_iwxxm
       files:
         - pattern: ^.*\.xml$
           nameTimeZone: Z
@@ -122,6 +122,11 @@ message-populators:
           - GTS_BULLETIN_HEADING
           - COLLECT_IDENTIFIER
     - name: MessageDataPopulator
+    - name: MessageContentTrimmer
+    - name: FixedDurationValidityPeriodPopulator
+      config:
+        messageType: SPACE_WEATHER_ADVISORY
+        validityEndOffset: PT30H
 # END SNIPPET: messagepopulators
 
 ##############################################

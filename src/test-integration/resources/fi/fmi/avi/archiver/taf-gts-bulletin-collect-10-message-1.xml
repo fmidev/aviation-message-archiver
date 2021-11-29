@@ -1,0 +1,26 @@
+<iwxxm:TAF xmlns:iwxxm='http://icao.int/iwxxm/3.0'
+           xmlns:gml='http://www.opengis.net/gml/3.2' xmlns:aixm='http://www.aixm.aero/schema/5.1.1'
+           xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+           xsi:schemaLocation='http://icao.int/iwxxm/3.0 http://schemas.wmo.int/iwxxm/3.0/iwxxm.xsd'
+           gml:id='metar-EFHA-20211021140000' reportStatus='NORMAL' permissibleUsage='OPERATIONAL'>
+
+    <!-- TAF EFHA 211400Z NIL= -->
+    <iwxxm:issueTime>
+        <gml:TimeInstant gml:id='ti-EFHA-20211021140000'>
+            <gml:timePosition>2021-10-21T14:00:00Z</gml:timePosition>
+        </gml:TimeInstant>
+    </iwxxm:issueTime>
+    <iwxxm:aerodrome>
+        <aixm:AirportHeliport gml:id='aerodrome-EFHA-20211021140000'>
+            <aixm:timeSlice>
+                <aixm:AirportHeliportTimeSlice gml:id='aerodrome-ts-EFHA-20211021140000'>
+                    <gml:validTime/>
+                    <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+                    <aixm:designator>EFHA</aixm:designator>
+                    <aixm:locationIndicatorICAO>EFHA</aixm:locationIndicatorICAO>
+                </aixm:AirportHeliportTimeSlice>
+            </aixm:timeSlice>
+        </aixm:AirportHeliport>
+    </iwxxm:aerodrome>
+    <iwxxm:baseForecast nilReason="http://codes.wmo.int/common/nil/missing"/>
+</iwxxm:TAF>
