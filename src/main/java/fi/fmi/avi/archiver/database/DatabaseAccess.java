@@ -87,7 +87,7 @@ public class DatabaseAccess {
      * Insert aviation message into the rejected messages table. Returns the generated id.
      *
      * @param archiveAviationMessage aviation message to archive in the rejected messages table
-     * @return affected row count
+     * @return the generated id
      */
     public Number insertRejectedAviationMessage(final ArchiveAviationMessage archiveAviationMessage) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
