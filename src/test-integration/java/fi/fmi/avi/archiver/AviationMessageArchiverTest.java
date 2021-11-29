@@ -572,10 +572,10 @@ class AviationMessageArchiverTest {
                                         .setRoute(1)
                                         .setMessage(fileContent("taf-gts-bulletin-collect-9-message-1.xml"))
                                         .setFileModified(Instant.parse("2021-10-21T14:00:00Z"))
-                                        .setHeading("LCFI32 EFKL 211400")
+                                        .setHeading("LCFI32 EFKL 211300")
                                         .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()
                                                 .setXMLNamespace("http://icao.int/iwxxm/3.0")
-                                                .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
+                                                .setCollectIdentifier("A_LCFI32EFKL211300_C_EFKL_20211021130000.xml")
                                                 .build())
                                         .build(),
                                 ArchiveAviationMessage.builder()
@@ -816,7 +816,9 @@ class AviationMessageArchiverTest {
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     public void test_all_at_once() {
         final List<AviationMessageArchiverTestCase> cases = test_archival().collect(Collectors.toList());
-        cases.parallelStream().forEach(this::assertFileFlow);
+        cases.parallelStream().forEach(this::copyFileSetLastModified);
+        cases.parallelStream().forEach(this::renameTempFile);
+        cases.parallelStream().forEach(this::assertFileOperations);
         cases.parallelStream().forEach(testCase -> {
             if (!testCase.getArchivedMessages().isEmpty()) {
                 assertThat(databaseAccessTestUtil.fetchArchiveMessages())
@@ -832,23 +834,43 @@ class AviationMessageArchiverTest {
     }
 
     private void assertFileFlow(final AviationMessageArchiverTestCase testCase) {
-        final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
-        final Path testFile = Paths.get(product.getInputDir().getPath() + "/" + testCase.getInputFileName());
-        final Path tempFile = Paths.get(testFile + TEMP_FILE_SUFFIX);
+        copyFileSetLastModified(testCase);
+        renameTempFile(testCase);
+        assertFileOperations(testCase);
+    }
 
+    private void copyFileSetLastModified(final AviationMessageArchiverTestCase testCase) {
+        final Path tempFile = testCase.getTempFile(testCase.getProduct(aviationProductsHolder));
         try {
             Files.copy(testCase.getInputFile(), tempFile);
             Files.setLastModifiedTime(tempFile, FileTime.from(testCase.getFileModified()));
-            Files.move(tempFile, testFile);
-
-            if (!testCase.getUnhandled()) {
-                testCase.assertInputAndOutputFilesEquals(product, clock.millis());
-                assertThat(testFile).doesNotExist();
-            } else {
-                assertThat(testFile).exists();
-            }
         } catch (final Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void renameTempFile(final AviationMessageArchiverTestCase testCase) {
+        final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
+        try {
+            Files.move(testCase.getTempFile(product), testCase.getTestFile(product));
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void assertFileOperations(final AviationMessageArchiverTestCase testCase) {
+        final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
+        final Path testFile = testCase.getTestFile(product);
+
+        if (!testCase.getUnhandled()) {
+            try {
+                testCase.assertInputAndOutputFilesEquals(product, clock.millis());
+                assertThat(testFile).doesNotExist();
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            assertThat(testFile).exists();
         }
     }
 
@@ -894,6 +916,14 @@ class AviationMessageArchiverTest {
             final Path path = Paths.get(resource.toURI());
             assertThat(path).exists();
             return path;
+        }
+
+        public Path getTestFile(final AviationProductsHolder.AviationProduct product) {
+            return Paths.get(product.getInputDir().getPath() + "/" + getInputFileName());
+        }
+
+        public Path getTempFile(final AviationProductsHolder.AviationProduct product) {
+            return Paths.get(getTestFile(product) + TEMP_FILE_SUFFIX);
         }
 
         public abstract String getProductName();

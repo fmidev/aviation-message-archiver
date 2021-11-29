@@ -1,6 +1,6 @@
 0000179300
 013
-LCFI32 EFKL 211400
+LCFI32 EFKL 211300
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <collect:MeteorologicalBulletin gml:id="LCFI32EFKL-20211021140000"
   xmlns:collect="http://def.wmo.int/collect/2014" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -32,7 +32,7 @@ LCFI32 EFKL 211400
 	  </iwxxm:aerodrome>
 	  <iwxxm:baseForecast nilReason="http://codes.wmo.int/common/nil/missing"/>
 	</iwxxm:TAF>
-	</collect:meteorologicalInformation>	 <collect:bulletinIdentifier>A_LCFI32EFKL211400_C_EFKL_20211021140000.xml</collect:bulletinIdentifier></collect:MeteorologicalBulletin>
+	</collect:meteorologicalInformation>	 <collect:bulletinIdentifier>A_LCFI32EFKL211300_C_EFKL_20211021130000.xml</collect:bulletinIdentifier></collect:MeteorologicalBulletin>
 
 0001501900
 014
