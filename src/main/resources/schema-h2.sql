@@ -63,6 +63,13 @@ CREATE TABLE public.avidb_message_iwxxm_details
     iwxxm_version      text
 );
 
+CREATE TABLE public.avidb_rejected_message_iwxxm_details
+(
+    rejected_message_id bigint PRIMARY KEY NOT NULL,
+    collect_identifier  text,
+    iwxxm_version       text
+);
+
 CREATE
     UNIQUE INDEX avidb_stations_icao_code_key ON public.avidb_stations (icao_code);
 
@@ -111,21 +118,33 @@ CREATE
 
 CREATE TABLE public.avidb_rejected_messages
 (
-    icao_code      text,
-    message_time   timestamp,
-    type_id        int,
-    route_id       int,
-    message        text,
-    valid_from     timestamp,
-    valid_to       timestamp,
-    created        timestamp DEFAULT CURRENT_TIMESTAMP(),
-    file_modified  timestamp,
-    flag           int       DEFAULT 0,
-    messir_heading text,
-    reject_reason  int,
-    version        varchar(20)
+    rejected_message_id bigint auto_increment PRIMARY KEY NOT NULL,
+    icao_code           text,
+    message_time        timestamp,
+    type_id             int,
+    route_id            int,
+    message             text,
+    valid_from          timestamp,
+    valid_to            timestamp,
+    created             timestamp DEFAULT CURRENT_TIMESTAMP(),
+    file_modified       timestamp,
+    flag                int       DEFAULT 0,
+    messir_heading      text,
+    reject_reason       int,
+    version             varchar(20),
+    format_id           smallint  DEFAULT 1 NOT NULL
 );
 
 CREATE
     INDEX avidb_rejected_messages_idx1 ON public.avidb_rejected_messages (created);
+
+ALTER TABLE public.avidb_rejected_message_iwxxm_details
+    ADD CONSTRAINT avidb_rejected_message_iwxxm_details_fk_rejected_message_id
+        FOREIGN KEY (rejected_message_id)
+            REFERENCES public.avidb_rejected_messages (rejected_message_id);
+
+ALTER TABLE public.avidb_rejected_messages
+    ADD CONSTRAINT avidb_rejected_messages_fkey_format_id
+        FOREIGN KEY (format_id)
+            REFERENCES public.avidb_message_format (format_id);
 

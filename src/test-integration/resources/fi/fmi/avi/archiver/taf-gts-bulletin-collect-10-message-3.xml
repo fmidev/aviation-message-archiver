@@ -1,0 +1,89 @@
+<iwxxm:TAF xmlns:iwxxm="http://icao.int/iwxxm/3.0"
+           xmlns:gml="http://www.opengis.net/gml/3.2"
+           xmlns:aixm="http://www.aixm.aero/schema/5.1.1"
+           xmlns:xlink="http://www.w3.org/1999/xlink"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           gml:id="uuid.992d468c-1af3-4f71-87b9-a1672d9099b0"
+           permissibleUsage="OPERATIONAL"
+           permissibleUsageSupplementary=""
+           reportStatus="NORMAL"
+           xsi:schemaLocation="http://icao.int/iwxxm/3.0 http://schemas.wmo.int/iwxxm/3.0/iwxxm.xsd">
+    <iwxxm:issueTime>
+        <gml:TimeInstant gml:id="uuid.c1c70e30-ae71-44ac-8e6d-f38a4ce17a23">
+            <gml:timePosition>2021-10-21T14:37:00Z</gml:timePosition>
+        </gml:TimeInstant>
+    </iwxxm:issueTime>
+    <iwxxm:aerodrome>
+        <aixm:AirportHeliport gml:id="uuid.466d6aad-2fa6-4917-aef3-09da0c8867e8">
+            <aixm:timeSlice>
+                <aixm:AirportHeliportTimeSlice gml:id="uuid.163251aa-053c-4694-8fa3-010dc7d023a7">
+                    <gml:validTime/>
+                    <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+                    <aixm:designator>EFPO</aixm:designator>
+                    <aixm:name>PORI</aixm:name>
+                    <aixm:locationIndicatorICAO>EFPO</aixm:locationIndicatorICAO>
+                    <aixm:designatorIATA>POR</aixm:designatorIATA>
+                    <aixm:fieldElevation uom="FT">45</aixm:fieldElevation>
+                    <aixm:ARP>
+                        <aixm:ElevatedPoint axisLabels="Lat Lon"
+                                            gml:id="uuid.cddda563-982d-42c6-abd5-046ff7702a8a"
+                                            srsDimension="2"
+                                            srsName="urn:ogc:def:crs:EPSG::4258"
+                                            uomLabels="deg deg">
+                            <gml:pos>61.46138888888889 21.797777777777778</gml:pos>
+                        </aixm:ElevatedPoint>
+                    </aixm:ARP>
+                </aixm:AirportHeliportTimeSlice>
+            </aixm:timeSlice>
+        </aixm:AirportHeliport>
+    </iwxxm:aerodrome>
+    <iwxxm:validPeriod>
+        <gml:TimePeriod gml:id="uuid.78e7e0b7-3e95-4b62-877c-aba9b511cfa6">
+            <gml:beginPosition>2021-10-21T15:00:00Z</gml:beginPosition>
+            <gml:endPosition>2021-10-21T18:00:00Z</gml:endPosition>
+        </gml:TimePeriod>
+    </iwxxm:validPeriod>
+    <iwxxm:baseForecast>
+        <iwxxm:MeteorologicalAerodromeForecast cloudAndVisibilityOK="true"
+                                               gml:id="uuid.6daae10e-9693-4339-996c-3d2b4d62a9b2">
+            <iwxxm:phenomenonTime xlink:href="#uuid.78e7e0b7-3e95-4b62-877c-aba9b511cfa6"/>
+            <iwxxm:surfaceWind>
+                <iwxxm:AerodromeSurfaceWindForecast variableWindDirection="false">
+                    <iwxxm:meanWindDirection uom="deg">120.0</iwxxm:meanWindDirection>
+                    <iwxxm:meanWindSpeed uom="[kn_i]">5.0</iwxxm:meanWindSpeed>
+                </iwxxm:AerodromeSurfaceWindForecast>
+            </iwxxm:surfaceWind>
+        </iwxxm:MeteorologicalAerodromeForecast>
+    </iwxxm:baseForecast>
+    <iwxxm:changeForecast>
+        <iwxxm:MeteorologicalAerodromeForecast changeIndicator="BECOMING"
+                                               cloudAndVisibilityOK="false"
+                                               gml:id="uuid.fa2800c1-cf4a-4a37-8407-ea0b0362b4bc">
+            <iwxxm:phenomenonTime>
+                <gml:TimePeriod gml:id="uuid.ea07e23d-a6cb-4da4-a5ca-67899d51bc2f">
+                    <gml:beginPosition>2021-10-21T16:00:00Z</gml:beginPosition>
+                    <gml:endPosition>2021-10-21T18:00:00Z</gml:endPosition>
+                </gml:TimePeriod>
+            </iwxxm:phenomenonTime>
+            <iwxxm:prevailingVisibility uom="m">4000.0</iwxxm:prevailingVisibility>
+            <iwxxm:weather xlink:href="http://codes.wmo.int/306/4678/SHRA"/>
+            <iwxxm:cloud>
+                <iwxxm:AerodromeCloudForecast gml:id="uuid.1cc9c9ab-a620-4acc-ad91-42b9fb66b9f7">
+                    <iwxxm:layer>
+                        <iwxxm:CloudLayer>
+                            <iwxxm:amount xlink:href="http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome/BKN"/>
+                            <iwxxm:base uom="[ft_i]">1200.0</iwxxm:base>
+                        </iwxxm:CloudLayer>
+                    </iwxxm:layer>
+                    <iwxxm:layer>
+                        <iwxxm:CloudLayer>
+                            <iwxxm:amount xlink:href="http://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome/BKN"/>
+                            <iwxxm:base uom="[ft_i]">2000.0</iwxxm:base>
+                            <iwxxm:cloudType xlink:href="http://codes.wmo.int/49-2/SigConvectiveCloudType/CB"/>
+                        </iwxxm:CloudLayer>
+                    </iwxxm:layer>
+                </iwxxm:AerodromeCloudForecast>
+            </iwxxm:cloud>
+        </iwxxm:MeteorologicalAerodromeForecast>
+    </iwxxm:changeForecast>
+</iwxxm:TAF>

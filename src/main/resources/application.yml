@@ -8,7 +8,7 @@ spring.config.activate.on-profile: h2
 
 spring:
   datasource:
-    url: jdbc:h2:mem:archiver
+    url: jdbc:h2:mem:archiver;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
   h2:
     console:
@@ -32,6 +32,7 @@ spring:
     default-timeout: PT15S
 
 datasource:
+  schema: public
   retry:
     initial-interval: PT0.5S
     multiplier: 2
@@ -39,6 +40,18 @@ datasource:
     # Set to zero to retry infinitely. Set a positive duration for time limited retries.
     timeout: PT0S
 ---
+# END SNIPPET: datasource
+
+##############################################
+#
+#  Executor config
+#
+##############################################
+# START SNIPPET: executor
+executor:
+  queue-size: 20
+---
+# END SNIPPET: executor
 
 ##############################################
 #
