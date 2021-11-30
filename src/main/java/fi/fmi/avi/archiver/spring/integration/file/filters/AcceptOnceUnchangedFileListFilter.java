@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.spring.filter;
+package fi.fmi.avi.archiver.spring.integration.file.filters;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.integration.file.filters.AbstractFileListFilter;
@@ -12,6 +12,8 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * {@link org.springframework.integration.file.filters.FileListFilter} that stores the file's last modification time and
@@ -43,9 +45,9 @@ public class AcceptOnceUnchangedFileListFilter extends AbstractFileListFilter<Fi
         this.seen = null;
     }
 
-
     @Override
     public boolean accept(final File file) {
+        requireNonNull(file, "file");
         synchronized (monitor) {
             if (seenMap.containsKey(file)) {
                 final FileData existingData = seenMap.get(file);
@@ -73,7 +75,9 @@ public class AcceptOnceUnchangedFileListFilter extends AbstractFileListFilter<Fi
 
     @Override
     public void rollback(final File file, List<File> files) {
-        synchronized (this.monitor) {
+        requireNonNull(file, "file");
+        requireNonNull(files, "files");
+        synchronized (monitor) {
             boolean rollingBack = false;
             for (final File fileToRollback : files) {
                 if (fileToRollback.equals(file)) {
@@ -88,11 +92,14 @@ public class AcceptOnceUnchangedFileListFilter extends AbstractFileListFilter<Fi
 
     @Override
     public boolean remove(final File fileToRemove) {
-        @Nullable final FileData fileData = seenMap.remove(fileToRemove);
-        if (seen != null) {
-            seen.remove(fileToRemove);
+        requireNonNull(fileToRemove, "fileToRemove");
+        synchronized (monitor) {
+            @Nullable final FileData fileData = seenMap.remove(fileToRemove);
+            if (seen != null) {
+                seen.remove(fileToRemove);
+            }
+            return fileData != null;
         }
-        return fileData != null;
     }
 
     @VisibleForTesting

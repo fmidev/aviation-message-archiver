@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.spring.filter;
+package fi.fmi.avi.archiver.spring.integration.file.filters;
 
 
 import org.junit.jupiter.api.Test;
