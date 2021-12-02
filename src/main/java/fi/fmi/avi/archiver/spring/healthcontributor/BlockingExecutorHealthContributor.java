@@ -52,7 +52,7 @@ public class BlockingExecutorHealthContributor implements CompositeHealthContrib
             if (timeout.compareTo(blockedDuration) > 0) {
                 builder.up();
             } else {
-                builder.down(new TimeoutException("Caller has been blocked for " + blockedDuration));
+                builder.down(new TimeoutException("Timeout (" + timeout + ") exceeded; caller has been blocked for " + blockedDuration));
             }
         }
 
