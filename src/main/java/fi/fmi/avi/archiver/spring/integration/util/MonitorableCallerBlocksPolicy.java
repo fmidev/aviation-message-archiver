@@ -16,7 +16,7 @@ public class MonitorableCallerBlocksPolicy implements RejectedExecutionHandler {
 
     private final Clock clock;
     private final long maxWait;
-    private final AtomicLong timestamp = new AtomicLong(-1);
+    private final AtomicLong blockStartMillis = new AtomicLong(-1);
 
     /**
      * Construct instance based on the provided maximum wait time.
@@ -34,7 +34,7 @@ public class MonitorableCallerBlocksPolicy implements RejectedExecutionHandler {
         if (!executor.isShutdown()) {
             try {
                 final BlockingQueue<Runnable> queue = executor.getQueue();
-                timestamp.set(clock.millis());
+                blockStartMillis.set(clock.millis());
                 if (!queue.offer(runnable, this.maxWait, TimeUnit.MILLISECONDS)) {
                     throw new RejectedExecutionException("Max wait time expired to queue task");
                 }
@@ -42,7 +42,7 @@ public class MonitorableCallerBlocksPolicy implements RejectedExecutionHandler {
                 Thread.currentThread().interrupt();
                 throw new RejectedExecutionException("Interrupted", e);
             } finally {
-                timestamp.set(-1);
+                blockStartMillis.set(-1);
             }
         } else {
             throw new RejectedExecutionException("Executor has been shut down");
@@ -50,7 +50,7 @@ public class MonitorableCallerBlocksPolicy implements RejectedExecutionHandler {
     }
 
     public Duration getBlockedDuration() {
-        final long millis = timestamp.get();
+        final long millis = blockStartMillis.get();
         if (millis > -1) {
             return Duration.between(Instant.ofEpochMilli(millis), clock.instant());
         } else {
