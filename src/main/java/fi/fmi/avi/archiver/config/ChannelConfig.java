@@ -1,14 +1,16 @@
 package fi.fmi.avi.archiver.config;
 
+import fi.fmi.avi.archiver.spring.healthcontributor.BlockingExecutorHealthContributor;
+import fi.fmi.avi.archiver.spring.integration.util.MonitorableCallerBlocksPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.PublishSubscribeChannel;
-import org.springframework.integration.util.CallerBlocksPolicy;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
+import java.time.Clock;
 import java.util.concurrent.*;
 
 @Configuration
@@ -18,7 +20,13 @@ public class ChannelConfig {
     private int executorQueueSize;
 
     @Autowired
+    private Clock clock;
+
+    @Autowired
     private ThreadGroup aviationMessageArchiverThreadGroup;
+
+    @Autowired
+    private BlockingExecutorHealthContributor executorHealthContributor;
 
     @Bean
     public ExecutorService processingExecutor() {
@@ -122,8 +130,10 @@ public class ChannelConfig {
 
     private ExecutorService newBlockingSingleThreadExecutor(final String threadNamePrefix) {
         final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(executorQueueSize);
+        final MonitorableCallerBlocksPolicy callerBlocksPolicy = new MonitorableCallerBlocksPolicy(clock, Long.MAX_VALUE);
+        executorHealthContributor.register(threadNamePrefix + "executor", callerBlocksPolicy);
         return new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS, queue,
-                newThreadFactory(threadNamePrefix), new CallerBlocksPolicy(Long.MAX_VALUE));
+                newThreadFactory(threadNamePrefix), callerBlocksPolicy);
     }
 
     private CustomizableThreadFactory newThreadFactory(final String threadNamePrefix) {

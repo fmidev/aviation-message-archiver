@@ -63,6 +63,8 @@ health-indicator:
   directoryPermission:
     tempFilePrefix: .temp
     tempFileSuffix: .healthindicator
+  blockingExecutor:
+    timeout: PT30S
 ---
 # END SNIPPET: actuators
 
