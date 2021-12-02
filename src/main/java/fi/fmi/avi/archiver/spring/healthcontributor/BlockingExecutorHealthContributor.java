@@ -49,7 +49,7 @@ public class BlockingExecutorHealthContributor implements CompositeHealthContrib
         @Override
         protected void doHealthCheck(final Health.Builder builder) {
             final Duration blockedDuration = policy.getBlockedDuration();
-            if (blockedDuration.minus(timeout).isNegative()) {
+            if (timeout.compareTo(blockedDuration) > 0) {
                 builder.up();
             } else {
                 builder.down(new TimeoutException("Caller has been blocked for " + blockedDuration));
