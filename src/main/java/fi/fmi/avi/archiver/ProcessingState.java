@@ -1,21 +1,20 @@
 package fi.fmi.avi.archiver;
 
-import static java.util.Objects.requireNonNull;
+import com.google.common.collect.ConcurrentHashMultiset;
+import com.google.common.collect.Multiset;
+import fi.fmi.avi.archiver.file.FileMetadata;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Objects;
 
-import com.google.common.collect.ConcurrentHashMultiset;
-import com.google.common.collect.Multiset;
+import static java.util.Objects.requireNonNull;
 
-import fi.fmi.avi.archiver.file.FileMetadata;
-
-public class ProcessingMetrics {
+public class ProcessingState {
     private final Clock clock;
     private final Multiset<FileUnderProcessing> filesUnderProcessing = ConcurrentHashMultiset.create();
 
-    public ProcessingMetrics(final Clock clock) {
+    public ProcessingState(final Clock clock) {
         this.clock = requireNonNull(clock, "clock");
     }
 
@@ -41,6 +40,13 @@ public class ProcessingMetrics {
                 .mapToLong(FileUnderProcessing::getStart)//
                 .min()//
                 .orElse(now));
+    }
+
+    public boolean isFileUnderProcessing(final String productIdentifier, final String filename) {
+        requireNonNull(productIdentifier, "productIdentifier");
+        requireNonNull(filename, "filename");
+        return filesUnderProcessing.stream().anyMatch(underProcessing ->
+                underProcessing.getProductIdentifier().equals(productIdentifier) && underProcessing.getFilename().equals(filename));
     }
 
     private static final class FileUnderProcessing {
