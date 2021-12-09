@@ -37,7 +37,7 @@
             <om:procedure>
                 <metce:Process gml:id="process-a3b74b56-6193-4ae7-835c-b41463df0d4a">
                     <gml:description>WMO No. 49 Volume 2 Meteorological Service for International Air Navigation
-                        APPENDIX 5 TECHNICAL SPECIFICATIONS RELATED TO FORECASTS
+                      APPENDIX 5 TECHNICAL SPECIFICATIONS RELATED TO FORECASTS
                     </gml:description>
                 </metce:Process>
             </om:procedure>
