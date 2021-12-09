@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.ProcessingMetrics;
+import fi.fmi.avi.archiver.ProcessingState;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
@@ -77,17 +77,17 @@ public class DirectoryInspectionConfig {
 
     @Bean
     public GracefulShutdownManager shutdownManager() {
-        final ProcessingMetrics processingMetrics = processingMetrics();
+        final ProcessingState processingState = processingState();
         final GracefulShutdownManager shutdownManager = new GracefulShutdownManager(inputReadersLifecycle(),
-                () -> processingMetrics.getFileCountUnderProcessing() > 0);
+                () -> processingState.getFileCountUnderProcessing() > 0);
         shutdownManager.setTimeout(gracefulShutdownTimeout);
         shutdownManager.setPollingInterval(gracefulShutdownPollingInterval);
         return shutdownManager;
     }
 
     @Bean
-    public ProcessingMetrics processingMetrics() {
-        return new ProcessingMetrics(clock);
+    public ProcessingState processingState() {
+        return new ProcessingState(clock);
     }
 
     @Bean(name = PollerMetadata.DEFAULT_POLLER)
@@ -97,7 +97,7 @@ public class DirectoryInspectionConfig {
 
     @Bean
     public MessageFileMonitorInitializer messageFileMonitorInitializer() {
-        return new MessageFileMonitorInitializer(flowContext, inputReadersLifecycle(), processingMetrics(), aviationProductsHolder, clock, processingChannel,
+        return new MessageFileMonitorInitializer(flowContext, inputReadersLifecycle(), processingState(), aviationProductsHolder, clock, processingChannel,
                 successChannel, failChannel, finishChannel, errorMessageChannel, archiveRetryAdvice, failRetryAdvice, exceptionTrapAdvice, filterQueueSize);
     }
 
@@ -118,9 +118,9 @@ public class DirectoryInspectionConfig {
 
     @Bean
     public IntegrationFlow finishFlow() {
-        final ProcessingMetrics processingMetrics = processingMetrics();
+        final ProcessingState processingState = processingState();
         return IntegrationFlows.from(finishChannel)//
-                .handle(ServiceActivators.peekHeader(FileMetadata.class, MessageFileMonitorInitializer.FILE_METADATA, processingMetrics::finish))//
+                .handle(ServiceActivators.peekHeader(FileMetadata.class, MessageFileMonitorInitializer.FILE_METADATA, processingState::finish))//
                 .nullChannel();
     }
 }

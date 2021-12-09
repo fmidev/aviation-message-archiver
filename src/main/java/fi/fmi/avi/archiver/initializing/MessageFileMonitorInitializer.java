@@ -1,12 +1,13 @@
 package fi.fmi.avi.archiver.initializing;
 
 import com.google.common.collect.ImmutableList;
-import fi.fmi.avi.archiver.ProcessingMetrics;
+import fi.fmi.avi.archiver.ProcessingState;
 import fi.fmi.avi.archiver.file.FileConfig;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
 import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
 import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
+import fi.fmi.avi.archiver.spring.integration.file.filters.ProcessingFileListFilter;
 import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 import org.aopalliance.aop.Advice;
 import org.slf4j.Logger;
@@ -57,7 +58,7 @@ public class MessageFileMonitorInitializer {
 
     private final IntegrationFlowContext context;
     private final CompoundLifecycle inputReadersLifecycle;
-    private final ProcessingMetrics processingMetrics;
+    private final ProcessingState processingState;
 
     private final AviationProductsHolder aviationProductsHolder;
     private final Clock clock;
@@ -74,13 +75,13 @@ public class MessageFileMonitorInitializer {
     private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registrations = new HashSet<>();
 
     public MessageFileMonitorInitializer(final IntegrationFlowContext context, final CompoundLifecycle inputReadersLifecycle,
-                                         final ProcessingMetrics processingMetrics, final AviationProductsHolder aviationProductsHolder, final Clock clock,
+                                         final ProcessingState processingState, final AviationProductsHolder aviationProductsHolder, final Clock clock,
                                          final MessageChannel processingChannel, final MessageChannel successChannel, final MessageChannel failChannel, final MessageChannel finishChannel,
                                          final MessageChannel errorMessageChannel, final Advice archiveRetryAdvice, final Advice failRetryAdvice, final Advice exceptionTrapAdvice,
                                          final int filterQueueSize) {
         this.context = requireNonNull(context, "context");
         this.inputReadersLifecycle = requireNonNull(inputReadersLifecycle, "inputReadersLifecycle");
-        this.processingMetrics = requireNonNull(processingMetrics, "processingMetrics");
+        this.processingState = requireNonNull(processingState, "processingState");
         this.aviationProductsHolder = requireNonNull(aviationProductsHolder, "aviationProductsHolder");
         this.clock = requireNonNull(clock, "clock");
         this.processingChannel = requireNonNull(processingChannel, "processingChannel");
@@ -125,8 +126,9 @@ public class MessageFileMonitorInitializer {
         aviationProductsHolder.getProducts().values().forEach(product -> {
             final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
             sourceDirectory.setDirectory(product.getInputDir());
-            sourceDirectory.setFilter(new ChainFileListFilter<>(ImmutableList.of(
-                    new AcceptUnchangedFileListFilter(), new AcceptOnceFileListFilter<>(filterQueueSize))));
+            sourceDirectory.setFilter(new ChainFileListFilter<>(
+                    ImmutableList.of(new ProcessingFileListFilter(processingState, product.getId()),
+                            new AcceptUnchangedFileListFilter(), new AcceptOnceFileListFilter<>(filterQueueSize))));
             inputReadersLifecycle.add(sourceDirectory);
 
             final FileWritingMessageHandler archiveDirectory = new FileWritingMessageHandler(product.getArchiveDir());
@@ -157,7 +159,7 @@ public class MessageFileMonitorInitializer {
                             .enrichHeaders(s -> s.header(PRODUCT_KEY, product)//
                                     .headerFunction(MessageHeaders.ERROR_CHANNEL, message -> errorMessageChannel)
                                     .headerFunction(FILE_METADATA, message -> createFileMetadata(message, fileConfig, product.getId())))
-                            .handle(ServiceActivators.peekHeader(FileMetadata.class, FILE_METADATA, processingMetrics::start))//
+                            .handle(ServiceActivators.peekHeader(FileMetadata.class, FILE_METADATA, processingState::start))//
                             .log(Level.INFO, INPUT_CATEGORY)//
                             .channel(processingChannel)//
                             .get()//

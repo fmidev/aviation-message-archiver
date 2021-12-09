@@ -1,12 +1,11 @@
 package fi.fmi.avi.archiver.initializing;
 
-import static org.mockito.Mockito.mock;
+import com.google.common.testing.AbstractPackageSanityTests;
+import fi.fmi.avi.archiver.ProcessingState;
 
 import java.time.Clock;
 
-import com.google.common.testing.AbstractPackageSanityTests;
-
-import fi.fmi.avi.archiver.ProcessingMetrics;
+import static org.mockito.Mockito.mock;
 
 public class PackageSanityTest extends AbstractPackageSanityTests {
 
@@ -16,7 +15,7 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
         setDefault(AviationProductsHolder.AviationProduct.class, AviationProductsHolder.AviationProduct.builder().buildPartial());
         setDefault(AviationProductsHolder.class, mock(AviationProductsHolder.class));
         setDefault(Clock.class, Clock.systemUTC());
-        setDefault(ProcessingMetrics.class, mock(ProcessingMetrics.class));
+        setDefault(ProcessingState.class, mock(ProcessingState.class));
     }
 
 }
