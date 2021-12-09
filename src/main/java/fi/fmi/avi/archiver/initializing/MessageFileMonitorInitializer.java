@@ -6,7 +6,7 @@ import fi.fmi.avi.archiver.file.FileConfig;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
 import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
-import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptOnceUnchangedFileListFilter;
+import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
 import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 import org.aopalliance.aop.Advice;
 import org.slf4j.Logger;
@@ -20,6 +20,8 @@ import org.springframework.integration.file.FileHeaders;
 import org.springframework.integration.file.FileNameGenerator;
 import org.springframework.integration.file.FileReadingMessageSource;
 import org.springframework.integration.file.FileWritingMessageHandler;
+import org.springframework.integration.file.filters.AcceptOnceFileListFilter;
+import org.springframework.integration.file.filters.ChainFileListFilter;
 import org.springframework.integration.file.filters.RegexPatternFileListFilter;
 import org.springframework.integration.file.support.FileExistsMode;
 import org.springframework.integration.handler.LoggingHandler.Level;
@@ -123,7 +125,8 @@ public class MessageFileMonitorInitializer {
         aviationProductsHolder.getProducts().values().forEach(product -> {
             final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
             sourceDirectory.setDirectory(product.getInputDir());
-            sourceDirectory.setFilter(new AcceptOnceUnchangedFileListFilter(filterQueueSize));
+            sourceDirectory.setFilter(new ChainFileListFilter<>(ImmutableList.of(
+                    new AcceptUnchangedFileListFilter(), new AcceptOnceFileListFilter<>(filterQueueSize))));
             inputReadersLifecycle.add(sourceDirectory);
 
             final FileWritingMessageHandler archiveDirectory = new FileWritingMessageHandler(product.getArchiveDir());
