@@ -45,7 +45,7 @@ public class ProcessingState {
     public boolean isFileUnderProcessing(final String productIdentifier, final String filename) {
         requireNonNull(productIdentifier, "productIdentifier");
         requireNonNull(filename, "filename");
-        return filesUnderProcessing.stream().anyMatch(underProcessing ->
+        return filesUnderProcessing.elementSet().stream().anyMatch(underProcessing ->
                 underProcessing.getProductIdentifier().equals(productIdentifier) && underProcessing.getFilename().equals(filename));
     }
 
