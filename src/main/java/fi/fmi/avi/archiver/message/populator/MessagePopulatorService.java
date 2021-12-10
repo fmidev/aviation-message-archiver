@@ -1,12 +1,11 @@
 package fi.fmi.avi.archiver.message.populator;
 
+import fi.fmi.avi.archiver.config.IntegrationFlowConfig;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -27,7 +26,6 @@ public class MessagePopulatorService {
         this.messagePopulators = requireNonNull(messagePopulators, "messagePopulators");
     }
 
-    @ServiceActivator
     public Message<List<ArchiveAviationMessage>> populateMessages(final List<InputAviationMessage> inputMessages,
                                                                   final MessageHeaders headers) {
         requireNonNull(inputMessages, "inputMessages");
@@ -51,8 +49,8 @@ public class MessagePopulatorService {
         return MessageBuilder
                 .withPayload(Collections.unmodifiableList(populatedMessages))
                 .copyHeaders(headers)
-                .setHeader(MessageFileMonitorInitializer.FAILED_MESSAGES, Collections.unmodifiableList(failures))
-                .setHeader(MessageFileMonitorInitializer.DISCARDED_MESSAGES, Collections.unmodifiableList(discards))
+                .setHeader(IntegrationFlowConfig.FAILED_MESSAGES, Collections.unmodifiableList(failures))
+                .setHeader(IntegrationFlowConfig.DISCARDED_MESSAGES, Collections.unmodifiableList(discards))
                 .build();
     }
 

@@ -10,10 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.NonTransientDataAccessException;
-import org.springframework.integration.dsl.IntegrationFlow;
-import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.messaging.MessageChannel;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
@@ -50,12 +47,6 @@ public class DataSourceConfig {
     @Autowired
     private Clock clock;
 
-    @Autowired
-    private MessageChannel databaseChannel;
-
-    @Autowired
-    private MessageChannel archiveChannel;
-
     @Bean
     public DatabaseAccess databaseAccess() {
         return new DatabaseAccess(jdbcTemplate, clock, databaseAccessRetryTemplate(), schema);
@@ -64,14 +55,6 @@ public class DataSourceConfig {
     @Bean
     public DatabaseService databaseService() {
         return new DatabaseService(databaseAccess());
-    }
-
-    @Bean
-    public IntegrationFlow databaseFlow() {
-        return IntegrationFlows.from(databaseChannel)
-                .handle(databaseService())
-                .channel(archiveChannel)
-                .get();
     }
 
     /**

@@ -1,15 +1,14 @@
 package fi.fmi.avi.archiver.config;
 
-import java.util.Collections;
-import java.util.Map;
-
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import fi.fmi.avi.model.MessageType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import fi.fmi.avi.model.MessageType;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Holder for static values of messages.

@@ -1,21 +1,20 @@
 package fi.fmi.avi.archiver.config;
 
+import fi.fmi.avi.archiver.database.DatabaseAccess;
+import fi.fmi.avi.archiver.initializing.MessagePopulatorExecutionChainHolder;
+import fi.fmi.avi.archiver.message.populator.MessagePopulator;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatorFactory;
+import fi.fmi.avi.archiver.message.populator.StationIdPopulator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import fi.fmi.avi.archiver.database.DatabaseAccess;
-import fi.fmi.avi.archiver.initializing.MessagePopulatorExecutionChainHolder;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorFactory;
-import fi.fmi.avi.archiver.message.populator.StationIdPopulator;
 
 @Configuration
 public class MessagePopulatorConfig {
