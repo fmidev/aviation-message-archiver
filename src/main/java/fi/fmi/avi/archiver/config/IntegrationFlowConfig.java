@@ -75,6 +75,26 @@ public class IntegrationFlowConfig {
     public static final String DISCARDED_MESSAGES = "processing_discards";
     public static final String FILE_PARSE_ERRORS = "file_parsed_partially";
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(IntegrationFlowConfig.class);
+
+    @Nullable
+    private static Message<?> errorMessageToOriginalMessage(final ErrorMessage errorMessage) {
+        final Message<?> failedMessage;
+        if (errorMessage.getPayload() instanceof MessagingException) {
+            failedMessage = ((MessagingException) errorMessage.getPayload()).getFailedMessage();
+        }
+        // Attempt to use original message if the exception is not a MessagingException
+        else if (errorMessage.getOriginalMessage() != null) {
+            failedMessage = errorMessage.getOriginalMessage();
+        } else {
+            // Unable to get the original message, log the exception
+            LOGGER.error("Unable to extract message from error message", errorMessage.getPayload());
+            return null;
+        }
+        LOGGER.error("Processing message {} failed: ", failedMessage, errorMessage.getPayload());
+        return failedMessage;
+    }
+
     @Bean
     IntegrationFlow archivalFlow(final FileToStringTransformer fileToStringTransformer, final RequestHandlerRetryAdvice fileReadingRetryAdvice,
             final ParserConfig.FileParserService fileParserService, final MessagePopulatorService messagePopulatorService,
@@ -127,37 +147,19 @@ public class IntegrationFlowConfig {
                 .get();
     }
 
-    @Nullable
-    private Message<?> errorMessageToOriginalMessage(final ErrorMessage errorMessage) {
-        final Message<?> failedMessage;
-        if (errorMessage.getPayload() instanceof MessagingException) {
-            failedMessage = ((MessagingException) errorMessage.getPayload()).getFailedMessage();
-        }
-        // Attempt to use original message if the exception is not a MessagingException
-        else if (errorMessage.getOriginalMessage() != null) {
-            failedMessage = errorMessage.getOriginalMessage();
-        } else {
-            // Unable to get the original message, log the exception
-            ProductFlowsInitializer.LOGGER.error("Unable to extract message from error message", errorMessage.getPayload());
-            return null;
-        }
-        ProductFlowsInitializer.LOGGER.error("Processing message {} failed: ", failedMessage, errorMessage.getPayload());
-        return failedMessage;
-    }
-
     @Bean
     FileToStringTransformer fileToStringTransformer(@Value("${file-handler.charset}") final String charset) {
         final FileToStringTransformer transformer = new FileToStringTransformer();
         transformer.setCharset(charset);
         return transformer;
     }
-    // Trap exceptions to avoid infinite looping when the error message flow itself results in exceptions
 
     @Bean
     FileNameGenerator timestampAppender(final Clock clock) {
         return msg -> msg.getHeaders().get(FILENAME) + "." + clock.millis();
     }
 
+    // Trap exceptions to avoid infinite looping when the error message flow itself results in exceptions
     @Bean
     Advice exceptionTrapAdvice(final MessageChannel errorLoggingChannel) {
         final ExpressionEvaluatingRequestHandlerAdvice advice = new ExpressionEvaluatingRequestHandlerAdvice();
@@ -208,7 +210,6 @@ public class IntegrationFlowConfig {
 
     @Component
     static class ProductFlowsInitializer {
-        private static final Logger LOGGER = LoggerFactory.getLogger(ProductFlowsInitializer.class);
         private static final String PRODUCT_KEY = "product";
         private static final String INPUT_CATEGORY = "input";
 
@@ -234,11 +235,9 @@ public class IntegrationFlowConfig {
                 final CompoundLifecycle inputReadersLifecycle, final ProcessingState processingState, final List<Advice> archiveAdviceChain,
                 final List<Advice> failAdviceChain, final FileNameGenerator timestampAppender,
                 @SuppressWarnings("rawtypes") final GenericTransformer<Message, File> headerToFileTransformer,
-                //
-                @Value("${polling.filter-queue-size}") final int filterQueueSize,
-                //
-                final MessageChannel processingChannel, final MessageChannel errorMessageChannel, final MessageChannel successChannel,
-                final MessageChannel failChannel, final MessageChannel finishChannel) {
+                @Value("${polling.filter-queue-size}") final int filterQueueSize, final MessageChannel processingChannel,
+                final MessageChannel errorMessageChannel, final MessageChannel successChannel, final MessageChannel failChannel,
+                final MessageChannel finishChannel) {
             this.context = requireNonNull(context, "context");
             this.aviationProductsHolder = requireNonNull(aviationProductsHolder, "aviationProductsHolder");
             this.inputReadersLifecycle = requireNonNull(inputReadersLifecycle, "inputReadersLifecycle");
@@ -280,7 +279,7 @@ public class IntegrationFlowConfig {
         @PostConstruct
         void initializeProductFlows() {
             aviationProductsHolder.getProducts().values().forEach(product -> {
-                final FileReadingMessageSource sourceReader = createMessageSource(product.getInputDir(), product.getId(), processingState);
+                final FileReadingMessageSource sourceReader = createMessageSource(product.getInputDir(), product.getId());
                 inputReadersLifecycle.add(sourceReader);
 
                 // Separate input channel needed in order to use multiple different
@@ -311,14 +310,14 @@ public class IntegrationFlowConfig {
                 registerIntegrationFlow(IntegrationFlows.from(successChannel)//
                         .filter(Message.class, productFilter)//
                         .transform(Message.class, headerToFileTransformer)//
-                        .handle(createArchiveHandler(product.getArchiveDir(), archiveAdviceChain, timestampAppender))//
+                        .handle(createArchiveHandler(product.getArchiveDir()))//
                         .channel(finishChannel)//
                         .get());
 
                 registerIntegrationFlow(IntegrationFlows.from(failChannel)//
                         .filter(Message.class, productFilter)//
                         .transform(Message.class, headerToFileTransformer)//
-                        .handle(createFailHandler(product.getFailDir(), failAdviceChain, timestampAppender))//
+                        .handle(createFailHandler(product.getFailDir()))//
                         .channel(finishChannel)//
                         .get());
             });
@@ -339,17 +338,21 @@ public class IntegrationFlowConfig {
             integrationFlows.forEach(this::registerIntegrationFlow);
         }
 
-        private FileReadingMessageSource createMessageSource(final File inputDir, final String productId, final ProcessingState processingState) {
+        private FileReadingMessageSource createMessageSource(final File inputDir, final String productId) {
             final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
             sourceDirectory.setDirectory(inputDir);
-            sourceDirectory.setFilter(new ChainFileListFilter<>(
-                    ImmutableList.of(new ProcessingFileListFilter(processingState, productId), new AcceptUnchangedFileListFilter(),
-                            new AcceptOnceFileListFilter<>(filterQueueSize))));
+            sourceDirectory.setFilter(createSourceFileListFilter(productId));
             return sourceDirectory;
         }
 
-        private FileWritingMessageHandler createArchiveHandler(final File destinationDir, final List<Advice> archiveAdviceChain,
-                final FileNameGenerator timestampAppender) {
+        private ChainFileListFilter<File> createSourceFileListFilter(final String productId) {
+            return new ChainFileListFilter<>(ImmutableList.of(//
+                    new ProcessingFileListFilter(processingState, productId), //
+                    new AcceptUnchangedFileListFilter(),//
+                    new AcceptOnceFileListFilter<>(filterQueueSize)));
+        }
+
+        private FileWritingMessageHandler createArchiveHandler(final File destinationDir) {
             final FileWritingMessageHandler archiveHandler = new FileWritingMessageHandler(destinationDir);
             archiveHandler.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
             archiveHandler.setDeleteSourceFiles(true);
@@ -358,8 +361,7 @@ public class IntegrationFlowConfig {
             return archiveHandler;
         }
 
-        private FileWritingMessageHandler createFailHandler(final File destinationDir, final List<Advice> failAdviceChain,
-                final FileNameGenerator timestampAppender) {
+        private FileWritingMessageHandler createFailHandler(final File destinationDir) {
             final FileWritingMessageHandler failHandler = new FileWritingMessageHandler(destinationDir);
             failHandler.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
             failHandler.setDeleteSourceFiles(true);
