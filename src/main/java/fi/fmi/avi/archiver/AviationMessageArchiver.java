@@ -1,19 +1,21 @@
 package fi.fmi.avi.archiver;
 
-import static java.util.Objects.requireNonNull;
-
-import java.time.Clock;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.config.EnableIntegration;
 
+import java.time.Clock;
+
+import static java.util.Objects.requireNonNull;
+
 @Configuration
 @EnableIntegration
 @ComponentScan
+@ConfigurationPropertiesScan
 @EnableAutoConfiguration
 public class AviationMessageArchiver {
     public static void main(final String[] args) {

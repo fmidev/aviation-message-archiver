@@ -1,7 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
 import fi.fmi.avi.archiver.database.DatabaseAccess;
-import fi.fmi.avi.archiver.initializing.MessagePopulatorExecutionChainHolder;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.message.populator.StationIdPopulator;
@@ -20,11 +19,11 @@ public class MessagePopulatorConfig {
 
     @Bean(name = "messagePopulators")
     public List<MessagePopulator> messagePopulators(final List<MessagePopulatorFactory<?>> messagePopulatorFactories,
-                                                    final MessagePopulatorExecutionChainHolder messagePopulatorExecutionChainHolder,
+                                                    final List<MessagePopulatorExecutionChainConfig.PopulatorInstanceSpec> executionChain,
                                                     final DatabaseAccess databaseAccess) {
         final Map<String, MessagePopulatorFactory<?>> factoriesByName = messagePopulatorFactories.stream()//
                 .collect(Collectors.toMap(MessagePopulatorFactory::getName, Function.identity()));
-        final ArrayList<MessagePopulator> populators = messagePopulatorExecutionChainHolder.getExecutionChain().stream()//
+        final ArrayList<MessagePopulator> populators = executionChain.stream()//
                 .map(spec -> factoriesByName.get(spec.getName()).newInstance(spec.getConfig()))//
                 .collect(Collectors.toCollection(ArrayList::new));
         populators.add(new StationIdPopulator(databaseAccess));

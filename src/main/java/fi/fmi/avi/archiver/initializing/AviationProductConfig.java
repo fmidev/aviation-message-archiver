@@ -11,9 +11,6 @@ import java.util.function.Consumer;
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
-/**
- * Holder for Aviation products.
- */
 @Configuration
 public class AviationProductConfig {
 
