@@ -1,14 +1,15 @@
 package fi.fmi.avi.archiver;
 
-import com.google.common.collect.ConcurrentHashMultiset;
-import com.google.common.collect.Multiset;
-import fi.fmi.avi.archiver.file.FileMetadata;
+import static java.util.Objects.requireNonNull;
 
 import java.time.Clock;
 import java.time.Duration;
-import java.util.Objects;
 
-import static java.util.Objects.requireNonNull;
+import com.google.common.collect.ConcurrentHashMultiset;
+import com.google.common.collect.Multiset;
+
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
 
 public class ProcessingState {
     private final Clock clock;
@@ -42,11 +43,9 @@ public class ProcessingState {
                 .orElse(now));
     }
 
-    public boolean isFileUnderProcessing(final String productIdentifier, final String filename) {
-        requireNonNull(productIdentifier, "productIdentifier");
-        requireNonNull(filename, "filename");
-        return filesUnderProcessing.elementSet().stream().anyMatch(underProcessing ->
-                underProcessing.getProductIdentifier().equals(productIdentifier) && underProcessing.getFilename().equals(filename));
+    public boolean isFileUnderProcessing(final FileReference fileReference) {
+        requireNonNull(fileReference, "fileReference");
+        return filesUnderProcessing.elementSet().stream().anyMatch(underProcessing -> underProcessing.getFileReference().equals(fileReference));
     }
 
     private static final class FileUnderProcessing {
@@ -58,12 +57,8 @@ public class ProcessingState {
             this.start = requireNonNull(clock, "clock").millis();
         }
 
-        public String getFilename() {
-            return fileMetadata.getFilename();
-        }
-
-        public String getProductIdentifier() {
-            return fileMetadata.getProductIdentifier();
+        private FileReference getFileReference() {
+            return fileMetadata.getFileReference();
         }
 
         public FileMetadata getFileMetadata() {
@@ -76,7 +71,7 @@ public class ProcessingState {
 
         @Override
         public int hashCode() {
-            return Objects.hash(getProductIdentifier(), getFilename());
+            return getFileReference().hashCode();
         }
 
         @Override
@@ -85,8 +80,7 @@ public class ProcessingState {
                 return true;
             } else if (obj instanceof FileUnderProcessing) {
                 final FileUnderProcessing other = (FileUnderProcessing) obj;
-                return this.getProductIdentifier().equals(other.getProductIdentifier())//
-                        && this.getFilename().equals(other.getFilename());
+                return this.getFileReference().equals(other.getFileReference());
             } else {
                 return false;
             }
@@ -94,7 +88,7 @@ public class ProcessingState {
 
         @Override
         public String toString() {
-            return getProductIdentifier() + ":" + getFilename();
+            return getFileReference().toString();
         }
     }
 }

@@ -14,13 +14,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
 import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.model.PartialDateTime;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
 
 class MessagePopulatorHelperTest {
     private static final FileMetadata FILE_METADATA_TEMPLATE = FileMetadata.builder()//
-            .setProductIdentifier("testproduct")//
+            .setFileReference(FileReference.create("testproduct", "null"))//
             .mutateFileConfig(fileConfig -> fileConfig//
                     .setFormat(MessagePopulatorTests.FormatId.TAC.getFormat())//
                     .setFormatId(MessagePopulatorTests.FormatId.TAC.getId())//
@@ -45,7 +46,7 @@ class MessagePopulatorHelperTest {
             @Nullable final Instant fileModified, final ZonedDateTime clock, @Nullable final ZonedDateTime expectedTime) {
         final MessagePopulatorHelper helper = new MessagePopulatorHelper(Clock.fixed(clock.toInstant(), clock.getZone()));
         final FileMetadata fileMetadata = FILE_METADATA_TEMPLATE.toBuilder()//
-                .setFilename(filename)//
+                .mutateFileReference(ref -> ref.setFilename(filename))//
                 .setNullableFileModified(fileModified)//
                 .build();
         final PartialOrCompleteTimeInstant partialOrCompleteTime = PartialOrCompleteTimeInstant.builder()//
@@ -79,7 +80,7 @@ class MessagePopulatorHelperTest {
                 .build();
         final MessagePopulatorHelper helper = new MessagePopulatorHelper(Clock.fixed(clock.toInstant(), clock.getZone()));
         final FileMetadata fileMetadata = FILE_METADATA_TEMPLATE.toBuilder()//
-                .setFilename(filename)//
+                .mutateFileReference(ref -> ref.setFilename(filename))//
                 .setNullableFileModified(fileModified)//
                 .build();
 

@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.file.FileConfig;
 import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
@@ -55,9 +56,8 @@ class FileMetadataPopulatorTest {
             .collect(ImmutableMap.toImmutableMap(AviationProductsHolder.AviationProduct::getId, Function.identity()));
     private static final InputAviationMessage INPUT_MESSAGE_TEMPLATE = InputAviationMessage.builder()//
             .setFileMetadata(FileMetadata.builder()//
-                    .setProductIdentifier(PRODUCT_ID_1)//
+                    .setFileReference(FileReference.create(PRODUCT_ID_1, "taf.txt"))//
                     .setFileModified(FILE_MODIFIED)//
-                    .setFilename("taf.txt")//
                     .setFileConfig(FILE_CONFIG_1))//
             .buildPartial();
     private FileMetadataPopulator populator;
@@ -74,8 +74,7 @@ class FileMetadataPopulatorTest {
     })
     void populates_route(final String productId, final MessagePopulatorTests.RouteId expected) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(fileMetadata -> fileMetadata//
-                        .setProductIdentifier(productId)//
+                .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductIdentifier(productId))//
                         .setFileConfig(PRODUCTS.get(productId).getFileConfigs().get(0)))//
                 .build();
 
@@ -91,8 +90,7 @@ class FileMetadataPopulatorTest {
     })
     void populates_format(final String productId, final MessagePopulatorTests.FormatId expected) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(fileMetadata -> fileMetadata//
-                        .setProductIdentifier(productId)//
+                .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductIdentifier(productId))//
                         .setFileConfig(PRODUCTS.get(productId).getFileConfigs().get(0)))//
                 .build();
 

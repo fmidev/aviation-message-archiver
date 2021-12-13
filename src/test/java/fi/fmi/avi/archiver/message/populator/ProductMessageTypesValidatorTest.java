@@ -1,19 +1,22 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.testing.NullPointerTester;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ProcessingResult;
-import fi.fmi.avi.model.MessageType;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.common.testing.NullPointerTester;
+
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ProcessingResult;
+import fi.fmi.avi.model.MessageType;
 
 public class ProductMessageTypesValidatorTest {
 
@@ -21,11 +24,11 @@ public class ProductMessageTypesValidatorTest {
     private static final String ANOTHER_PRODUCT_IDENTIFIER = "another_product";
     private static final Set<MessageType> TYPE_IDENTIFIERS = ImmutableSet.of(MessagePopulatorTests.TypeId.SPECI.getType(),
             MessagePopulatorTests.TypeId.METAR.getType());
-    private static final FileMetadata TEST_METADATA = FileMetadata.builder()
-            .setProductIdentifier(TEST_PRODUCT_IDENTIFIER)
+    private static final FileMetadata TEST_METADATA = FileMetadata.builder()//
+            .setFileReference(FileReference.create(TEST_PRODUCT_IDENTIFIER, "anyfile"))//
             .buildPartial();
-    private static final FileMetadata ANOTHER_METADATA = FileMetadata.builder()
-            .setProductIdentifier(ANOTHER_PRODUCT_IDENTIFIER)
+    private static final FileMetadata ANOTHER_METADATA = FileMetadata.builder()//
+            .setFileReference(FileReference.create(ANOTHER_PRODUCT_IDENTIFIER, "anyfile"))//
             .buildPartial();
 
     private ProductMessageTypesValidator productMessageTypesValidator;

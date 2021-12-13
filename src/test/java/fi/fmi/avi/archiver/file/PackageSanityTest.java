@@ -24,6 +24,7 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
         setDefault(FileMetadata.class, fileMetadata);
         setDefault(FileParser.FileParseResult.class, FileParser.FileParseResult.builder().buildPartial());
         setDefault(FileParser.LogDetails.class, FileParser.LogDetails.builder().setFileMetadata(fileMetadata).buildPartial());
+        setDefault(FileReference.class, FileReference.create("product-id", "filename"));
         setDefault(InputAviationMessage.class, InputAviationMessage.builder().setFileMetadata(fileMetadata).buildPartial());
         setDefault(InputBulletinHeading.class, InputBulletinHeading.builder().buildPartial());
         setDefault(ZoneId.class, ZoneOffset.UTC);

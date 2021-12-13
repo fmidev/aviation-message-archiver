@@ -1,24 +1,24 @@
 package fi.fmi.avi.archiver;
 
-import fi.fmi.avi.archiver.file.FileMetadata;
-import org.junit.jupiter.api.Test;
-import org.threeten.extra.MutableClock;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.threeten.extra.MutableClock;
+
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
 
 class ProcessingStateTest {
     private static final FileMetadata FILE_METADATA_1 = FileMetadata.builder()//
-            .setProductIdentifier("productid")//
-            .setFilename("filename1.txt")//
+            .setFileReference(FileReference.create("productid", "filename1.txt"))//
             .buildPartial();
     private static final FileMetadata FILE_METADATA_2 = FileMetadata.builder()//
-            .setProductIdentifier("productid")//
-            .setFilename("filename2.txt")//
+            .setFileReference(FileReference.create("productid", "filename2.txt"))//
             .buildPartial();
     private static final Clock FIXED_EPOCH_CLOCK = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC);
 

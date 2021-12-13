@@ -1,16 +1,16 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ProcessingResult;
-import fi.fmi.avi.model.MessageType;
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ProcessingResult;
+import fi.fmi.avi.model.MessageType;
 
 public class ProductMessageTypesValidator implements MessagePopulator {
 
@@ -34,8 +34,7 @@ public class ProductMessageTypesValidator implements MessagePopulator {
         requireNonNull(inputAviationMessage, "inputAviationMessage");
         requireNonNull(builder, "builder");
         MessagePopulatorHelper.tryGetInt(builder, ArchiveAviationMessage.Builder::getType).ifPresent(type -> {
-            if (inputAviationMessage.getFileMetadata().getProductIdentifier().equals(productIdentifier)
-                    && !typeIdentifiers.contains(type)) {
+            if (inputAviationMessage.getFileMetadata().getFileReference().getProductIdentifier().equals(productIdentifier) && !typeIdentifiers.contains(type)) {
                 builder.setProcessingResult(ProcessingResult.FORBIDDEN_MESSAGE_TYPE);
             }
         });

@@ -18,6 +18,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.PartialDateTime;
@@ -32,9 +33,8 @@ class BulletinHeadingDataPopulatorTest {
             BulletinHeadingSource.COLLECT_IDENTIFIER);
     private static final InputAviationMessage INPUT_MESSAGE_TEMPLATE = InputAviationMessage.builder()//
             .setFileMetadata(FileMetadata.builder()//
-                    .setProductIdentifier("testproduct")//
+                    .setFileReference(FileReference.create("testproduct", "taf.txt"))//
                     .setFileModified(Instant.parse("2000-01-02T03:05:34Z"))//
-                    .setFilename("taf.txt")//
                     .mutateFileConfig(fileConfig -> fileConfig//
                             .setFormat(MessagePopulatorTests.FormatId.TAC.getFormat())//
                             .setFormatId(MessagePopulatorTests.FormatId.TAC.getId())//
@@ -150,8 +150,7 @@ class BulletinHeadingDataPopulatorTest {
     void populates_messageTime_when_exists(@Nullable final PartialDateTime gtsIssueTime, @Nullable final ZonedDateTime collectIssueTime, final String filename,
             final Instant fileModified, final Instant expectedTime) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(filedata -> filedata//
-                        .setFilename(filename)//
+                .mutateFileMetadata(filedata -> filedata.mutateFileReference(ref -> ref.setFilename(filename))//
                         .setFileModified(fileModified));
         if (gtsIssueTime != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(builder -> builder.setBulletinHeading(

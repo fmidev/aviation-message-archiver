@@ -1,14 +1,23 @@
 package fi.fmi.avi.archiver.initializing;
 
-import com.google.common.collect.ImmutableList;
-import fi.fmi.avi.archiver.ProcessingState;
-import fi.fmi.avi.archiver.file.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
-import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
-import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
-import fi.fmi.avi.archiver.spring.integration.file.filters.ProcessingFileListFilter;
-import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
+import static java.util.Objects.requireNonNull;
+import static org.springframework.integration.file.FileHeaders.FILENAME;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
 import org.aopalliance.aop.Advice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,17 +39,17 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.*;
-import java.util.stream.Stream;
+import com.google.common.collect.ImmutableList;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.ProcessingState;
+import fi.fmi.avi.archiver.file.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
+import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
+import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
+import fi.fmi.avi.archiver.spring.integration.file.filters.ProcessingFileListFilter;
+import fi.fmi.avi.archiver.transformer.HeaderToFileTransformer;
 
 /**
  * Initializes Message file source directory reading, filename filtering and archiving of the files.
@@ -75,10 +84,10 @@ public class MessageFileMonitorInitializer {
     private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registrations = new HashSet<>();
 
     public MessageFileMonitorInitializer(final IntegrationFlowContext context, final CompoundLifecycle inputReadersLifecycle,
-                                         final ProcessingState processingState, final AviationProductsHolder aviationProductsHolder, final Clock clock,
-                                         final MessageChannel processingChannel, final MessageChannel successChannel, final MessageChannel failChannel, final MessageChannel finishChannel,
-                                         final MessageChannel errorMessageChannel, final Advice archiveRetryAdvice, final Advice failRetryAdvice, final Advice exceptionTrapAdvice,
-                                         final int filterQueueSize) {
+            final ProcessingState processingState, final AviationProductsHolder aviationProductsHolder, final Clock clock,
+            final MessageChannel processingChannel, final MessageChannel successChannel, final MessageChannel failChannel, final MessageChannel finishChannel,
+            final MessageChannel errorMessageChannel, final Advice archiveRetryAdvice, final Advice failRetryAdvice, final Advice exceptionTrapAdvice,
+            final int filterQueueSize) {
         this.context = requireNonNull(context, "context");
         this.inputReadersLifecycle = requireNonNull(inputReadersLifecycle, "inputReadersLifecycle");
         this.processingState = requireNonNull(processingState, "processingState");
@@ -96,12 +105,11 @@ public class MessageFileMonitorInitializer {
     }
 
     private static FileMetadata createFileMetadata(final Message<?> message, final FileConfig fileConfig, final String productIdentifier) {
-        final String filename = message.getHeaders().get(FileHeaders.FILENAME, String.class);
-        return FileMetadata.builder()
-                .setFilename(filename)
-                .setFileConfig(fileConfig)
-                .setProductIdentifier(productIdentifier)
-                .setFileModified(getFileModified(message))
+        final String filename = requireNonNull(message.getHeaders().get(FILENAME, String.class), FILENAME);
+        return FileMetadata.builder()//
+                .setFileReference(FileReference.create(productIdentifier, filename))//
+                .setFileConfig(fileConfig)//
+                .setFileModified(getFileModified(message))//
                 .build();
     }
 
@@ -119,7 +127,7 @@ public class MessageFileMonitorInitializer {
 
     @PostConstruct
     private void initializeFilePatternFlows() {
-        final FileNameGenerator timestampAppender = msg -> msg.getHeaders().get(FileHeaders.FILENAME) + "." + clock.millis();
+        final FileNameGenerator timestampAppender = msg -> msg.getHeaders().get(FILENAME) + "." + clock.millis();
         final List<Advice> archiveAdviceChain = ImmutableList.of(exceptionTrapAdvice, archiveRetryAdvice);
         final List<Advice> failAdviceChain = ImmutableList.of(exceptionTrapAdvice, failRetryAdvice);
 
@@ -127,8 +135,8 @@ public class MessageFileMonitorInitializer {
             final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
             sourceDirectory.setDirectory(product.getInputDir());
             sourceDirectory.setFilter(new ChainFileListFilter<>(
-                    ImmutableList.of(new ProcessingFileListFilter(processingState, product.getId()),
-                            new AcceptUnchangedFileListFilter(), new AcceptOnceFileListFilter<>(filterQueueSize))));
+                    ImmutableList.of(new ProcessingFileListFilter(processingState, product.getId()), new AcceptUnchangedFileListFilter(),
+                            new AcceptOnceFileListFilter<>(filterQueueSize))));
             inputReadersLifecycle.add(sourceDirectory);
 
             final FileWritingMessageHandler archiveDirectory = new FileWritingMessageHandler(product.getArchiveDir());
