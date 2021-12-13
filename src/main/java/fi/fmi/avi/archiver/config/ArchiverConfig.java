@@ -13,7 +13,12 @@ import java.time.Clock;
 import java.time.Duration;
 
 @Configuration
-public class DirectoryInspectionConfig {
+public class ArchiverConfig {
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemUTC();
+    }
 
     @Bean
     public CompoundLifecycle inputReadersLifecycle() {
@@ -21,10 +26,9 @@ public class DirectoryInspectionConfig {
     }
 
     @Bean
-    public GracefulShutdownManager shutdownManager(final Clock clock,
-                                                   @Value("${processing-flow.gracefulShutdown.timeout:PT20S}") final Duration gracefulShutdownTimeout,
+    public GracefulShutdownManager shutdownManager(@Value("${processing-flow.gracefulShutdown.timeout:PT20S}") final Duration gracefulShutdownTimeout,
                                                    @Value("${processing-flow.gracefulShutdown.pollingInterval:PT0.1S}") final Duration gracefulShutdownPollingInterval) {
-        final ProcessingState processingState = processingState(clock);
+        final ProcessingState processingState = processingState();
         final GracefulShutdownManager shutdownManager = new GracefulShutdownManager(inputReadersLifecycle(),
                 () -> processingState.getFileCountUnderProcessing() > 0);
         shutdownManager.setTimeout(gracefulShutdownTimeout);
@@ -33,8 +37,8 @@ public class DirectoryInspectionConfig {
     }
 
     @Bean
-    public ProcessingState processingState(final Clock clock) {
-        return new ProcessingState(clock);
+    public ProcessingState processingState() {
+        return new ProcessingState(clock());
     }
 
     @Bean(name = PollerMetadata.DEFAULT_POLLER)

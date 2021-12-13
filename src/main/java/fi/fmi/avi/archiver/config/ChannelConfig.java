@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
+import fi.fmi.avi.archiver.AviationMessageArchiver;
 import fi.fmi.avi.archiver.spring.healthcontributor.BlockingExecutorHealthContributor;
 import fi.fmi.avi.archiver.spring.integration.util.MonitorableCallerBlocksPolicy;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,15 +19,12 @@ import static java.util.Objects.requireNonNull;
 public class ChannelConfig {
 
     private final Clock clock;
-    private final ThreadGroup aviationMessageArchiverThreadGroup;
     private final BlockingExecutorHealthContributor executorHealthContributor;
     private final int executorQueueSize;
 
-    public ChannelConfig(final Clock clock, final ThreadGroup aviationMessageArchiverThreadGroup,
-                         final BlockingExecutorHealthContributor executorHealthContributor,
+    public ChannelConfig(final Clock clock, final BlockingExecutorHealthContributor executorHealthContributor,
                          @Value("${executor.queue-size}") final int executorQueueSize) {
         this.clock = requireNonNull(clock, "clock");
-        this.aviationMessageArchiverThreadGroup = requireNonNull(aviationMessageArchiverThreadGroup, "aviationMessageArchiverThreadGroup");
         this.executorHealthContributor = requireNonNull(executorHealthContributor, "executorHealthContributor");
         this.executorQueueSize = executorQueueSize;
     }
@@ -131,6 +129,11 @@ public class ChannelConfig {
         return new PublishSubscribeChannel(errorLoggingExecutor());
     }
 
+    @Bean(destroyMethod = "destroy")
+    public ThreadGroup aviationMessageArchiverThreadGroup() {
+        return new ThreadGroup(AviationMessageArchiver.class.getSimpleName());
+    }
+
     private ExecutorService newBlockingSingleThreadExecutor(final String threadNamePrefix) {
         final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(executorQueueSize);
         final MonitorableCallerBlocksPolicy callerBlocksPolicy = new MonitorableCallerBlocksPolicy(clock, Long.MAX_VALUE);
@@ -141,7 +144,7 @@ public class ChannelConfig {
 
     private CustomizableThreadFactory newThreadFactory(final String threadNamePrefix) {
         final CustomizableThreadFactory threadFactory = new CustomizableThreadFactory(threadNamePrefix);
-        threadFactory.setThreadGroup(aviationMessageArchiverThreadGroup);
+        threadFactory.setThreadGroup(aviationMessageArchiverThreadGroup());
         return threadFactory;
     }
 
