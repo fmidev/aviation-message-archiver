@@ -97,20 +97,20 @@ public class IntegrationFlowConfig {
 
     @Bean
     IntegrationFlow archivalFlow(final FileToStringTransformer fileToStringTransformer, final RequestHandlerRetryAdvice fileReadingRetryAdvice,
-            final ParserConfig.FileParserService fileParserService, final MessagePopulatorService messagePopulatorService,
-            final DatabaseService databaseService, //
-            final MessageChannel processingChannel, final MessageChannel parserChannel, final MessageChannel populatorChannel,
-            final MessageChannel databaseChannel, final MessageChannel archiveChannel, final MessageChannel successChannel, final MessageChannel failChannel) {
+                                 final ParserConfig.FileParserService fileParserService, final MessagePopulatorService messagePopulatorService,
+                                 final DatabaseService databaseService, final MessageChannel processingChannel, final MessageChannel parserChannel,
+                                 final MessageChannel populatorChannel, final MessageChannel databaseChannel, final MessageChannel archiveChannel,
+                                 final MessageChannel successChannel, final MessageChannel failChannel) {
         return IntegrationFlows.from(processingChannel)
                 .transform(Message.class, fileToStringTransformer::transform, spec -> spec.advice(fileReadingRetryAdvice))
                 .channel(parserChannel)
-                .<String> filter(content -> content != null && !content.isEmpty(), discards -> discards.discardChannel(failChannel))
+                .<String>filter(content -> content != null && !content.isEmpty(), discards -> discards.discardChannel(failChannel))
                 .handle(fileParserService::parse)
-                .<List<InputAviationMessage>> filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))
+                .<List<InputAviationMessage>>filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))
                 .channel(populatorChannel)
                 .handle(messagePopulatorService::populateMessages)
                 .channel(databaseChannel)
-                .<List<ArchiveAviationMessage>> handle((payload, headers) -> databaseService.insertMessages(payload))
+                .<List<ArchiveAviationMessage>>handle((payload, headers) -> databaseService.insertMessages(payload))
                 .channel(archiveChannel)
                 .route("headers." + FAILED_MESSAGES + ".isEmpty()" //
                         + " and !headers." + FILE_PARSE_ERRORS, r -> r//
@@ -170,10 +170,10 @@ public class IntegrationFlowConfig {
 
     @Bean
     RetryAdviceFactory retryAdviceFactory(//
-            @Value("${file-handler.retry.initial-interval}") final Duration initialInterval, //
-            @Value("${file-handler.retry.max-interval}") final Duration maxInterval, //
-            @Value("${file-handler.retry.multiplier}") final int retryMultiplier, //
-            @Value("${file-handler.retry.timeout}") final Duration timeout) {
+                                          @Value("${file-handler.retry.initial-interval}") final Duration initialInterval, //
+                                          @Value("${file-handler.retry.max-interval}") final Duration maxInterval, //
+                                          @Value("${file-handler.retry.multiplier}") final int retryMultiplier, //
+                                          @Value("${file-handler.retry.timeout}") final Duration timeout) {
         return new RetryAdviceFactory(initialInterval, maxInterval, retryMultiplier, timeout);
     }
 
@@ -232,10 +232,10 @@ public class IntegrationFlowConfig {
         private final MessageChannel finishChannel;
 
         ProductFlowsInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
-                final CompoundLifecycle inputReadersLifecycle, final ProcessingState processingState, final List<Advice> archiveAdviceChain,
-                final List<Advice> failAdviceChain, final FileNameGenerator timestampAppender,
-                @SuppressWarnings("rawtypes") final GenericTransformer<Message, File> headerToFileTransformer,
-                @Value("${polling.filter-queue-size}") final int filterQueueSize, final MessageChannel processingChannel,
+                                final CompoundLifecycle inputReadersLifecycle, final ProcessingState processingState, final List<Advice> archiveAdviceChain,
+                                final List<Advice> failAdviceChain, final FileNameGenerator timestampAppender,
+                                @SuppressWarnings("rawtypes") final GenericTransformer<Message, File> headerToFileTransformer,
+                                @Value("${polling.filter-queue-size}") final int filterQueueSize, final MessageChannel processingChannel,
                 final MessageChannel errorMessageChannel, final MessageChannel successChannel, final MessageChannel failChannel,
                 final MessageChannel finishChannel) {
             this.context = requireNonNull(context, "context");
@@ -304,8 +304,7 @@ public class IntegrationFlowConfig {
                                 .get()//
                         ));
 
-                @SuppressWarnings("rawtypes")
-                final GenericSelector<Message> productFilter = m -> Objects.equals(m.getHeaders().get(PRODUCT_KEY), product);
+                @SuppressWarnings("rawtypes") final GenericSelector<Message> productFilter = m -> Objects.equals(m.getHeaders().get(PRODUCT_KEY), product);
 
                 registerIntegrationFlow(IntegrationFlows.from(successChannel)//
                         .filter(Message.class, productFilter)//
