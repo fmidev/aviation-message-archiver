@@ -1,9 +1,10 @@
 package fi.fmi.avi.archiver.file;
 
+import fi.fmi.avi.archiver.config.model.FileConfig;
+import org.inferred.freebuilder.FreeBuilder;
+
 import java.time.Instant;
 import java.util.Optional;
-
-import org.inferred.freebuilder.FreeBuilder;
 
 @FreeBuilder
 public abstract class FileMetadata {

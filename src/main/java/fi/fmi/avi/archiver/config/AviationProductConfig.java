@@ -2,7 +2,7 @@ package fi.fmi.avi.archiver.config;
 
 import com.google.common.collect.ImmutableMap;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.file.FileConfig;
+import fi.fmi.avi.archiver.config.model.FileConfig;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
