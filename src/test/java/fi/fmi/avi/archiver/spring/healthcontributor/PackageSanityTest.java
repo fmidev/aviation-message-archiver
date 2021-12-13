@@ -1,7 +1,7 @@
 package fi.fmi.avi.archiver.spring.healthcontributor;
 
 import com.google.common.testing.AbstractPackageSanityTests;
-import fi.fmi.avi.archiver.initializing.AviationProductConfig;
+import fi.fmi.avi.archiver.config.AviationProductConfig;
 import fi.fmi.avi.archiver.spring.integration.util.MonitorableCallerBlocksPolicy;
 
 import static org.mockito.Mockito.mock;

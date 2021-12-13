@@ -1,8 +1,8 @@
-package fi.fmi.avi.archiver.initializing;
+package fi.fmi.avi.archiver.config;
 
 import fi.fmi.avi.archiver.AviationMessageArchiver;
 import fi.fmi.avi.archiver.TestConfig;
-import fi.fmi.avi.archiver.config.ConversionConfig;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

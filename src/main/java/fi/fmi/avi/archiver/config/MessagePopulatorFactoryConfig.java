@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.initializing.AviationProduct;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.message.populator.*;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;

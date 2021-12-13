@@ -1,7 +1,7 @@
 package fi.fmi.avi.archiver.spring.healthcontributor;
 
 import com.google.common.collect.ImmutableMap;
-import fi.fmi.avi.archiver.initializing.AviationProduct;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
 import org.springframework.boot.actuate.health.*;
 
 import java.io.IOException;

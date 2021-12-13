@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.initializing.AviationProduct;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.spring.healthcontributor.BlockingExecutorHealthContributor;
 import fi.fmi.avi.archiver.spring.healthcontributor.DirectoryPermissionHealthContributor;
 import org.springframework.beans.factory.annotation.Value;

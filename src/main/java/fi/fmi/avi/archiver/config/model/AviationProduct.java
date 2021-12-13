@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.initializing;
+package fi.fmi.avi.archiver.config.model;
 
 import fi.fmi.avi.archiver.file.FileConfig;
 import org.inferred.freebuilder.FreeBuilder;

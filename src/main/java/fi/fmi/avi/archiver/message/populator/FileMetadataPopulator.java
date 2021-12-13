@@ -1,9 +1,9 @@
 package fi.fmi.avi.archiver.message.populator;
 
 import com.google.common.base.Preconditions;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.initializing.AviationProduct;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 import java.util.Map;

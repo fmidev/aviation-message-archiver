@@ -2,11 +2,11 @@ package fi.fmi.avi.archiver.config;
 
 import com.google.common.collect.ImmutableList;
 import fi.fmi.avi.archiver.ProcessingState;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.database.DatabaseService;
 import fi.fmi.avi.archiver.file.FileConfig;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.initializing.AviationProduct;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorService;
 import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
