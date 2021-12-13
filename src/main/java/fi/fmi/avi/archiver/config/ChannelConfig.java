@@ -2,7 +2,6 @@ package fi.fmi.avi.archiver.config;
 
 import fi.fmi.avi.archiver.spring.healthcontributor.BlockingExecutorHealthContributor;
 import fi.fmi.avi.archiver.spring.integration.util.MonitorableCallerBlocksPolicy;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,20 +12,24 @@ import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import java.time.Clock;
 import java.util.concurrent.*;
 
+import static java.util.Objects.requireNonNull;
+
 @Configuration
 public class ChannelConfig {
 
-    @Value("${executor.queue-size}")
-    private int executorQueueSize;
+    private final Clock clock;
+    private final ThreadGroup aviationMessageArchiverThreadGroup;
+    private final BlockingExecutorHealthContributor executorHealthContributor;
+    private final int executorQueueSize;
 
-    @Autowired
-    private Clock clock;
-
-    @Autowired
-    private ThreadGroup aviationMessageArchiverThreadGroup;
-
-    @Autowired
-    private BlockingExecutorHealthContributor executorHealthContributor;
+    public ChannelConfig(final Clock clock, final ThreadGroup aviationMessageArchiverThreadGroup,
+                         final BlockingExecutorHealthContributor executorHealthContributor,
+                         @Value("${executor.queue-size}") final int executorQueueSize) {
+        this.clock = requireNonNull(clock, "clock");
+        this.aviationMessageArchiverThreadGroup = requireNonNull(aviationMessageArchiverThreadGroup, "aviationMessageArchiverThreadGroup");
+        this.executorHealthContributor = requireNonNull(executorHealthContributor, "executorHealthContributor");
+        this.executorQueueSize = executorQueueSize;
+    }
 
     @Bean
     public ExecutorService processingExecutor() {

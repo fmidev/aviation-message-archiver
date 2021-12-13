@@ -3,7 +3,7 @@ package fi.fmi.avi.archiver.message.populator;
 import com.google.common.base.Preconditions;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+import fi.fmi.avi.archiver.initializing.AviationProduct;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 import java.util.Map;
@@ -15,9 +15,9 @@ import static java.util.Objects.requireNonNull;
  * the file, such as route and format. Populated file-specific metadata is the file modification time.
  */
 public class FileMetadataPopulator implements MessagePopulator {
-    private final Map<String, AviationProductsHolder.AviationProduct> products;
+    private final Map<String, AviationProduct> products;
 
-    public FileMetadataPopulator(final Map<String, AviationProductsHolder.AviationProduct> products) {
+    public FileMetadataPopulator(final Map<String, AviationProduct> products) {
         this.products = requireNonNull(products, "products");
     }
 
@@ -26,7 +26,7 @@ public class FileMetadataPopulator implements MessagePopulator {
         requireNonNull(input, "input");
         requireNonNull(builder, "builder");
         final FileMetadata fileMetadata = input.getFileMetadata();
-        final AviationProductsHolder.AviationProduct product = products.get(fileMetadata.getProductIdentifier());
+        final AviationProduct product = products.get(fileMetadata.getProductIdentifier());
         // TODO Logging / exception message
         Preconditions.checkState(product != null, "Unknown product identifier: %s; unable to resolve route", fileMetadata.getProductIdentifier());
 

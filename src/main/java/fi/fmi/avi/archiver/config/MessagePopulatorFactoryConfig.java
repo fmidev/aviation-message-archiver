@@ -1,37 +1,44 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+import fi.fmi.avi.archiver.initializing.AviationProduct;
 import fi.fmi.avi.archiver.message.populator.*;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
 
-import javax.annotation.Resource;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
+
 @Configuration
 public class MessagePopulatorFactoryConfig {
-    @Autowired
-    private ConversionService conversionService;
 
-    @Autowired
-    private Clock clock;
+    private final ConversionService conversionService;
+    private final Clock clock;
+    private final Map<String, AviationProduct> aviationProducts;
+    private final Map<MessageType, Integer> messageTypeIds;
+    private final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds;
 
-    @Autowired
-    private AviationProductsHolder aviationProductsHolder;
+    public MessagePopulatorFactoryConfig(final ConversionService conversionService, final Clock clock, final Map<String, AviationProduct> aviationProducts,
+                                         @Qualifier("messageTypeIds") final Map<MessageType, Integer> messageTypeIds,
+                                         @Qualifier("messageFormatIds") final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
+        this.conversionService = requireNonNull(conversionService, "conversionService");
+        this.clock = requireNonNull(clock, "clock");
+        this.aviationProducts = requireNonNull(aviationProducts, "aviationProducts");
+        this.messageTypeIds = requireNonNull(messageTypeIds, "messageTypeIds");
+        this.messageFormatIds = requireNonNull(messageFormatIds, "messageFormatIds");
 
-    @Resource(name = "messageTypeIds")
-    private Map<MessageType, Integer> messageTypeIds;
-
-    @Resource(name = "messageFormatIds")
-    private Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds;
+        checkArgument(!messageTypeIds.isEmpty(), "messageTypeIds cannot be empty");
+        checkArgument(!messageFormatIds.isEmpty(), "messageFormatIds cannot be empty");
+    }
 
     @Bean
     public MessagePopulatorHelper messagePopulatorHelper() {
@@ -50,7 +57,7 @@ public class MessagePopulatorFactoryConfig {
     @Bean
     public MessagePopulatorFactory<FileMetadataPopulator> fileMetadataPopulatorFactory() {
         return builder(FileMetadataPopulator.class)//
-                .addDependencyArg(aviationProductsHolder.getProducts())//
+                .addDependencyArg(aviationProducts)//
                 .build();
     }
 

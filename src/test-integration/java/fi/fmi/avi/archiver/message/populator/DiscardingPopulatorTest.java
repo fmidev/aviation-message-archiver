@@ -6,7 +6,7 @@ import fi.fmi.avi.archiver.config.ConversionConfig;
 import fi.fmi.avi.archiver.config.IntegrationFlowConfig;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+import fi.fmi.avi.archiver.initializing.AviationProduct;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,7 +68,7 @@ public class DiscardingPopulatorTest {
     private DatabaseAccess databaseAccess;
 
     @Autowired
-    private AviationProductsHolder aviationProductsHolder;
+    private Map<String, AviationProduct> aviationProducts;
 
     @Captor
     private ArgumentCaptor<Message<?>> messageCaptor;
@@ -77,7 +78,7 @@ public class DiscardingPopulatorTest {
 
     @Test
     public void test_discarding_populator() throws URISyntaxException, IOException, InterruptedException {
-        final AviationProductsHolder.AviationProduct product = getProduct(aviationProductsHolder);
+        final AviationProduct product = getProduct(aviationProducts);
         Files.copy(getInputFile(), Paths.get(product.getInputDir().getPath() + "/" + FILENAME));
         waitUntilFileExists(new File(product.getFailDir().getPath() + "/" + FILENAME));
 
@@ -110,8 +111,8 @@ public class DiscardingPopulatorTest {
         return path;
     }
 
-    public AviationProductsHolder.AviationProduct getProduct(final AviationProductsHolder holder) {
-        return requireNonNull(holder.getProducts().get(PRODUCT), PRODUCT);
+    public AviationProduct getProduct(final Map<String, AviationProduct> aviationProducts) {
+        return requireNonNull(aviationProducts.get(PRODUCT), PRODUCT);
     }
 
     private void waitUntilFileExists(final File expectedOutputFile) throws InterruptedException {

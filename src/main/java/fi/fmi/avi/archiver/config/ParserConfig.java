@@ -6,7 +6,6 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorService;
 import fi.fmi.avi.converter.AviMessageConverter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +31,7 @@ public class ParserConfig {
     }
 
     @Bean
-    public MessagePopulatorService messagePopulatorService(@Qualifier("messagePopulators") @Autowired final List<MessagePopulator> messagePopulators) {
+    public MessagePopulatorService messagePopulatorService(@Qualifier("messagePopulators") final List<MessagePopulator> messagePopulators) {
         return new MessagePopulatorService(messagePopulators);
     }
 

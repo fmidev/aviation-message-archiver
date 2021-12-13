@@ -1,25 +1,19 @@
 package fi.fmi.avi.archiver.config;
 
-import static java.util.Objects.requireNonNull;
-import static org.springframework.integration.file.FileHeaders.FILENAME;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
+import com.google.common.collect.ImmutableList;
+import fi.fmi.avi.archiver.ProcessingState;
+import fi.fmi.avi.archiver.database.DatabaseService;
+import fi.fmi.avi.archiver.file.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.initializing.AviationProduct;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatorService;
+import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
+import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
+import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
+import fi.fmi.avi.archiver.spring.integration.file.filters.ProcessingFileListFilter;
+import fi.fmi.avi.archiver.spring.retry.RetryAdviceFactory;
 import org.aopalliance.aop.Advice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,21 +45,20 @@ import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.ImmutableList;
+import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
+import java.util.stream.Stream;
 
-import fi.fmi.avi.archiver.ProcessingState;
-import fi.fmi.avi.archiver.database.DatabaseService;
-import fi.fmi.avi.archiver.file.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorService;
-import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
-import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
-import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
-import fi.fmi.avi.archiver.spring.integration.file.filters.ProcessingFileListFilter;
-import fi.fmi.avi.archiver.spring.retry.RetryAdviceFactory;
+import static java.util.Objects.requireNonNull;
+import static org.springframework.integration.file.FileHeaders.FILENAME;
 
 @Configuration
 public class IntegrationFlowConfig {
@@ -216,7 +209,7 @@ public class IntegrationFlowConfig {
         private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registrations = new HashSet<>();
 
         private final IntegrationFlowContext context;
-        private final AviationProductsHolder aviationProductsHolder;
+        private final Map<String, AviationProduct> aviationProducts;
         private final CompoundLifecycle inputReadersLifecycle;
         private final ProcessingState processingState;
         private final List<Advice> archiveAdviceChain;
@@ -231,15 +224,15 @@ public class IntegrationFlowConfig {
         private final MessageChannel failChannel;
         private final MessageChannel finishChannel;
 
-        ProductFlowsInitializer(final IntegrationFlowContext context, final AviationProductsHolder aviationProductsHolder,
+        ProductFlowsInitializer(final IntegrationFlowContext context, final Map<String, AviationProduct> aviationProducts,
                                 final CompoundLifecycle inputReadersLifecycle, final ProcessingState processingState, final List<Advice> archiveAdviceChain,
                                 final List<Advice> failAdviceChain, final FileNameGenerator timestampAppender,
                                 @SuppressWarnings("rawtypes") final GenericTransformer<Message, File> headerToFileTransformer,
                                 @Value("${polling.filter-queue-size}") final int filterQueueSize, final MessageChannel processingChannel,
-                final MessageChannel errorMessageChannel, final MessageChannel successChannel, final MessageChannel failChannel,
-                final MessageChannel finishChannel) {
+                                final MessageChannel errorMessageChannel, final MessageChannel successChannel, final MessageChannel failChannel,
+                                final MessageChannel finishChannel) {
             this.context = requireNonNull(context, "context");
-            this.aviationProductsHolder = requireNonNull(aviationProductsHolder, "aviationProductsHolder");
+            this.aviationProducts = requireNonNull(aviationProducts, "aviationProducts");
             this.inputReadersLifecycle = requireNonNull(inputReadersLifecycle, "inputReadersLifecycle");
             this.processingState = requireNonNull(processingState, "processingState");
             this.archiveAdviceChain = requireNonNull(archiveAdviceChain, "archiveAdviceChain");
@@ -278,7 +271,7 @@ public class IntegrationFlowConfig {
 
         @PostConstruct
         void initializeProductFlows() {
-            aviationProductsHolder.getProducts().values().forEach(product -> {
+            aviationProducts.values().forEach(product -> {
                 final FileReadingMessageSource sourceReader = createMessageSource(product.getInputDir(), product.getId());
                 inputReadersLifecycle.add(sourceReader);
 
