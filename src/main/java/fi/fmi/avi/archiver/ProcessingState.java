@@ -9,10 +9,15 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileReference;
 
 public class ProcessingState {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessingState.class);
+
     private final Clock clock;
     private final ConcurrentMap<FileReference, Status> filesUnderProcessing = new ConcurrentHashMap<>();
 
@@ -22,13 +27,21 @@ public class ProcessingState {
 
     public void start(final FileMetadata file) {
         requireNonNull(file, "file");
-        filesUnderProcessing.compute(file.getFileReference(),
+        final Status newStatus = filesUnderProcessing.compute(file.getFileReference(),
                 (fileReference, status) -> status == null ? new Status(clock.millis()) : status.increaseProcessingCount());
+        if (newStatus.getProcessingCount() > 1) {
+            LOGGER.warn("Starting processing of file '{}', now being processed concurrently for {} times.", file.getFileReference(),
+                    newStatus.getProcessingCount());
+        }
     }
 
     public void finish(final FileMetadata file) {
         requireNonNull(file, "file");
-        filesUnderProcessing.computeIfPresent(file.getFileReference(), (fileReference, status) -> status.decreaseProcessingCount());
+        if (filesUnderProcessing.containsKey(file.getFileReference())) {
+            filesUnderProcessing.computeIfPresent(file.getFileReference(), (fileReference, status) -> status.decreaseProcessingCount());
+        } else {
+            LOGGER.warn("Attempted to finish processing of file '{}', but it is not under processing.", file.getFileReference());
+        }
     }
 
     public int getFileCountUnderProcessing() {
