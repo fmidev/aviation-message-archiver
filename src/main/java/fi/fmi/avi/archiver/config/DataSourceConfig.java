@@ -4,7 +4,6 @@ import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.database.DatabaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,35 +25,15 @@ public class DataSourceConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceConfig.class);
 
-    @Value("${datasource.retry.initial-interval:PT0.5S}")
-    private Duration retryInitialInterval;
-
-    @Value("${datasource.retry.multiplier:2}")
-    private int retryMultiplier;
-
-    @Value("${datasource.retry.max-interval:PT1M}")
-    private Duration retryMaxInterval;
-
-    @Value("${datasource.retry.timeout:PT0S}")
-    private Duration retryTimeout;
-
-    @Value("${datasource.schema}")
-    private String schema;
-
-    @Autowired
-    private NamedParameterJdbcTemplate jdbcTemplate;
-
-    @Autowired
-    private Clock clock;
-
     @Bean
-    public DatabaseAccess databaseAccess() {
-        return new DatabaseAccess(jdbcTemplate, clock, databaseAccessRetryTemplate(), schema);
+    public DatabaseAccess databaseAccess(final NamedParameterJdbcTemplate jdbcTemplate, final Clock clock, final RetryTemplate databaseAccessRetryTemplate,
+                                         @Value("${datasource.schema}") final String schema) {
+        return new DatabaseAccess(jdbcTemplate, clock, databaseAccessRetryTemplate, schema);
     }
 
     @Bean
-    public DatabaseService databaseService() {
-        return new DatabaseService(databaseAccess());
+    public DatabaseService databaseService(final DatabaseAccess databaseAccess) {
+        return new DatabaseService(databaseAccess);
     }
 
     /**
@@ -71,17 +50,20 @@ public class DataSourceConfig {
      * @return retry template for database access
      */
     @Bean
-    public RetryTemplate databaseAccessRetryTemplate() {
+    public RetryTemplate databaseAccessRetryTemplate(@Value("${datasource.retry.initial-interval:PT0.5S}") final Duration initialInterval,
+                                                     @Value("${datasource.retry.multiplier:2}") final int multiplier,
+                                                     @Value("${datasource.retry.max-interval:PT1M}") final Duration maxInterval,
+                                                     @Value("${datasource.retry.timeout:PT0S}") final Duration timeout) {
         final ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
-        backOffPolicy.setInitialInterval(retryInitialInterval.toMillis());
-        backOffPolicy.setMultiplier(retryMultiplier);
-        backOffPolicy.setMaxInterval(retryMaxInterval.toMillis());
+        backOffPolicy.setInitialInterval(initialInterval.toMillis());
+        backOffPolicy.setMultiplier(multiplier);
+        backOffPolicy.setMaxInterval(maxInterval.toMillis());
 
         final RetryTemplateBuilder retryTemplateBuilder = new RetryTemplateBuilder();
-        if (retryTimeout.isZero()) {
+        if (timeout.isZero()) {
             retryTemplateBuilder.infiniteRetry();
         } else {
-            retryTemplateBuilder.withinMillis(retryTimeout.toMillis());
+            retryTemplateBuilder.withinMillis(timeout.toMillis());
         }
         retryTemplateBuilder.customBackoff(backOffPolicy);
         retryTemplateBuilder.notRetryOn(NonTransientDataAccessException.class);

@@ -5,7 +5,6 @@ import fi.fmi.avi.archiver.initializing.MessagePopulatorExecutionChainHolder;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.message.populator.StationIdPopulator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,17 +18,10 @@ import java.util.stream.Collectors;
 @Configuration
 public class MessagePopulatorConfig {
 
-    @Autowired
-    private List<MessagePopulatorFactory<?>> messagePopulatorFactories;
-
-    @Autowired
-    private MessagePopulatorExecutionChainHolder messagePopulatorExecutionChainHolder;
-
-    @Autowired
-    private DatabaseAccess databaseAccess;
-
     @Bean(name = "messagePopulators")
-    public List<MessagePopulator> messagePopulators() {
+    public List<MessagePopulator> messagePopulators(final List<MessagePopulatorFactory<?>> messagePopulatorFactories,
+                                                    final MessagePopulatorExecutionChainHolder messagePopulatorExecutionChainHolder,
+                                                    final DatabaseAccess databaseAccess) {
         final Map<String, MessagePopulatorFactory<?>> factoriesByName = messagePopulatorFactories.stream()//
                 .collect(Collectors.toMap(MessagePopulatorFactory::getName, Function.identity()));
         final ArrayList<MessagePopulator> populators = messagePopulatorExecutionChainHolder.getExecutionChain().stream()//
@@ -39,4 +31,5 @@ public class MessagePopulatorConfig {
         populators.trimToSize();
         return Collections.unmodifiableList(populators);
     }
+
 }

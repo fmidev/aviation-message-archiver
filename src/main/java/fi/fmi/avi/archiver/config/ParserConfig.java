@@ -21,25 +21,18 @@ import static java.util.Objects.requireNonNull;
 @Configuration
 public class ParserConfig {
 
-    @Qualifier("messagePopulators")
-    @Autowired
-    private List<MessagePopulator> messagePopulators;
-
-    @Autowired
-    private AviMessageConverter aviMessageConverter;
-
     @Bean
-    public FileParser fileParser() {
+    public FileParser fileParser(final AviMessageConverter aviMessageConverter) {
         return new FileParser(aviMessageConverter);
     }
 
     @Bean
-    public FileParserService fileParserService() {
-        return new FileParserService(fileParser());
+    public FileParserService fileParserService(final FileParser fileParser) {
+        return new FileParserService(fileParser);
     }
 
     @Bean
-    public MessagePopulatorService messagePopulatorService() {
+    public MessagePopulatorService messagePopulatorService(@Qualifier("messagePopulators") @Autowired final List<MessagePopulator> messagePopulators) {
         return new MessagePopulatorService(messagePopulators);
     }
 
