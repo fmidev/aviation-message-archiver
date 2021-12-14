@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import org.inferred.freebuilder.FreeBuilder;
 
+import fi.fmi.avi.archiver.config.model.FileConfig;
+
 @FreeBuilder
 public abstract class FileMetadata {
 

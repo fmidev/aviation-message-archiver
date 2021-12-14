@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -35,10 +36,10 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import fi.fmi.avi.archiver.AviationMessageArchiver;
 import fi.fmi.avi.archiver.TestConfig;
 import fi.fmi.avi.archiver.config.ConversionConfig;
+import fi.fmi.avi.archiver.config.IntegrationFlowConfig;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
-import fi.fmi.avi.archiver.initializing.MessageFileMonitorInitializer;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
@@ -66,7 +67,7 @@ public class FailingPopulatorTest {
     private DatabaseAccess databaseAccess;
 
     @Autowired
-    private AviationProductsHolder aviationProductsHolder;
+    private Map<String, AviationProduct> aviationProducts;
 
     @Captor
     private ArgumentCaptor<Message<?>> failChannelCaptor;
@@ -76,7 +77,7 @@ public class FailingPopulatorTest {
 
     @Test
     public void test_failing_populator() throws URISyntaxException, IOException, InterruptedException {
-        final AviationProductsHolder.AviationProduct product = getProduct(aviationProductsHolder);
+        final AviationProduct product = getProduct(aviationProducts);
         Files.copy(getInputFile(), Paths.get(product.getInputDir().getPath() + "/" + FILENAME));
         waitUntilFileExists(new File(product.getFailDir().getPath() + "/" + FILENAME));
 
@@ -85,7 +86,7 @@ public class FailingPopulatorTest {
         @SuppressWarnings("unchecked")
         final List<InputAviationMessage> failures = (List<InputAviationMessage>) failChannelCaptor.getValue()
                 .getHeaders()
-                .get(MessageFileMonitorInitializer.FAILED_MESSAGES);
+                .get(IntegrationFlowConfig.FAILED_MESSAGES);
         assertThat(failures).hasSize(1);
         assertThat(failures.get(0).getMessage().getLocationIndicators().get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME)).isEqualTo("EFYY");
 
@@ -101,8 +102,8 @@ public class FailingPopulatorTest {
         return path;
     }
 
-    public AviationProductsHolder.AviationProduct getProduct(final AviationProductsHolder holder) {
-        return requireNonNull(holder.getProducts().get(PRODUCT), PRODUCT);
+    public AviationProduct getProduct(final Map<String, AviationProduct> aviationProducts) {
+        return requireNonNull(aviationProducts.get(PRODUCT), PRODUCT);
     }
 
     private void waitUntilFileExists(final File expectedOutputFile) throws InterruptedException {

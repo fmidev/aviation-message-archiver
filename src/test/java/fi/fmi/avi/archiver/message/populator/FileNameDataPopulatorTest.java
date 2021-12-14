@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import fi.fmi.avi.archiver.file.FileConfig;
+import fi.fmi.avi.archiver.config.model.FileConfig;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.file.InputAviationMessage;

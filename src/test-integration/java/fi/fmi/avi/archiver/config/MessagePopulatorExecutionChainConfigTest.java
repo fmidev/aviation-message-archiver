@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.initializing;
+package fi.fmi.avi.archiver.config;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,7 +13,6 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +26,6 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import fi.fmi.avi.archiver.AviationMessageArchiver;
 import fi.fmi.avi.archiver.TestConfig;
-import fi.fmi.avi.archiver.config.ConversionConfig;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.AbstractMessagePopulatorFactory;
@@ -43,16 +41,9 @@ import fi.fmi.avi.archiver.message.populator.ReflectionMessagePopulatorFactory;
 @Sql(scripts = { "classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @ActiveProfiles("MessagePopulatorExecutionChainHolderTest")
-class MessagePopulatorExecutionChainHolderTest {
-    @Autowired
-    private MessagePopulatorExecutionChainHolder messagePopulatorExecutionChainHolder;
-
+class MessagePopulatorExecutionChainConfigTest {
     @Autowired
     private MessagePopulatorService messagePopulatorService;
-
-    @Qualifier("messagePopulators")
-    @Autowired
-    private List<MessagePopulator> messagePopulators;
 
     @Test
     void testMessagePopulatorExecutionChain() {

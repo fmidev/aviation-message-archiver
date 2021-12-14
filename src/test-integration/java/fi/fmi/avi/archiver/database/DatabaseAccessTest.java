@@ -1,16 +1,21 @@
 package fi.fmi.avi.archiver.database;
 
-import fi.fmi.avi.archiver.AviationMessageArchiver;
-import fi.fmi.avi.archiver.TestConfig;
-import fi.fmi.avi.archiver.config.ConversionConfig;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
-import fi.fmi.avi.archiver.message.ProcessingResult;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.QueryTimeoutException;
@@ -21,21 +26,19 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.util.Optional;
+import fi.fmi.avi.archiver.AviationMessageArchiver;
+import fi.fmi.avi.archiver.TestConfig;
+import fi.fmi.avi.archiver.config.ConversionConfig;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
+import fi.fmi.avi.archiver.message.ProcessingResult;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-@JdbcTest(properties = {"testclass.name=fi.fmi.avi.archiver.database.DatabaseAccessTest"})
-@Sql(scripts = {"classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.database.DatabaseAccessTest" })
+@Sql(scripts = { "classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},//
+@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = {ConfigDataApplicationContextInitializer.class})
+        initializers = { ConfigDataApplicationContextInitializer.class })
 public class DatabaseAccessTest {
 
     private static final Instant NOW = Instant.now();

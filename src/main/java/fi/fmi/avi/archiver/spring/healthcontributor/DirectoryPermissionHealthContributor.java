@@ -1,8 +1,6 @@
 package fi.fmi.avi.archiver.spring.healthcontributor;
 
-import com.google.common.collect.ImmutableMap;
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
-import org.springframework.boot.actuate.health.*;
+import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
@@ -12,7 +10,15 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static java.util.Objects.requireNonNull;
+import org.springframework.boot.actuate.health.AbstractHealthIndicator;
+import org.springframework.boot.actuate.health.CompositeHealthContributor;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthContributor;
+import org.springframework.boot.actuate.health.NamedContributor;
+
+import com.google.common.collect.ImmutableMap;
+
+import fi.fmi.avi.archiver.config.model.AviationProduct;
 
 public class DirectoryPermissionHealthContributor implements CompositeHealthContributor {
 
@@ -20,12 +26,11 @@ public class DirectoryPermissionHealthContributor implements CompositeHealthCont
     private final String tempFilePrefix;
     private final String tempFileSuffix;
 
-    public DirectoryPermissionHealthContributor(final AviationProductsHolder aviationProductsHolder,
-                                                final String tempFilePrefix, final String tempFileSuffix) {
-        requireNonNull(aviationProductsHolder, "aviationProductsHolder");
+    public DirectoryPermissionHealthContributor(final Map<String, AviationProduct> aviationProducts, final String tempFilePrefix, final String tempFileSuffix) {
         this.tempFilePrefix = requireNonNull(tempFilePrefix, "tempFilePrefix");
         this.tempFileSuffix = requireNonNull(tempFileSuffix, "tempFileSuffix");
-        healthContributors = aviationProductsHolder.getProducts().entrySet().stream()
+        healthContributors = aviationProducts.entrySet()
+                .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ProductDirectoryPermissionHealthContributor(entry.getValue())));
     }
 
@@ -45,13 +50,12 @@ public class DirectoryPermissionHealthContributor implements CompositeHealthCont
 
         private final Map<String, HealthContributor> contributors;
 
-        public ProductDirectoryPermissionHealthContributor(final AviationProductsHolder.AviationProduct product) {
+        public ProductDirectoryPermissionHealthContributor(final AviationProduct product) {
             requireNonNull(product, "product");
-            contributors = ImmutableMap.of(
-                    "input (" + product.getInputDir().getPath() + ")", new DirectoryPermissionHealthIndicator(product.getInputDir().toPath()),
-                    "archive (" + product.getArchiveDir().getPath() + ")", new DirectoryPermissionHealthIndicator(product.getArchiveDir().toPath()),
-                    "fail (" + product.getFailDir().getPath() + ")", new DirectoryPermissionHealthIndicator(product.getFailDir().toPath())
-            );
+            contributors = ImmutableMap.of("input (" + product.getInputDir().getPath() + ")",
+                    new DirectoryPermissionHealthIndicator(product.getInputDir().toPath()), "archive (" + product.getArchiveDir().getPath() + ")",
+                    new DirectoryPermissionHealthIndicator(product.getArchiveDir().toPath()), "fail (" + product.getFailDir().getPath() + ")",
+                    new DirectoryPermissionHealthIndicator(product.getFailDir().toPath()));
         }
 
         @Override

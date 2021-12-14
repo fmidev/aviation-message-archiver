@@ -1,8 +1,15 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.spring.healthcontributor.BlockingExecutorHealthContributor;
-import fi.fmi.avi.archiver.spring.integration.util.MonitorableCallerBlocksPolicy;
-import org.springframework.beans.factory.annotation.Autowired;
+import static java.util.Objects.requireNonNull;
+
+import java.time.Clock;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,23 +17,23 @@ import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
-import java.time.Clock;
-import java.util.concurrent.*;
+import fi.fmi.avi.archiver.AviationMessageArchiver;
+import fi.fmi.avi.archiver.spring.healthcontributor.BlockingExecutorHealthContributor;
+import fi.fmi.avi.archiver.spring.integration.util.MonitorableCallerBlocksPolicy;
 
 @Configuration
 public class ChannelConfig {
 
-    @Value("${executor.queue-size}")
-    private int executorQueueSize;
+    private final Clock clock;
+    private final BlockingExecutorHealthContributor executorHealthContributor;
+    private final int executorQueueSize;
 
-    @Autowired
-    private Clock clock;
-
-    @Autowired
-    private ThreadGroup aviationMessageArchiverThreadGroup;
-
-    @Autowired
-    private BlockingExecutorHealthContributor executorHealthContributor;
+    public ChannelConfig(final Clock clock, final BlockingExecutorHealthContributor executorHealthContributor,
+            @Value("${executor.queue-size}") final int executorQueueSize) {
+        this.clock = requireNonNull(clock, "clock");
+        this.executorHealthContributor = requireNonNull(executorHealthContributor, "executorHealthContributor");
+        this.executorQueueSize = executorQueueSize;
+    }
 
     @Bean
     public ExecutorService processingExecutor() {
@@ -128,17 +135,21 @@ public class ChannelConfig {
         return new PublishSubscribeChannel(errorLoggingExecutor());
     }
 
+    @Bean(destroyMethod = "destroy")
+    public ThreadGroup aviationMessageArchiverThreadGroup() {
+        return new ThreadGroup(AviationMessageArchiver.class.getSimpleName());
+    }
+
     private ExecutorService newBlockingSingleThreadExecutor(final String threadNamePrefix) {
         final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(executorQueueSize);
         final MonitorableCallerBlocksPolicy callerBlocksPolicy = new MonitorableCallerBlocksPolicy(clock, Long.MAX_VALUE);
         executorHealthContributor.register(threadNamePrefix + "executor", callerBlocksPolicy);
-        return new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS, queue,
-                newThreadFactory(threadNamePrefix), callerBlocksPolicy);
+        return new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS, queue, newThreadFactory(threadNamePrefix), callerBlocksPolicy);
     }
 
     private CustomizableThreadFactory newThreadFactory(final String threadNamePrefix) {
         final CustomizableThreadFactory threadFactory = new CustomizableThreadFactory(threadNamePrefix);
-        threadFactory.setThreadGroup(aviationMessageArchiverThreadGroup);
+        threadFactory.setThreadGroup(aviationMessageArchiverThreadGroup());
         return threadFactory;
     }
 

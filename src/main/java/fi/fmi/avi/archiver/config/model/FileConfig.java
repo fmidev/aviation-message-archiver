@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.file;
+package fi.fmi.avi.archiver.config.model;
 
 import static com.google.common.base.Preconditions.checkState;
 

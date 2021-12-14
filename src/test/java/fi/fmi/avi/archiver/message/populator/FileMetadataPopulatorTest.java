@@ -17,11 +17,11 @@ import org.junit.jupiter.params.provider.CsvSource;
 import com.google.common.collect.ImmutableMap;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.file.FileConfig;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.config.model.FileConfig;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 @SuppressWarnings("UnnecessaryLocalVariable")
@@ -40,20 +40,20 @@ class FileMetadataPopulatorTest {
             .setFormat(MessagePopulatorTests.FormatId.IWXXM.getFormat())//
             .setFormatId(MessagePopulatorTests.FormatId.IWXXM.getId())//
             .build();
-    private static final Map<String, AviationProductsHolder.AviationProduct> PRODUCTS = Stream.of(//
-                    AviationProductsHolder.AviationProduct.builder()//
+    private static final Map<String, AviationProduct> PRODUCTS = Stream.of(//
+                    AviationProduct.builder()//
                             .setId(PRODUCT_ID_1)//
                             .setRoute(MessagePopulatorTests.RouteId.TEST.getName())//
                             .setRouteId(MessagePopulatorTests.RouteId.TEST.getId())//
                             .addFileConfigs(FILE_CONFIG_1)//
                             .buildPartial(), //
-                    AviationProductsHolder.AviationProduct.builder()//
+                    AviationProduct.builder()//
                             .setId(PRODUCT_ID_2)//
                             .setRoute(MessagePopulatorTests.RouteId.TEST2.getName())//
                             .setRouteId(MessagePopulatorTests.RouteId.TEST2.getId())//
                             .addFileConfigs(FILE_CONFIG_2)//
                             .buildPartial())//
-            .collect(ImmutableMap.toImmutableMap(AviationProductsHolder.AviationProduct::getId, Function.identity()));
+            .collect(ImmutableMap.toImmutableMap(AviationProduct::getId, Function.identity()));
     private static final InputAviationMessage INPUT_MESSAGE_TEMPLATE = InputAviationMessage.builder()//
             .setFileMetadata(FileMetadata.builder()//
                     .setFileReference(FileReference.create(PRODUCT_ID_1, "taf.txt"))//

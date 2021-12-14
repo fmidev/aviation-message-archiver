@@ -21,12 +21,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import fi.fmi.avi.archiver.config.ConverterConfig;
+import fi.fmi.avi.archiver.config.AviMessageConverterConfig;
+import fi.fmi.avi.archiver.config.model.FileConfig;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 
-@SpringJUnitConfig(ConverterConfig.class)
+@SpringJUnitConfig(AviMessageConverterConfig.class)
 public class FileParserTest {
 
     private static final String DEFAULT_FILENAME = "test_file";
