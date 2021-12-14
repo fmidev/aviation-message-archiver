@@ -4,7 +4,6 @@ import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.message.populator.*;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
@@ -15,7 +14,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 @Configuration
@@ -23,21 +21,10 @@ public class MessagePopulatorFactoryConfig {
 
     private final ConversionService conversionService;
     private final Clock clock;
-    private final Map<String, AviationProduct> aviationProducts;
-    private final Map<MessageType, Integer> messageTypeIds;
-    private final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds;
 
-    public MessagePopulatorFactoryConfig(final ConversionService conversionService, final Clock clock, final Map<String, AviationProduct> aviationProducts,
-                                         @Qualifier("messageTypeIds") final Map<MessageType, Integer> messageTypeIds,
-                                         @Qualifier("messageFormatIds") final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
+    public MessagePopulatorFactoryConfig(final ConversionService conversionService, final Clock clock) {
         this.conversionService = requireNonNull(conversionService, "conversionService");
         this.clock = requireNonNull(clock, "clock");
-        this.aviationProducts = requireNonNull(aviationProducts, "aviationProducts");
-        this.messageTypeIds = requireNonNull(messageTypeIds, "messageTypeIds");
-        this.messageFormatIds = requireNonNull(messageFormatIds, "messageFormatIds");
-
-        checkArgument(!messageTypeIds.isEmpty(), "messageTypeIds cannot be empty");
-        checkArgument(!messageFormatIds.isEmpty(), "messageFormatIds cannot be empty");
     }
 
     @Bean
@@ -55,7 +42,8 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
-    public MessagePopulatorFactory<FileMetadataPopulator> fileMetadataPopulatorFactory() {
+    public MessagePopulatorFactory<FileMetadataPopulator> fileMetadataPopulatorFactory(
+            final Map<String, AviationProduct> aviationProducts) {
         return builder(FileMetadataPopulator.class)//
                 .addDependencyArg(aviationProducts)//
                 .build();
@@ -69,21 +57,26 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
-    public MessagePopulatorFactory<BulletinHeadingDataPopulator> bulletinHeadingDataPopulatorFactory() {
+    public MessagePopulatorFactory<BulletinHeadingDataPopulator> bulletinHeadingDataPopulatorFactory(
+            final Map<MessageType, Integer> messageTypeIds,
+            final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
         return builder(BulletinHeadingDataPopulator.class)//
                 .addDependencyArgs(messagePopulatorHelper(), messageFormatIds, messageTypeIds)//
                 .build();
     }
 
     @Bean
-    public MessagePopulatorFactory<MessageDataPopulator> messageDataPopulatorFactory() {
+    public MessagePopulatorFactory<MessageDataPopulator> messageDataPopulatorFactory(
+            final Map<MessageType, Integer> messageTypeIds,
+            final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
         return builder(MessageDataPopulator.class)//
                 .addDependencyArgs(messagePopulatorHelper(), messageFormatIds, messageTypeIds)//
                 .build();
     }
 
     @Bean
-    public MessagePopulatorFactory<FixedDurationValidityPeriodPopulator> fixedDurationValidityPeriodPopulatorFactory() {
+    public MessagePopulatorFactory<FixedDurationValidityPeriodPopulator> fixedDurationValidityPeriodPopulatorFactory(
+            final Map<MessageType, Integer> messageTypeIds) {
         return builder(FixedDurationValidityPeriodPopulator.class)//
                 .addDependencyArg(messageTypeIds)//
                 .addConfigArg("messageType", MessageType.class)//
@@ -132,7 +125,8 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
-    public MessagePopulatorFactory<ProductMessageTypesValidator> productMessageTypesValidatorFactory() {
+    public MessagePopulatorFactory<ProductMessageTypesValidator> productMessageTypesValidatorFactory(
+            final Map<MessageType, Integer> messageTypeIds) {
         return builder(ProductMessageTypesValidator.class)//
                 .addDependencyArg(messageTypeIds)//
                 .addConfigArg("productIdentifier", String.class)//

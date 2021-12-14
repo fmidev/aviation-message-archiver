@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.FileConfig;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.context.annotation.Bean;
@@ -21,30 +20,16 @@ import static java.util.Objects.requireNonNull;
 @ConfigurationProperties(prefix = "production-line-initialization")
 public class AviationProductConfig {
 
-    private final List<AviationProduct.Builder> products;
+    private final List<AviationProduct.Builder> productBuilders;
 
     public AviationProductConfig(final List<AviationProduct.Builder> products) {
-        this.products = requireNonNull(products, "products");
+        this.productBuilders = requireNonNull(products, "products");
     }
 
     @Bean
-    public Map<String, AviationProduct> aviationProducts(@Qualifier("messageRouteIds") final Map<String, Integer> messageRouteIds,
-                                                         @Qualifier("messageFormatIds") final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
-        return buildProducts(products, messageRouteIds, messageFormatIds);
-    }
-
-    public static <E> void iterateProducts(final List<E> productBuilders, final Consumer<? super E> productConsumer) {
-        requireNonNull(productBuilders, "productBuilders");
-        requireNonNull(productConsumer, "productConsumer");
-
-        final int size = productBuilders.size();
-        for (int i = 0; i < size; i++) {
-            try {
-                productConsumer.accept(productBuilders.get(i));
-            } catch (final RuntimeException e) {
-                throw new IllegalStateException("Product at index <" + i + "> is invalid", e);
-            }
-        }
+    public Map<String, AviationProduct> aviationProducts(final Map<String, Integer> messageRouteIds,
+                                                         final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
+        return buildProducts(productBuilders, messageRouteIds, messageFormatIds);
     }
 
     private static Map<String, AviationProduct> buildProducts(final List<AviationProduct.Builder> productBuilders,
@@ -59,6 +44,20 @@ public class AviationProductConfig {
             builder.put(product.getId(), product);
         });
         return builder.build();
+    }
+
+    private static <E> void iterateProducts(final List<E> productBuilders, final Consumer<? super E> productConsumer) {
+        requireNonNull(productBuilders, "productBuilders");
+        requireNonNull(productConsumer, "productConsumer");
+
+        final int size = productBuilders.size();
+        for (int i = 0; i < size; i++) {
+            try {
+                productConsumer.accept(productBuilders.get(i));
+            } catch (final RuntimeException e) {
+                throw new IllegalStateException("Product at index <" + i + "> is invalid", e);
+            }
+        }
     }
 
     private static void mapRouteToId(final AviationProduct.Builder product, final Map<String, Integer> messageRouteIds) {
