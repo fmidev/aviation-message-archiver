@@ -16,7 +16,7 @@ import java.util.concurrent.*;
 import static java.util.Objects.requireNonNull;
 
 @Configuration
-public class ChannelConfig {
+class ChannelConfig {
 
     private final Clock clock;
     private final BlockingExecutorHealthContributor executorHealthContributor;
@@ -30,102 +30,102 @@ public class ChannelConfig {
     }
 
     @Bean
-    public ExecutorService processingExecutor() {
+    ExecutorService processingExecutor() {
         return newBlockingSingleThreadExecutor("Processing-");
     }
 
     @Bean
-    public MessageChannel processingChannel() {
+    MessageChannel processingChannel() {
         return new PublishSubscribeChannel(processingExecutor());
     }
 
     @Bean
-    public ExecutorService archiveExecutor() {
+    ExecutorService archiveExecutor() {
         return newBlockingSingleThreadExecutor("Archive-");
     }
 
     @Bean
-    public MessageChannel archiveChannel() {
+    MessageChannel archiveChannel() {
         return new PublishSubscribeChannel(archiveExecutor());
     }
 
     @Bean
-    public ExecutorService successExecutor() {
+    ExecutorService successExecutor() {
         return newBlockingSingleThreadExecutor("Success-");
     }
 
     @Bean
-    public MessageChannel successChannel() {
+    MessageChannel successChannel() {
         return new PublishSubscribeChannel(successExecutor());
     }
 
     @Bean
-    public ExecutorService failExecutor() {
+    ExecutorService failExecutor() {
         return newBlockingSingleThreadExecutor("Fail-");
     }
 
     @Bean
-    public MessageChannel failChannel() {
+    MessageChannel failChannel() {
         return new PublishSubscribeChannel(failExecutor());
     }
 
     @Bean
-    public ExecutorService parserExecutor() {
+    ExecutorService parserExecutor() {
         return newBlockingSingleThreadExecutor("Parser-");
     }
 
     @Bean
-    public MessageChannel parserChannel() {
+    MessageChannel parserChannel() {
         return new PublishSubscribeChannel(parserExecutor());
     }
 
     @Bean
-    public ExecutorService populatorExecutor() {
+    ExecutorService populatorExecutor() {
         return newBlockingSingleThreadExecutor("Populator-");
     }
 
     @Bean
-    public MessageChannel populatorChannel() {
+    MessageChannel populatorChannel() {
         return new PublishSubscribeChannel(populatorExecutor());
     }
 
     @Bean
-    public ExecutorService databaseExecutor() {
+    ExecutorService databaseExecutor() {
         return newBlockingSingleThreadExecutor("Database-");
     }
 
     @Bean
-    public MessageChannel databaseChannel() {
+    MessageChannel databaseChannel() {
         return new PublishSubscribeChannel(databaseExecutor());
     }
 
     @Bean
-    public ExecutorService finishExecutor() {
+    ExecutorService finishExecutor() {
         return newBlockingSingleThreadExecutor("Finish-");
     }
 
     @Bean
-    public MessageChannel finishChannel() {
+    MessageChannel finishChannel() {
         return new PublishSubscribeChannel(finishExecutor());
     }
 
     @Bean
-    public ExecutorService errorMessageExecutor() {
+    ExecutorService errorMessageExecutor() {
         return newBlockingSingleThreadExecutor("Error-");
     }
 
     @Bean
-    public MessageChannel errorMessageChannel() {
+    MessageChannel errorMessageChannel() {
         return new PublishSubscribeChannel(errorMessageExecutor());
     }
 
     @Bean
-    public ExecutorService errorLoggingExecutor() {
+    ExecutorService errorLoggingExecutor() {
         return Executors.newCachedThreadPool(newThreadFactory("Error-Log-"));
     }
 
     @Bean
-    public MessageChannel errorLoggingChannel() {
+    MessageChannel errorLoggingChannel() {
         return new PublishSubscribeChannel(errorLoggingExecutor());
     }
 

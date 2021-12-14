@@ -17,7 +17,7 @@ import static java.util.Objects.requireNonNull;
  */
 @ConstructorBinding
 @ConfigurationProperties(prefix = "message-static-values")
-public class MessageStaticValuesConfig {
+class MessageStaticValuesConfig {
     private final Map<String, Integer> routeIds;
     private final Map<GenericAviationWeatherMessage.Format, Integer> formatIds;
     private final Map<MessageType, Integer> typeIds;
@@ -34,17 +34,17 @@ public class MessageStaticValuesConfig {
     }
 
     @Bean
-    public Map<String, Integer> messageRouteIds() {
+    Map<String, Integer> messageRouteIds() {
         return Collections.unmodifiableMap(routeIds);
     }
 
     @Bean
-    public Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds() {
+    Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds() {
         return Collections.unmodifiableMap(formatIds);
     }
 
     @Bean
-    public Map<MessageType, Integer> messageTypeIds() {
+    Map<MessageType, Integer> messageTypeIds() {
         return Collections.unmodifiableMap(typeIds);
     }
 }

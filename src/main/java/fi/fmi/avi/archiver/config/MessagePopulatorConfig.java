@@ -20,7 +20,7 @@ import static java.util.Objects.requireNonNull;
 
 @ConstructorBinding
 @ConfigurationProperties(prefix = "message-populators")
-public class MessagePopulatorConfig {
+class MessagePopulatorConfig {
 
     private final List<PopulatorInstanceSpec> executionChain;
 
@@ -29,7 +29,7 @@ public class MessagePopulatorConfig {
     }
 
     @Bean
-    public List<PopulatorInstanceSpec> executionChain() {
+    List<PopulatorInstanceSpec> executionChain() {
         return Collections.unmodifiableList(executionChain);
     }
 

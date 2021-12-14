@@ -22,18 +22,18 @@ public class TestConfig {
     private static final String TEST_CLASS_NAME_MESSAGE = "Set in your test class: @SpringBootTest(\"testclass.name=test.class.FQN\" })";
 
     @Bean
-    public Clock clock() {
+    Clock clock() {
         return Clock.fixed(Instant.parse("2019-05-01T00:00:00Z"), ZoneId.of("UTC"));
     }
 
     @Bean
-    public ApplicationConversionService conversionService() {
+    ApplicationConversionService conversionService() {
         return new ApplicationConversionService();
     }
 
     @Bean
-    public TestWorkDirHolder testWorkDirHolder(@Value("${testclass.workdir.path}") final File workdirPath,
-            @Value("${testclass.name}") final String testclassName) {
+    TestWorkDirHolder testWorkDirHolder(@Value("${testclass.workdir.path}") final File workdirPath,
+                                        @Value("${testclass.name}") final String testclassName) {
         requireNonNull(workdirPath, "workdirPath");
         requireNonNull(testclassName, "testclassName; " + TEST_CLASS_NAME_MESSAGE);
         Preconditions.checkState(!workdirPath.toString().isEmpty(), "workdirPath must not be empty");

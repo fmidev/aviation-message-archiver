@@ -21,18 +21,18 @@ import java.time.Clock;
 import java.time.Duration;
 
 @Configuration
-public class DataSourceConfig {
+class DataSourceConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceConfig.class);
 
     @Bean
-    public DatabaseAccess databaseAccess(final NamedParameterJdbcTemplate jdbcTemplate, final Clock clock, final RetryTemplate databaseAccessRetryTemplate,
-                                         @Value("${datasource.schema}") final String schema) {
+    DatabaseAccess databaseAccess(final NamedParameterJdbcTemplate jdbcTemplate, final Clock clock, final RetryTemplate databaseAccessRetryTemplate,
+                                  @Value("${datasource.schema}") final String schema) {
         return new DatabaseAccess(jdbcTemplate, clock, databaseAccessRetryTemplate, schema);
     }
 
     @Bean
-    public DatabaseService databaseService(final DatabaseAccess databaseAccess) {
+    DatabaseService databaseService(final DatabaseAccess databaseAccess) {
         return new DatabaseService(databaseAccess);
     }
 
@@ -50,10 +50,10 @@ public class DataSourceConfig {
      * @return retry template for database access
      */
     @Bean
-    public RetryTemplate databaseAccessRetryTemplate(@Value("${datasource.retry.initial-interval:PT0.5S}") final Duration initialInterval,
-                                                     @Value("${datasource.retry.multiplier:2}") final int multiplier,
-                                                     @Value("${datasource.retry.max-interval:PT1M}") final Duration maxInterval,
-                                                     @Value("${datasource.retry.timeout:PT0S}") final Duration timeout) {
+    RetryTemplate databaseAccessRetryTemplate(@Value("${datasource.retry.initial-interval:PT0.5S}") final Duration initialInterval,
+                                              @Value("${datasource.retry.multiplier:2}") final int multiplier,
+                                              @Value("${datasource.retry.max-interval:PT1M}") final Duration maxInterval,
+                                              @Value("${datasource.retry.timeout:PT0S}") final Duration timeout) {
         final ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
         backOffPolicy.setInitialInterval(initialInterval.toMillis());
         backOffPolicy.setMultiplier(multiplier);

@@ -18,7 +18,7 @@ import static java.util.Objects.requireNonNull;
 
 @ConstructorBinding
 @ConfigurationProperties(prefix = "production-line-initialization")
-public class AviationProductConfig {
+class AviationProductConfig {
 
     private final List<AviationProduct.Builder> productBuilders;
 
@@ -27,8 +27,8 @@ public class AviationProductConfig {
     }
 
     @Bean
-    public Map<String, AviationProduct> aviationProducts(final Map<String, Integer> messageRouteIds,
-                                                         final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
+    Map<String, AviationProduct> aviationProducts(final Map<String, Integer> messageRouteIds,
+                                                  final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
         return buildProducts(productBuilders, messageRouteIds, messageFormatIds);
     }
 

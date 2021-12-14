@@ -11,17 +11,17 @@ import java.time.Duration;
 import java.util.Map;
 
 @Configuration
-public class HealthEndpointConfig {
+class HealthEndpointConfig {
 
     @Bean
-    public DirectoryPermissionHealthContributor directoryPermissionHealthContributor(final Map<String, AviationProduct> aviationProducts,
-                                                                                     @Value("${health-indicator.directoryPermission.tempFilePrefix}") final String tempFilePrefix,
-                                                                                     @Value("${health-indicator.directoryPermission.tempFileSuffix}") final String tempFileSuffix) {
+    DirectoryPermissionHealthContributor directoryPermissionHealthContributor(final Map<String, AviationProduct> aviationProducts,
+                                                                              @Value("${health-indicator.directoryPermission.tempFilePrefix}") final String tempFilePrefix,
+                                                                              @Value("${health-indicator.directoryPermission.tempFileSuffix}") final String tempFileSuffix) {
         return new DirectoryPermissionHealthContributor(aviationProducts, tempFilePrefix, tempFileSuffix);
     }
 
     @Bean
-    public BlockingExecutorHealthContributor executorHealthContributor(@Value("${health-indicator.blockingExecutor.timeout}") final Duration blockingExecutorTimeout) {
+    BlockingExecutorHealthContributor executorHealthContributor(@Value("${health-indicator.blockingExecutor.timeout}") final Duration blockingExecutorTimeout) {
         return new BlockingExecutorHealthContributor(blockingExecutorTimeout);
     }
 

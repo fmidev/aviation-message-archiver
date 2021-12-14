@@ -11,8 +11,9 @@ import org.springframework.core.convert.support.DefaultConversionService;
 
 @Configuration
 public class ConversionConfig {
+
     @Bean
-    public ConversionService conversionService() {
+    ConversionService conversionService() {
         final DefaultConversionService conversionService = new DefaultConversionService();
 
         conversionService.addConverter(new StringToDurationConverter());
@@ -22,4 +23,5 @@ public class ConversionConfig {
 
         return conversionService;
     }
+
 }

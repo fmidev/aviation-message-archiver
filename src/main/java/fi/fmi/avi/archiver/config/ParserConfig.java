@@ -17,20 +17,20 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 
 @Configuration
-public class ParserConfig {
+class ParserConfig {
 
     @Bean
-    public FileParser fileParser(final AviMessageConverter aviMessageConverter) {
+    FileParser fileParser(final AviMessageConverter aviMessageConverter) {
         return new FileParser(aviMessageConverter);
     }
 
     @Bean
-    public FileParserService fileParserService(final FileParser fileParser) {
+    FileParserService fileParserService(final FileParser fileParser) {
         return new FileParserService(fileParser);
     }
 
     @Bean
-    public MessagePopulatorService messagePopulatorService(final List<MessagePopulator> messagePopulators) {
+    MessagePopulatorService messagePopulatorService(final List<MessagePopulator> messagePopulators) {
         return new MessagePopulatorService(messagePopulators);
     }
 
