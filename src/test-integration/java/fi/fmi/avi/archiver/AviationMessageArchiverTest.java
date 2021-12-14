@@ -816,7 +816,7 @@ class AviationMessageArchiverTest {
 
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
-    public void test_all_at_once() {
+    void test_all_at_once() {
         final List<AviationMessageArchiverTestCase> cases = test_archival().collect(Collectors.toList());
         cases.parallelStream().forEach(this::copyFileSetLastModified);
         cases.parallelStream().forEach(this::renameTempFile);

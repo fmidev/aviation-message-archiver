@@ -11,7 +11,7 @@ import java.time.Duration;
 import java.util.Map;
 
 @Configuration
-class HealthEndpointConfig {
+public class HealthEndpointConfig {
 
     @Bean
     DirectoryPermissionHealthContributor directoryPermissionHealthContributor(final Map<String, AviationProduct> aviationProducts,

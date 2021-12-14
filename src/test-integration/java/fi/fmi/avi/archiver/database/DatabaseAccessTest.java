@@ -6,9 +6,7 @@ import fi.fmi.avi.archiver.config.ConversionConfig;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
 import fi.fmi.avi.archiver.message.ProcessingResult;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -18,6 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
@@ -25,6 +24,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,7 +36,8 @@ import static org.mockito.Mockito.*;
 @ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},//
         loader = AnnotationConfigContextLoader.class,//
         initializers = {ConfigDataApplicationContextInitializer.class})
-public class DatabaseAccessTest {
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+class DatabaseAccessTest {
 
     private static final Instant NOW = Instant.now();
     private static final String IWXXM_2_1_NAMESPACE = "http://icao.int/iwxxm/2.1";
@@ -54,41 +55,39 @@ public class DatabaseAccessTest {
             .setHeading("TEST HEADING")
             .build();
 
-    @Autowired
-    private DatabaseAccess databaseAccess;
-    @Autowired
-    private Clock clock;
     @SpyBean
     private JdbcTemplate jdbcTemplate;
 
-    private DatabaseAccessTestUtil databaseAccessTestUtil;
+    private final DatabaseAccess databaseAccess;
+    private final DatabaseAccessTestUtil databaseAccessTestUtil;
 
-    @BeforeEach
-    public void setUp() {
-        databaseAccessTestUtil = new DatabaseAccessTestUtil(databaseAccess, clock.instant());
+    DatabaseAccessTest(final DatabaseAccess databaseAccess, final Clock clock) {
+        this.databaseAccess = requireNonNull(databaseAccess, "databaseAccess");
+        requireNonNull(clock, "clock");
+        this.databaseAccessTestUtil = new DatabaseAccessTestUtil(databaseAccess, clock.instant());
     }
 
     @Test
-    public void test_empty_tables() {
+    void test_empty_tables() {
         databaseAccessTestUtil.assertMessagesEmpty();
         databaseAccessTestUtil.assertRejectedMessagesEmpty();
     }
 
     @Test
-    public void test_insert_aviation_message() {
+    void test_insert_aviation_message() {
         final Number generatedId = databaseAccess.insertAviationMessage(TEST_MESSAGE);
         assertThat(generatedId.longValue()).isPositive();
         databaseAccessTestUtil.assertMessagesContains(TEST_MESSAGE);
     }
 
     @Test
-    public void test_insert_aviation_message_with_nonexistent_station_id() {
+    void test_insert_aviation_message_with_nonexistent_station_id() {
         final ArchiveAviationMessage archiveAviationMessage = TEST_MESSAGE.toBuilder().setStationId(200).build();
         assertThrows(DataIntegrityViolationException.class, () -> databaseAccess.insertAviationMessage(archiveAviationMessage));
     }
 
     @Test
-    public void test_insert_aviation_message_with_iwxxm_details() {
+    void test_insert_aviation_message_with_iwxxm_details() {
         final ArchiveAviationMessage archiveAviationMessage = TEST_MESSAGE.toBuilder()
                 .setIWXXMDetails(
                         ArchiveAviationMessageIWXXMDetails.builder().setCollectIdentifier("test identifier").setXMLNamespace(IWXXM_2_1_NAMESPACE).build())
@@ -100,7 +99,7 @@ public class DatabaseAccessTest {
     }
 
     @Test
-    public void test_insert_aviation_message_with_new_iwxxm_version() {
+    void test_insert_aviation_message_with_new_iwxxm_version() {
         final ArchiveAviationMessage archiveAviationMessage = TEST_MESSAGE.toBuilder()
                 .setIWXXMDetails(
                         ArchiveAviationMessageIWXXMDetails.builder().setCollectIdentifier("test identifier").setXMLNamespace("http://test.namespace").build())
@@ -112,7 +111,7 @@ public class DatabaseAccessTest {
     }
 
     @Test
-    public void test_insert_aviation_message_with_iwxxm_details_only_collect_identifier() {
+    void test_insert_aviation_message_with_iwxxm_details_only_collect_identifier() {
         final ArchiveAviationMessage archiveAviationMessage = TEST_MESSAGE.toBuilder()
                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder().setCollectIdentifier("test identifier").build())
                 .build();
@@ -123,7 +122,7 @@ public class DatabaseAccessTest {
     }
 
     @Test
-    public void test_insert_aviation_message_with_iwxxm_details_only_version() {
+    void test_insert_aviation_message_with_iwxxm_details_only_version() {
         final ArchiveAviationMessage archiveAviationMessage = TEST_MESSAGE.toBuilder()
                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder().setXMLNamespace(IWXXM_2_1_NAMESPACE).build())
                 .build();
@@ -134,7 +133,7 @@ public class DatabaseAccessTest {
     }
 
     @Test
-    public void test_insert_aviation_message_with_query_timeouts_and_retries() {
+    void test_insert_aviation_message_with_query_timeouts_and_retries() {
         doThrow(QueryTimeoutException.class).doThrow(QueryTimeoutException.class)
                 .doCallRealMethod()
                 .when(jdbcTemplate)
@@ -146,7 +145,7 @@ public class DatabaseAccessTest {
     }
 
     @Test
-    public void test_insert_rejected_aviation_message() {
+    void test_insert_rejected_aviation_message() {
         final ArchiveAviationMessage archiveAviationMessage = TEST_MESSAGE.toBuilder().setProcessingResult(ProcessingResult.UNKNOWN_STATION_ICAO_CODE)//
                 .build();
 
@@ -156,13 +155,13 @@ public class DatabaseAccessTest {
     }
 
     @Test
-    public void test_query_existing_station() {
+    void test_query_existing_station() {
         final Optional<Integer> testId = databaseAccess.queryStationId("EFXX");
         assertThat(testId).isPresent();
     }
 
     @Test
-    public void test_query_nonexistent_station() {
+    void test_query_nonexistent_station() {
         final Optional<Integer> testId = databaseAccess.queryStationId("XXXX");
         assertThat(testId).isEmpty();
     }

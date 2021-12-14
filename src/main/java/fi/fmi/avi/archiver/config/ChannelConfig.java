@@ -16,14 +16,14 @@ import java.util.concurrent.*;
 import static java.util.Objects.requireNonNull;
 
 @Configuration
-class ChannelConfig {
+public class ChannelConfig {
 
     private final Clock clock;
     private final BlockingExecutorHealthContributor executorHealthContributor;
     private final int executorQueueSize;
 
-    public ChannelConfig(final Clock clock, final BlockingExecutorHealthContributor executorHealthContributor,
-                         @Value("${executor.queue-size}") final int executorQueueSize) {
+    ChannelConfig(final Clock clock, final BlockingExecutorHealthContributor executorHealthContributor,
+                  @Value("${executor.queue-size}") final int executorQueueSize) {
         this.clock = requireNonNull(clock, "clock");
         this.executorHealthContributor = requireNonNull(executorHealthContributor, "executorHealthContributor");
         this.executorQueueSize = executorQueueSize;
@@ -130,7 +130,7 @@ class ChannelConfig {
     }
 
     @Bean(destroyMethod = "destroy")
-    public ThreadGroup aviationMessageArchiverThreadGroup() {
+    ThreadGroup aviationMessageArchiverThreadGroup() {
         return new ThreadGroup(AviationMessageArchiver.class.getSimpleName());
     }
 

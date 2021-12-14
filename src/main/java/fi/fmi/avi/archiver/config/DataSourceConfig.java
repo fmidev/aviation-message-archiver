@@ -21,7 +21,7 @@ import java.time.Clock;
 import java.time.Duration;
 
 @Configuration
-class DataSourceConfig {
+public class DataSourceConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceConfig.class);
 

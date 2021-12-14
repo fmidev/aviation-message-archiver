@@ -13,7 +13,7 @@ import java.time.Clock;
 import java.time.Duration;
 
 @Configuration
-class ArchiverConfig {
+public class ArchiverConfig {
 
     @Bean
     Clock clock() {

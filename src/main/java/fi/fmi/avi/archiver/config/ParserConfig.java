@@ -17,7 +17,7 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 
 @Configuration
-class ParserConfig {
+public class ParserConfig {
 
     @Bean
     FileParser fileParser(final AviMessageConverter aviMessageConverter) {

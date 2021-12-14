@@ -12,7 +12,6 @@ import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -23,6 +22,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
@@ -49,7 +49,8 @@ import static org.mockito.Mockito.verify;
         loader = AnnotationConfigContextLoader.class,//
         initializers = {ConfigDataApplicationContextInitializer.class})
 @ActiveProfiles("failingPopulatorTest")
-public class FailingPopulatorTest {
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+class FailingPopulatorTest {
 
     private static final int WAIT_MILLIS = 100;
     private static final int TIMEOUT_MILLIS = 1000;
@@ -65,17 +66,20 @@ public class FailingPopulatorTest {
     @SpyBean
     private DatabaseAccess databaseAccess;
 
-    @Autowired
-    private Map<String, AviationProduct> aviationProducts;
-
     @Captor
     private ArgumentCaptor<Message<?>> failChannelCaptor;
 
     @Captor
     private ArgumentCaptor<ArchiveAviationMessage> databaseMessageCaptor;
 
+    private final Map<String, AviationProduct> aviationProducts;
+
+    FailingPopulatorTest(final Map<String, AviationProduct> aviationProducts) {
+        this.aviationProducts = requireNonNull(aviationProducts, "aviationProducts");
+    }
+
     @Test
-    public void test_failing_populator() throws URISyntaxException, IOException, InterruptedException {
+    void test_failing_populator() throws URISyntaxException, IOException, InterruptedException {
         final AviationProduct product = getProduct(aviationProducts);
         Files.copy(getInputFile(), Paths.get(product.getInputDir().getPath() + "/" + FILENAME));
         waitUntilFileExists(new File(product.getFailDir().getPath() + "/" + FILENAME));
@@ -127,11 +131,9 @@ public class FailingPopulatorTest {
     @Configuration
     @Profile("failingPopulatorTest")
     static class FailingPopulatorConfig {
-        @Autowired
-        private AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter;
-
         @Bean
-        public MessagePopulatorFactory<FailingPopulator> failingPopulatorFactory() {
+        public MessagePopulatorFactory<FailingPopulator> failingPopulatorFactory(
+                final AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter) {
             return ReflectionMessagePopulatorFactory.builder(FailingPopulator.class, messagePopulatorConfigValueConverter).build();
         }
     }

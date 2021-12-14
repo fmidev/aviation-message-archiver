@@ -20,11 +20,11 @@ import static java.util.Objects.requireNonNull;
 
 @ConstructorBinding
 @ConfigurationProperties(prefix = "message-populators")
-class MessagePopulatorConfig {
+public class MessagePopulatorConfig {
 
     private final List<PopulatorInstanceSpec> executionChain;
 
-    public MessagePopulatorConfig(final List<PopulatorInstanceSpec> executionChain) {
+    MessagePopulatorConfig(final List<PopulatorInstanceSpec> executionChain) {
         this.executionChain = requireNonNull(executionChain, "executionChain");
     }
 

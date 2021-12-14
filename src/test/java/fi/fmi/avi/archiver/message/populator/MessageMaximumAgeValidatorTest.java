@@ -27,59 +27,59 @@ public class MessageMaximumAgeValidatorTest {
     }
 
     @Test
-    public void invalid_configuration_zero_duration() {
+    void invalid_configuration_zero_duration() {
         assertThrows(IllegalArgumentException.class, () -> new MessageMaximumAgeValidator(clock, Duration.ZERO));
     }
 
     @Test
-    public void invalid_configuration_negative_duration() {
+    void invalid_configuration_negative_duration() {
         assertThrows(IllegalArgumentException.class, () -> new MessageMaximumAgeValidator(clock, Duration.ofDays(-1)));
     }
 
     @Test
-    public void valid() {
+    void valid() {
         final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(clock.instant());
         messageMaximumAgeValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
-    public void two_days_in_the_past() {
+    void two_days_in_the_past() {
         final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(clock.instant().minus(2, ChronoUnit.DAYS));
         messageMaximumAgeValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
-    public void three_days_in_the_past() {
+    void three_days_in_the_past() {
         final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(clock.instant().minus(3, ChronoUnit.DAYS));
         messageMaximumAgeValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
-    public void three_days_and_one_second_in_the_past() {
+    void three_days_and_one_second_in_the_past() {
         final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(Instant.parse("2019-05-06T23:59:59Z"));
         messageMaximumAgeValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.MESSAGE_TOO_OLD);
     }
 
     @Test
-    public void three_days_and_one_nanosecond_in_the_past() {
+    void three_days_and_one_nanosecond_in_the_past() {
         final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(Instant.parse("2019-05-07T00:00:00Z").minusNanos(1));
         messageMaximumAgeValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.MESSAGE_TOO_OLD);
     }
 
     @Test
-    public void year_in_the_past() {
+    void year_in_the_past() {
         final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(Instant.parse("2018-05-10T00:00:00Z"));
         messageMaximumAgeValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.MESSAGE_TOO_OLD);
     }
 
     @Test
-    public void twelve_hours_in_the_future() {
+    void twelve_hours_in_the_future() {
         final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(clock.instant().plus(12, ChronoUnit.HOURS));
         messageMaximumAgeValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);

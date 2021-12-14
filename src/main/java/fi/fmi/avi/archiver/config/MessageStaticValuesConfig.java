@@ -17,13 +17,13 @@ import static java.util.Objects.requireNonNull;
  */
 @ConstructorBinding
 @ConfigurationProperties(prefix = "message-static-values")
-class MessageStaticValuesConfig {
+public class MessageStaticValuesConfig {
     private final Map<String, Integer> routeIds;
     private final Map<GenericAviationWeatherMessage.Format, Integer> formatIds;
     private final Map<MessageType, Integer> typeIds;
 
-    public MessageStaticValuesConfig(final Map<String, Integer> routeIds, final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
-                                     final Map<MessageType, Integer> typeIds) {
+    MessageStaticValuesConfig(final Map<String, Integer> routeIds, final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
+                              final Map<MessageType, Integer> typeIds) {
         this.routeIds = requireNonNull(routeIds, "routeIds");
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");

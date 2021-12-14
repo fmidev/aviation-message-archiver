@@ -18,11 +18,11 @@ import static java.util.Objects.requireNonNull;
 
 @ConstructorBinding
 @ConfigurationProperties(prefix = "production-line-initialization")
-class AviationProductConfig {
+public class AviationProductConfig {
 
     private final List<AviationProduct.Builder> productBuilders;
 
-    public AviationProductConfig(final List<AviationProduct.Builder> products) {
+    AviationProductConfig(final List<AviationProduct.Builder> products) {
         this.productBuilders = requireNonNull(products, "products");
     }
 

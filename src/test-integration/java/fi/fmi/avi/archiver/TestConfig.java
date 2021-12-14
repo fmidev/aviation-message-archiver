@@ -41,7 +41,7 @@ public class TestConfig {
         return new TestWorkDirHolder(workdirPath);
     }
 
-    public static class TestWorkDirHolder implements InitializingBean, DisposableBean {
+    static class TestWorkDirHolder implements InitializingBean, DisposableBean {
         private final File workDir;
         private final File tmpDir;
 

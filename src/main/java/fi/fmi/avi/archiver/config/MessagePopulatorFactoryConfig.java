@@ -17,12 +17,12 @@ import java.util.regex.Pattern;
 import static java.util.Objects.requireNonNull;
 
 @Configuration
-class MessagePopulatorFactoryConfig {
+public class MessagePopulatorFactoryConfig {
 
     private final ConversionService conversionService;
     private final Clock clock;
 
-    public MessagePopulatorFactoryConfig(final ConversionService conversionService, final Clock clock) {
+    MessagePopulatorFactoryConfig(final ConversionService conversionService, final Clock clock) {
         this.conversionService = requireNonNull(conversionService, "conversionService");
         this.clock = requireNonNull(clock, "clock");
     }
