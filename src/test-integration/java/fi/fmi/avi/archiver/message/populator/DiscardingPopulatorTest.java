@@ -68,17 +68,17 @@ public class DiscardingPopulatorTest {
     @SpyBean
     private DatabaseAccess databaseAccess;
 
-    @Autowired
-    private Map<String, AviationProduct> aviationProducts;
-
     @Captor
     private ArgumentCaptor<Message<?>> messageCaptor;
 
     @Captor
     private ArgumentCaptor<ArchiveAviationMessage> databaseMessageCaptor;
 
+    @Autowired
+    private Map<String, AviationProduct> aviationProducts;
+
     @Test
-    public void test_discarding_populator() throws URISyntaxException, IOException, InterruptedException {
+    void test_discarding_populator() throws URISyntaxException, IOException, InterruptedException {
         final AviationProduct product = getProduct(aviationProducts);
         Files.copy(getInputFile(), Paths.get(product.getInputDir().getPath() + "/" + FILENAME));
         waitUntilFileExists(new File(product.getFailDir().getPath() + "/" + FILENAME));
@@ -143,11 +143,9 @@ public class DiscardingPopulatorTest {
     @Configuration
     @Profile("discardingPopulatorTest")
     static class DiscardingPopulatorConfig {
-        @Autowired
-        private AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter;
-
         @Bean
-        public MessagePopulatorFactory<DiscardingPopulator> discardingPopulatorFactory() {
+        public MessagePopulatorFactory<DiscardingPopulator> discardingPopulatorFactory(
+                final AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter) {
             return ReflectionMessagePopulatorFactory.builder(DiscardingPopulator.class, messagePopulatorConfigValueConverter).build();
         }
     }

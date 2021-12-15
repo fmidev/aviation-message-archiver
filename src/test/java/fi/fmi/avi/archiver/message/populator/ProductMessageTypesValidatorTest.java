@@ -39,35 +39,35 @@ public class ProductMessageTypesValidatorTest {
     }
 
     @Test
-    public void valid_speci() {
+    void valid_speci() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.SPECI.getId());
         productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(TEST_METADATA).buildPartial(), builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
-    public void valid_metar() {
+    void valid_metar() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.METAR.getId());
         productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(TEST_METADATA).buildPartial(), builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
-    public void another_product_identifier_with_taf() {
+    void another_product_identifier_with_taf() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.TAF.getId());
         productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(ANOTHER_METADATA).buildPartial(), builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
-    public void invalid_taf() {
+    void invalid_taf() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.TAF.getId());
         productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(TEST_METADATA).buildPartial(), builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.FORBIDDEN_MESSAGE_TYPE);
     }
 
     @Test
-    public void invalid_type() {
+    void invalid_type() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(-1);
         productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(TEST_METADATA).buildPartial(), builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.FORBIDDEN_MESSAGE_TYPE);

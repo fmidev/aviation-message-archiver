@@ -13,7 +13,7 @@ public class MonitorableCallerBlocksPolicyTest {
     private final Clock clock = Clock.systemUTC();
 
     @Test
-    public void test_rejection() throws Exception {
+    void test_rejection() throws Exception {
         final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
                 new SynchronousQueue<>(), Executors.defaultThreadFactory(), new MonitorableCallerBlocksPolicy(clock, 10));
 
@@ -43,7 +43,7 @@ public class MonitorableCallerBlocksPolicyTest {
     }
 
     @Test
-    public void test_queue() throws Exception {
+    void test_queue() throws Exception {
         final MonitorableCallerBlocksPolicy policy = new MonitorableCallerBlocksPolicy(clock, Long.MAX_VALUE);
         final ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 2, 0, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(1), Executors.defaultThreadFactory(), policy);

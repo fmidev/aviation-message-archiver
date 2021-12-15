@@ -21,7 +21,7 @@ public class MessageContentTrimmerTest {
     }
 
     @Test
-    public void trim() throws MessageDiscardedException {
+    void trim() throws MessageDiscardedException {
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()//
                 .setMessage("\nTAF TEST ")//
                 .setHeading("")//

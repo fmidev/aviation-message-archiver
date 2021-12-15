@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class AcceptUnchangedFileListFilterTest {
 
     @Test
-    public void test(@TempDir Path tempDir) throws IOException {
+    void test(@TempDir Path tempDir) throws IOException {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         final File file = tempFile.toFile();
@@ -36,7 +36,7 @@ public class AcceptUnchangedFileListFilterTest {
     }
 
     @Test
-    public void test_content_change(@TempDir Path tempDir) throws IOException {
+    void test_content_change(@TempDir Path tempDir) throws IOException {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         Files.write(tempFile, "temp content".getBytes(StandardCharsets.UTF_8));
@@ -49,7 +49,7 @@ public class AcceptUnchangedFileListFilterTest {
     }
 
     @Test
-    public void test_multiple_content_changes(@TempDir Path tempDir) throws IOException {
+    void test_multiple_content_changes(@TempDir Path tempDir) throws IOException {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         Files.write(tempFile, "temp content".getBytes(StandardCharsets.UTF_8));
@@ -66,7 +66,7 @@ public class AcceptUnchangedFileListFilterTest {
     }
 
     @Test
-    public void test_last_modified_change(@TempDir Path tempDir) throws IOException {
+    void test_last_modified_change(@TempDir Path tempDir) throws IOException {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         Files.write(tempFile, "temp content".getBytes(StandardCharsets.UTF_8));
@@ -81,7 +81,7 @@ public class AcceptUnchangedFileListFilterTest {
     }
 
     @Test
-    public void test_multiple_last_modified_changes(@TempDir Path tempDir) throws IOException {
+    void test_multiple_last_modified_changes(@TempDir Path tempDir) throws IOException {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         Files.write(tempFile, "temp content".getBytes(StandardCharsets.UTF_8));
@@ -99,7 +99,7 @@ public class AcceptUnchangedFileListFilterTest {
     }
 
     @Test
-    public void test_filter_files(@TempDir Path tempDir) throws IOException {
+    void test_filter_files(@TempDir Path tempDir) throws IOException {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         Files.write(tempFile, "temp content".getBytes(StandardCharsets.UTF_8));
@@ -114,7 +114,7 @@ public class AcceptUnchangedFileListFilterTest {
     }
 
     @Test
-    public void test_filter_files_modification(@TempDir Path tempDir) throws IOException {
+    void test_filter_files_modification(@TempDir Path tempDir) throws IOException {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         Files.write(tempFile, "temp content".getBytes(StandardCharsets.UTF_8));
@@ -131,13 +131,13 @@ public class AcceptUnchangedFileListFilterTest {
     }
 
     @Test
-    public void test_rollback(@TempDir Path tempDir) {
+    void test_rollback(@TempDir Path tempDir) {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         testRollback(filter, tempDir);
     }
 
     @Test
-    public void test_rollback_composite(@TempDir Path tempDir) {
+    void test_rollback_composite(@TempDir Path tempDir) {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final CompositeFileListFilter<File> composite = new CompositeFileListFilter<>(Collections.singletonList(filter));
         testRollback(composite, tempDir);

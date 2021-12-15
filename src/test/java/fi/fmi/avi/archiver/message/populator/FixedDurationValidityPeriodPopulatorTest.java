@@ -25,7 +25,7 @@ public class FixedDurationValidityPeriodPopulatorTest {
     }
 
     @Test
-    public void swx_validity_end() {
+    void swx_validity_end() {
         final Instant messageTime = Instant.parse("2019-05-10T00:00:00Z");
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
                 .setMessageTime(messageTime)
@@ -36,7 +36,7 @@ public class FixedDurationValidityPeriodPopulatorTest {
     }
 
     @Test
-    public void taf_validity_end() {
+    void taf_validity_end() {
         final Instant validFrom = Instant.parse("2019-05-10T00:00:00Z");
         final Instant validTo = Instant.parse("2019-05-11T00:00:00Z");
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
@@ -50,7 +50,7 @@ public class FixedDurationValidityPeriodPopulatorTest {
     }
 
     @Test
-    public void metar_validity_end() {
+    void metar_validity_end() {
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
                 .setMessageTime(Instant.parse("2019-05-10T00:00:00Z"))
                 .setType(MessagePopulatorTests.TypeId.METAR.getId());
@@ -60,7 +60,7 @@ public class FixedDurationValidityPeriodPopulatorTest {
     }
 
     @Test
-    public void missing_message_type() {
+    void missing_message_type() {
         final Instant messageTime = Instant.parse("2019-05-10T00:00:00Z");
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
                 .setMessageTime(messageTime);
@@ -70,7 +70,7 @@ public class FixedDurationValidityPeriodPopulatorTest {
     }
 
     @Test
-    public void missing_message_time() {
+    void missing_message_time() {
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
                 .setType(MessagePopulatorTests.TypeId.SWX.getId());
         fixedDurationValidityPeriodPopulator.populate(inputAviationMessage, aviationMessage);

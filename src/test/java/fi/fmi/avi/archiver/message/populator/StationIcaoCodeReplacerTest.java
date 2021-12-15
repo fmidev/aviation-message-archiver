@@ -20,7 +20,7 @@ public class StationIcaoCodeReplacerTest {
     }
 
     @Test
-    public void replace() {
+    void replace() {
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
                 .setStationIcaoCode("YUDO");
         stationIcaoCodeReplacer.populate(inputAviationMessage, aviationMessage);
@@ -28,7 +28,7 @@ public class StationIcaoCodeReplacerTest {
     }
 
     @Test
-    public void no_match() {
+    void no_match() {
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
                 .setStationIcaoCode("YADO");
         stationIcaoCodeReplacer.populate(inputAviationMessage, aviationMessage);
@@ -36,7 +36,7 @@ public class StationIcaoCodeReplacerTest {
     }
 
     @Test
-    public void backreference_capture_group() {
+    void backreference_capture_group() {
         stationIcaoCodeReplacer = new StationIcaoCodeReplacer(Pattern.compile("^YU(..)$"), "XX$1");
         final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
                 .setStationIcaoCode("XXDO");

@@ -1,17 +1,15 @@
 package fi.fmi.avi.archiver.spring.convert;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 class NonEmptyStringConverterTest {
@@ -24,13 +22,13 @@ class NonEmptyStringConverterTest {
     }
 
     @Test
-    public void returns_null_for_empty_by_default() {
+    void returns_null_for_empty_by_default() {
         assertThat(converter.convert("")).isNull();
         assertThat(converter.getInvocations()).isEmpty();
     }
 
     @Test
-    public void returns_custom_value_for_empty() {
+    void returns_custom_value_for_empty() {
         final String emptyValue = "I am an empty value";
         final TestConverterWithCustomEmptyValue converter = new TestConverterWithCustomEmptyValue(emptyValue);
         assertThat(converter.convert("")).isSameAs(emptyValue);
@@ -39,7 +37,7 @@ class NonEmptyStringConverterTest {
     }
 
     @Test
-    public void invokes_convertNonEmpty_for_non_empty_value() {
+    void invokes_convertNonEmpty_for_non_empty_value() {
         final String value1 = "This is a value";
         final String value2 = "This is another value";
         assertThat(converter.convert(value1)).isEqualTo(TestConverter.PREFIX + value1);

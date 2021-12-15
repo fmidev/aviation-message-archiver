@@ -50,7 +50,7 @@ import fi.fmi.avi.model.GenericAviationWeatherMessage;
         loader = AnnotationConfigContextLoader.class,//
         initializers = { ConfigDataApplicationContextInitializer.class })
 @ActiveProfiles("failingPopulatorTest")
-public class FailingPopulatorTest {
+class FailingPopulatorTest {
 
     private static final int WAIT_MILLIS = 100;
     private static final int TIMEOUT_MILLIS = 1000;
@@ -66,17 +66,17 @@ public class FailingPopulatorTest {
     @SpyBean
     private DatabaseAccess databaseAccess;
 
-    @Autowired
-    private Map<String, AviationProduct> aviationProducts;
-
     @Captor
     private ArgumentCaptor<Message<?>> failChannelCaptor;
 
     @Captor
     private ArgumentCaptor<ArchiveAviationMessage> databaseMessageCaptor;
 
+    @Autowired
+    private Map<String, AviationProduct> aviationProducts;
+
     @Test
-    public void test_failing_populator() throws URISyntaxException, IOException, InterruptedException {
+    void test_failing_populator() throws URISyntaxException, IOException, InterruptedException {
         final AviationProduct product = getProduct(aviationProducts);
         Files.copy(getInputFile(), Paths.get(product.getInputDir().getPath() + "/" + FILENAME));
         waitUntilFileExists(new File(product.getFailDir().getPath() + "/" + FILENAME));
@@ -129,11 +129,9 @@ public class FailingPopulatorTest {
     @Configuration
     @Profile("failingPopulatorTest")
     static class FailingPopulatorConfig {
-        @Autowired
-        private AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter;
-
         @Bean
-        public MessagePopulatorFactory<FailingPopulator> failingPopulatorFactory() {
+        public MessagePopulatorFactory<FailingPopulator> failingPopulatorFactory(
+                final AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter) {
             return ReflectionMessagePopulatorFactory.builder(FailingPopulator.class, messagePopulatorConfigValueConverter).build();
         }
     }
