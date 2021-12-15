@@ -1,6 +1,16 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import com.google.common.collect.ImmutableMap;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -9,19 +19,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-
-import com.google.common.collect.ImmutableMap;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.file.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("UnnecessaryLocalVariable")
 @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
@@ -39,20 +37,20 @@ class FileMetadataPopulatorTest {
             .setFormat(MessagePopulatorTests.FormatId.IWXXM.getFormat())//
             .setFormatId(MessagePopulatorTests.FormatId.IWXXM.getId())//
             .build();
-    private static final Map<String, AviationProductsHolder.AviationProduct> PRODUCTS = Stream.of(//
-                    AviationProductsHolder.AviationProduct.builder()//
+    private static final Map<String, AviationProduct> PRODUCTS = Stream.of(//
+                    AviationProduct.builder()//
                             .setId(PRODUCT_ID_1)//
                             .setRoute(MessagePopulatorTests.RouteId.TEST.getName())//
                             .setRouteId(MessagePopulatorTests.RouteId.TEST.getId())//
                             .addFileConfigs(FILE_CONFIG_1)//
                             .buildPartial(), //
-                    AviationProductsHolder.AviationProduct.builder()//
+                    AviationProduct.builder()//
                             .setId(PRODUCT_ID_2)//
                             .setRoute(MessagePopulatorTests.RouteId.TEST2.getName())//
                             .setRouteId(MessagePopulatorTests.RouteId.TEST2.getId())//
                             .addFileConfigs(FILE_CONFIG_2)//
                             .buildPartial())//
-            .collect(ImmutableMap.toImmutableMap(AviationProductsHolder.AviationProduct::getId, Function.identity()));
+            .collect(ImmutableMap.toImmutableMap(AviationProduct::getId, Function.identity()));
     private static final InputAviationMessage INPUT_MESSAGE_TEMPLATE = InputAviationMessage.builder()//
             .setFileMetadata(FileMetadata.builder()//
                     .setProductIdentifier(PRODUCT_ID_1)//

@@ -1,9 +1,14 @@
 package fi.fmi.avi.archiver.file;
 
-import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
+import fi.fmi.avi.archiver.config.AviMessageConverterConfig;
+import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.converter.AviMessageConverter;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import fi.fmi.avi.model.MessageType;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -16,17 +21,12 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.regex.Pattern;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
-import fi.fmi.avi.archiver.config.ConverterConfig;
-import fi.fmi.avi.converter.AviMessageConverter;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import fi.fmi.avi.model.MessageType;
-
-@SpringJUnitConfig(ConverterConfig.class)
+@SpringJUnitConfig(AviMessageConverterConfig.class)
 public class FileParserTest {
 
     private static final String DEFAULT_FILENAME = "test_file";
@@ -74,17 +74,17 @@ public class FileParserTest {
     }
 
     @Test
-    public void empty_content() {
+    void empty_content() {
         assertThrows(IllegalStateException.class, () -> fileParser.parse("", DEFAULT_METADATA.toBuilder().setFileConfig(TAC_FILECONFIG).build()));
     }
 
     @Test
-    public void whitespace_content() {
+    void whitespace_content() {
         assertThrows(IllegalStateException.class, () -> fileParser.parse("\r\r\n ", DEFAULT_METADATA.toBuilder().setFileConfig(TAC_FILECONFIG).build()));
     }
 
     @Test
-    public void inconvertible_content() {
+    void inconvertible_content() {
         final String filename = "inconvertible.txt";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(TAC_FILECONFIG).build();
         final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
@@ -101,7 +101,7 @@ public class FileParserTest {
     }
 
     @Test
-    public void taf_tac() {
+    void taf_tac() {
         final String filename = "simple_taf.txt2";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(TAC_FILECONFIG).build();
         final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
@@ -118,7 +118,7 @@ public class FileParserTest {
     }
 
     @Test
-    public void taf_tac_without_gts_heading() {
+    void taf_tac_without_gts_heading() {
         final String filename = "taf-missing-gts-heading.txt";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(TAC_FILECONFIG).build();
         final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
@@ -135,7 +135,7 @@ public class FileParserTest {
     }
 
     @Test
-    public void taf_tac_bulletin() {
+    void taf_tac_bulletin() {
         final String filename = "taf-tac-bulletin.bul";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(TAC_FILECONFIG).build();
         final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
@@ -155,7 +155,7 @@ public class FileParserTest {
     }
 
     @Test
-    public void taf_tac_bulletin_partially_valid() {
+    void taf_tac_bulletin_partially_valid() {
         final String filename = "taf-tac-bulletin-partially-valid.bul";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(TAC_FILECONFIG).build();
         final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
@@ -175,7 +175,7 @@ public class FileParserTest {
     }
 
     @Test
-    public void taf_tac_two_bulletins() {
+    void taf_tac_two_bulletins() {
         final String filename = "taf-tac-two-bulletins.bul";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(TAC_FILECONFIG).build();
         final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
@@ -199,7 +199,7 @@ public class FileParserTest {
     }
 
     @Test
-    public void taf_iwxxm() {
+    void taf_iwxxm() {
         final String filename = "taf.xml";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
         final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
@@ -217,7 +217,7 @@ public class FileParserTest {
     }
 
     @Test
-    public void taf_iwxxm_without_issue_and_valid_time_elements() {
+    void taf_iwxxm_without_issue_and_valid_time_elements() {
         final String filename = "taf-missing-issue-valid-times.xml";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
         final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
@@ -235,14 +235,14 @@ public class FileParserTest {
     }
 
     @Test
-    public void taf_iwxxm_invalid() {
+    void taf_iwxxm_invalid() {
         final String filename = "taf-invalid-content.xml";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
         assertThrows(IllegalStateException.class, () -> fileParser.parse(getFileContent(filename), metadata));
     }
 
     @Test
-    public void taf_iwxxm_with_gts_heading() {
+    void taf_iwxxm_with_gts_heading() {
         final String filename = "taf-gts-heading.xml";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
         final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
@@ -260,7 +260,7 @@ public class FileParserTest {
     }
 
     @Test
-    public void taf_iwxxm_bulletin() {
+    void taf_iwxxm_bulletin() {
         final String filename = "taf-bulletin.xml";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
         final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
@@ -279,7 +279,7 @@ public class FileParserTest {
     }
 
     @Test
-    public void taf_iwxxm_bulletin_with_gts_heading() {
+    void taf_iwxxm_bulletin_with_gts_heading() {
         final String filename = "taf-gts-heading-bulletin.xml";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
         final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
@@ -298,7 +298,7 @@ public class FileParserTest {
     }
 
     @Test
-    public void taf_iwxxm_in_gts_bulletin() {
+    void taf_iwxxm_in_gts_bulletin() {
         final String filename = "taf-iwxxm-bulletin.bul";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
         final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
@@ -317,7 +317,7 @@ public class FileParserTest {
     }
 
     @Test
-    public void taf_iwxxm_in_gts_bulletin_with_invalid_heading() {
+    void taf_iwxxm_in_gts_bulletin_with_invalid_heading() {
         final String filename = "taf-iwxxm-in-gts-bulletin-with-invalid-heading.bul";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().setFilename(filename).setFileConfig(IWXXM_FILECONFIG).build();
         assertThrows(IllegalStateException.class, () -> fileParser.parse(getFileContent(filename), metadata));

@@ -1,8 +1,8 @@
 package fi.fmi.avi.archiver.config;
 
+import fi.fmi.avi.archiver.AviationMessageArchiver;
 import fi.fmi.avi.archiver.spring.healthcontributor.BlockingExecutorHealthContributor;
 import fi.fmi.avi.archiver.spring.integration.util.MonitorableCallerBlocksPolicy;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,119 +13,125 @@ import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import java.time.Clock;
 import java.util.concurrent.*;
 
+import static java.util.Objects.requireNonNull;
+
 @Configuration
 public class ChannelConfig {
 
-    @Value("${executor.queue-size}")
-    private int executorQueueSize;
+    private final Clock clock;
+    private final BlockingExecutorHealthContributor executorHealthContributor;
+    private final int executorQueueSize;
 
-    @Autowired
-    private Clock clock;
-
-    @Autowired
-    private ThreadGroup aviationMessageArchiverThreadGroup;
-
-    @Autowired
-    private BlockingExecutorHealthContributor executorHealthContributor;
+    ChannelConfig(final Clock clock, final BlockingExecutorHealthContributor executorHealthContributor,
+                  @Value("${executor.queue-size}") final int executorQueueSize) {
+        this.clock = requireNonNull(clock, "clock");
+        this.executorHealthContributor = requireNonNull(executorHealthContributor, "executorHealthContributor");
+        this.executorQueueSize = executorQueueSize;
+    }
 
     @Bean
-    public ExecutorService processingExecutor() {
+    ExecutorService processingExecutor() {
         return newBlockingSingleThreadExecutor("Processing-");
     }
 
     @Bean
-    public MessageChannel processingChannel() {
+    MessageChannel processingChannel() {
         return new PublishSubscribeChannel(processingExecutor());
     }
 
     @Bean
-    public ExecutorService archiveExecutor() {
+    ExecutorService archiveExecutor() {
         return newBlockingSingleThreadExecutor("Archive-");
     }
 
     @Bean
-    public MessageChannel archiveChannel() {
+    MessageChannel archiveChannel() {
         return new PublishSubscribeChannel(archiveExecutor());
     }
 
     @Bean
-    public ExecutorService successExecutor() {
+    ExecutorService successExecutor() {
         return newBlockingSingleThreadExecutor("Success-");
     }
 
     @Bean
-    public MessageChannel successChannel() {
+    MessageChannel successChannel() {
         return new PublishSubscribeChannel(successExecutor());
     }
 
     @Bean
-    public ExecutorService failExecutor() {
+    ExecutorService failExecutor() {
         return newBlockingSingleThreadExecutor("Fail-");
     }
 
     @Bean
-    public MessageChannel failChannel() {
+    MessageChannel failChannel() {
         return new PublishSubscribeChannel(failExecutor());
     }
 
     @Bean
-    public ExecutorService parserExecutor() {
+    ExecutorService parserExecutor() {
         return newBlockingSingleThreadExecutor("Parser-");
     }
 
     @Bean
-    public MessageChannel parserChannel() {
+    MessageChannel parserChannel() {
         return new PublishSubscribeChannel(parserExecutor());
     }
 
     @Bean
-    public ExecutorService populatorExecutor() {
+    ExecutorService populatorExecutor() {
         return newBlockingSingleThreadExecutor("Populator-");
     }
 
     @Bean
-    public MessageChannel populatorChannel() {
+    MessageChannel populatorChannel() {
         return new PublishSubscribeChannel(populatorExecutor());
     }
 
     @Bean
-    public ExecutorService databaseExecutor() {
+    ExecutorService databaseExecutor() {
         return newBlockingSingleThreadExecutor("Database-");
     }
 
     @Bean
-    public MessageChannel databaseChannel() {
+    MessageChannel databaseChannel() {
         return new PublishSubscribeChannel(databaseExecutor());
     }
 
     @Bean
-    public ExecutorService finishExecutor() {
+    ExecutorService finishExecutor() {
         return newBlockingSingleThreadExecutor("Finish-");
     }
 
     @Bean
-    public MessageChannel finishChannel() {
+    MessageChannel finishChannel() {
         return new PublishSubscribeChannel(finishExecutor());
     }
 
     @Bean
-    public ExecutorService errorMessageExecutor() {
+    ExecutorService errorMessageExecutor() {
         return newBlockingSingleThreadExecutor("Error-");
     }
 
     @Bean
-    public MessageChannel errorMessageChannel() {
+    MessageChannel errorMessageChannel() {
         return new PublishSubscribeChannel(errorMessageExecutor());
     }
 
     @Bean
-    public ExecutorService errorLoggingExecutor() {
+    ExecutorService errorLoggingExecutor() {
         return Executors.newCachedThreadPool(newThreadFactory("Error-Log-"));
     }
 
     @Bean
-    public MessageChannel errorLoggingChannel() {
+    MessageChannel errorLoggingChannel() {
         return new PublishSubscribeChannel(errorLoggingExecutor());
+    }
+
+    @Bean(destroyMethod = "destroy")
+    ThreadGroup aviationMessageArchiverThreadGroup() {
+        return new ThreadGroup(AviationMessageArchiver.class.getSimpleName());
     }
 
     private ExecutorService newBlockingSingleThreadExecutor(final String threadNamePrefix) {
@@ -138,7 +144,7 @@ public class ChannelConfig {
 
     private CustomizableThreadFactory newThreadFactory(final String threadNamePrefix) {
         final CustomizableThreadFactory threadFactory = new CustomizableThreadFactory(threadNamePrefix);
-        threadFactory.setThreadGroup(aviationMessageArchiverThreadGroup);
+        threadFactory.setThreadGroup(aviationMessageArchiverThreadGroup());
         return threadFactory;
     }
 

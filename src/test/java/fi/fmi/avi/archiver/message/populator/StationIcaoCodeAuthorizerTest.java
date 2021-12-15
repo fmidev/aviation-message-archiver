@@ -25,7 +25,7 @@ public class StationIcaoCodeAuthorizerTest {
     }
 
     @Test
-    public void valid_tac_message() {
+    void valid_tac_message() {
         final InputAviationMessage inputAviationMessage = createTacMessage("TEST");
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setStationIcaoCode("XXXX");
         stationIcaoCodeAuthorizer.populate(inputAviationMessage, builder);
@@ -33,7 +33,7 @@ public class StationIcaoCodeAuthorizerTest {
     }
 
     @Test
-    public void valid_iwxxm_message() {
+    void valid_iwxxm_message() {
         final InputAviationMessage inputAviationMessage = createIwxxmMessage("TEST");
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setStationIcaoCode("XXXX");
         stationIcaoCodeAuthorizer.populate(inputAviationMessage, builder);
@@ -41,7 +41,7 @@ public class StationIcaoCodeAuthorizerTest {
     }
 
     @Test
-    public void invalid_tac_message() {
+    void invalid_tac_message() {
         final InputAviationMessage inputAviationMessage = createTacMessage("TEXX");
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setStationIcaoCode("YYYY");
         stationIcaoCodeAuthorizer.populate(inputAviationMessage, builder);
@@ -49,7 +49,7 @@ public class StationIcaoCodeAuthorizerTest {
     }
 
     @Test
-    public void invalid_iwxxm_message() {
+    void invalid_iwxxm_message() {
         final InputAviationMessage inputAviationMessage = createIwxxmMessage("TEXX");
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setStationIcaoCode("YYYY");
         stationIcaoCodeAuthorizer.populate(inputAviationMessage, builder);
@@ -57,7 +57,7 @@ public class StationIcaoCodeAuthorizerTest {
     }
 
     @Test
-    public void non_matching_bulletin_location_indicator() {
+    void non_matching_bulletin_location_indicator() {
         final InputAviationMessage inputAviationMessage = createTacMessage("XXXX");
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setStationIcaoCode("YYYY");
         stationIcaoCodeAuthorizer.populate(inputAviationMessage, builder);
@@ -65,7 +65,7 @@ public class StationIcaoCodeAuthorizerTest {
     }
 
     @Test
-    public void valid_without_collect_identifier_source() {
+    void valid_without_collect_identifier_source() {
         stationIcaoCodeAuthorizer.setBulletinHeadingSources(Collections.singletonList(GTS_BULLETIN_HEADING));
         final InputAviationMessage inputAviationMessage = createIwxxmMessage("TEXX");
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setStationIcaoCode("YYYY");
@@ -74,7 +74,7 @@ public class StationIcaoCodeAuthorizerTest {
     }
 
     @Test
-    public void valid_without_gts_heading_source() {
+    void valid_without_gts_heading_source() {
         stationIcaoCodeAuthorizer.setBulletinHeadingSources(Collections.singletonList(COLLECT_IDENTIFIER));
         final InputAviationMessage inputAviationMessage = createTacMessage("TEXX");
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setStationIcaoCode("YYYY");

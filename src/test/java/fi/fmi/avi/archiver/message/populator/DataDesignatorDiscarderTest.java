@@ -31,19 +31,19 @@ public class DataDesignatorDiscarderTest {
     }
 
     @Test
-    public void discard_based_on_gts_heading() {
+    void discard_based_on_gts_heading() {
         final InputAviationMessage inputAviationMessage = createTacMessage("XX", 42);
         assertThrows(MessageDiscardedException.class, () -> dataDesignatorDiscarder.populate(inputAviationMessage, ArchiveAviationMessage.builder()));
     }
 
     @Test
-    public void discard_based_on_collect_identifier() {
+    void discard_based_on_collect_identifier() {
         final InputAviationMessage inputAviationMessage = createIwxxmMessage("XX", 42);
         assertThrows(MessageDiscardedException.class, () -> dataDesignatorDiscarder.populate(inputAviationMessage, ArchiveAviationMessage.builder()));
     }
 
     @Test
-    public void no_discard_based_on_gts_heading() throws MessageDiscardedException {
+    void no_discard_based_on_gts_heading() throws MessageDiscardedException {
         final InputAviationMessage inputAviationMessage = createTacMessage("YY", 1);
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
         dataDesignatorDiscarder.populate(inputAviationMessage, builder);
@@ -51,7 +51,7 @@ public class DataDesignatorDiscarderTest {
     }
 
     @Test
-    public void no_discard_based_on_collect_identifier() throws MessageDiscardedException {
+    void no_discard_based_on_collect_identifier() throws MessageDiscardedException {
         final InputAviationMessage inputAviationMessage = createIwxxmMessage("YY", 1);
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder();
         dataDesignatorDiscarder.populate(inputAviationMessage, builder);
@@ -59,7 +59,7 @@ public class DataDesignatorDiscarderTest {
     }
 
     @Test
-    public void no_discard_without_collect_identifier_source() throws MessageDiscardedException {
+    void no_discard_without_collect_identifier_source() throws MessageDiscardedException {
         dataDesignatorDiscarder.setBulletinHeadingSources(Collections.singletonList(GTS_BULLETIN_HEADING));
         final InputAviationMessage inputAviationMessage = InputAviationMessage.builder()
                 .setCollectIdentifier(createInputBulletinHeading("XX", 42))
@@ -72,7 +72,7 @@ public class DataDesignatorDiscarderTest {
     }
 
     @Test
-    public void no_discard_without_gts_heading_source() throws MessageDiscardedException {
+    void no_discard_without_gts_heading_source() throws MessageDiscardedException {
         dataDesignatorDiscarder.setBulletinHeadingSources(Collections.singletonList(COLLECT_IDENTIFIER));
         final InputAviationMessage inputAviationMessage = InputAviationMessage.builder()
                 .setCollectIdentifier(createInputBulletinHeading("YY", 1))

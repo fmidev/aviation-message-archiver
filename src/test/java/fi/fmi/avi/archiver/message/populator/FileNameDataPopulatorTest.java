@@ -1,7 +1,12 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.tryGet;
-import static org.assertj.core.api.Assertions.assertThat;
+import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -9,14 +14,8 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-
-import fi.fmi.avi.archiver.file.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.tryGet;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class FileNameDataPopulatorTest {
     private static final InputAviationMessage INPUT_TEMPLATE = InputAviationMessage.builder()//

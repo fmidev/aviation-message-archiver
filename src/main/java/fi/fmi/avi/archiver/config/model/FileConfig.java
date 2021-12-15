@@ -1,13 +1,12 @@
-package fi.fmi.avi.archiver.file;
+package fi.fmi.avi.archiver.config.model;
 
-import static com.google.common.base.Preconditions.checkState;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import org.inferred.freebuilder.FreeBuilder;
 
 import java.time.ZoneId;
 import java.util.regex.Pattern;
 
-import org.inferred.freebuilder.FreeBuilder;
-
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import static com.google.common.base.Preconditions.checkState;
 
 @FreeBuilder
 public abstract class FileConfig {

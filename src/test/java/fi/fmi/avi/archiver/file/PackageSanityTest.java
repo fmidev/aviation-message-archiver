@@ -1,12 +1,12 @@
 package fi.fmi.avi.archiver.file;
 
+import com.google.common.testing.AbstractPackageSanityTests;
+import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
+
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.regex.Pattern;
-
-import com.google.common.testing.AbstractPackageSanityTests;
-
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
 public class PackageSanityTest extends AbstractPackageSanityTests {
 

@@ -27,31 +27,31 @@ public class MessageFutureTimeValidatorTest {
     }
 
     @Test
-    public void invalid_configuration_zero_duration() {
+    void invalid_configuration_zero_duration() {
         assertThrows(IllegalArgumentException.class, () -> new MessageFutureTimeValidator(clock, Duration.ZERO));
     }
 
     @Test
-    public void invalid_configuration_negative_duration() {
+    void invalid_configuration_negative_duration() {
         assertThrows(IllegalArgumentException.class, () -> new MessageFutureTimeValidator(clock, Duration.ofDays(-1)));
     }
 
     @Test
-    public void valid() {
+    void valid() {
         final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(Instant.parse("2019-05-10T00:00:00Z"));
         messageFutureTimeValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
-    public void two_days_in_the_past() {
+    void two_days_in_the_past() {
         final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(Instant.parse("2019-05-08T00:00:00Z"));
         messageFutureTimeValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
-    public void twelve_hours_minus_nanosecond_in_the_future() {
+    void twelve_hours_minus_nanosecond_in_the_future() {
         final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(Instant.parse("2019-05-10T12:00:00Z")
                 .minusNanos(1));
         messageFutureTimeValidator.populate(inputAviationMessage, builder);
@@ -59,14 +59,14 @@ public class MessageFutureTimeValidatorTest {
     }
 
     @Test
-    public void twelve_hours_in_the_future() {
+    void twelve_hours_in_the_future() {
         final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(Instant.parse("2019-05-10T12:00:00Z"));
         messageFutureTimeValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.MESSAGE_TIME_IN_FUTURE);
     }
 
     @Test
-    public void twelve_hours_and_one_nanosecond_in_the_future() {
+    void twelve_hours_and_one_nanosecond_in_the_future() {
         final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(clock.instant()
                 .plus(12, ChronoUnit.HOURS).plusNanos(1));
         messageFutureTimeValidator.populate(inputAviationMessage, builder);
@@ -74,7 +74,7 @@ public class MessageFutureTimeValidatorTest {
     }
 
     @Test
-    public void two_days_in_the_future() {
+    void two_days_in_the_future() {
         final ArchiveAviationMessage.Builder builder = createArchiveAviationMessage(Instant.parse("2019-05-12T00:00:00Z"));
         messageFutureTimeValidator.populate(inputAviationMessage, builder);
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.MESSAGE_TIME_IN_FUTURE);

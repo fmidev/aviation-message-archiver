@@ -1,24 +1,14 @@
 package fi.fmi.avi.archiver;
 
-import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.FileTime;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.List;
-import java.util.function.BiPredicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import com.google.common.collect.Streams;
+import com.google.common.io.Resources;
+import fi.fmi.avi.archiver.config.ConversionConfig;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.database.DatabaseAccess;
+import fi.fmi.avi.archiver.database.DatabaseAccessTestUtil;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
+import fi.fmi.avi.archiver.message.ProcessingResult;
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.inferred.freebuilder.FreeBuilder;
@@ -35,16 +25,25 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import org.xml.sax.SAXException;
 
-import com.google.common.collect.Streams;
-import com.google.common.io.Resources;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import fi.fmi.avi.archiver.config.ConversionConfig;
-import fi.fmi.avi.archiver.database.DatabaseAccess;
-import fi.fmi.avi.archiver.database.DatabaseAccessTestUtil;
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
-import fi.fmi.avi.archiver.message.ProcessingResult;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.AviationMessageArchiverTest"})
 @Sql(scripts = {"classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
@@ -57,7 +56,7 @@ class AviationMessageArchiverTest {
     private static final String TEMP_FILE_SUFFIX = ".tmp";
 
     @Autowired
-    private AviationProductsHolder aviationProductsHolder;
+    private Map<String, AviationProduct> aviationProducts;
     @Autowired
     private DatabaseAccess databaseAccess;
     @Autowired
@@ -817,7 +816,7 @@ class AviationMessageArchiverTest {
 
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
-    public void test_all_at_once() {
+    void test_all_at_once() {
         final List<AviationMessageArchiverTestCase> cases = test_archival().collect(Collectors.toList());
         cases.parallelStream().forEach(this::copyFileSetLastModified);
         cases.parallelStream().forEach(this::renameTempFile);
@@ -843,7 +842,7 @@ class AviationMessageArchiverTest {
     }
 
     private void copyFileSetLastModified(final AviationMessageArchiverTestCase testCase) {
-        final Path tempFile = testCase.getTempFile(testCase.getProduct(aviationProductsHolder));
+        final Path tempFile = testCase.getTempFile(testCase.getProduct(aviationProducts));
         try {
             Files.copy(testCase.getInputFile(), tempFile);
             Files.setLastModifiedTime(tempFile, FileTime.from(testCase.getFileModified()));
@@ -853,7 +852,7 @@ class AviationMessageArchiverTest {
     }
 
     private void renameTempFile(final AviationMessageArchiverTestCase testCase) {
-        final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
+        final AviationProduct product = testCase.getProduct(aviationProducts);
         try {
             Files.move(testCase.getTempFile(product), testCase.getTestFile(product));
         } catch (final IOException e) {
@@ -862,7 +861,7 @@ class AviationMessageArchiverTest {
     }
 
     private void assertFileOperations(final AviationMessageArchiverTestCase testCase) {
-        final AviationProductsHolder.AviationProduct product = testCase.getProduct(aviationProductsHolder);
+        final AviationProduct product = testCase.getProduct(aviationProducts);
         final Path testFile = testCase.getTestFile(product);
 
         if (!testCase.getUnhandled()) {
@@ -880,7 +879,7 @@ class AviationMessageArchiverTest {
     @FreeBuilder
     static abstract class AviationMessageArchiverTestCase {
         private static final int WAIT_MILLIS = 100;
-        private static final int TIMEOUT_MILLIS = 1000;
+        private static final int TIMEOUT_MILLIS = 3000;
 
         AviationMessageArchiverTestCase() {
         }
@@ -921,22 +920,22 @@ class AviationMessageArchiverTest {
             return path;
         }
 
-        public Path getTestFile(final AviationProductsHolder.AviationProduct product) {
+        public Path getTestFile(final AviationProduct product) {
             return Paths.get(product.getInputDir().getPath() + "/" + getInputFileName());
         }
 
-        public Path getTempFile(final AviationProductsHolder.AviationProduct product) {
+        public Path getTempFile(final AviationProduct product) {
             return Paths.get(getTestFile(product) + TEMP_FILE_SUFFIX);
         }
 
         public abstract String getProductName();
 
-        public AviationProductsHolder.AviationProduct getProduct(final AviationProductsHolder holder) {
+        public AviationProduct getProduct(final Map<String, AviationProduct> aviationProducts) {
             final String productName = getProductName();
-            return requireNonNull(holder.getProducts().get(productName), productName);
+            return requireNonNull(aviationProducts.get(productName), productName);
         }
 
-        public void assertInputAndOutputFilesEquals(final AviationProductsHolder.AviationProduct product, final long timestamp) throws InterruptedException {
+        public void assertInputAndOutputFilesEquals(final AviationProduct product, final long timestamp) throws InterruptedException {
             final byte[] expectedContent = fileContentAsByteArray(getInputFileName());
             final File expectedOutputFile = new File((getExpectFail() ? product.getFailDir() :
                     product.getArchiveDir()) + "/" + getInputFileName() + "." + timestamp);

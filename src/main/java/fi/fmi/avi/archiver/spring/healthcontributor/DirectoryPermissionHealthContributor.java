@@ -1,7 +1,7 @@
 package fi.fmi.avi.archiver.spring.healthcontributor;
 
 import com.google.common.collect.ImmutableMap;
-import fi.fmi.avi.archiver.initializing.AviationProductsHolder;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
 import org.springframework.boot.actuate.health.*;
 
 import java.io.IOException;
@@ -20,12 +20,11 @@ public class DirectoryPermissionHealthContributor implements CompositeHealthCont
     private final String tempFilePrefix;
     private final String tempFileSuffix;
 
-    public DirectoryPermissionHealthContributor(final AviationProductsHolder aviationProductsHolder,
+    public DirectoryPermissionHealthContributor(final Map<String, AviationProduct> aviationProducts,
                                                 final String tempFilePrefix, final String tempFileSuffix) {
-        requireNonNull(aviationProductsHolder, "aviationProductsHolder");
         this.tempFilePrefix = requireNonNull(tempFilePrefix, "tempFilePrefix");
         this.tempFileSuffix = requireNonNull(tempFileSuffix, "tempFileSuffix");
-        healthContributors = aviationProductsHolder.getProducts().entrySet().stream()
+        healthContributors = aviationProducts.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ProductDirectoryPermissionHealthContributor(entry.getValue())));
     }
 
@@ -45,7 +44,7 @@ public class DirectoryPermissionHealthContributor implements CompositeHealthCont
 
         private final Map<String, HealthContributor> contributors;
 
-        public ProductDirectoryPermissionHealthContributor(final AviationProductsHolder.AviationProduct product) {
+        public ProductDirectoryPermissionHealthContributor(final AviationProduct product) {
             requireNonNull(product, "product");
             contributors = ImmutableMap.of(
                     "input (" + product.getInputDir().getPath() + ")", new DirectoryPermissionHealthIndicator(product.getInputDir().toPath()),

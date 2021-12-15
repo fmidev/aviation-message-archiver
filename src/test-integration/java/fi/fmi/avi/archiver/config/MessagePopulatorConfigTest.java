@@ -1,19 +1,12 @@
-package fi.fmi.avi.archiver.initializing;
+package fi.fmi.avi.archiver.config;
 
-import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
+import fi.fmi.avi.archiver.AviationMessageArchiver;
+import fi.fmi.avi.archiver.TestConfig;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.populator.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
@@ -25,34 +18,28 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-import fi.fmi.avi.archiver.AviationMessageArchiver;
-import fi.fmi.avi.archiver.TestConfig;
-import fi.fmi.avi.archiver.config.ConversionConfig;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.AbstractMessagePopulatorFactory;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorFactory;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorService;
-import fi.fmi.avi.archiver.message.populator.ReflectionMessagePopulatorFactory;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-@SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.initializing.MessagePopulatorExecutionChainHolderTest" })
-@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class },//
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.config.MessagePopulatorConfigTest"})
+@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = { ConfigDataApplicationContextInitializer.class })
-@Sql(scripts = { "classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+        initializers = {ConfigDataApplicationContextInitializer.class})
+@Sql(scripts = {"classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ActiveProfiles("MessagePopulatorExecutionChainHolderTest")
-class MessagePopulatorExecutionChainHolderTest {
-    @Autowired
-    private MessagePopulatorExecutionChainHolder messagePopulatorExecutionChainHolder;
+@ActiveProfiles("MessagePopulatorTest")
+class MessagePopulatorConfigTest {
 
     @Autowired
     private MessagePopulatorService messagePopulatorService;
-
-    @Qualifier("messagePopulators")
-    @Autowired
-    private List<MessagePopulator> messagePopulators;
 
     @Test
     void testMessagePopulatorExecutionChain() {
@@ -189,25 +176,25 @@ class MessagePopulatorExecutionChainHolderTest {
     }
 
     @Configuration
-    @Profile("MessagePopulatorExecutionChainHolderTest")
-    static class MessagePopulatorExecutionChainHolderTestConfig {
-        @Autowired
-        private AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter;
-
+    @Profile("MessagePopulatorTest")
+    static class MessagePopulatorTestConfig {
         @Bean
-        public MessagePopulatorFactory<FixedValueTestPopulator1> fixedValueTestPopulator1() {
+        public MessagePopulatorFactory<FixedValueTestPopulator1> fixedValueTestPopulator1(
+                final AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter) {
             return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator1.class, messagePopulatorConfigValueConverter).build();
         }
 
         @Bean
-        public MessagePopulatorFactory<FixedValueTestPopulator2> fixedValueTestPopulator2() {
+        public MessagePopulatorFactory<FixedValueTestPopulator2> fixedValueTestPopulator2(
+                final AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter) {
             return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator2.class, messagePopulatorConfigValueConverter)//
                     .addConfigArg("station", String.class)//
                     .build();
         }
 
         @Bean
-        public MessagePopulatorFactory<FixedValueTestPopulator3> fixedValueTestPopulator3() {
+        public MessagePopulatorFactory<FixedValueTestPopulator3> fixedValueTestPopulator3(
+                final AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter) {
             return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator3.class, messagePopulatorConfigValueConverter)//
                     .addDependencyArg(Clock.fixed(Instant.parse("2001-02-03T04:05:06.789Z"), ZoneOffset.UTC))//
                     .addConfigArg("fileModifiedFromNow", Duration.class)//
