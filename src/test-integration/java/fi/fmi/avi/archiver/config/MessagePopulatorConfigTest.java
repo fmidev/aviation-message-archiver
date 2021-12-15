@@ -6,6 +6,7 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.*;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +15,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
@@ -36,14 +36,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Sql(scripts = {"classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @ActiveProfiles("MessagePopulatorTest")
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class MessagePopulatorConfigTest {
 
-    private final MessagePopulatorService messagePopulatorService;
-
-    public MessagePopulatorConfigTest(final MessagePopulatorService messagePopulatorService) {
-        this.messagePopulatorService = requireNonNull(messagePopulatorService, "messagePopulatorService");
-    }
+    @Autowired
+    private MessagePopulatorService messagePopulatorService;
 
     @Test
     void testMessagePopulatorExecutionChain() {

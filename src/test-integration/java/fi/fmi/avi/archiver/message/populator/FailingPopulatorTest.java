@@ -12,6 +12,7 @@ import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -22,7 +23,6 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
@@ -49,7 +49,6 @@ import static org.mockito.Mockito.verify;
         loader = AnnotationConfigContextLoader.class,//
         initializers = {ConfigDataApplicationContextInitializer.class})
 @ActiveProfiles("failingPopulatorTest")
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class FailingPopulatorTest {
 
     private static final int WAIT_MILLIS = 100;
@@ -72,11 +71,8 @@ class FailingPopulatorTest {
     @Captor
     private ArgumentCaptor<ArchiveAviationMessage> databaseMessageCaptor;
 
-    private final Map<String, AviationProduct> aviationProducts;
-
-    FailingPopulatorTest(final Map<String, AviationProduct> aviationProducts) {
-        this.aviationProducts = requireNonNull(aviationProducts, "aviationProducts");
-    }
+    @Autowired
+    private Map<String, AviationProduct> aviationProducts;
 
     @Test
     void test_failing_populator() throws URISyntaxException, IOException, InterruptedException {

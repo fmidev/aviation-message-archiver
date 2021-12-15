@@ -6,7 +6,9 @@ import fi.fmi.avi.archiver.config.ConversionConfig;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
 import fi.fmi.avi.archiver.message.ProcessingResult;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -16,7 +18,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
@@ -24,7 +25,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 
-import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,7 +36,6 @@ import static org.mockito.Mockito.*;
 @ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},//
         loader = AnnotationConfigContextLoader.class,//
         initializers = {ConfigDataApplicationContextInitializer.class})
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class DatabaseAccessTest {
 
     private static final Instant NOW = Instant.now();
@@ -58,12 +57,16 @@ class DatabaseAccessTest {
     @SpyBean
     private JdbcTemplate jdbcTemplate;
 
-    private final DatabaseAccess databaseAccess;
-    private final DatabaseAccessTestUtil databaseAccessTestUtil;
+    @Autowired
+    private DatabaseAccess databaseAccess;
 
-    DatabaseAccessTest(final DatabaseAccess databaseAccess, final Clock clock) {
-        this.databaseAccess = requireNonNull(databaseAccess, "databaseAccess");
-        requireNonNull(clock, "clock");
+    @Autowired
+    private Clock clock;
+
+    private DatabaseAccessTestUtil databaseAccessTestUtil;
+
+    @BeforeEach
+    public void setUp() {
         this.databaseAccessTestUtil = new DatabaseAccessTestUtil(databaseAccess, clock.instant());
     }
 
