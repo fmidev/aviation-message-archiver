@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 @ConstructorBinding
@@ -25,6 +26,7 @@ public class MessagePopulatorConfig {
     private final List<PopulatorInstanceSpec> executionChain;
 
     MessagePopulatorConfig(final List<PopulatorInstanceSpec> executionChain) {
+        checkState(!executionChain.isEmpty(), "Message populator execution chain not configured");
         this.executionChain = requireNonNull(executionChain, "executionChain");
     }
 
