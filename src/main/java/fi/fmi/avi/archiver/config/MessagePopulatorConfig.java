@@ -26,8 +26,8 @@ public class MessagePopulatorConfig {
     private final List<PopulatorInstanceSpec> executionChain;
 
     MessagePopulatorConfig(final List<PopulatorInstanceSpec> executionChain) {
-        checkState(!executionChain.isEmpty(), "Message populator execution chain not configured");
         this.executionChain = requireNonNull(executionChain, "executionChain");
+        checkState(!executionChain.isEmpty(), "Message populator execution chain not configured");
     }
 
     @Bean
