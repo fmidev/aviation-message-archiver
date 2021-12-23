@@ -1,12 +1,10 @@
 package fi.fmi.avi.archiver.spring.integration.file.filters;
 
-import com.google.common.annotations.VisibleForTesting;
-import org.springframework.integration.file.filters.AbstractFileListFilter;
-import org.springframework.integration.file.filters.ResettableFileListFilter;
-import org.springframework.integration.file.filters.ReversibleFileListFilter;
+import static java.util.Objects.requireNonNull;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.HashMap;
@@ -14,7 +12,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static java.util.Objects.requireNonNull;
+import org.springframework.integration.file.filters.AbstractFileListFilter;
+import org.springframework.integration.file.filters.ResettableFileListFilter;
+import org.springframework.integration.file.filters.ReversibleFileListFilter;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * {@link org.springframework.integration.file.filters.FileListFilter} that stores the file's last modification time and
@@ -72,10 +76,12 @@ public class AcceptUnchangedFileListFilter extends AbstractFileListFilter<File> 
         private FileTime lastModified = FileTime.from(Instant.EPOCH);
         private long size = 0;
 
+        @SuppressFBWarnings("DE_MIGHT_IGNORE")
         FileData(final File file) {
             try {
-                this.lastModified = Files.getLastModifiedTime(file.toPath());
-                this.size = Files.size(file.toPath());
+                final Path path = file.toPath();
+                this.lastModified = Files.getLastModifiedTime(path);
+                this.size = Files.size(path);
             } catch (final Exception ignored) {
                 // Use default values
             }
@@ -85,7 +91,7 @@ public class AcceptUnchangedFileListFilter extends AbstractFileListFilter<File> 
         public boolean equals(final Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            FileData fileData = (FileData) o;
+            final FileData fileData = (FileData) o;
             return size == fileData.size && lastModified.equals(fileData.lastModified);
         }
 

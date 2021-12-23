@@ -47,9 +47,9 @@ public class DirectoryPermissionHealthContributor implements CompositeHealthCont
         public ProductDirectoryPermissionHealthContributor(final AviationProduct product) {
             requireNonNull(product, "product");
             contributors = ImmutableMap.of(
-                    "input (" + product.getInputDir().getPath() + ")", new DirectoryPermissionHealthIndicator(product.getInputDir().toPath()),
-                    "archive (" + product.getArchiveDir().getPath() + ")", new DirectoryPermissionHealthIndicator(product.getArchiveDir().toPath()),
-                    "fail (" + product.getFailDir().getPath() + ")", new DirectoryPermissionHealthIndicator(product.getFailDir().toPath())
+                    "input (" + product.getInputDir() + ")", new DirectoryPermissionHealthIndicator(product.getInputDir()),
+                    "archive (" + product.getArchiveDir() + ")", new DirectoryPermissionHealthIndicator(product.getArchiveDir()),
+                    "fail (" + product.getFailDir() + ")", new DirectoryPermissionHealthIndicator(product.getFailDir())
             );
         }
 

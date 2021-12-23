@@ -51,6 +51,7 @@ import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -330,9 +331,9 @@ public class IntegrationFlowConfig {
             integrationFlows.forEach(this::registerIntegrationFlow);
         }
 
-        private FileReadingMessageSource createMessageSource(final File inputDir, final String productId) {
+        private FileReadingMessageSource createMessageSource(final Path inputDir, final String productId) {
             final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
-            sourceDirectory.setDirectory(inputDir);
+            sourceDirectory.setDirectory(inputDir.toFile());
             sourceDirectory.setFilter(createSourceFileListFilter(productId));
             return sourceDirectory;
         }
@@ -344,8 +345,8 @@ public class IntegrationFlowConfig {
                     new AcceptOnceFileListFilter<>(filterQueueSize)));
         }
 
-        private FileWritingMessageHandler createArchiveHandler(final File destinationDir) {
-            final FileWritingMessageHandler archiveHandler = new FileWritingMessageHandler(destinationDir);
+        private FileWritingMessageHandler createArchiveHandler(final Path destinationDir) {
+            final FileWritingMessageHandler archiveHandler = new FileWritingMessageHandler(destinationDir.toFile());
             archiveHandler.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
             archiveHandler.setDeleteSourceFiles(true);
             archiveHandler.setAdviceChain(archiveAdviceChain);
@@ -353,8 +354,8 @@ public class IntegrationFlowConfig {
             return archiveHandler;
         }
 
-        private FileWritingMessageHandler createFailHandler(final File destinationDir) {
-            final FileWritingMessageHandler failHandler = new FileWritingMessageHandler(destinationDir);
+        private FileWritingMessageHandler createFailHandler(final Path destinationDir) {
+            final FileWritingMessageHandler failHandler = new FileWritingMessageHandler(destinationDir.toFile());
             failHandler.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
             failHandler.setDeleteSourceFiles(true);
             failHandler.setAdviceChain(failAdviceChain);

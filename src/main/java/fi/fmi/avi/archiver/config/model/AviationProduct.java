@@ -2,7 +2,7 @@ package fi.fmi.avi.archiver.config.model;
 
 import org.inferred.freebuilder.FreeBuilder;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -22,11 +22,11 @@ public abstract class AviationProduct {
 
     public abstract int getRouteId();
 
-    public abstract File getInputDir();
+    public abstract Path getInputDir();
 
-    public abstract File getArchiveDir();
+    public abstract Path getArchiveDir();
 
-    public abstract File getFailDir();
+    public abstract Path getFailDir();
 
     public abstract List<FileConfig> getFileConfigs();
 

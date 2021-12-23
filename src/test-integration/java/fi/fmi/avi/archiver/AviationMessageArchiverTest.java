@@ -25,7 +25,6 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import org.xml.sax.SAXException;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -921,11 +920,12 @@ class AviationMessageArchiverTest {
         }
 
         public Path getTestFile(final AviationProduct product) {
-            return Paths.get(product.getInputDir().getPath() + "/" + getInputFileName());
+            return product.getInputDir().resolve(getInputFileName());
         }
 
         public Path getTempFile(final AviationProduct product) {
-            return Paths.get(getTestFile(product) + TEMP_FILE_SUFFIX);
+            final Path testFile = getTestFile(product);
+            return testFile.resolveSibling(testFile.getFileName() + TEMP_FILE_SUFFIX);
         }
 
         public abstract String getProductName();
@@ -937,17 +937,18 @@ class AviationMessageArchiverTest {
 
         public void assertInputAndOutputFilesEquals(final AviationProduct product, final long timestamp) throws InterruptedException {
             final byte[] expectedContent = fileContentAsByteArray(getInputFileName());
-            final File expectedOutputFile = new File((getExpectFail() ? product.getFailDir() :
-                    product.getArchiveDir()) + "/" + getInputFileName() + "." + timestamp);
+            final Path outputDir = getExpectFail() ? product.getFailDir() : product.getArchiveDir();
+            final Path expectedOutputFile = outputDir.resolve(getInputFileName() + "." + timestamp);
             waitUntilFileExists(expectedOutputFile);
 
             assertThat(expectedOutputFile).exists();
             assertThat(expectedOutputFile).hasBinaryContent(expectedContent);
         }
 
-        private void waitUntilFileExists(final File expectedOutputFile) throws InterruptedException {
+        private void waitUntilFileExists(final Path expectedOutputFile) throws InterruptedException {
             long totalWaitTime = 0;
-            while (!expectedOutputFile.exists() && totalWaitTime < TIMEOUT_MILLIS) {
+            while (!Files.exists(expectedOutputFile) && totalWaitTime < TIMEOUT_MILLIS) {
+                //noinspection BusyWait
                 Thread.sleep(WAIT_MILLIS);
                 totalWaitTime += WAIT_MILLIS;
             }

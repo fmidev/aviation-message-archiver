@@ -26,7 +26,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -77,8 +76,8 @@ class FailingPopulatorTest {
     @Test
     void test_failing_populator() throws URISyntaxException, IOException, InterruptedException {
         final AviationProduct product = getProduct(aviationProducts);
-        Files.copy(getInputFile(), Paths.get(product.getInputDir().getPath() + "/" + FILENAME));
-        waitUntilFileExists(new File(product.getFailDir().getPath() + "/" + FILENAME));
+        Files.copy(getInputFile(), product.getInputDir().resolve(FILENAME));
+        waitUntilFileExists(product.getFailDir().resolve(FILENAME));
 
         verify(successChannel, times(0)).send(any(Message.class));
         verify(failChannel).send(failChannelCaptor.capture());
@@ -104,9 +103,10 @@ class FailingPopulatorTest {
         return requireNonNull(aviationProducts.get(PRODUCT), PRODUCT);
     }
 
-    private void waitUntilFileExists(final File expectedOutputFile) throws InterruptedException {
+    private void waitUntilFileExists(final Path expectedOutputFile) throws InterruptedException {
         long totalWaitTime = 0;
-        while (!expectedOutputFile.exists() && totalWaitTime < TIMEOUT_MILLIS) {
+        while (!Files.exists(expectedOutputFile) && totalWaitTime < TIMEOUT_MILLIS) {
+            //noinspection BusyWait
             Thread.sleep(WAIT_MILLIS);
             totalWaitTime += WAIT_MILLIS;
         }

@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class AcceptUnchangedFileListFilterTest {
 
     @Test
-    void test(@TempDir Path tempDir) throws IOException {
+    void test(@TempDir Path tempDir) {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         final File file = tempFile.toFile();
