@@ -1,8 +1,8 @@
 package fi.fmi.avi.archiver.config;
 
-import static fi.fmi.avi.archiver.logging.SpringLoggingContextHelper.getLoggingContext;
-import static fi.fmi.avi.archiver.logging.SpringLoggingContextHelper.withLoggingContext;
-import static fi.fmi.avi.archiver.logging.SpringLoggingContextHelper.withPayloadAndLoggingContext;
+import static fi.fmi.avi.archiver.config.SpringLoggingContextHelper.getLoggingContext;
+import static fi.fmi.avi.archiver.config.SpringLoggingContextHelper.withLoggingContext;
+import static fi.fmi.avi.archiver.config.SpringLoggingContextHelper.withPayloadAndLoggingContext;
 import static java.util.Objects.requireNonNull;
 import static org.springframework.integration.file.FileHeaders.FILENAME;
 
@@ -66,7 +66,6 @@ import fi.fmi.avi.archiver.logging.FileProcessingStatistics;
 import fi.fmi.avi.archiver.logging.FileProcessingStatisticsImpl;
 import fi.fmi.avi.archiver.logging.LoggingContext;
 import fi.fmi.avi.archiver.logging.LoggingContextImpl;
-import fi.fmi.avi.archiver.logging.SpringLoggingContextHelper;
 import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
 import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
 import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
