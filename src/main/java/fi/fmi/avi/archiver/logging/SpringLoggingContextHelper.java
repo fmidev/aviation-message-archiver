@@ -47,8 +47,8 @@ public final class SpringLoggingContextHelper {
         return ServiceActivators.peekHeader(LoggingContext.class, HEADER_KEY, consumer);
     }
 
-    public static <P> GenericHandler<P> withLoggingContextAndPayload(final BiConsumer<LoggingContext, P> consumer) {
+    public static <P> GenericHandler<P> withPayloadAndLoggingContext(final BiConsumer<P, LoggingContext> consumer) {
         requireNonNull(consumer, "consumer");
-        return ServiceActivators.peekPayloadAndHeader(LoggingContext.class, HEADER_KEY, (payload, logger) -> consumer.accept(logger, payload));
+        return ServiceActivators.peekPayloadAndHeader(LoggingContext.class, HEADER_KEY, consumer);
     }
 }

@@ -2,7 +2,7 @@ package fi.fmi.avi.archiver.config;
 
 import static fi.fmi.avi.archiver.logging.SpringLoggingContextHelper.getLoggingContext;
 import static fi.fmi.avi.archiver.logging.SpringLoggingContextHelper.withLoggingContext;
-import static fi.fmi.avi.archiver.logging.SpringLoggingContextHelper.withLoggingContextAndPayload;
+import static fi.fmi.avi.archiver.logging.SpringLoggingContextHelper.withPayloadAndLoggingContext;
 import static java.util.Objects.requireNonNull;
 import static org.springframework.integration.file.FileHeaders.FILENAME;
 
@@ -67,7 +67,6 @@ import fi.fmi.avi.archiver.logging.FileProcessingStatisticsImpl;
 import fi.fmi.avi.archiver.logging.LoggingContext;
 import fi.fmi.avi.archiver.logging.LoggingContextImpl;
 import fi.fmi.avi.archiver.logging.SpringLoggingContextHelper;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
 import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
 import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
@@ -102,8 +101,7 @@ public class IntegrationFlowConfig {
                 .channel(populatorChannel)
                 .handle(messagePopulationIntegrationService::populateMessages)
                 .channel(databaseChannel)
-                .<List<ArchiveAviationMessage>> handle(
-                        withLoggingContextAndPayload((loggingContext, payload) -> databaseService.insertMessages(payload, loggingContext)))
+                .handle(withPayloadAndLoggingContext(databaseService::insertMessages))
                 .channel(archiveChannel)
                 .route(Message.class, message -> hasProcessingErrors(message.getHeaders()), spec -> spec//
                         .channelMapping(false, successChannel)//
