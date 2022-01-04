@@ -9,6 +9,7 @@ import com.google.common.testing.AbstractPackageSanityTests;
 import fi.fmi.avi.archiver.config.model.FileConfig;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
+@SuppressWarnings("UnstableApiUsage")
 public class PackageSanityTest extends AbstractPackageSanityTests {
 
     @Override
@@ -24,7 +25,6 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
         setDefault(FileConfig.class, fileConfig);
         setDefault(FileMetadata.class, fileMetadata);
         setDefault(FileParser.FileParseResult.class, FileParser.FileParseResult.builder().buildPartial());
-        setDefault(FileParser.LogDetails.class, FileParser.LogDetails.builder().setFileMetadata(fileMetadata).buildPartial());
         setDefault(FileReference.class, FileReference.create("product-id", "filename"));
         setDefault(InputAviationMessage.class, InputAviationMessage.builder().setFileMetadata(fileMetadata).buildPartial());
         setDefault(InputBulletinHeading.class, InputBulletinHeading.builder().buildPartial());

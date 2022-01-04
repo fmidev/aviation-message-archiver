@@ -1,20 +1,22 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileParser;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorService;
-import fi.fmi.avi.converter.AviMessageConverter;
+import static fi.fmi.avi.archiver.config.IntegrationFlowConfig.FILE_METADATA;
+import static java.util.Objects.requireNonNull;
+
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 
-import java.util.List;
-
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileParser;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.logging.ProcessingChainLogger;
+import fi.fmi.avi.archiver.logging.SpringProcessingChainLoggerHelper;
+import fi.fmi.avi.converter.AviMessageConverter;
 
 @Configuration
 public class ParserConfig {
@@ -25,29 +27,24 @@ public class ParserConfig {
     }
 
     @Bean
-    FileParserService fileParserService(final FileParser fileParser) {
-        return new FileParserService(fileParser);
+    FileParserIntegrationService fileParserIntegrationService(final FileParser fileParser) {
+        return new FileParserIntegrationService(fileParser);
     }
 
-    @Bean
-    MessagePopulatorService messagePopulatorService(final List<MessagePopulator> messagePopulators) {
-        return new MessagePopulatorService(messagePopulators);
-    }
-
-    public static class FileParserService {
+    public static class FileParserIntegrationService {
         private final FileParser fileParser;
 
-        FileParserService(final FileParser fileParser) {
+        FileParserIntegrationService(final FileParser fileParser) {
             this.fileParser = requireNonNull(fileParser, "fileParser");
         }
 
         public Message<List<InputAviationMessage>> parse(final String content, final MessageHeaders headers) {
-            final FileMetadata fileMetadata = headers.get(IntegrationFlowConfig.FILE_METADATA, FileMetadata.class);
-            requireNonNull(fileMetadata, "fileMetadata");
-            final FileParser.FileParseResult result = fileParser.parse(content, fileMetadata);
+            final FileMetadata fileMetadata = requireNonNull(headers.get(FILE_METADATA, FileMetadata.class), "fileMetadata");
+            final ProcessingChainLogger logger = SpringProcessingChainLoggerHelper.getLogger(headers);
+            final FileParser.FileParseResult result = fileParser.parse(content, fileMetadata, logger);
             return MessageBuilder.withPayload(result.getInputAviationMessages())
                     .copyHeaders(headers)
-                    .setHeader(IntegrationFlowConfig.FILE_PARSE_ERRORS, result.getParseErrors())
+                    .setHeader(IntegrationFlowConfig.PROCESSING_ERRORS, IntegrationFlowConfig.hasProcessingErrors(headers) || result.getParseErrors())
                     .build();
         }
     }

@@ -90,22 +90,12 @@ public class DiscardingPopulatorTest {
         assertThat(successes.get(0).getStationIcaoCode()).isEqualTo("EFXX");
 
         verify(failChannel, times(0)).send(any(Message.class));
-        @SuppressWarnings("unchecked")
-        final List<InputAviationMessage> failures = (List<InputAviationMessage>) messageCaptor.getValue()
-                .getHeaders()
-                .get(IntegrationFlowConfig.FAILED_MESSAGES);
-        assertThat(failures).isEmpty();
+        final boolean failures = IntegrationFlowConfig.hasProcessingErrors(messageCaptor.getValue().getHeaders());
+        assertThat(failures).isFalse();
 
-        @SuppressWarnings("unchecked")
-        final List<InputAviationMessage> discards = (List<InputAviationMessage>) messageCaptor.getValue()
-                .getHeaders()
-                .get(IntegrationFlowConfig.DISCARDED_MESSAGES);
-        assertThat(discards).hasSize(1);
-        assertThat(discards.get(0).getMessage().getLocationIndicators().get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME)).isEqualTo("EFYY");
-
-        verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture());
+        verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture(), any());
         assertThat(databaseMessageCaptor.getValue().getStationIcaoCode()).isEqualTo("EFXX");
-        verify(databaseAccess, times(0)).insertRejectedAviationMessage(any());
+        verify(databaseAccess, times(0)).insertRejectedAviationMessage(any(), any());
     }
 
     public Path getInputFile() throws URISyntaxException {

@@ -2,7 +2,7 @@ package fi.fmi.avi.archiver.file;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
@@ -23,6 +23,8 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import fi.fmi.avi.archiver.config.AviMessageConverterConfig;
 import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.logging.NoOpProcessingChainLogger;
+import fi.fmi.avi.archiver.logging.ProcessingChainLogger;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
@@ -55,6 +57,7 @@ public class FileParserTest {
     private AviMessageConverter aviMessageConverter;
 
     private FileParser fileParser;
+    private ProcessingChainLogger logger;
 
     private static String getFileContent(final String filename) {
         try {
@@ -71,23 +74,25 @@ public class FileParserTest {
     @BeforeEach
     public void setUp() {
         fileParser = new FileParser(aviMessageConverter);
+        logger = NoOpProcessingChainLogger.getInstance();
     }
 
     @Test
     void empty_content() {
-        assertThrows(IllegalStateException.class, () -> fileParser.parse("", DEFAULT_METADATA.toBuilder().setFileConfig(TAC_FILECONFIG).build()));
+        assertThatIllegalArgumentException().isThrownBy(() -> fileParser.parse("", DEFAULT_METADATA.toBuilder().setFileConfig(TAC_FILECONFIG).build(), logger));
     }
 
     @Test
     void whitespace_content() {
-        assertThrows(IllegalStateException.class, () -> fileParser.parse("\r\r\n ", DEFAULT_METADATA.toBuilder().setFileConfig(TAC_FILECONFIG).build()));
+        assertThatIllegalArgumentException().isThrownBy(
+                () -> fileParser.parse("\r\r\n ", DEFAULT_METADATA.toBuilder().setFileConfig(TAC_FILECONFIG).build(), logger));
     }
 
     @Test
     void inconvertible_content() {
         final String filename = "inconvertible.txt";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().mutateFileReference(ref -> ref.setFilename(filename)).setFileConfig(TAC_FILECONFIG).build();
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -104,7 +109,7 @@ public class FileParserTest {
     void taf_tac() {
         final String filename = "simple_taf.txt2";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().mutateFileReference(ref -> ref.setFilename(filename)).setFileConfig(TAC_FILECONFIG).build();
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -121,7 +126,7 @@ public class FileParserTest {
     void taf_tac_without_gts_heading() {
         final String filename = "taf-missing-gts-heading.txt";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().mutateFileReference(ref -> ref.setFilename(filename)).setFileConfig(TAC_FILECONFIG).build();
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -138,7 +143,7 @@ public class FileParserTest {
     void taf_tac_bulletin() {
         final String filename = "taf-tac-bulletin.bul";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().mutateFileReference(ref -> ref.setFilename(filename)).setFileConfig(TAC_FILECONFIG).build();
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(2);
@@ -158,7 +163,7 @@ public class FileParserTest {
     void taf_tac_bulletin_partially_valid() {
         final String filename = "taf-tac-bulletin-partially-valid.bul";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().mutateFileReference(ref -> ref.setFilename(filename)).setFileConfig(TAC_FILECONFIG).build();
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
 
         assertThat(result.getParseErrors()).isTrue();
         assertThat(result.getInputAviationMessages()).hasSize(2);
@@ -178,7 +183,7 @@ public class FileParserTest {
     void taf_tac_two_bulletins() {
         final String filename = "taf-tac-two-bulletins.bul";
         final FileMetadata metadata = DEFAULT_METADATA.toBuilder().mutateFileReference(ref -> ref.setFilename(filename)).setFileConfig(TAC_FILECONFIG).build();
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(4);
@@ -205,7 +210,7 @@ public class FileParserTest {
                 .mutateFileReference(ref -> ref.setFilename(filename))
                 .setFileConfig(IWXXM_FILECONFIG)
                 .build();
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -226,7 +231,7 @@ public class FileParserTest {
                 .mutateFileReference(ref -> ref.setFilename(filename))
                 .setFileConfig(IWXXM_FILECONFIG)
                 .build();
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -247,7 +252,9 @@ public class FileParserTest {
                 .mutateFileReference(ref -> ref.setFilename(filename))
                 .setFileConfig(IWXXM_FILECONFIG)
                 .build();
-        assertThrows(IllegalStateException.class, () -> fileParser.parse(getFileContent(filename), metadata));
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
+        assertThat(result.getInputAviationMessages()).isEmpty();
+        assertThat(result.getParseErrors()).isTrue();
     }
 
     @Test
@@ -257,7 +264,7 @@ public class FileParserTest {
                 .mutateFileReference(ref -> ref.setFilename(filename))
                 .setFileConfig(IWXXM_FILECONFIG)
                 .build();
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -278,7 +285,7 @@ public class FileParserTest {
                 .mutateFileReference(ref -> ref.setFilename(filename))
                 .setFileConfig(IWXXM_FILECONFIG)
                 .build();
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(2);
@@ -300,7 +307,7 @@ public class FileParserTest {
                 .mutateFileReference(ref -> ref.setFilename(filename))
                 .setFileConfig(IWXXM_FILECONFIG)
                 .build();
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(2);
@@ -322,7 +329,7 @@ public class FileParserTest {
                 .mutateFileReference(ref -> ref.setFilename(filename))
                 .setFileConfig(IWXXM_FILECONFIG)
                 .build();
-        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata);
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
 
         assertThat(result.getParseErrors()).isFalse();
         assertThat(result.getInputAviationMessages()).hasSize(1);
@@ -344,7 +351,8 @@ public class FileParserTest {
                 .mutateFileReference(ref -> ref.setFilename(filename))
                 .setFileConfig(IWXXM_FILECONFIG)
                 .build();
-        assertThrows(IllegalStateException.class, () -> fileParser.parse(getFileContent(filename), metadata));
+        final FileParser.FileParseResult result = fileParser.parse(getFileContent(filename), metadata, logger);
+        assertThat(result.getInputAviationMessages()).isEmpty();
+        assertThat(result.getParseErrors()).isTrue();
     }
-
 }

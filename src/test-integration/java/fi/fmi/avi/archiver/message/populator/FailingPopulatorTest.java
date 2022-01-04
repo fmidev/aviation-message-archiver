@@ -13,7 +13,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -83,16 +82,12 @@ class FailingPopulatorTest {
 
         verify(successChannel, times(0)).send(any(Message.class));
         verify(failChannel).send(failChannelCaptor.capture());
-        @SuppressWarnings("unchecked")
-        final List<InputAviationMessage> failures = (List<InputAviationMessage>) failChannelCaptor.getValue()
-                .getHeaders()
-                .get(IntegrationFlowConfig.FAILED_MESSAGES);
-        assertThat(failures).hasSize(1);
-        assertThat(failures.get(0).getMessage().getLocationIndicators().get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME)).isEqualTo("EFYY");
+        final boolean failures = IntegrationFlowConfig.hasProcessingErrors(failChannelCaptor.getValue().getHeaders());
+        assertThat(failures).isTrue();
 
-        verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture());
+        verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture(), any());
         assertThat(databaseMessageCaptor.getValue().getStationIcaoCode()).isEqualTo("EFXX");
-        verify(databaseAccess, times(0)).insertRejectedAviationMessage(any());
+        verify(databaseAccess, times(0)).insertRejectedAviationMessage(any(), any());
     }
 
     public Path getInputFile() throws URISyntaxException {

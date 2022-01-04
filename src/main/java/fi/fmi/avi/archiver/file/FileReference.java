@@ -26,7 +26,7 @@ public abstract class FileReference {
 
     @Override
     public String toString() {
-        return getProductIdentifier() + ":" + getFilename();
+        return getProductIdentifier() + "/" + getFilename();
     }
 
     public static class Builder extends FileReference_Builder {

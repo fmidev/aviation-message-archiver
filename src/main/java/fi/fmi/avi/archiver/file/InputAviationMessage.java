@@ -1,7 +1,9 @@
 package fi.fmi.avi.archiver.file;
 
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import org.inferred.freebuilder.FreeBuilder;
+
+import fi.fmi.avi.archiver.message.MessageReference;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
 /**
  * Model representing content and metadata parsed from a file per message.
@@ -16,8 +18,6 @@ public abstract class InputAviationMessage {
         return new Builder();
     }
 
-    public abstract Builder toBuilder();
-
     public abstract InputBulletinHeading getGtsBulletinHeading();
 
     public abstract InputBulletinHeading getCollectIdentifier();
@@ -26,8 +26,13 @@ public abstract class InputAviationMessage {
 
     public abstract GenericAviationWeatherMessage getMessage();
 
+    public abstract MessageReference getMessageReference();
+
+    public abstract Builder toBuilder();
+
     public static class Builder extends InputAviationMessage_Builder {
         Builder() {
+            setMessageReference(MessageReference.getInitial());
         }
     }
 

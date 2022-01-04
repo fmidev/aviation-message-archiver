@@ -20,8 +20,8 @@ public class FileReferenceTest {
     }
 
     @Test
-    void toString_returns_productId_and_filename_separated_by_colon() {
+    void toString_returns_productId_and_filename_separated_by_slash() {
         final FileReference fileReference = FileReference.create(PRODUCT_ID, FILENAME);
-        assertThat(fileReference.toString()).isEqualTo("test-product-id:test-filename");
+        assertThat(fileReference.toString()).isEqualTo("test-product-id/test-filename");
     }
 }
