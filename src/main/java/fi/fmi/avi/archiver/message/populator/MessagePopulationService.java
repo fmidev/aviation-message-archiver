@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.logging.FileProcessingStatistics;
 import fi.fmi.avi.archiver.logging.LoggingContext;
-import fi.fmi.avi.archiver.logging.ProcessingChainLogger;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
 
@@ -27,11 +26,11 @@ public class MessagePopulationService {
         this.messagePopulators = requireNonNull(messagePopulators, "messagePopulators");
     }
 
-    public List<PopulationResult> populateMessages(final List<InputAviationMessage> inputMessages, final ProcessingChainLogger logger) {
+    public List<PopulationResult> populateMessages(final List<InputAviationMessage> inputMessages, final LoggingContext loggingContext) {
         requireNonNull(inputMessages, "inputMessages");
+        requireNonNull(loggingContext, "loggingContext");
 
         final List<PopulationResult> populationResults = new ArrayList<>();
-        final LoggingContext loggingContext = logger.getContext();
         for (final InputAviationMessage inputMessage : inputMessages) {
             loggingContext.enterMessage(inputMessage.getMessageReference());
             final PopulationResult.Builder builder = PopulationResult.builder()//
@@ -43,11 +42,11 @@ public class MessagePopulationService {
             } catch (final MessageDiscardedException e) {
                 builder.setStatus(PopulationResult.Status.DISCARD);
                 LOGGER.info("Discarded message <{}>", loggingContext, e);
-                logger.collectContextStatistics(FileProcessingStatistics.Status.DISCARDED);
+                loggingContext.recordStatus(FileProcessingStatistics.Status.DISCARDED);
             } catch (final Exception e) {
                 builder.setStatus(PopulationResult.Status.FAIL);
                 LOGGER.error("Failed to populate message <{}>.", loggingContext, e);
-                logger.collectContextStatistics(FileProcessingStatistics.Status.FAILED);
+                loggingContext.recordStatus(FileProcessingStatistics.Status.FAILED);
             }
             populationResults.add(builder.build());
         }

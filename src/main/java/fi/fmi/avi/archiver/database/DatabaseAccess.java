@@ -73,27 +73,27 @@ public class DatabaseAccess {
      *
      * @param archiveAviationMessage
      *         aviation message to archive
-     * @param logCtx
+     * @param loggingContext
      *         logging context
      *
      * @return the generated id
      */
-    public Number insertAviationMessage(final ArchiveAviationMessage archiveAviationMessage, final Loggable logCtx) {
+    public Number insertAviationMessage(final ArchiveAviationMessage archiveAviationMessage, final Loggable loggingContext) {
         requireNonNull(archiveAviationMessage, "archiveAviationMessage");
-        requireNonNull(logCtx, "logCtx");
+        requireNonNull(loggingContext, "loggingContext");
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("station_id", archiveAviationMessage.getStationId()
-                .orElseThrow(() -> new IllegalArgumentException(String.format("Message <%s> is missing stationId.", logCtx))));
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Message <%s> is missing stationId.", loggingContext))));
         addCommonParameters(parameters, archiveAviationMessage);
         try {
             final Number id = retryTemplate.execute(context -> insertAviationMessage.executeAndReturnKey(parameters));
             if (!archiveAviationMessage.getIWXXMDetails().isEmpty()) {
-                insertIwxxmDetails(id, archiveAviationMessage.getIWXXMDetails(), logCtx);
+                insertIwxxmDetails(id, archiveAviationMessage.getIWXXMDetails(), loggingContext);
             }
-            LOGGER.debug("Inserted message <{}>.", logCtx);
+            LOGGER.debug("Inserted message <{}>.", loggingContext);
             return id;
         } catch (final RuntimeException e) {
-            LOGGER.error("Error while inserting message <{}>.", logCtx, e);
+            LOGGER.error("Error while inserting message <{}>.", loggingContext, e);
             throw e;
         }
     }
@@ -103,14 +103,14 @@ public class DatabaseAccess {
      *
      * @param archiveAviationMessage
      *         aviation message to archive in the rejected messages table
-     * @param logCtx
+     * @param loggingContext
      *         logging context
      *
      * @return the generated id
      */
-    public Number insertRejectedAviationMessage(final ArchiveAviationMessage archiveAviationMessage, final Loggable logCtx) {
+    public Number insertRejectedAviationMessage(final ArchiveAviationMessage archiveAviationMessage, final Loggable loggingContext) {
         requireNonNull(archiveAviationMessage, "archiveAviationMessage");
-        requireNonNull(logCtx, "logCtx");
+        requireNonNull(loggingContext, "loggingContext");
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("icao_code", archiveAviationMessage.getStationIcaoCode())
                 .addValue("reject_reason", archiveAviationMessage.getProcessingResult().getCode());
@@ -118,18 +118,18 @@ public class DatabaseAccess {
         try {
             final Number id = retryTemplate.execute(context -> insertRejectedAviationMessage.executeAndReturnKey(parameters));
             if (!archiveAviationMessage.getIWXXMDetails().isEmpty()) {
-                insertRejectedIwxxmDetails(id, archiveAviationMessage.getIWXXMDetails(), logCtx);
+                insertRejectedIwxxmDetails(id, archiveAviationMessage.getIWXXMDetails(), loggingContext);
             }
-            LOGGER.debug("Inserted rejected message <{}>; reject reason: {}({})", logCtx, archiveAviationMessage.getProcessingResult().getCode(),
+            LOGGER.debug("Inserted rejected message <{}>; reject reason: {}({})", loggingContext, archiveAviationMessage.getProcessingResult().getCode(),
                     archiveAviationMessage.getProcessingResult());
             return id;
         } catch (final RuntimeException e) {
-            LOGGER.error("Error while inserting rejected message <{}>.", logCtx, e);
+            LOGGER.error("Error while inserting rejected message <{}>.", loggingContext, e);
             throw e;
         }
     }
 
-    private int insertIwxxmDetails(final Number messageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails, final Loggable logCtx) {
+    private int insertIwxxmDetails(final Number messageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails, final Loggable loggingContext) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("message_id", messageId)
                 .addValue("collect_identifier", iwxxmDetails.getCollectIdentifier().orElse(null))
@@ -137,12 +137,13 @@ public class DatabaseAccess {
         try {
             return retryTemplate.execute(context -> insertIwxxmDetails.execute(parameters));
         } catch (final RuntimeException e) {
-            LOGGER.error("Error while inserting IWXXM details for message id {} <{}>.", messageId, logCtx, e);
+            LOGGER.error("Error while inserting IWXXM details for message id {} <{}>.", messageId, loggingContext, e);
             throw e;
         }
     }
 
-    private int insertRejectedIwxxmDetails(final Number rejectedMessageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails, final Loggable logCtx) {
+    private int insertRejectedIwxxmDetails(final Number rejectedMessageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails,
+            final Loggable loggingContext) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("rejected_message_id", rejectedMessageId)
                 .addValue("collect_identifier", iwxxmDetails.getCollectIdentifier().orElse(null))
@@ -150,7 +151,7 @@ public class DatabaseAccess {
         try {
             return retryTemplate.execute(context -> insertRejectedIwxxmDetails.execute(parameters));
         } catch (final RuntimeException e) {
-            LOGGER.error("Error while inserting IWXXM details failed for rejected message id {} <{}>.", rejectedMessageId, logCtx, e);
+            LOGGER.error("Error while inserting IWXXM details failed for rejected message id {} <{}>.", rejectedMessageId, loggingContext, e);
             throw e;
         }
     }

@@ -13,7 +13,6 @@ import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.message.MessageReference;
 
-// TODO: ProcessingChainLogger -> ProcessingChainLogging with logXXX methods inlined
 // TODO: SynchronizedLoggingContext & SynchronizedFileProcessingStatistics
 // TODO: Tests
 // TODO: Document
@@ -24,6 +23,7 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
     private static final int FILENAME_MAX_LENGTH = 256;
 
     private final FileProcessingIdentifier fileProcessingIdentifier;
+    private final FileProcessingStatistics fileProcessingStatistics;
     private final List<BulletinLogReference> bulletinLogReferences = new ArrayList<>();
     private final List<List<MessageLogReference>> bulletinMessageLogReferences = new ArrayList<>();
 
@@ -33,8 +33,9 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
     private int bulletinIndex = -1;
     private int messageIndex = -1;
 
-    public LoggingContextImpl(final FileProcessingIdentifier fileProcessingIdentifier) {
+    public LoggingContextImpl(final FileProcessingIdentifier fileProcessingIdentifier, final FileProcessingStatistics fileProcessingStatistics) {
         this.fileProcessingIdentifier = requireNonNull(fileProcessingIdentifier, "fileProcessingIdentifier");
+        this.fileProcessingStatistics = requireNonNull(fileProcessingStatistics, "fileProcessingStatistics");
     }
 
     private static <E> void ensureIndex(final List<E> list, final int expectedIndex, final IntFunction<E> defaultElement) {
@@ -179,5 +180,10 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
     @Override
     public int getMessageIndex() {
         return messageIndex;
+    }
+
+    @Override
+    public FileProcessingStatistics getStatistics() {
+        return fileProcessingStatistics;
     }
 }

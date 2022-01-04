@@ -21,8 +21,8 @@ import org.springframework.messaging.support.MessageBuilder;
 import fi.fmi.avi.archiver.config.model.PopulatorInstanceSpec;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.logging.ProcessingChainLogger;
-import fi.fmi.avi.archiver.logging.SpringProcessingChainLoggerHelper;
+import fi.fmi.avi.archiver.logging.LoggingContext;
+import fi.fmi.avi.archiver.logging.SpringLoggingContextHelper;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.MessagePopulationService;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
@@ -80,19 +80,19 @@ public class MessagePopulatorConfig {
             requireNonNull(inputMessages, "inputMessages");
             requireNonNull(headers, "headers");
 
-            final ProcessingChainLogger logger = SpringProcessingChainLoggerHelper.getLogger(headers);
-            final List<MessagePopulationService.PopulationResult> populationResults = messagePopulationService.populateMessages(inputMessages, logger);
+            final LoggingContext loggingContext = SpringLoggingContextHelper.getLoggingContext(headers);
+            final List<MessagePopulationService.PopulationResult> populationResults = messagePopulationService.populateMessages(inputMessages, loggingContext);
 
             final List<ArchiveAviationMessage> populatedMessages = new ArrayList<>();
             boolean failures = false;
             for (final MessagePopulationService.PopulationResult populationResult : populationResults) {
-                logger.getContext().enterMessage(populationResult.getInputMessage().getMessageReference());
+                loggingContext.enterMessage(populationResult.getInputMessage().getMessageReference());
                 switch (populationResult.getStatus()) {
                     case STORE:
                         final ArchiveAviationMessage archiveMessage = populationResult.getArchiveMessage().orElse(null);
                         if (archiveMessage == null) {
                             LOGGER.error("PopulationResult of status {} is missing message in <{}>.", MessagePopulationService.PopulationResult.Status.STORE,
-                                    logger.getContext());
+                                    loggingContext);
                         } else {
                             populatedMessages.add(archiveMessage);
                         }
@@ -103,10 +103,10 @@ public class MessagePopulatorConfig {
                         failures = true;
                         break;
                     default:
-                        LOGGER.error("Unknown PopulationResult status '{}' in <{}>.", populationResult.getStatus(), logger.getContext());
+                        LOGGER.error("Unknown PopulationResult status '{}' in <{}>.", populationResult.getStatus(), loggingContext);
                 }
             }
-            logger.getContext().leaveBulletin();
+            loggingContext.leaveBulletin();
 
             return MessageBuilder.withPayload(Collections.unmodifiableList(populatedMessages))//
                     .copyHeaders(headers)//

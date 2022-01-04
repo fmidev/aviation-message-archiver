@@ -89,4 +89,14 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     public int getMessageIndex() {
         return -1;
     }
+
+    @Override
+    public FileProcessingStatistics getStatistics() {
+        return NoOpFileProcessingStatistics.getInstance();
+    }
+
+    @Override
+    public void recordStatus(final FileProcessingStatistics.Status status) {
+        requireNonNull(status, "status");
+    }
 }

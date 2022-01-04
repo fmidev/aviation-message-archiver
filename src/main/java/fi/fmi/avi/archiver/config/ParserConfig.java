@@ -14,8 +14,8 @@ import org.springframework.messaging.MessageHeaders;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileParser;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.logging.ProcessingChainLogger;
-import fi.fmi.avi.archiver.logging.SpringProcessingChainLoggerHelper;
+import fi.fmi.avi.archiver.logging.LoggingContext;
+import fi.fmi.avi.archiver.logging.SpringLoggingContextHelper;
 import fi.fmi.avi.converter.AviMessageConverter;
 
 @Configuration
@@ -40,8 +40,8 @@ public class ParserConfig {
 
         public Message<List<InputAviationMessage>> parse(final String content, final MessageHeaders headers) {
             final FileMetadata fileMetadata = requireNonNull(headers.get(FILE_METADATA, FileMetadata.class), "fileMetadata");
-            final ProcessingChainLogger logger = SpringProcessingChainLoggerHelper.getLogger(headers);
-            final FileParser.FileParseResult result = fileParser.parse(content, fileMetadata, logger);
+            final LoggingContext loggingContext = SpringLoggingContextHelper.getLoggingContext(headers);
+            final FileParser.FileParseResult result = fileParser.parse(content, fileMetadata, loggingContext);
             return MessageBuilder.withPayload(result.getInputAviationMessages())
                     .copyHeaders(headers)
                     .setHeader(IntegrationFlowConfig.PROCESSING_ERRORS, IntegrationFlowConfig.hasProcessingErrors(headers) || result.getParseErrors())
