@@ -13,7 +13,6 @@ import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.message.MessageReference;
 
-// TODO: SynchronizedLoggingContext & SynchronizedFileProcessingStatistics
 // TODO: Tests
 // TODO: Document
 // TODO: Cleanup

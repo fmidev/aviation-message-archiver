@@ -11,6 +11,11 @@ import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.message.MessageReference;
 
 public interface LoggingContext extends AppendingLoggable {
+    @SuppressWarnings("ClassReferencesSubclass")
+    static LoggingContext synchronize(final LoggingContext loggingContext) {
+        return loggingContext instanceof SynchronizedLoggingContext ? loggingContext : new SynchronizedLoggingContext(loggingContext);
+    }
+
     void enterFile(@Nullable FileReference fileReference);
 
     default void leaveFile() {
