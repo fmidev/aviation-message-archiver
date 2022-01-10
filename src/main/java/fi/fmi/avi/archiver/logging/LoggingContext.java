@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.logging;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
@@ -34,6 +35,8 @@ public interface LoggingContext extends AppendingLoggable {
 
     Optional<BulletinLogReference> getBulletinLogReference();
 
+    List<BulletinLogReference> getAllBulletinLogReferences();
+
     default void modifyBulletinReference(final UnaryOperator<BulletinLogReference> operator) {
         getBulletinLogReference()//
                 .map(operator)//
@@ -53,6 +56,8 @@ public interface LoggingContext extends AppendingLoggable {
     }
 
     Optional<MessageLogReference> getMessageLogReference();
+
+    List<MessageLogReference> getBulletinMessageLogReferences();
 
     default void modifyMessageReference(final UnaryOperator<MessageLogReference> operator) {
         getMessageLogReference()//

@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.logging;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
@@ -82,6 +83,13 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
+    public List<BulletinLogReference> getAllBulletinLogReferences() {
+        synchronized (mutex) {
+            return delegate.getAllBulletinLogReferences();
+        }
+    }
+
+    @Override
     public void modifyBulletinReference(final UnaryOperator<BulletinLogReference> operator) {
         synchronized (mutex) {
             delegate.modifyBulletinReference(operator);
@@ -120,6 +128,13 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     public Optional<MessageLogReference> getMessageLogReference() {
         synchronized (mutex) {
             return delegate.getMessageLogReference();
+        }
+    }
+
+    @Override
+    public List<MessageLogReference> getBulletinMessageLogReferences() {
+        synchronized (mutex) {
+            return delegate.getBulletinMessageLogReferences();
         }
     }
 

@@ -2,6 +2,8 @@ package fi.fmi.avi.archiver.logging;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
@@ -53,6 +55,11 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
+    public List<BulletinLogReference> getAllBulletinLogReferences() {
+        return Collections.emptyList();
+    }
+
+    @Override
     public void modifyBulletinReference(final UnaryOperator<BulletinLogReference> operator) {
         requireNonNull(operator, "operator");
     }
@@ -78,6 +85,11 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     @Override
     public Optional<MessageLogReference> getMessageLogReference() {
         return Optional.empty();
+    }
+
+    @Override
+    public List<MessageLogReference> getBulletinMessageLogReferences() {
+        return Collections.emptyList();
     }
 
     @Override

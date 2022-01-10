@@ -3,6 +3,7 @@ package fi.fmi.avi.archiver.logging;
 import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.IntFunction;
@@ -130,6 +131,11 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
     }
 
     @Override
+    public List<BulletinLogReference> getAllBulletinLogReferences() {
+        return Collections.unmodifiableList(bulletinLogReferences);
+    }
+
+    @Override
     public int getBulletinIndex() {
         return bulletinIndex;
     }
@@ -174,6 +180,13 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
     @Override
     public Optional<MessageLogReference> getMessageLogReference() {
         return bulletinIndex < 0 || messageIndex < 0 ? Optional.empty() : Optional.of(bulletinMessageLogReferences.get(bulletinIndex).get(messageIndex));
+    }
+
+    @Override
+    public List<MessageLogReference> getBulletinMessageLogReferences() {
+        return bulletinIndex < 0 || bulletinIndex >= bulletinMessageLogReferences.size()
+                ? Collections.emptyList()
+                : Collections.unmodifiableList(bulletinMessageLogReferences.get(bulletinIndex));
     }
 
     @Override

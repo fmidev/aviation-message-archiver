@@ -62,6 +62,7 @@ import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.logging.BulletinLogReference;
 import fi.fmi.avi.archiver.logging.FileProcessingStatistics;
 import fi.fmi.avi.archiver.logging.FileProcessingStatisticsImpl;
 import fi.fmi.avi.archiver.logging.LoggingContext;
@@ -96,6 +97,7 @@ public class IntegrationFlowConfig {
                 .channel(parserChannel)
                 .<String> filter(content -> content != null && !content.isEmpty(), discards -> discards.discardChannel(failChannel))
                 .handle(fileParserIntegrationService::parse)
+                .handle(withLoggingContext(this::logFileContentOverview))
                 .<List<InputAviationMessage>> filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))
                 .channel(populatorChannel)
                 .handle(messagePopulationIntegrationService::populateMessages)
@@ -108,18 +110,33 @@ public class IntegrationFlowConfig {
                 .get();
     }
 
+    private void logFileContentOverview(final LoggingContext loggingContext) {
+        if (LOGGER.isInfoEnabled()) {
+            final List<BulletinLogReference> bulletinLogReferences = loggingContext.getAllBulletinLogReferences();
+            if (bulletinLogReferences.size() == 1 && !bulletinLogReferences.get(0).getBulletinHeading().isPresent()) {
+                loggingContext.enterBulletin(0);
+                LOGGER.info("Messages in <{}>: {}", loggingContext, loggingContext.getBulletinMessageLogReferences());
+                loggingContext.leaveBulletin();
+            } else {
+                LOGGER.info("Bulletins in <{}>: {}", loggingContext, bulletinLogReferences);
+            }
+        }
+    }
+
     @Bean
     IntegrationFlow finishFlow(final ProcessingState processingState, final MessageChannel finishChannel) {
         return IntegrationFlows.from(finishChannel)//
                 .handle(ServiceActivators.peekHeader(FileMetadata.class, FILE_METADATA, processingState::finish))//
-                .handle((payload, headers) -> {
-                    final LoggingContext loggingContext = getLoggingContext(headers);
-                    loggingContext.leaveBulletin();
-                    LOGGER.info("Finish processing <{}> {}. Statistics: {}", loggingContext, hasProcessingErrors(headers) ? "with errors" : "successfully",
-                            loggingContext.getStatistics());
-                    return payload;
-                })//
+                .handle(this::logFinish)//
                 .nullChannel();
+    }
+
+    private Object logFinish(final Object payload, final MessageHeaders headers) {
+        final LoggingContext loggingContext = getLoggingContext(headers);
+        loggingContext.leaveBulletin();
+        LOGGER.info("Finish processing <{}> {}. Statistics: {}", loggingContext, hasProcessingErrors(headers) ? "with errors" : "successfully",
+                loggingContext.getStatistics());
+        return payload;
     }
 
     @Bean
