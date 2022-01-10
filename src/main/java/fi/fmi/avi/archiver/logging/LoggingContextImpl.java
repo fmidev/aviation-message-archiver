@@ -54,18 +54,18 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
                     .append('/')//
                     .append(LoggableUtils.sanitize(fileReference.getFilename(), FILENAME_MAX_LENGTH));
             if (bulletinIndex >= 0) {
-                builder.append(SEPARATOR);
-                bulletinLogReferences.get(bulletinIndex).appendTo(builder);
+                builder.append(SEPARATOR)//
+                        .append(bulletinLogReferences.get(bulletinIndex));
                 if (messageIndex >= 0) {
-                    builder.append(SEPARATOR);
-                    bulletinMessageLogReferences.get(bulletinIndex).get(messageIndex).appendTo(builder);
+                    builder.append(SEPARATOR)//
+                            .append(bulletinMessageLogReferences.get(bulletinIndex).get(messageIndex));
                 }
             }
         }
     }
 
     @Override
-    protected int estimateLogStringLength() {
+    public int estimateLogStringLength() {
         return fileProcessingIdentifier.toString().length() //
                 + (fileReference == null
                 ? 0

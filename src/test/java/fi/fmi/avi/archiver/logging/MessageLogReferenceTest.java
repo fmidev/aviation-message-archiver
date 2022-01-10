@@ -17,15 +17,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 
 final class MessageLogReferenceTest {
     @Test
-    void satisfies_AppendingLoggable_contract() {
-        final MessageLogReference loggable = builder()//
-                .setMessageIndex(47)//
-                .setMessageContent(LoggableTests.createString(37))//
-                .build();
-        LoggableTests.assertAppendingLoggableContract(loggable);
-    }
-
-    @Test
     void messageIndex_below_zero_is_forbidden() {
         assertThatIllegalArgumentException().isThrownBy(() -> builder().setMessageIndex(-1));
     }

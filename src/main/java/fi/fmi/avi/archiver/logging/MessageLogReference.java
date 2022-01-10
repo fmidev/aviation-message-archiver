@@ -9,7 +9,7 @@ import org.inferred.freebuilder.FreeBuilder;
 import com.google.common.base.Preconditions;
 
 @FreeBuilder
-public abstract class MessageLogReference extends AbstractAppendingLoggable {
+public abstract class MessageLogReference extends AbstractMemoizingLoggable {
     private static final Pattern XML_EXCERPT_PATTERN = Pattern.compile("^\\s*<[^>]+[:\\s]id\\s*=\\s*\"([^\"]+)\"");
     private static final int MESSAGE_INDEX_LENGTH_ESTIMATE = 4;
     private static final int EXCERPT_MAX_LENGTH = 42;
@@ -35,13 +35,13 @@ public abstract class MessageLogReference extends AbstractAppendingLoggable {
     }
 
     @Override
-    public void appendTo(final StringBuilder builder) {
+    protected void appendOnceTo(final StringBuilder builder) {
         builder.append(getMessageIndex() + 1);
-        getMessageExcerpt().ifPresent(messageExcerpt -> builder.append('(').append(getMessageExcerpt().orElse(null)).append(')'));
+        getMessageExcerpt().ifPresent(messageExcerpt -> builder.append('(').append(messageExcerpt).append(')'));
     }
 
     @Override
-    protected int estimateLogStringLength() {
+    public int estimateLogStringLength() {
         return MESSAGE_INDEX_LENGTH_ESTIMATE + EXCERPT_MAX_LENGTH + 2;
     }
 

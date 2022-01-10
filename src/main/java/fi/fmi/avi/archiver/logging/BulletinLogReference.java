@@ -7,7 +7,7 @@ import org.inferred.freebuilder.FreeBuilder;
 import com.google.common.base.Preconditions;
 
 @FreeBuilder
-public abstract class BulletinLogReference extends AbstractAppendingLoggable {
+public abstract class BulletinLogReference extends AbstractMemoizingLoggable {
     private static final int HEADING_MAX_LENGTH = 44;
     private static final int BULLETIN_INDEX_LENGTH_ESTIMATE = 3;
     private static final int CHAR_INDEX_LENGTH_ESTIMATE = 7;
@@ -23,7 +23,7 @@ public abstract class BulletinLogReference extends AbstractAppendingLoggable {
     public abstract int getCharIndex();
 
     @Override
-    public void appendTo(final StringBuilder builder) {
+    protected void appendOnceTo(final StringBuilder builder) {
         builder.append(getBulletinIndex() + 1);
         getBulletinHeading().ifPresent(bulletinHeading -> builder.append('(').append(LoggableUtils.sanitize(bulletinHeading, HEADING_MAX_LENGTH)).append(')'));
         if (getCharIndex() >= 0) {
@@ -32,7 +32,7 @@ public abstract class BulletinLogReference extends AbstractAppendingLoggable {
     }
 
     @Override
-    protected int estimateLogStringLength() {
+    public int estimateLogStringLength() {
         return BULLETIN_INDEX_LENGTH_ESTIMATE + 2 + HEADING_MAX_LENGTH + CHAR_INDEX_LENGTH_ESTIMATE;
     }
 

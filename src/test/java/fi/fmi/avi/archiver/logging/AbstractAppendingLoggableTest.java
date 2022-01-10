@@ -17,7 +17,7 @@ final class AbstractAppendingLoggableTest {
         }
 
         @Override
-        protected int estimateLogStringLength() {
+        public int estimateLogStringLength() {
             return logString.length();
         }
 

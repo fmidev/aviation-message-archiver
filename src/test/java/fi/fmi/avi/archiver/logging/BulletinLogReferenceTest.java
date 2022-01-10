@@ -43,16 +43,6 @@ final class BulletinLogReferenceTest {
     }
 
     @Test
-    void satisfies_AppendingLoggable_contract() {
-        final BulletinLogReference loggable = BulletinLogReference.builder()//
-                .setBulletinIndex(47)//
-                .setBulletinHeading(LoggableTests.createString(37))//
-                .setCharIndex(2022)//
-                .build();
-        LoggableTests.assertAppendingLoggableContract(loggable);
-    }
-
-    @Test
     void bulletinIndex_below_zero_is_forbidden() {
         assertThatIllegalArgumentException().isThrownBy(() -> builder().setBulletinIndex(-1));
     }

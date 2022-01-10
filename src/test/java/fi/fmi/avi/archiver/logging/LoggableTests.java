@@ -18,11 +18,11 @@ public final class LoggableTests {
                 .isEqualTo(builder.toString());
     }
 
-    public static void assertDecentLengthEstimate(final AbstractAppendingLoggable loggable) {
+    public static void assertDecentLengthEstimate(final Loggable loggable) {
         assertDecentLengthEstimate(loggable, length -> (int) (length * 1.5));
     }
 
-    public static void assertDecentLengthEstimate(final AbstractAppendingLoggable loggable, final IntUnaryOperator maxLength) {
+    public static void assertDecentLengthEstimate(final Loggable loggable, final IntUnaryOperator maxLength) {
         final int result = loggable.estimateLogStringLength();
         final int actual = loggable.toString().length();
 

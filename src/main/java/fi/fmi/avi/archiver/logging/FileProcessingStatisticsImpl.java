@@ -107,7 +107,7 @@ public final class FileProcessingStatisticsImpl extends AbstractAppendingLoggabl
     }
 
     @Override
-    protected int estimateLogStringLength() {
+    public int estimateLogStringLength() {
         return (Statistics.STRING_LENGTH_ESTIMATE + 4) * STATISTICS_CATEGORIES_COUNT;
     }
 
@@ -143,7 +143,7 @@ public final class FileProcessingStatisticsImpl extends AbstractAppendingLoggabl
         }
 
         @Override
-        protected int estimateLogStringLength() {
+        public int estimateLogStringLength() {
             return STRING_LENGTH_ESTIMATE;
         }
     }
