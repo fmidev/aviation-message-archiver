@@ -39,13 +39,6 @@ public final class SynchronizedFileProcessingStatistics implements FileProcessin
     }
 
     @Override
-    public String logString() {
-        synchronized (mutex) {
-            return delegate.logString();
-        }
-    }
-
-    @Override
     public String toString() {
         synchronized (mutex) {
             return delegate.toString();

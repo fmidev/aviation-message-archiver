@@ -13,9 +13,9 @@ final class AbstractNoOpLoggableTest {
     }
 
     @Test
-    void logString_returns_default_String_when_not_overridden() {
+    void toString_returns_default_String_when_not_overridden() {
         final AbstractNoOpLoggable loggable = new DefaultStringNoOpLoggable();
-        assertThat(loggable.logString()).isEqualTo("[omitted]");
+        assertThat(loggable.toString()).isEqualTo("[omitted]");
         LoggableTests.assertAppendingLoggableContract(loggable);
     }
 
@@ -30,7 +30,7 @@ final class AbstractNoOpLoggableTest {
         }
 
         @Override
-        public String logString() {
+        public String toString() {
             return logString;
         }
     }

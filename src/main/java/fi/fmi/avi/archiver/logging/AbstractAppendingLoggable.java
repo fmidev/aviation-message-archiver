@@ -4,7 +4,7 @@ public abstract class AbstractAppendingLoggable extends AbstractLoggable impleme
     protected abstract int estimateLogStringLength();
 
     @Override
-    public final String logString() {
+    public final String toString() {
         final StringBuilder builder = new StringBuilder(estimateLogStringLength());
         appendTo(builder);
         return builder.toString();

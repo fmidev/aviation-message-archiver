@@ -10,19 +10,11 @@ public final class LoggableTests {
         throw new AssertionError();
     }
 
-    public static void assertLoggableContract(final Loggable loggable) {
-        assertThat(loggable.toString())//
-                .as("toString() equal to logString()")//
-                .isEqualTo(loggable.logString());
-    }
-
     public static void assertAppendingLoggableContract(final AppendingLoggable loggable) {
         final StringBuilder builder = new StringBuilder();
         loggable.appendTo(builder);
         assertThat(loggable.toString())//
-                .as("toString() equal to logString()")//
-                .isEqualTo(loggable.logString())//
-                .as("toString() equal to appendTo()")//
+                .as("toString() equal to appendTo() result")//
                 .isEqualTo(builder.toString());
     }
 

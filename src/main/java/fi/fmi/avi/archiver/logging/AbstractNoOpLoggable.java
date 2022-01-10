@@ -6,11 +6,11 @@ public class AbstractNoOpLoggable extends AbstractLoggable implements AppendingL
     @Override
     public final void appendTo(final StringBuilder builder) {
         requireNonNull(builder, "builder");
-        builder.append(logString());
+        builder.append(this);
     }
 
     @Override
-    public String logString() {
+    public String toString() {
         return "[omitted]";
     }
 }

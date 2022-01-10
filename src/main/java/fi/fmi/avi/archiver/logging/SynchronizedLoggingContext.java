@@ -26,13 +26,6 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public String logString() {
-        synchronized (mutex) {
-            return delegate.logString();
-        }
-    }
-
-    @Override
     public String toString() {
         synchronized (mutex) {
             return delegate.toString();
