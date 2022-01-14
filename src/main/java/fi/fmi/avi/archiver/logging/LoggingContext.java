@@ -13,7 +13,7 @@ import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
 public interface LoggingContext extends AppendingLoggable {
     @SuppressWarnings("ClassReferencesSubclass")
-    static LoggingContext synchronize(final LoggingContext loggingContext) {
+    static LoggingContext asSynchronized(final LoggingContext loggingContext) {
         return loggingContext instanceof SynchronizedLoggingContext ? loggingContext : new SynchronizedLoggingContext(loggingContext);
     }
 

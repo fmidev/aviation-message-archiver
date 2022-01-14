@@ -13,7 +13,7 @@ public interface FileProcessingStatistics extends AppendingLoggable {
     Status INITIAL_STATUS = Status.NOTHING;
 
     @SuppressWarnings("ClassReferencesSubclass")
-    static FileProcessingStatistics synchronize(final FileProcessingStatistics fileProcessingStatistics) {
+    static FileProcessingStatistics asSynchronized(final FileProcessingStatistics fileProcessingStatistics) {
         return fileProcessingStatistics instanceof SynchronizedFileProcessingStatistics
                 ? fileProcessingStatistics
                 : new SynchronizedFileProcessingStatistics(fileProcessingStatistics);

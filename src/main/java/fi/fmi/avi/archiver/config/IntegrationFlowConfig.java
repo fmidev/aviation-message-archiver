@@ -391,8 +391,8 @@ public class IntegrationFlowConfig {
         }
 
         private LoggingContext createLoggingContext(final FileProcessingIdentifier fileProcessingIdentifier) {
-            return LoggingContext.synchronize(
-                    new LoggingContextImpl(fileProcessingIdentifier, FileProcessingStatistics.synchronize(new FileProcessingStatisticsImpl())));
+            return LoggingContext.asSynchronized(
+                    new LoggingContextImpl(fileProcessingIdentifier, FileProcessingStatistics.asSynchronized(new FileProcessingStatisticsImpl())));
         }
 
         @PreDestroy
