@@ -24,7 +24,7 @@ public class DatabaseService {
         RuntimeException databaseInsertionException = null;
         for (final ArchiveAviationMessage message : messages) {
             try {
-                loggingContext.enterMessage(message.getMessageReference());
+                loggingContext.enterMessage(message.getMessagePositionInFile());
                 if (message.getProcessingResult() == ProcessingResult.OK) {
                     databaseAccess.insertAviationMessage(message, loggingContext);
                     loggingContext.recordStatus(FileProcessingStatistics.Status.ARCHIVED);

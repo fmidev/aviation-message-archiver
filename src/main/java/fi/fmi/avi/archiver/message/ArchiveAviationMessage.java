@@ -19,6 +19,8 @@ public abstract class ArchiveAviationMessage {
         return new Builder();
     }
 
+    public abstract MessagePositionInFile getMessagePositionInFile();
+
     public abstract ProcessingResult getProcessingResult();
 
     public abstract int getRoute();
@@ -47,14 +49,12 @@ public abstract class ArchiveAviationMessage {
 
     public abstract String getMessage();
 
-    public abstract MessageReference getMessageReference();
-
     public abstract Builder toBuilder();
 
     public static class Builder extends ArchiveAviationMessage_Builder {
         Builder() {
             setProcessingResult(ProcessingResult.OK);
-            setMessageReference(MessageReference.getInitial());
+            setMessagePositionInFile(MessagePositionInFile.getInitial());
         }
     }
 }

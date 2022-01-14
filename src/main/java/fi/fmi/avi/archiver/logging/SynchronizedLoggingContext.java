@@ -9,7 +9,7 @@ import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
 import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.message.MessageReference;
+import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
 public final class SynchronizedLoggingContext implements LoggingContext {
     private final Object mutex = new Object();
@@ -125,9 +125,9 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public void enterMessage(final MessageReference messageReference) {
+    public void enterMessage(final MessagePositionInFile messagePositionInFile) {
         synchronized (mutex) {
-            delegate.enterMessage(messageReference);
+            delegate.enterMessage(messagePositionInFile);
         }
     }
 

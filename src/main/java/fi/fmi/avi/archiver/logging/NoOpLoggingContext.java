@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.message.MessageReference;
+import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
 public final class NoOpLoggingContext extends AbstractNoOpLoggable implements LoggingContext {
     private static final NoOpLoggingContext INSTANCE = new NoOpLoggingContext();
@@ -78,8 +78,8 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public void enterMessage(final MessageReference messageReference) {
-        requireNonNull(messageReference, "messageReference");
+    public void enterMessage(final MessagePositionInFile messagePositionInFile) {
+        requireNonNull(messagePositionInFile, "messagePositionInFile");
     }
 
     @Override

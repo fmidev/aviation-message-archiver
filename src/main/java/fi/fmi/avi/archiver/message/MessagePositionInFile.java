@@ -2,24 +2,24 @@ package fi.fmi.avi.archiver.message;
 
 import com.google.common.base.Preconditions;
 
-public final class MessageReference {
-    private static final MessageReference INITIAL = new MessageReference(0, 0);
+public final class MessagePositionInFile {
+    private static final MessagePositionInFile INITIAL = new MessagePositionInFile(0, 0);
 
     private final int bulletinIndex;
     private final int messageIndex;
 
-    private MessageReference(final int bulletinIndex, final int messageIndex) {
+    private MessagePositionInFile(final int bulletinIndex, final int messageIndex) {
         Preconditions.checkArgument(bulletinIndex >= 0, "bulletinIndex must be non-negative");
         Preconditions.checkArgument(messageIndex >= 0, "messageIndex must be non-negative");
         this.bulletinIndex = bulletinIndex;
         this.messageIndex = messageIndex;
     }
 
-    public static MessageReference getInstance(final int bulletinIndex, final int messageIndex) {
-        return bulletinIndex == 0 && messageIndex == 0 ? INITIAL : new MessageReference(bulletinIndex, messageIndex);
+    public static MessagePositionInFile getInstance(final int bulletinIndex, final int messageIndex) {
+        return bulletinIndex == 0 && messageIndex == 0 ? INITIAL : new MessagePositionInFile(bulletinIndex, messageIndex);
     }
 
-    public static MessageReference getInitial() {
+    public static MessagePositionInFile getInitial() {
         return INITIAL;
     }
 
@@ -45,8 +45,8 @@ public final class MessageReference {
     public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
-        } else if (obj instanceof MessageReference) {
-            final MessageReference other = (MessageReference) obj;
+        } else if (obj instanceof MessagePositionInFile) {
+            final MessagePositionInFile other = (MessagePositionInFile) obj;
             return this.bulletinIndex == other.bulletinIndex //
                     && this.messageIndex == other.messageIndex;
         } else {

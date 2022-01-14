@@ -32,7 +32,7 @@ public class MessagePopulationService {
 
         final List<PopulationResult> populationResults = new ArrayList<>();
         for (final InputAviationMessage inputMessage : inputMessages) {
-            loggingContext.enterMessage(inputMessage.getMessageReference());
+            loggingContext.enterMessage(inputMessage.getMessagePositionInFile());
             final PopulationResult.Builder builder = PopulationResult.builder()//
                     .setInputMessage(inputMessage);
             try {
@@ -56,7 +56,7 @@ public class MessagePopulationService {
 
     private ArchiveAviationMessage populateMessage(final InputAviationMessage inputAviationMessage) throws MessageDiscardedException {
         final ArchiveAviationMessage.Builder messageBuilder = ArchiveAviationMessage.builder()//
-                .setMessageReference(inputAviationMessage.getMessageReference());
+                .setMessagePositionInFile(inputAviationMessage.getMessagePositionInFile());
         for (final MessagePopulator messagePopulator : messagePopulators) {
             messagePopulator.populate(inputAviationMessage, messageBuilder);
         }

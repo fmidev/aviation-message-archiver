@@ -23,7 +23,7 @@ import org.mockito.MockitoAnnotations;
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.logging.FileProcessingStatistics.Status;
-import fi.fmi.avi.archiver.message.MessageReference;
+import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
 class LoggingContextImplTest {
     private static final FileReference FILE_REFERENCE = FileReference.create("productId", "test_file.txt");
@@ -493,8 +493,8 @@ class LoggingContextImplTest {
     }
 
     @Test
-    void enterMessage_MessageReference_enters_bulletin_and_message() {
-        loggingContext.enterMessage(MessageReference.getInstance(2, 4));
+    void enterMessage_MessagePositionInFile_enters_bulletin_and_message() {
+        loggingContext.enterMessage(MessagePositionInFile.getInstance(2, 4));
 
         assertState(null, bulletinLogReference(2), messageLogReference(4));
     }

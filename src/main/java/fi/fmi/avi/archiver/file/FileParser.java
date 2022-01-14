@@ -31,7 +31,7 @@ import fi.fmi.avi.archiver.logging.BulletinLogReference;
 import fi.fmi.avi.archiver.logging.FileProcessingStatistics;
 import fi.fmi.avi.archiver.logging.LoggingContext;
 import fi.fmi.avi.archiver.logging.MessageLogReference;
-import fi.fmi.avi.archiver.message.MessageReference;
+import fi.fmi.avi.archiver.message.MessagePositionInFile;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.converter.ConversionHints;
 import fi.fmi.avi.converter.ConversionResult;
@@ -255,7 +255,7 @@ public class FileParser {
                     .build());
             resultBuilder.addInputAviationMessages(InputAviationMessage.builder()//
                     .mergeFrom(inputBuilder)//
-                    .setMessageReference(MessageReference.getInstance(bulletinIndex, messageIndex))//
+                    .setMessagePositionInFile(MessagePositionInFile.getInstance(bulletinIndex, messageIndex))//
                     .setMessage(message)//
                     .build());
             loggingContext.leaveMessage();

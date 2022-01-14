@@ -2,7 +2,7 @@ package fi.fmi.avi.archiver.file;
 
 import org.inferred.freebuilder.FreeBuilder;
 
-import fi.fmi.avi.archiver.message.MessageReference;
+import fi.fmi.avi.archiver.message.MessagePositionInFile;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
 /**
@@ -24,16 +24,15 @@ public abstract class InputAviationMessage {
 
     public abstract FileMetadata getFileMetadata();
 
-    public abstract GenericAviationWeatherMessage getMessage();
+    public abstract MessagePositionInFile getMessagePositionInFile();
 
-    public abstract MessageReference getMessageReference();
+    public abstract GenericAviationWeatherMessage getMessage();
 
     public abstract Builder toBuilder();
 
     public static class Builder extends InputAviationMessage_Builder {
         Builder() {
-            setMessageReference(MessageReference.getInitial());
+            setMessagePositionInFile(MessagePositionInFile.getInitial());
         }
     }
-
 }

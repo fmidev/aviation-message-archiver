@@ -9,7 +9,7 @@ import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
 import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.message.MessageReference;
+import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
 public interface LoggingContext extends AppendingLoggable {
     @SuppressWarnings("ClassReferencesSubclass")
@@ -51,10 +51,10 @@ public interface LoggingContext extends AppendingLoggable {
 
     void enterMessage(int index);
 
-    default void enterMessage(final MessageReference messageReference) {
-        requireNonNull(messageReference, "messageReference");
-        enterBulletin(messageReference.getBulletinIndex());
-        enterMessage(messageReference.getMessageIndex());
+    default void enterMessage(final MessagePositionInFile messagePositionInFile) {
+        requireNonNull(messagePositionInFile, "messagePositionInFile");
+        enterBulletin(messagePositionInFile.getBulletinIndex());
+        enterMessage(messagePositionInFile.getMessageIndex());
     }
 
     default void leaveMessage() {
