@@ -545,14 +545,14 @@ class LoggingContextImplTest {
     }
 
     @Test
-    void modifyMessageReference_does_nothing_when_missing() {
+    void modifyMessageLogReference_does_nothing_when_missing() {
         loggingContext.modifyMessageLogReference(ref -> ref.toBuilder().setMessageContent("MODIFIED CONTENT").build());
 
         assertEmptyState();
     }
 
     @Test
-    void modifyMessageReference_modifies_current_MessageLogReference_when_exists() {
+    void modifyMessageLogReference_modifies_current_MessageLogReference_when_exists() {
         final MessageLogReference modifiedReference = messageLogReference(1).toBuilder().setMessageContent("MODIFIED CONTENT").build();
         loggingContext.enterMessage(1);
 
@@ -562,7 +562,7 @@ class LoggingContextImplTest {
     }
 
     @Test
-    void modifyMessageReference_handles_change_of_messageIndex() {
+    void modifyMessageLogReference_handles_change_of_messageIndex() {
         final BulletinLogReference bulletinLogReference = bulletinLogReference(0);
         final MessageLogReference messageLogReference = MessageLogReference.builder()//
                 .setMessageIndex(1)//
