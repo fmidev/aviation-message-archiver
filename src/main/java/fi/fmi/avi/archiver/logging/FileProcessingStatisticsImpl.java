@@ -49,6 +49,20 @@ public final class FileProcessingStatisticsImpl extends AbstractAppendingLoggabl
     }
 
     @Override
+    public void initBulletins(final int amount) {
+        if (amount > 0) {
+            ensureStatusesSizeAtLeast(bulletinStatuses, amount);
+        }
+    }
+
+    @Override
+    public void initMessages(final int bulletinIndex, final int amount) {
+        if (bulletinIndex >= 0 && amount > 0) {
+            ensureStatusesSizeAtLeast(getBulletinMessageStatuses(bulletinIndex), amount);
+        }
+    }
+
+    @Override
     public void recordMessageStatus(final int bulletinIndex, final int messageIndex, final Status status) {
         requireNonNull(status, "status");
         recordStatus(getBulletinMessageStatuses(bulletinIndex), messageIndex, status);

@@ -20,6 +20,14 @@ public final class NoOpFileProcessingStatistics extends AbstractNoOpLoggable imp
     }
 
     @Override
+    public void initBulletins(final int amount) {
+    }
+
+    @Override
+    public void initMessages(final int bulletinIndex, final int amount) {
+    }
+
+    @Override
     public void recordMessageStatus(final int bulletinIndex, final int messageIndex, final Status status) {
         requireNonNull(status, "status");
     }

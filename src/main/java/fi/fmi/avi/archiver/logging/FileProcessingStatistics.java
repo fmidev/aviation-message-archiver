@@ -21,6 +21,10 @@ public interface FileProcessingStatistics extends AppendingLoggable {
 
     void clear();
 
+    void initBulletins(int amount);
+
+    void initMessages(int bulletinIndex, int amount);
+
     void recordMessageStatus(int bulletinIndex, int messageIndex, Status status);
 
     void recordBulletinStatus(int bulletinIndex, Status status);

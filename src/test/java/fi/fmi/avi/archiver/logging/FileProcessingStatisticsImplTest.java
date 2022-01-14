@@ -40,6 +40,62 @@ class FileProcessingStatisticsImplTest {
     }
 
     @Test
+    void initBulletins_does_nothing_when_amount_is_zero() {
+        statistics.initBulletins(0);
+
+        assertEmpty(statistics);
+    }
+
+    @Test
+    void initBulletins_does_nothing_when_amount_is_negative() {
+        statistics.initBulletins(-1);
+
+        assertEmpty(statistics);
+    }
+
+    @Test
+    void initBulletins_records_initial_status_for_amount_of_bulletins() {
+        statistics.initBulletins(3);
+
+        assertThat(statistics.toString()).isEqualTo("M{T:0} B{N:3,T:3} F{N}");
+    }
+
+    @Test
+    void initMessages_does_nothing_when_bulletinIndex_is_negative() {
+        statistics.initMessages(-1, 2);
+
+        assertEmpty(statistics);
+    }
+
+    @Test
+    void initMessages_does_nothing_when_amount_is_zero() {
+        statistics.initMessages(0, 0);
+
+        assertEmpty(statistics);
+    }
+
+    @Test
+    void initMessages_does_nothing_when_amount_is_negative() {
+        statistics.initMessages(0, -1);
+
+        assertEmpty(statistics);
+    }
+
+    @Test
+    void initMessages_records_initial_status_for_amount_of_messages() {
+        statistics.initMessages(0, 4);
+
+        assertThat(statistics.toString()).isEqualTo("M{N:4,T:4} B{N:1,T:1} F{N}");
+    }
+
+    @Test
+    void initMessages_implicitly_records_initial_status_for_amount_for_bulletins_up_to_index() {
+        statistics.initMessages(2, 4);
+
+        assertThat(statistics.toString()).isEqualTo("M{N:4,T:4} B{N:3,T:3} F{N}");
+    }
+
+    @Test
     void recordFileStatus_records_file_status() {
         statistics.recordFileStatus(Status.DISCARDED);
 

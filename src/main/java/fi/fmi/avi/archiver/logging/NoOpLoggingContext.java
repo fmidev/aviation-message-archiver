@@ -112,6 +112,10 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
+    public void initStatistics() {
+    }
+
+    @Override
     public void recordStatus(final FileProcessingStatistics.Status status) {
         requireNonNull(status, "status");
     }

@@ -174,6 +174,13 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
+    public void initStatistics() {
+        synchronized (mutex) {
+            delegate.initStatistics();
+        }
+    }
+
+    @Override
     public void recordStatus(final FileProcessingStatistics.Status status) {
         synchronized (mutex) {
             delegate.recordStatus(status);

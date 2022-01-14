@@ -2,7 +2,11 @@ package fi.fmi.avi.archiver.logging;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -664,6 +668,28 @@ class LoggingContextImplTest {
     @Test
     void getStatistics_returns_provided_statistics() {
         assertThat(loggingContext.getStatistics()).isSameAs(statistics);
+    }
+
+    @Test
+    void initStatistics_does_nothing_in_initial_state() {
+        loggingContext.initStatistics();
+
+        verify(statistics).initBulletins(0);
+        verify(statistics, never()).initMessages(anyInt(), anyInt());
+    }
+
+    @Test
+    void initStatistics_initializes_known_bulletins_and_messages() {
+        loggingContext.enterBulletin(2);
+        loggingContext.enterMessage(4);
+
+        loggingContext.initStatistics();
+
+        verify(statistics).initBulletins(3);
+        verify(statistics, atMostOnce()).initMessages(0, 0);
+        verify(statistics, atMostOnce()).initMessages(1, 0);
+        verify(statistics).initMessages(2, 5);
+        verify(statistics, never()).initMessages(eq(3), anyInt());
     }
 
     @Test

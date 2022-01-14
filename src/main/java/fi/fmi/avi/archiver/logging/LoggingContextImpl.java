@@ -214,4 +214,12 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
     public FileProcessingStatistics getStatistics() {
         return fileProcessingStatistics;
     }
+
+    @Override
+    public void initStatistics() {
+        fileProcessingStatistics.initBulletins(bulletinLogReferences.size());
+        for (int bulletinIndex = 0, size = bulletinMessageLogReferences.size(); bulletinIndex < size; bulletinIndex++) {
+            fileProcessingStatistics.initMessages(bulletinIndex, bulletinMessageLogReferences.get(bulletinIndex).size());
+        }
+    }
 }

@@ -97,7 +97,7 @@ public class IntegrationFlowConfig {
                 .channel(parserChannel)
                 .<String> filter(content -> content != null && !content.isEmpty(), discards -> discards.discardChannel(failChannel))
                 .handle(fileParserIntegrationService::parse)
-                .handle(withLoggingContext(this::logFileContentOverview))
+                .handle(withLoggingContext(this::loggingActionsAfterParse))
                 .<List<InputAviationMessage>> filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))
                 .channel(populatorChannel)
                 .handle(messagePopulationIntegrationService::populateMessages)
@@ -108,6 +108,11 @@ public class IntegrationFlowConfig {
                         .channelMapping(false, successChannel)//
                         .channelMapping(true, failChannel))
                 .get();
+    }
+
+    private void loggingActionsAfterParse(final LoggingContext loggingContext) {
+        loggingContext.initStatistics();
+        logFileContentOverview(loggingContext);
     }
 
     private void logFileContentOverview(final LoggingContext loggingContext) {

@@ -77,6 +77,8 @@ public interface LoggingContext extends AppendingLoggable {
 
     FileProcessingStatistics getStatistics();
 
+    void initStatistics();
+
     default void recordStatus(final FileProcessingStatistics.Status status) {
         requireNonNull(status, "status");
         final int bulletinIndex = getBulletinIndex();
