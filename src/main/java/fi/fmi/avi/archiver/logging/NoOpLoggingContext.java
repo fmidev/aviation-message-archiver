@@ -60,7 +60,7 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public void modifyBulletinReference(final UnaryOperator<BulletinLogReference> operator) {
+    public void modifyBulletinLogReference(final UnaryOperator<BulletinLogReference> operator) {
         requireNonNull(operator, "operator");
     }
 
@@ -71,6 +71,10 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
 
     @Override
     public void enterMessage(@Nullable final MessageLogReference messageLogReference) {
+    }
+
+    @Override
+    public void enterMessage(final int index) {
     }
 
     @Override
@@ -93,7 +97,7 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public void modifyMessageReference(final UnaryOperator<MessageLogReference> operator) {
+    public void modifyMessageLogReference(final UnaryOperator<MessageLogReference> operator) {
         requireNonNull(operator, "operator");
     }
 

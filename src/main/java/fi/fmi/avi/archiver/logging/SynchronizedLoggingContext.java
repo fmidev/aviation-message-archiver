@@ -97,9 +97,9 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public void modifyBulletinReference(final UnaryOperator<BulletinLogReference> operator) {
+    public void modifyBulletinLogReference(final UnaryOperator<BulletinLogReference> operator) {
         synchronized (mutex) {
-            delegate.modifyBulletinReference(operator);
+            delegate.modifyBulletinLogReference(operator);
         }
     }
 
@@ -114,6 +114,13 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     public void enterMessage(@Nullable final MessageLogReference messageLogReference) {
         synchronized (mutex) {
             delegate.enterMessage(messageLogReference);
+        }
+    }
+
+    @Override
+    public void enterMessage(final int index) {
+        synchronized (mutex) {
+            delegate.enterMessage(index);
         }
     }
 
@@ -146,9 +153,9 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public void modifyMessageReference(final UnaryOperator<MessageLogReference> operator) {
+    public void modifyMessageLogReference(final UnaryOperator<MessageLogReference> operator) {
         synchronized (mutex) {
-            delegate.modifyMessageReference(operator);
+            delegate.modifyMessageLogReference(operator);
         }
     }
 

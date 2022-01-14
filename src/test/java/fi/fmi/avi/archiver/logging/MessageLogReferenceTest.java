@@ -32,7 +32,8 @@ final class MessageLogReferenceTest {
 
     @ArgumentsSource(TestValuesProvider.class)
     @ParameterizedTest
-    void logString_is_expected(final String expectedStringTemplate, @Nullable final String expectedExcerpt, final MessageLogReference messageLogReference) {
+    void toString_returns_expected_value(final String expectedStringTemplate, @Nullable final String expectedExcerpt,
+            final MessageLogReference messageLogReference) {
         final String expectedString = expectedExcerpt == null ? expectedStringTemplate : expectedStringTemplate.replace("%s", expectedExcerpt);
         assertThat(messageLogReference.toString()).isEqualTo(expectedString);
     }

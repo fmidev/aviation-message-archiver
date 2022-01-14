@@ -18,6 +18,13 @@ public final class SynchronizedFileProcessingStatistics implements FileProcessin
     }
 
     @Override
+    public void clear() {
+        synchronized (mutex) {
+            delegate.clear();
+        }
+    }
+
+    @Override
     public void recordMessageStatus(final int bulletinIndex, final int messageIndex, final Status status) {
         synchronized (mutex) {
             delegate.recordMessageStatus(bulletinIndex, messageIndex, status);

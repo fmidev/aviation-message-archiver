@@ -16,6 +16,10 @@ public final class NoOpFileProcessingStatistics extends AbstractNoOpLoggable imp
     }
 
     @Override
+    public void clear() {
+    }
+
+    @Override
     public void recordMessageStatus(final int bulletinIndex, final int messageIndex, final Status status) {
         requireNonNull(status, "status");
     }

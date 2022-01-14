@@ -12,7 +12,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 final class BulletinLogReferenceTest {
-    static Stream<Arguments> logString_is_expected() {
+    static Stream<Arguments> toString_returns_expected_value() {
         return Stream.of(//
                 Arguments.of("1", BulletinLogReference.builder()//
                         .setBulletinIndex(0)//
@@ -67,7 +67,7 @@ final class BulletinLogReferenceTest {
 
     @MethodSource
     @ParameterizedTest
-    void logString_is_expected(final String expectedString, final BulletinLogReference bulletinLogReference) {
+    void toString_returns_expected_value(final String expectedString, final BulletinLogReference bulletinLogReference) {
         assertThat(bulletinLogReference.toString()).isEqualTo(expectedString);
     }
 }

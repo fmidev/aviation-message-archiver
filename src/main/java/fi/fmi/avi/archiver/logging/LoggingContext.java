@@ -37,7 +37,7 @@ public interface LoggingContext extends AppendingLoggable {
 
     List<BulletinLogReference> getAllBulletinLogReferences();
 
-    default void modifyBulletinReference(final UnaryOperator<BulletinLogReference> operator) {
+    default void modifyBulletinLogReference(final UnaryOperator<BulletinLogReference> operator) {
         getBulletinLogReference()//
                 .map(operator)//
                 .ifPresent(this::enterBulletin);
@@ -49,7 +49,13 @@ public interface LoggingContext extends AppendingLoggable {
 
     void enterMessage(@Nullable MessageLogReference messageLogReference);
 
-    void enterMessage(MessageReference messageReference);
+    void enterMessage(int index);
+
+    default void enterMessage(final MessageReference messageReference) {
+        requireNonNull(messageReference, "messageReference");
+        enterBulletin(messageReference.getBulletinIndex());
+        enterMessage(messageReference.getMessageIndex());
+    }
 
     default void leaveMessage() {
         enterMessage((MessageLogReference) null);
@@ -59,7 +65,7 @@ public interface LoggingContext extends AppendingLoggable {
 
     List<MessageLogReference> getBulletinMessageLogReferences();
 
-    default void modifyMessageReference(final UnaryOperator<MessageLogReference> operator) {
+    default void modifyMessageLogReference(final UnaryOperator<MessageLogReference> operator) {
         getMessageLogReference()//
                 .map(operator)//
                 .ifPresent(this::enterMessage);

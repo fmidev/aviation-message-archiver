@@ -187,7 +187,7 @@ public class FileParser {
                 return parseBulletin(inputBuilder, template.getText().trim(), fileFormat, bulletinIndex, loggingContext);
             }
         } else {
-            loggingContext.modifyBulletinReference(reference -> reference.toBuilder().clearBulletinHeading().build());
+            loggingContext.modifyBulletinLogReference(reference -> reference.toBuilder().clearBulletinHeading().build());
             LOGGER.debug("{} bulletin <{}> does not contain GTS heading.", fileFormat, loggingContext);
         }
         return parseBulletin(inputBuilder, fileContent.trim(), fileFormat, bulletinIndex, loggingContext);
@@ -280,7 +280,7 @@ public class FileParser {
             if (collectIdentifier == null) {
                 LOGGER.warn("IWXXM collect document <{}> is missing bulletinIdentifier.", loggingContext);
             } else if (!inputBuilder.getGtsBulletinHeadingBuilder().getBulletinHeadingString().isPresent()) {
-                loggingContext.modifyBulletinReference(reference -> reference.toBuilder().setBulletinHeading(collectIdentifier).build());
+                loggingContext.modifyBulletinLogReference(reference -> reference.toBuilder().setBulletinHeading(collectIdentifier).build());
             }
 
             inputBuilder.setCollectIdentifier(InputBulletinHeading.builder()//

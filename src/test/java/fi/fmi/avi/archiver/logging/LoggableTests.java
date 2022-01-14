@@ -19,7 +19,7 @@ public final class LoggableTests {
     }
 
     public static void assertDecentLengthEstimate(final Loggable loggable) {
-        assertDecentLengthEstimate(loggable, length -> (int) (length * 1.5));
+        assertDecentLengthEstimate(loggable, length -> length + (int) (length * 32 / Math.pow(Math.log(length) / Math.log(2), 2)));
     }
 
     public static void assertDecentLengthEstimate(final Loggable loggable, final IntUnaryOperator maxLength) {
@@ -27,8 +27,9 @@ public final class LoggableTests {
         final int actual = loggable.toString().length();
 
         assertThat(result)//
+                .as("actual: " + actual)//
                 .isGreaterThanOrEqualTo(actual)//
-                .isLessThan(maxLength.applyAsInt(actual));
+                .isLessThanOrEqualTo(maxLength.applyAsInt(actual));
     }
 
     public static String createString(final int length) {

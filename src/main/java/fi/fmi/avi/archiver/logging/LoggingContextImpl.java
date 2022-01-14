@@ -10,22 +10,25 @@ import java.util.function.IntFunction;
 
 import javax.annotation.Nullable;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.message.MessageReference;
 
-// TODO: Tests
 // TODO: Document
 // TODO: Cleanup
 // TODO: More debug / trace logging?
 public class LoggingContextImpl extends AbstractAppendingLoggable implements LoggingContext {
     private static final char SEPARATOR = ':';
-    private static final int FILENAME_MAX_LENGTH = 256;
+    /**
+     * Maximum file name length is set according to maximum length of mandatory file name files specified by
+     * WMO doc 386 Manual on the Global Telecommunication System, General file naming conventions
+     */
+    private static final int FILENAME_MAX_LENGTH = 128;
 
     private final FileProcessingIdentifier fileProcessingIdentifier;
     private final FileProcessingStatistics fileProcessingStatistics;
-    private final List<BulletinLogReference> bulletinLogReferences = new ArrayList<>();
-    private final List<List<MessageLogReference>> bulletinMessageLogReferences = new ArrayList<>();
+    private final ArrayList<BulletinLogReference> bulletinLogReferences = new ArrayList<>(0);
+    private final ArrayList<ArrayList<MessageLogReference>> bulletinMessageLogReferences = new ArrayList<>(0);
 
     @Nullable
     private FileReference fileReference;
@@ -38,8 +41,9 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
         this.fileProcessingStatistics = requireNonNull(fileProcessingStatistics, "fileProcessingStatistics");
     }
 
-    private static <E> void ensureIndex(final List<E> list, final int expectedIndex, final IntFunction<E> defaultElement) {
-        for (int nextIndex = list.size(); expectedIndex >= nextIndex; nextIndex++) {
+    private static <E> void ensureSizeAtLeast(final ArrayList<E> list, final int minSize, final IntFunction<E> defaultElement) {
+        list.ensureCapacity(minSize);
+        for (int nextIndex = list.size(); nextIndex < minSize; nextIndex++) {
             list.add(defaultElement.apply(nextIndex));
         }
     }
@@ -53,13 +57,16 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
                     .append(fileReference.getProductIdentifier())//
                     .append('/')//
                     .append(LoggableUtils.sanitize(fileReference.getFilename(), FILENAME_MAX_LENGTH));
-            if (bulletinIndex >= 0) {
+        }
+        if (bulletinIndex >= 0) {
+            if (fileReference == null) {
+                builder.append(SEPARATOR);
+            }
+            builder.append(SEPARATOR)//
+                    .append(bulletinLogReferences.get(bulletinIndex));
+            if (messageIndex >= 0) {
                 builder.append(SEPARATOR)//
-                        .append(bulletinLogReferences.get(bulletinIndex));
-                if (messageIndex >= 0) {
-                    builder.append(SEPARATOR)//
-                            .append(bulletinMessageLogReferences.get(bulletinIndex).get(messageIndex));
-                }
+                        .append(bulletinMessageLogReferences.get(bulletinIndex).get(messageIndex));
             }
         }
     }
@@ -67,28 +74,42 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
     @Override
     public int estimateLogStringLength() {
         return fileProcessingIdentifier.toString().length() //
-                + (fileReference == null
+                + estimateFileReferenceLength() //
+                + estimateBulletinLogReferenceLength() //
+                + estimateMessageLogReferenceLength();
+    }
+
+    private int estimateFileReferenceLength() {
+        return fileReference == null
                 ? 0
-                : fileReference.getProductIdentifier().length() + Math.min(fileReference.getFilename().length(), FILENAME_MAX_LENGTH) + 2) //
-                + getBulletinLogReference().map(BulletinLogReference::estimateLogStringLength).orElse(-1) + 1 //
-                + getMessageLogReference().map(MessageLogReference::estimateLogStringLength).orElse(-1) + 1;
+                : fileReference.getProductIdentifier().length() + Math.min(fileReference.getFilename().length(), FILENAME_MAX_LENGTH) + 2;
+    }
+
+    private int estimateBulletinLogReferenceLength() {
+        return bulletinIndex < 0 ? 0 : bulletinLogReferences.get(bulletinIndex).estimateLogStringLength() + 1;
+    }
+
+    private int estimateMessageLogReferenceLength() {
+        return bulletinIndex < 0 || messageIndex < 0 ? 0 : bulletinMessageLogReferences.get(bulletinIndex).get(messageIndex).estimateLogStringLength() + 1;
     }
 
     @Override
     public void enterFile(@Nullable final FileReference fileReference) {
         leaveBulletin();
-        this.fileReference = fileReference;
-        if (fileReference == null) {
-            clearLogReferenceCaches();
+        if (fileReference == null || !fileReference.equals(this.fileReference)) {
+            clearLogReferenceCachesAndStatistics();
         }
+        this.fileReference = fileReference;
     }
 
-    private void clearLogReferenceCaches() {
+    private void clearLogReferenceCachesAndStatistics() {
         bulletinLogReferences.clear();
+        bulletinLogReferences.trimToSize();
         bulletinMessageLogReferences.clear();
+        bulletinMessageLogReferences.trimToSize();
+        fileProcessingStatistics.clear();
     }
 
-    @Nullable
     @Override
     public Optional<FileReference> getFileReference() {
         return Optional.ofNullable(fileReference);
@@ -101,13 +122,10 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
             bulletinIndex = -1;
             return;
         }
-        final int newIndex = bulletinLogReference.getBulletinIndex();
-        ensureBulletinLogReferencesIndex(newIndex);
-        final BulletinLogReference existingReference = bulletinLogReferences.get(newIndex);
-        if (!existingReference.equals(bulletinLogReference)) {
-            bulletinLogReferences.set(newIndex, bulletinLogReference);
-        }
-        bulletinIndex = newIndex;
+        final int index = bulletinLogReference.getBulletinIndex();
+        ensureBulletinLogReferencesHasIndex(index);
+        bulletinLogReferences.set(index, bulletinLogReference);
+        bulletinIndex = index;
     }
 
     @Override
@@ -117,12 +135,12 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
             bulletinIndex = -1;
             return;
         }
-        ensureBulletinLogReferencesIndex(index);
+        ensureBulletinLogReferencesHasIndex(index);
         bulletinIndex = index;
     }
 
-    private void ensureBulletinLogReferencesIndex(final int expectedIndex) {
-        ensureIndex(bulletinLogReferences, expectedIndex, i -> BulletinLogReference.builder().setBulletinIndex(i).build());
+    private void ensureBulletinLogReferencesHasIndex(final int expectedIndex) {
+        ensureSizeAtLeast(bulletinLogReferences, expectedIndex + 1, i -> BulletinLogReference.builder().setBulletinIndex(i).build());
     }
 
     @Override
@@ -149,32 +167,29 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
         if (bulletinIndex < 0) {
             enterBulletin(0);
         }
-        final int newIndex = messageLogReference.getMessageIndex();
-        ensureMessageLogReferencesIndex(bulletinIndex, newIndex);
+        final int index = messageLogReference.getMessageIndex();
+        ensureMessageLogReferencesHasIndex(bulletinIndex, index);
         final List<MessageLogReference> messageLogReferences = bulletinMessageLogReferences.get(bulletinIndex);
-        final MessageLogReference existingReference = messageLogReferences.get(newIndex);
-        if (!existingReference.equals(messageLogReference)) {
-            messageLogReferences.set(newIndex, messageLogReference);
-        }
-        messageIndex = newIndex;
+        messageLogReferences.set(index, messageLogReference);
+        messageIndex = index;
     }
 
     @Override
-    public void enterMessage(final MessageReference messageReference) {
-        requireNonNull(messageReference, "messageReference");
-        enterBulletin(messageReference.getBulletinIndex());
-        final int newIndex = messageReference.getMessageIndex();
-        if (newIndex < 0) {
+    public void enterMessage(final int index) {
+        if (index < 0) {
             messageIndex = -1;
             return;
         }
-        ensureMessageLogReferencesIndex(messageReference.getBulletinIndex(), newIndex);
-        messageIndex = newIndex;
+        if (bulletinIndex < 0) {
+            enterBulletin(0);
+        }
+        ensureMessageLogReferencesHasIndex(bulletinIndex, index);
+        messageIndex = index;
     }
 
-    private void ensureMessageLogReferencesIndex(final int bulletinIndex, final int messageIndex) {
-        ensureIndex(bulletinMessageLogReferences, bulletinIndex, i -> new ArrayList<>());
-        ensureIndex(bulletinMessageLogReferences.get(bulletinIndex), messageIndex, i -> MessageLogReference.builder().setMessageIndex(i).build());
+    private void ensureMessageLogReferencesHasIndex(final int bulletinIndex, final int messageIndex) {
+        ensureSizeAtLeast(bulletinMessageLogReferences, bulletinIndex + 1, i -> new ArrayList<>(0));
+        ensureSizeAtLeast(bulletinMessageLogReferences.get(bulletinIndex), messageIndex + 1, i -> MessageLogReference.builder().setMessageIndex(i).build());
     }
 
     @Override
@@ -194,6 +209,7 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
         return messageIndex;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP")
     @Override
     public FileProcessingStatistics getStatistics() {
         return fileProcessingStatistics;
