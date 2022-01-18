@@ -22,7 +22,7 @@ import org.mockito.MockitoAnnotations;
 
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.logging.FileProcessingStatistics.Status;
+import fi.fmi.avi.archiver.logging.FileProcessingStatistics.ProcessingResult;
 import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
 class LoggingContextImplTest {
@@ -746,39 +746,39 @@ class LoggingContextImplTest {
     }
 
     @Test
-    void recordStatus_initially_records_file_status() {
-        loggingContext.recordStatus(Status.ARCHIVED);
+    void recordProcessingResult_initially_records_file_processingResult() {
+        loggingContext.recordProcessingResult(ProcessingResult.ARCHIVED);
 
-        verify(statistics).recordFileStatus(Status.ARCHIVED);
+        verify(statistics).recordFileResult(ProcessingResult.ARCHIVED);
     }
 
     @Test
-    void recordStatus_on_file_records_file_status() {
+    void recordProcessingResult_on_file_records_file_processingResult() {
         loggingContext.enterFile(FILE_REFERENCE);
 
-        loggingContext.recordStatus(Status.ARCHIVED);
+        loggingContext.recordProcessingResult(ProcessingResult.ARCHIVED);
 
-        verify(statistics).recordFileStatus(Status.ARCHIVED);
+        verify(statistics).recordFileResult(ProcessingResult.ARCHIVED);
     }
 
     @Test
-    void recordStatus_on_bulletin_records_bulletin_status() {
+    void recordProcessingResult_on_bulletin_records_bulletin_processingResult() {
         loggingContext.enterFile(FILE_REFERENCE);
         loggingContext.enterBulletin(1);
 
-        loggingContext.recordStatus(Status.ARCHIVED);
+        loggingContext.recordProcessingResult(ProcessingResult.ARCHIVED);
 
-        verify(statistics).recordBulletinStatus(1, Status.ARCHIVED);
+        verify(statistics).recordBulletinResult(1, ProcessingResult.ARCHIVED);
     }
 
     @Test
-    void recordStatus_on_message_records_message_status() {
+    void recordProcessingResult_on_message_records_message_processingResult() {
         loggingContext.enterFile(FILE_REFERENCE);
         loggingContext.enterBulletin(1);
         loggingContext.enterMessage(2);
 
-        loggingContext.recordStatus(Status.ARCHIVED);
+        loggingContext.recordProcessingResult(ProcessingResult.ARCHIVED);
 
-        verify(statistics).recordMessageStatus(1, 2, Status.ARCHIVED);
+        verify(statistics).recordMessageResult(1, 2, ProcessingResult.ARCHIVED);
     }
 }

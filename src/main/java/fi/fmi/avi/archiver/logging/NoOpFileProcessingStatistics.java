@@ -28,18 +28,18 @@ public final class NoOpFileProcessingStatistics extends AbstractNoOpLoggable imp
     }
 
     @Override
-    public void recordMessageStatus(final int bulletinIndex, final int messageIndex, final Status status) {
-        requireNonNull(status, "status");
+    public void recordMessageResult(final int bulletinIndex, final int messageIndex, final ProcessingResult processingResult) {
+        requireNonNull(processingResult, "processingResult");
     }
 
     @Override
-    public void recordBulletinStatus(final int bulletinIndex, final Status status) {
-        requireNonNull(status, "status");
+    public void recordBulletinResult(final int bulletinIndex, final ProcessingResult processingResult) {
+        requireNonNull(processingResult, "processingResult");
     }
 
     @Override
-    public void recordFileStatus(final Status status) {
-        requireNonNull(status, "status");
+    public void recordFileResult(final ProcessingResult processingResult) {
+        requireNonNull(processingResult, "processingResult");
     }
 
 }

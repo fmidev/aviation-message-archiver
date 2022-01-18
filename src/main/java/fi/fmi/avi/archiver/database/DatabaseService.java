@@ -7,7 +7,6 @@ import java.util.List;
 import fi.fmi.avi.archiver.logging.FileProcessingStatistics;
 import fi.fmi.avi.archiver.logging.LoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ProcessingResult;
 
 public class DatabaseService {
 
@@ -25,16 +24,16 @@ public class DatabaseService {
         for (final ArchiveAviationMessage message : messages) {
             try {
                 loggingContext.enterMessage(message.getMessagePositionInFile());
-                if (message.getProcessingResult() == ProcessingResult.OK) {
+                if (message.getProcessingResult() == fi.fmi.avi.archiver.message.ProcessingResult.OK) {
                     databaseAccess.insertAviationMessage(message, loggingContext);
-                    loggingContext.recordStatus(FileProcessingStatistics.Status.ARCHIVED);
+                    loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.ARCHIVED);
                 } else {
                     databaseAccess.insertRejectedAviationMessage(message, loggingContext);
-                    loggingContext.recordStatus(FileProcessingStatistics.Status.REJECTED);
+                    loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.REJECTED);
                 }
             } catch (final RuntimeException e) {
                 databaseInsertionException = e;
-                loggingContext.recordStatus(FileProcessingStatistics.Status.FAILED);
+                loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
             } finally {
                 loggingContext.leaveMessage();
             }

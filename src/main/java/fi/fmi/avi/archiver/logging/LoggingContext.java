@@ -342,31 +342,31 @@ public interface LoggingContext extends AppendingLoggable {
     void initStatistics();
 
     /**
-     * Record the processing status of current state in {@link #getStatistics() file processing statistics}.
-     * When both bulletin and message is registered in current state, provided {@code status} is recorded for
-     * {@link FileProcessingStatistics#recordMessageStatus(int, int, FileProcessingStatistics.Status) message}. If only bulletin is registered in current
-     * state, provided {@code status} is recorded for {@link FileProcessingStatistics#recordBulletinStatus(int, FileProcessingStatistics.Status) bulletin}.
-     * Otherwise provided {@code status} is recorded for {@link FileProcessingStatistics#recordFileStatus(FileProcessingStatistics.Status) file}.
+     * Record the processing result of current state in {@link #getStatistics() file processing statistics}.
+     * When both bulletin and message is registered in current state, provided {@code processingResult} is recorded for
+     * {@link FileProcessingStatistics#recordMessageResult(int, int, FileProcessingStatistics.ProcessingResult) message}. If only bulletin is registered in current
+     * state, provided {@code processingResult} is recorded for {@link FileProcessingStatistics#recordBulletinResult(int, FileProcessingStatistics.ProcessingResult) bulletin}.
+     * Otherwise provided {@code processingResult} is recorded for {@link FileProcessingStatistics#recordFileResult(FileProcessingStatistics.ProcessingResult) file}.
      *
      * <p>
      * The default implementation tests current state of bulletin and message invoking {@link #getBulletinIndex()} and {@link #getMessageIndex()}.
      * </p>
      *
-     * @param status
-     *         status to record on current state
+     * @param processingResult
+     *         processing result to record on current state
      */
-    default void recordStatus(final FileProcessingStatistics.Status status) {
-        requireNonNull(status, "status");
+    default void recordProcessingResult(final FileProcessingStatistics.ProcessingResult processingResult) {
+        requireNonNull(processingResult, "processingResult");
         final int bulletinIndex = getBulletinIndex();
         if (bulletinIndex < 0) {
-            getStatistics().recordFileStatus(status);
+            getStatistics().recordFileResult(processingResult);
         } else {
             final int messageIndex = getMessageIndex();
             if (messageIndex < 0) {
-                getStatistics().recordBulletinStatus(bulletinIndex, status);
+                getStatistics().recordBulletinResult(bulletinIndex, processingResult);
                 leaveBulletin();
             } else {
-                getStatistics().recordMessageStatus(bulletinIndex, messageIndex, status);
+                getStatistics().recordMessageResult(bulletinIndex, messageIndex, processingResult);
                 leaveMessage();
             }
         }

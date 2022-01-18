@@ -14,13 +14,13 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  * statistics output of recorded data.
  *
  * <p>
- * When computing statistics, bulletin status is considered as maximum by {@link Status#getComparator()} of all message statuses in bulletin and status
- * explicitly recorded for the bulletin in question. Likewise, file status is considered as maximum of all bulletin and message statuses in file and status
- * explicitly recorded for the file.
+ * When computing statistics, bulletin processing result is considered as maximum by {@link ProcessingResult#getComparator()} of all message results in
+ * bulletin and processing result explicitly recorded for the bulletin in question. Likewise, file processing result is considered as maximum of all bulletin
+ * and message results in file and processing result explicitly recorded for the file.
  * </p>
  */
 public interface FileProcessingStatistics extends AppendingLoggable {
-    Status INITIAL_STATUS = Status.NOTHING;
+    ProcessingResult INITIAL_PROCESSING_RESULT = ProcessingResult.NOTHING;
 
     /**
      * Return a {@code FileProcessingStatistics} that synchronizes each method call backed by provided {@code fileProcessingStatistics} instance.
@@ -45,7 +45,8 @@ public interface FileProcessingStatistics extends AppendingLoggable {
 
     /**
      * Initialize this object to report statistics for at least provided {@code amount} of bulletins.
-     * Status of each bulletin up to {@code amount} is initialized to {@link #INITIAL_STATUS}, unless a status is already recorded for a bulletin.
+     * Processing result of each bulletin up to {@code amount} is initialized to {@link #INITIAL_PROCESSING_RESULT}, unless a processing result is already
+     * recorded for a bulletin.
      *
      * @param amount
      *         minimum amount of bulletins to report statistics for
@@ -54,7 +55,8 @@ public interface FileProcessingStatistics extends AppendingLoggable {
 
     /**
      * Initialize this object to report statistics for at least provided {@code amount} of messages in bulletin at index {@code bulletinIndex}.
-     * Status of each message up to {@code amount} is initialized to {@link #INITIAL_STATUS}, unless a status is already recorded for a message.
+     * Processing result of each message up to {@code amount} is initialized to {@link #INITIAL_PROCESSING_RESULT}, unless a processing result is already
+     * recorded for a message.
      *
      * @param bulletinIndex
      *         index of target bulletin starting from {@code 0}
@@ -64,47 +66,47 @@ public interface FileProcessingStatistics extends AppendingLoggable {
     void initMessages(int bulletinIndex, int amount);
 
     /**
-     * Record status of message processing at provided {@code bulletinIndex} and {@code messageIndex}.
-     * If an earlier record for the message in question exists, the provided {@code status} is recorded only, if it is considered greater than existing
-     * status by the comparator returned from {@link Status#getComparator()}.
+     * Record result of message processing at provided {@code bulletinIndex} and {@code messageIndex}.
+     * If an earlier record for the message in question exists, the provided {@code processingResult} is recorded only, if it is considered greater than
+     * existing processing result by the comparator returned from {@link ProcessingResult#getComparator()}.
      *
      * @param bulletinIndex
      *         index of bulletin within file starting from {@code 0}
      * @param messageIndex
      *         index of message within bulletin starting from {@code 0}
-     * @param status
-     *         message processing status to record
+     * @param processingResult
+     *         message processing result to record
      */
-    void recordMessageStatus(int bulletinIndex, int messageIndex, Status status);
+    void recordMessageResult(int bulletinIndex, int messageIndex, ProcessingResult processingResult);
 
     /**
-     * Record overall status of bulletin processing at provided {@code bulletinIndex}.
-     * If an earlier record for the bulletin in question exists, the provided {@code status} is recorded only, if it is considered greater than existing
-     * status by the comparator returned from {@link Status#getComparator()}.
+     * Record overall result of bulletin processing at provided {@code bulletinIndex}.
+     * If an earlier record for the bulletin in question exists, the provided {@code processingResult} is recorded only, if it is considered greater than
+     * existing processing result by the comparator returned from {@link ProcessingResult#getComparator()}.
      *
      * @param bulletinIndex
      *         index of bulletin within file starting from {@code 0}
-     * @param status
-     *         bulletin processing status to record
+     * @param processingResult
+     *         bulletin processing result to record
      */
-    void recordBulletinStatus(int bulletinIndex, Status status);
+    void recordBulletinResult(int bulletinIndex, ProcessingResult processingResult);
 
     /**
-     * Record overall status of file processing.
-     * If an earlier record for the file exists, the provided {@code status} is recorded only, if it is considered greater than existing status by the
-     * comparator returned from {@link Status#getComparator()}.
+     * Record overall result of file processing.
+     * If an earlier record for the file exists, the provided {@code processingResult} is recorded only, if it is considered greater than existing
+     * processing result by the comparator returned from {@link ProcessingResult#getComparator()}.
      *
-     * @param status
-     *         file processing status to record
+     * @param processingResult
+     *         file processing result to record
      */
-    void recordFileStatus(Status status);
+    void recordFileResult(ProcessingResult processingResult);
 
     /**
      * Result of processing a file, bulletin or a message.
      */
-    enum Status {
+    enum ProcessingResult {
         /**
-         * Item was not processed, and/or no final status was recorded.
+         * Item was not processed, and/or no final processing result was recorded.
          */
         NOTHING("N"),
         /**
@@ -124,20 +126,20 @@ public interface FileProcessingStatistics extends AppendingLoggable {
          */
         FAILED("F");
 
-        private static final List<Status> VALUES = Collections.unmodifiableList(Arrays.asList(Status.values()));
+        private static final List<ProcessingResult> VALUES = Collections.unmodifiableList(Arrays.asList(ProcessingResult.values()));
 
         private final String abbreviatedName;
 
-        Status(final String abbreviatedName) {
+        ProcessingResult(final String abbreviatedName) {
             this.abbreviatedName = requireNonNull(abbreviatedName, "abbreviatedName");
         }
 
-        public static Comparator<Status> getComparator() {
+        public static Comparator<ProcessingResult> getComparator() {
             return Comparator.naturalOrder();
         }
 
         @SuppressFBWarnings(value = "MS_EXPOSE_REP", justification = "immutable value")
-        public static List<Status> getValues() {
+        public static List<ProcessingResult> getValues() {
             return VALUES;
         }
 

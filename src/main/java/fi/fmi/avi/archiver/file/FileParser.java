@@ -107,7 +107,7 @@ public class FileParser {
         final GenericAviationWeatherMessage.Format fileFormat = fileMetadata.getFileConfig().getFormat();
         final List<GTSExchangeFileTemplate.ParseResult> parseResults = GTSExchangeFileTemplate.parseAll(content);
         if (parseResults.isEmpty()) {
-            loggingContext.recordStatus(FileProcessingStatistics.Status.FAILED);
+            loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
             throw new IllegalArgumentException("Nothing to parse in <" + loggingContext + ">");
         }
         final boolean bulletinParseSuccess = parseResults.stream().anyMatch(result -> result.getResult().isPresent());
@@ -128,7 +128,7 @@ public class FileParser {
                         resultBuilder.setParseErrors(true);
                         final GTSExchangeFileParseException error = result.getError().get();
                         LOGGER.error("Error parsing GTS envelope <{}>: {}", loggingContext, error.getMessage());
-                        loggingContext.recordStatus(FileProcessingStatistics.Status.FAILED);
+                        loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
                     } else if (result.getResult().isPresent()) {
                         final GTSExchangeFileTemplate template = result.getResult().get();
                         resultBuilder.mergeFrom(parseContent(content, template, fileFormat, inputMessageTemplate, bulletinIndex, loggingContext));
@@ -157,7 +157,7 @@ public class FileParser {
             return resultBuilder.build();
         } catch (final RuntimeException e) {
             LOGGER.error("Unable to parse any input messages from <{}>", loggingContext, e);
-            loggingContext.recordStatus(FileProcessingStatistics.Status.FAILED);
+            loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
             return FileParseResult.error();
         }
     }
@@ -169,7 +169,7 @@ public class FileParser {
             return parseContentUnsafe(fileContent, template, fileFormat, inputMessageTemplate, bulletinIndex, loggingContext);
         } catch (final RuntimeException e) {
             LOGGER.error("Error while parsing <{}>: {}.", loggingContext, e.getMessage(), e);
-            loggingContext.recordStatus(FileProcessingStatistics.Status.FAILED);
+            loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
             return FileParseResult.error();
         }
     }
@@ -207,7 +207,7 @@ public class FileParser {
                 }
             } catch (final IOException | SAXException | ParserConfigurationException e) {
                 LOGGER.error("Unable to parse bulletin <{}> as IWXXM document: {}", loggingContext, String.valueOf(e));
-                loggingContext.recordStatus(FileProcessingStatistics.Status.FAILED);
+                loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
                 return FileParseResult.error();
             }
         }
@@ -239,7 +239,7 @@ public class FileParser {
                 return addMessages(resultBuilder, inputBuilder, Collections.singletonList(message), bulletinIndex, loggingContext).build();
             } else {
                 LOGGER.error("Unable to parse TAC content <{}>: {}", loggingContext, messageConversion.getConversionIssues());
-                loggingContext.recordStatus(FileProcessingStatistics.Status.FAILED);
+                loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
                 return FileParseResult.error();
             }
         }
@@ -290,7 +290,7 @@ public class FileParser {
             return addMessages(FileParseResult.builder(), inputBuilder, parsedMessages, bulletinIndex, loggingContext).build();
         } else {
             LOGGER.error("Unable to parse IWXXM collect document <{}>: {}", loggingContext, conversion.getConversionIssues());
-            loggingContext.recordStatus(FileProcessingStatistics.Status.FAILED);
+            loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
             return FileParseResult.error();
         }
     }
@@ -311,7 +311,7 @@ public class FileParser {
         } else {
             resultBuilder.setParseErrors(true);
             LOGGER.error("Unable to parse IWXXM message document <{}>: {}", loggingContext, conversion.getConversionIssues());
-            loggingContext.recordStatus(FileProcessingStatistics.Status.FAILED);
+            loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
         }
         return resultBuilder.build();
     }

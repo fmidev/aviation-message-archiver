@@ -252,7 +252,7 @@ public class IntegrationFlowConfig {
             final LoggingContext loggingContext = getLoggingContext(failedMessage);
             final Throwable errorToLog = throwable instanceof MessagingException ? throwable.getCause() : throwable;
             LOGGER.error("Error while processing <{}>: {}", loggingContext, errorToLog == null ? "" : errorToLog.getMessage(), errorToLog);
-            loggingContext.recordStatus(FileProcessingStatistics.Status.FAILED);
+            loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
             return failedMessage;
         };
     }

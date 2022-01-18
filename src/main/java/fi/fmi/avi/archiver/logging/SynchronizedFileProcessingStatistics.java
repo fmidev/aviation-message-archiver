@@ -39,23 +39,23 @@ public final class SynchronizedFileProcessingStatistics implements FileProcessin
     }
 
     @Override
-    public void recordMessageStatus(final int bulletinIndex, final int messageIndex, final Status status) {
+    public void recordMessageResult(final int bulletinIndex, final int messageIndex, final ProcessingResult processingResult) {
         synchronized (mutex) {
-            delegate.recordMessageStatus(bulletinIndex, messageIndex, status);
+            delegate.recordMessageResult(bulletinIndex, messageIndex, processingResult);
         }
     }
 
     @Override
-    public void recordBulletinStatus(final int bulletinIndex, final Status status) {
+    public void recordBulletinResult(final int bulletinIndex, final ProcessingResult processingResult) {
         synchronized (mutex) {
-            delegate.recordBulletinStatus(bulletinIndex, status);
+            delegate.recordBulletinResult(bulletinIndex, processingResult);
         }
     }
 
     @Override
-    public void recordFileStatus(final Status status) {
+    public void recordFileResult(final ProcessingResult processingResult) {
         synchronized (mutex) {
-            delegate.recordFileStatus(status);
+            delegate.recordFileResult(processingResult);
         }
     }
 

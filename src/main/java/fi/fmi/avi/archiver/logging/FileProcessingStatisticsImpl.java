@@ -15,13 +15,13 @@ public final class FileProcessingStatisticsImpl extends AbstractAppendingLoggabl
     private static final int STATISTICS_CATEGORIES_COUNT = 2; // message, bulletin
     private static final int STRING_LENGTH_ESTIMATE = (Statistics.STRING_LENGTH_ESTIMATE + 4) * STATISTICS_CATEGORIES_COUNT + FILE_STATISTICS_LENGTH_ESTIMATE;
 
-    private final ArrayList<ArrayList<Status>> bulletinMessageStatuses = new ArrayList<>(0);
-    private final ArrayList<Status> bulletinStatuses = new ArrayList<>(0);
+    private final ArrayList<ArrayList<ProcessingResult>> bulletinMessageProcessingResults = new ArrayList<>(0);
+    private final ArrayList<ProcessingResult> bulletinProcessingResults = new ArrayList<>(0);
 
-    private Status fileStatus = INITIAL_STATUS;
+    private ProcessingResult fileProcessingResult = INITIAL_PROCESSING_RESULT;
 
-    private static void ensureStatusesSizeAtLeast(final ArrayList<Status> statuses, final int minSize) {
-        ensureSizeAtLeast(statuses, minSize, i -> INITIAL_STATUS);
+    private static void ensureProcessingResultsSizeAtLeast(final ArrayList<ProcessingResult> processingResults, final int minSize) {
+        ensureSizeAtLeast(processingResults, minSize, i -> INITIAL_PROCESSING_RESULT);
     }
 
     private static <E> void ensureSizeAtLeast(final ArrayList<E> list, final int minSize, final IntFunction<E> defaultElement) {
@@ -35,94 +35,94 @@ public final class FileProcessingStatisticsImpl extends AbstractAppendingLoggabl
         return list.size() > index ? Optional.of(list.get(index)) : Optional.empty();
     }
 
-    private static Status max(final Status status1, final Status status2) {
-        return Status.getComparator().compare(status1, status2) >= 0 ? status1 : status2;
+    private static ProcessingResult max(final ProcessingResult processingResult1, final ProcessingResult processingResult2) {
+        return ProcessingResult.getComparator().compare(processingResult1, processingResult2) >= 0 ? processingResult1 : processingResult2;
     }
 
     @Override
     public void clear() {
-        bulletinMessageStatuses.clear();
-        bulletinMessageStatuses.trimToSize();
-        bulletinStatuses.clear();
-        bulletinStatuses.trimToSize();
-        fileStatus = INITIAL_STATUS;
+        bulletinMessageProcessingResults.clear();
+        bulletinMessageProcessingResults.trimToSize();
+        bulletinProcessingResults.clear();
+        bulletinProcessingResults.trimToSize();
+        fileProcessingResult = INITIAL_PROCESSING_RESULT;
     }
 
     @Override
     public void initBulletins(final int amount) {
         if (amount > 0) {
-            ensureStatusesSizeAtLeast(bulletinStatuses, amount);
+            ensureProcessingResultsSizeAtLeast(bulletinProcessingResults, amount);
         }
     }
 
     @Override
     public void initMessages(final int bulletinIndex, final int amount) {
         if (bulletinIndex >= 0 && amount > 0) {
-            ensureStatusesSizeAtLeast(getBulletinMessageStatuses(bulletinIndex), amount);
+            ensureProcessingResultsSizeAtLeast(getBulletinMessageProcessingResults(bulletinIndex), amount);
         }
     }
 
     @Override
-    public void recordMessageStatus(final int bulletinIndex, final int messageIndex, final Status status) {
-        requireNonNull(status, "status");
-        recordStatus(getBulletinMessageStatuses(bulletinIndex), messageIndex, status);
+    public void recordMessageResult(final int bulletinIndex, final int messageIndex, final ProcessingResult processingResult) {
+        requireNonNull(processingResult, "processingResult");
+        recordProcessingResult(getBulletinMessageProcessingResults(bulletinIndex), messageIndex, processingResult);
     }
 
-    private ArrayList<Status> getBulletinMessageStatuses(final int bulletinIndex) {
-        ensureSizeAtLeast(bulletinMessageStatuses, bulletinIndex + 1, i -> new ArrayList<>(0));
-        return bulletinMessageStatuses.get(bulletinIndex);
+    private ArrayList<ProcessingResult> getBulletinMessageProcessingResults(final int bulletinIndex) {
+        ensureSizeAtLeast(bulletinMessageProcessingResults, bulletinIndex + 1, i -> new ArrayList<>(0));
+        return bulletinMessageProcessingResults.get(bulletinIndex);
     }
 
-    private void recordStatus(final ArrayList<Status> statuses, final int index, final Status status) {
-        ensureStatusesSizeAtLeast(statuses, index + 1);
-        final Status oldStatus = statuses.get(index);
-        statuses.set(index, max(oldStatus, status));
+    private void recordProcessingResult(final ArrayList<ProcessingResult> processingResults, final int index, final ProcessingResult processingResult) {
+        ensureProcessingResultsSizeAtLeast(processingResults, index + 1);
+        final ProcessingResult oldProcessingResult = processingResults.get(index);
+        processingResults.set(index, max(oldProcessingResult, processingResult));
     }
 
     @Override
-    public void recordBulletinStatus(final int bulletinIndex, final Status status) {
-        requireNonNull(status, "status");
-        recordStatus(bulletinStatuses, bulletinIndex, status);
+    public void recordBulletinResult(final int bulletinIndex, final ProcessingResult processingResult) {
+        requireNonNull(processingResult, "processingResult");
+        recordProcessingResult(bulletinProcessingResults, bulletinIndex, processingResult);
     }
 
-    private Status getFileStatus() {
+    private ProcessingResult getFileProcessingResult() {
         return Stream.of(//
-                        bulletinMessageStatuses.stream()//
+                        bulletinMessageProcessingResults.stream()//
                                 .flatMap(Collection::stream), //
-                        bulletinStatuses.stream(), //
-                        Stream.of(this.fileStatus))//
+                        bulletinProcessingResults.stream(), //
+                        Stream.of(this.fileProcessingResult))//
                 .flatMap(Function.identity())//
-                .max(Status.getComparator())//
-                .orElse(INITIAL_STATUS);
+                .max(ProcessingResult.getComparator())//
+                .orElse(INITIAL_PROCESSING_RESULT);
     }
 
     @Override
-    public void recordFileStatus(final Status status) {
-        requireNonNull(status, "status");
-        fileStatus = max(fileStatus, status);
+    public void recordFileResult(final ProcessingResult processingResult) {
+        requireNonNull(processingResult, "processingResult");
+        fileProcessingResult = max(fileProcessingResult, processingResult);
     }
 
     private Statistics getBulletinStatistics() {
         final Statistics bulletinStatistics = new Statistics();
-        for (int i = 0, size = Math.max(bulletinMessageStatuses.size(), bulletinStatuses.size()); i < size; i++) {
-            bulletinStatistics.add(getBulletinStatus(i));
+        for (int i = 0, size = Math.max(bulletinMessageProcessingResults.size(), bulletinProcessingResults.size()); i < size; i++) {
+            bulletinStatistics.add(getBulletinProcessingResult(i));
         }
         return bulletinStatistics;
     }
 
-    private Status getBulletinStatus(final int index) {
-        final Status bulletinMessageStatus = getElement(bulletinMessageStatuses, index)//
-                .flatMap(statuses -> statuses.stream()//
-                        .max(Status.getComparator()))//
-                .orElse(INITIAL_STATUS);
-        final Status bulletinStatus = getElement(bulletinStatuses, index)//
-                .orElse(INITIAL_STATUS);
-        return max(bulletinMessageStatus, bulletinStatus);
+    private ProcessingResult getBulletinProcessingResult(final int index) {
+        final ProcessingResult bulletinMessageProcessingResult = getElement(bulletinMessageProcessingResults, index)//
+                .flatMap(processingResults -> processingResults.stream()//
+                        .max(ProcessingResult.getComparator()))//
+                .orElse(INITIAL_PROCESSING_RESULT);
+        final ProcessingResult bulletinProcessingResult = getElement(bulletinProcessingResults, index)//
+                .orElse(INITIAL_PROCESSING_RESULT);
+        return max(bulletinMessageProcessingResult, bulletinProcessingResult);
     }
 
     private Statistics getMessageStatistics() {
         final Statistics messageStatistics = new Statistics();
-        bulletinMessageStatuses.forEach(messageStatuses -> messageStatuses.forEach(messageStatistics::add));
+        bulletinMessageProcessingResults.forEach(processingResults -> processingResults.forEach(messageStatistics::add));
         return messageStatistics;
     }
 
@@ -133,7 +133,7 @@ public final class FileProcessingStatisticsImpl extends AbstractAppendingLoggabl
         builder.append("} B{");
         getBulletinStatistics().appendTo(builder);
         builder.append("} F{")//
-                .append(getFileStatus().getAbbreviatedName())//
+                .append(getFileProcessingResult().getAbbreviatedName())//
                 .append("}");
     }
 
@@ -143,26 +143,26 @@ public final class FileProcessingStatisticsImpl extends AbstractAppendingLoggabl
     }
 
     private static final class Statistics extends AbstractAppendingLoggable {
-        private static final int STRING_LENGTH_PER_STATUS_ESTIMATE = 3 /* control chars */ + 4 /* number */;
-        static final int STRING_LENGTH_ESTIMATE = (Status.getValues().size() + 1) * STRING_LENGTH_PER_STATUS_ESTIMATE;
+        private static final int STRING_LENGTH_PER_PROCESSING_RESULT_ESTIMATE = 3 /* control chars */ + 4 /* number */;
+        static final int STRING_LENGTH_ESTIMATE = (ProcessingResult.getValues().size() + 1) * STRING_LENGTH_PER_PROCESSING_RESULT_ESTIMATE;
 
-        private final int[] statistics = new int[Status.getValues().size()];
+        private final int[] statistics = new int[ProcessingResult.getValues().size()];
 
         private Statistics() {
         }
 
-        public void add(final Status status) {
-            statistics[status.ordinal()]++;
+        public void add(final ProcessingResult processingResult) {
+            statistics[processingResult.ordinal()]++;
         }
 
         @Override
         public void appendTo(final StringBuilder builder) {
             int total = 0;
-            for (final Status status : Status.getValues()) {
-                final int amount = statistics[status.ordinal()];
+            for (final ProcessingResult processingResult : ProcessingResult.getValues()) {
+                final int amount = statistics[processingResult.ordinal()];
                 total += amount;
                 if (amount > 0) {
-                    builder.append(status.getAbbreviatedName())//
+                    builder.append(processingResult.getAbbreviatedName())//
                             .append(':')//
                             .append(amount)//
                             .append(',');

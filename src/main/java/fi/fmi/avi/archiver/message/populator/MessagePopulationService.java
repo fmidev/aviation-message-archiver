@@ -42,11 +42,11 @@ public class MessagePopulationService {
             } catch (final MessageDiscardedException e) {
                 builder.setStatus(PopulationResult.Status.DISCARD);
                 LOGGER.info("Discarded message <{}>", loggingContext, e);
-                loggingContext.recordStatus(FileProcessingStatistics.Status.DISCARDED);
+                loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.DISCARDED);
             } catch (final Exception e) {
                 builder.setStatus(PopulationResult.Status.FAIL);
                 LOGGER.error("Failed to populate message <{}>.", loggingContext, e);
-                loggingContext.recordStatus(FileProcessingStatistics.Status.FAILED);
+                loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
             }
             populationResults.add(builder.build());
         }
