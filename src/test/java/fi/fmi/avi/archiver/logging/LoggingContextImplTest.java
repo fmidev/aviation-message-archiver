@@ -312,10 +312,63 @@ class LoggingContextImplTest {
     }
 
     @Test
+    void enterBulletin_equal_BulletinLogReference_resets_message() {
+        final BulletinLogReference bulletinLogReference = BulletinLogReference.builder()//
+                .setBulletinIndex(1)//
+                .setBulletinHeading("TEST HEADING")//
+                .setCharIndex(123)//
+                .build();
+        loggingContext.enterBulletin(bulletinLogReference);
+        loggingContext.enterMessage(3);
+
+        loggingContext.enterBulletin(bulletinLogReference);
+
+        assertState(null, bulletinLogReference, null);
+    }
+
+    @Test
+    void enterBulletin_different_BulletinLogReference_resets_message() {
+        final BulletinLogReference bulletinLogReference1a = BulletinLogReference.builder()//
+                .setBulletinIndex(1)//
+                .setBulletinHeading("TEST HEADING")//
+                .setCharIndex(123)//
+                .build();
+        final BulletinLogReference bulletinLogReference1b = bulletinLogReference1a.toBuilder()//
+                .setBulletinHeading("MODIFIED HEADING")//
+                .build();
+        loggingContext.enterBulletin(bulletinLogReference1a);
+        loggingContext.enterMessage(3);
+
+        loggingContext.enterBulletin(bulletinLogReference1b);
+
+        assertState(null, bulletinLogReference1b, null);
+    }
+
+    @Test
     void enterBulletin_index_creates_new_bulletinLogReference() {
         loggingContext.enterBulletin(3);
 
         assertState(null, bulletinLogReference(3), null);
+    }
+
+    @Test
+    void enterBulletin_equal_index_resets_message() {
+        loggingContext.enterBulletin(2);
+        loggingContext.enterMessage(3);
+
+        loggingContext.enterBulletin(2);
+
+        assertState(null, bulletinLogReference(2), null);
+    }
+
+    @Test
+    void enterBulletin_different_index_resets_message() {
+        loggingContext.enterBulletin(2);
+        loggingContext.enterMessage(3);
+
+        loggingContext.enterBulletin(4);
+
+        assertState(null, bulletinLogReference(4), null);
     }
 
     @Test
