@@ -14,7 +14,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
 
-// TODO: Document
 // TODO: Cleanup
 // TODO: More debug / trace logging?
 public class LoggingContextImpl extends AbstractAppendingLoggable implements LoggingContext {
