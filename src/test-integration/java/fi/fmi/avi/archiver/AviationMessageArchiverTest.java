@@ -555,7 +555,8 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/2.1")
                                                 .setCollectIdentifier("A_LTFI31EFKL301115_C_EFKL_201902011315--.xml")
                                                 .build())
-                                        .build()).build(), AviationMessageArchiverTestCase.builder()//
+                                        .build()).build(),//
+                AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM 3.0 TAF Collect bulletin within GTS envelopes")//
                         .setProductName("test_iwxxm")//
                         .setInputFileName("taf-gts-bulletin-collect-9.xml")//
@@ -926,11 +927,12 @@ class AviationMessageArchiverTest {
         }
 
         public Path getTestFile(final AviationProduct product) {
-            return Paths.get(product.getInputDir().getPath() + "/" + getInputFileName());
+            return product.getInputDir().resolve(getInputFileName());
         }
 
         public Path getTempFile(final AviationProduct product) {
-            return Paths.get(getTestFile(product) + TEMP_FILE_SUFFIX);
+            final Path testFile = getTestFile(product);
+            return testFile.resolveSibling(testFile.getFileName() + TEMP_FILE_SUFFIX);
         }
 
         public abstract String getProductName();
@@ -942,7 +944,7 @@ class AviationMessageArchiverTest {
 
         public void assertInputAndOutputFilesEquals(final AviationProduct product) throws InterruptedException, IOException {
             final byte[] expectedContent = readResourceToByteArray(getInputFileName());
-            final Path expectedOutputDir = (getExpectFail() ? product.getFailDir() : product.getArchiveDir()).toPath();
+            final Path expectedOutputDir = getExpectFail() ? product.getFailDir() : product.getArchiveDir();
             final Path outputFile = waitUntilFileExists(expectedOutputDir, getInputFileName());
 
             assertThat(outputFile)//

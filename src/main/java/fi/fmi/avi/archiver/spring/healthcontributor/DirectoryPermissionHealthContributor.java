@@ -42,8 +42,9 @@ public class DirectoryPermissionHealthContributor implements CompositeHealthCont
 
     @Override
     public Iterator<NamedContributor<HealthContributor>> iterator() {
-        return healthContributors.entrySet().stream()
-                .map((entry) -> NamedContributor.of(entry.getKey(), entry.getValue())).iterator();
+        return healthContributors.entrySet().stream()//
+                .map((entry) -> NamedContributor.of(entry.getKey(), entry.getValue()))//
+                .iterator();
     }
 
     private class ProductDirectoryPermissionHealthContributor implements CompositeHealthContributor {
@@ -52,10 +53,11 @@ public class DirectoryPermissionHealthContributor implements CompositeHealthCont
 
         public ProductDirectoryPermissionHealthContributor(final AviationProduct product) {
             requireNonNull(product, "product");
-            contributors = ImmutableMap.of("input (" + product.getInputDir().getPath() + ")",
-                    new DirectoryPermissionHealthIndicator(product.getInputDir().toPath()), "archive (" + product.getArchiveDir().getPath() + ")",
-                    new DirectoryPermissionHealthIndicator(product.getArchiveDir().toPath()), "fail (" + product.getFailDir().getPath() + ")",
-                    new DirectoryPermissionHealthIndicator(product.getFailDir().toPath()));
+            contributors = ImmutableMap.of(//
+                    "input (" + product.getInputDir() + ")", new DirectoryPermissionHealthIndicator(product.getInputDir()), //
+                    "archive (" + product.getArchiveDir() + ")", new DirectoryPermissionHealthIndicator(product.getArchiveDir()), //
+                    "fail (" + product.getFailDir() + ")", new DirectoryPermissionHealthIndicator(product.getFailDir())//
+            );
         }
 
         @Override
@@ -66,8 +68,9 @@ public class DirectoryPermissionHealthContributor implements CompositeHealthCont
 
         @Override
         public Iterator<NamedContributor<HealthContributor>> iterator() {
-            return contributors.entrySet().stream()
-                    .map((entry) -> NamedContributor.of(entry.getKey(), entry.getValue())).iterator();
+            return contributors.entrySet().stream()//
+                    .map((entry) -> NamedContributor.of(entry.getKey(), entry.getValue()))//
+                    .iterator();
         }
 
     }

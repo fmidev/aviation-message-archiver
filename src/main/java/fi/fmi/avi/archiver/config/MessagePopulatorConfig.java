@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public class MessagePopulatorConfig {
 
     MessagePopulatorConfig(final List<PopulatorInstanceSpec> executionChain) {
         this.executionChain = requireNonNull(executionChain, "executionChain");
+        checkState(!executionChain.isEmpty(), "Message populator execution chain not configured");
     }
 
     @Bean

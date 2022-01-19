@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -80,8 +79,8 @@ public class DiscardingPopulatorTest {
     @Test
     void test_discarding_populator() throws URISyntaxException, IOException, InterruptedException {
         final AviationProduct product = getProduct(aviationProducts);
-        Files.copy(getInputFile(), Paths.get(product.getInputDir().getPath() + "/" + FILENAME));
-        waitUntilFileExists(new File(product.getFailDir().getPath() + "/" + FILENAME));
+        Files.copy(getInputFile(), product.getInputDir().resolve(FILENAME));
+        waitUntilFileExists(product.getFailDir().resolve(FILENAME));
 
         verify(successChannel).send(messageCaptor.capture());
         @SuppressWarnings("unchecked")
@@ -109,9 +108,10 @@ public class DiscardingPopulatorTest {
         return requireNonNull(aviationProducts.get(PRODUCT), PRODUCT);
     }
 
-    private void waitUntilFileExists(final File expectedOutputFile) throws InterruptedException {
+    private void waitUntilFileExists(final Path expectedOutputFile) throws InterruptedException {
         long totalWaitTime = 0;
-        while (!expectedOutputFile.exists() && totalWaitTime < TIMEOUT_MILLIS) {
+        while (!Files.exists(expectedOutputFile) && totalWaitTime < TIMEOUT_MILLIS) {
+            //noinspection BusyWait
             Thread.sleep(WAIT_MILLIS);
             totalWaitTime += WAIT_MILLIS;
         }

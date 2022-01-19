@@ -1,10 +1,6 @@
 package fi.fmi.avi.archiver.spring.integration.file.filters;
 
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.springframework.integration.file.filters.CompositeFileListFilter;
-import org.springframework.integration.file.filters.ReversibleFileListFilter;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,13 +13,16 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.springframework.integration.file.filters.CompositeFileListFilter;
+import org.springframework.integration.file.filters.ReversibleFileListFilter;
 
 
 public class AcceptUnchangedFileListFilterTest {
 
     @Test
-    void test(@TempDir Path tempDir) throws IOException {
+    void test(@TempDir final Path tempDir) {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         final File file = tempFile.toFile();
@@ -36,7 +35,7 @@ public class AcceptUnchangedFileListFilterTest {
     }
 
     @Test
-    void test_content_change(@TempDir Path tempDir) throws IOException {
+    void test_content_change(@TempDir final Path tempDir) throws IOException {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         Files.write(tempFile, "temp content".getBytes(StandardCharsets.UTF_8));
@@ -49,7 +48,7 @@ public class AcceptUnchangedFileListFilterTest {
     }
 
     @Test
-    void test_multiple_content_changes(@TempDir Path tempDir) throws IOException {
+    void test_multiple_content_changes(@TempDir final Path tempDir) throws IOException {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         Files.write(tempFile, "temp content".getBytes(StandardCharsets.UTF_8));
@@ -66,7 +65,7 @@ public class AcceptUnchangedFileListFilterTest {
     }
 
     @Test
-    void test_last_modified_change(@TempDir Path tempDir) throws IOException {
+    void test_last_modified_change(@TempDir final Path tempDir) throws IOException {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         Files.write(tempFile, "temp content".getBytes(StandardCharsets.UTF_8));
@@ -81,7 +80,7 @@ public class AcceptUnchangedFileListFilterTest {
     }
 
     @Test
-    void test_multiple_last_modified_changes(@TempDir Path tempDir) throws IOException {
+    void test_multiple_last_modified_changes(@TempDir final Path tempDir) throws IOException {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         Files.write(tempFile, "temp content".getBytes(StandardCharsets.UTF_8));
@@ -99,45 +98,45 @@ public class AcceptUnchangedFileListFilterTest {
     }
 
     @Test
-    void test_filter_files(@TempDir Path tempDir) throws IOException {
+    void test_filter_files(@TempDir final Path tempDir) throws IOException {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         Files.write(tempFile, "temp content".getBytes(StandardCharsets.UTF_8));
         final File file = tempFile.toFile();
 
-        assertThat(filter.filterFiles(new File[]{file})).hasSize(0);
-        assertThat(filter.filterFiles(new File[]{file})).hasSize(1);
-        assertThat(filter.filterFiles(new File[]{file})).hasSize(0);
-        assertThat(filter.filterFiles(new File[]{file})).hasSize(1);
+        assertThat(filter.filterFiles(new File[] { file })).hasSize(0);
+        assertThat(filter.filterFiles(new File[] { file })).hasSize(1);
+        assertThat(filter.filterFiles(new File[] { file })).hasSize(0);
+        assertThat(filter.filterFiles(new File[] { file })).hasSize(1);
         assertThat(filter.accept(file)).isFalse();
         assertThat(filter.accept(file)).isTrue();
     }
 
     @Test
-    void test_filter_files_modification(@TempDir Path tempDir) throws IOException {
+    void test_filter_files_modification(@TempDir final Path tempDir) throws IOException {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final Path tempFile = tempDir.resolve("temp");
         Files.write(tempFile, "temp content".getBytes(StandardCharsets.UTF_8));
         final File file = tempFile.toFile();
 
-        assertThat(filter.filterFiles(new File[]{file})).hasSize(0);
+        assertThat(filter.filterFiles(new File[] { file })).hasSize(0);
         Files.write(tempFile, "more content".getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
-        assertThat(filter.filterFiles(new File[]{file})).hasSize(0);
-        assertThat(filter.filterFiles(new File[]{file})).hasSize(1);
-        assertThat(filter.filterFiles(new File[]{file})).hasSize(0);
-        assertThat(filter.filterFiles(new File[]{file})).hasSize(1);
+        assertThat(filter.filterFiles(new File[] { file })).hasSize(0);
+        assertThat(filter.filterFiles(new File[] { file })).hasSize(1);
+        assertThat(filter.filterFiles(new File[] { file })).hasSize(0);
+        assertThat(filter.filterFiles(new File[] { file })).hasSize(1);
         assertThat(filter.accept(file)).isFalse();
         assertThat(filter.accept(file)).isTrue();
     }
 
     @Test
-    void test_rollback(@TempDir Path tempDir) {
+    void test_rollback(@TempDir final Path tempDir) {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         testRollback(filter, tempDir);
     }
 
     @Test
-    void test_rollback_composite(@TempDir Path tempDir) {
+    void test_rollback_composite(@TempDir final Path tempDir) {
         final AcceptUnchangedFileListFilter filter = new AcceptUnchangedFileListFilter();
         final CompositeFileListFilter<File> composite = new CompositeFileListFilter<>(Collections.singletonList(filter));
         testRollback(composite, tempDir);

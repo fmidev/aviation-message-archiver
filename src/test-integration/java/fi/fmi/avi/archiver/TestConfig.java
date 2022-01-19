@@ -1,21 +1,23 @@
 package fi.fmi.avi.archiver;
 
-import com.google.common.base.Preconditions;
-import org.apache.commons.io.FileUtils;
+import static java.util.Objects.requireNonNull;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.FileSystemUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneId;
-
-import static java.util.Objects.requireNonNull;
+import com.google.common.base.Preconditions;
 
 @Configuration
 public class TestConfig {
@@ -32,8 +34,7 @@ public class TestConfig {
     }
 
     @Bean
-    TestWorkDirHolder testWorkDirHolder(@Value("${testclass.workdir.path}") final File workdirPath,
-                                        @Value("${testclass.name}") final String testclassName) {
+    TestWorkDirHolder testWorkDirHolder(@Value("${testclass.workdir.path}") final Path workdirPath, @Value("${testclass.name}") final String testclassName) {
         requireNonNull(workdirPath, "workdirPath");
         requireNonNull(testclassName, "testclassName; " + TEST_CLASS_NAME_MESSAGE);
         Preconditions.checkState(!workdirPath.toString().isEmpty(), "workdirPath must not be empty");
@@ -42,32 +43,25 @@ public class TestConfig {
     }
 
     static class TestWorkDirHolder implements InitializingBean, DisposableBean {
-        private final File workDir;
-        private final File tmpDir;
+        private final Path workDir;
+        private final Path tmpDir;
 
-        public TestWorkDirHolder(final File workDir) {
+        public TestWorkDirHolder(final Path workDir) {
             this.workDir = requireNonNull(workDir, "workDir");
-            this.tmpDir = new File(workDir, "temp");
-        }
-
-        public File getWorkDir() {
-            return workDir;
-        }
-
-        public File getTmpDir() {
-            return tmpDir;
+            this.tmpDir = workDir.resolve("temp");
         }
 
         @Override
-        public void afterPropertiesSet() {
-            if (!tmpDir.mkdirs() && !tmpDir.canWrite()) {
+        public void afterPropertiesSet() throws IOException {
+            Files.createDirectories(tmpDir);
+            if (!Files.isWritable(tmpDir)) {
                 throw new IllegalStateException("Cannot write to " + tmpDir);
             }
         }
 
         @Override
         public void destroy() throws IOException {
-            FileUtils.deleteDirectory(workDir);
+            FileSystemUtils.deleteRecursively(workDir);
         }
     }
 }
