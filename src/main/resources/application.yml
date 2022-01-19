@@ -1,5 +1,33 @@
 ##############################################
 #
+#  Logging properties
+#
+##############################################
+# START SNIPPET: logging
+spring.config.activate.on-profile: local
+logging:
+  level:
+    fi.fmi.avi.archiver: DEBUG
+---
+spring.config.activate.on-profile: development
+logging:
+  level:
+    fi.fmi.avi.archiver: DEBUG
+---
+spring.config.activate.on-profile: testing
+logging:
+  level:
+    fi.fmi.avi.archiver: INFO
+---
+spring.config.activate.on-profile: production
+logging:
+  level:
+    fi.fmi.avi.archiver: INFO
+---
+# END SNIPPET: logging
+
+##############################################
+#
 #  Datasource properties
 #
 ##############################################
