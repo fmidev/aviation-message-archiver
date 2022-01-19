@@ -125,9 +125,9 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public void enterMessage(final MessagePositionInFile messagePositionInFile) {
+    public void enterBulletinMessage(final MessagePositionInFile messagePositionInFile) {
         synchronized (mutex) {
-            delegate.enterMessage(messagePositionInFile);
+            delegate.enterBulletinMessage(messagePositionInFile);
         }
     }
 

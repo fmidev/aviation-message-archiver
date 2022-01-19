@@ -32,7 +32,7 @@ public class MessagePopulationService {
 
         final List<PopulationResult> populationResults = new ArrayList<>();
         for (final InputAviationMessage inputMessage : inputMessages) {
-            loggingContext.enterMessage(inputMessage.getMessagePositionInFile());
+            loggingContext.enterBulletinMessage(inputMessage.getMessagePositionInFile());
             final PopulationResult.Builder builder = PopulationResult.builder()//
                     .setInputMessage(inputMessage);
             try {

@@ -242,7 +242,7 @@ public interface LoggingContext extends AppendingLoggable {
      * @throws NullPointerException
      *         if {@code messagePositionInFile} is {@code null}
      */
-    default void enterMessage(final MessagePositionInFile messagePositionInFile) {
+    default void enterBulletinMessage(final MessagePositionInFile messagePositionInFile) {
         requireNonNull(messagePositionInFile, "messagePositionInFile");
         enterBulletin(messagePositionInFile.getBulletinIndex());
         enterMessage(messagePositionInFile.getMessageIndex());
@@ -252,15 +252,15 @@ public interface LoggingContext extends AppendingLoggable {
      * Register processing of currently registered message being finished.
      *
      * <p>
-     * Equivalent to, and preferred over {@link #enterMessage(MessageLogReference) enterMessage((MessageLogReference) null)}.
+     * Equivalent to, and preferred over {@link #enterMessage(MessageLogReference) enterMessage(null)}.
      * </p>
      *
      * <p>
-     * The default implementation invokes {@code enterMessage((MessageLogReference) null)}.
+     * The default implementation invokes {@code enterMessage(null)}.
      * </p>
      */
     default void leaveMessage() {
-        enterMessage((MessageLogReference) null);
+        enterMessage(null);
     }
 
     /**

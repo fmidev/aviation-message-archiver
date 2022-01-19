@@ -85,7 +85,7 @@ public class MessagePopulatorConfig {
             final List<ArchiveAviationMessage> populatedMessages = new ArrayList<>();
             boolean failures = false;
             for (final MessagePopulationService.PopulationResult populationResult : populationResults) {
-                loggingContext.enterMessage(populationResult.getInputMessage().getMessagePositionInFile());
+                loggingContext.enterBulletinMessage(populationResult.getInputMessage().getMessagePositionInFile());
                 switch (populationResult.getStatus()) {
                     case STORE:
                         final ArchiveAviationMessage archiveMessage = populationResult.getArchiveMessage().orElse(null);

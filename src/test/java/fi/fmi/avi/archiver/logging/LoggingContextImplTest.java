@@ -546,8 +546,8 @@ class LoggingContextImplTest {
     }
 
     @Test
-    void enterMessage_MessagePositionInFile_enters_bulletin_and_message() {
-        loggingContext.enterMessage(MessagePositionInFile.getInstance(2, 4));
+    void enterBulletinMessage_enters_bulletin_and_message() {
+        loggingContext.enterBulletinMessage(MessagePositionInFile.getInstance(2, 4));
 
         assertState(null, bulletinLogReference(2), messageLogReference(4));
     }
@@ -558,7 +558,7 @@ class LoggingContextImplTest {
         loggingContext.enterBulletin(2);
         loggingContext.enterMessage(3);
 
-        loggingContext.enterMessage((MessageLogReference) null);
+        loggingContext.enterMessage(null);
 
         assertState(FILE_REFERENCE, bulletinLogReference(2), null);
     }

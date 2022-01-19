@@ -78,7 +78,7 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public void enterMessage(final MessagePositionInFile messagePositionInFile) {
+    public void enterBulletinMessage(final MessagePositionInFile messagePositionInFile) {
         requireNonNull(messagePositionInFile, "messagePositionInFile");
     }
 

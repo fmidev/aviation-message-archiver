@@ -23,7 +23,7 @@ public class DatabaseService {
         RuntimeException databaseInsertionException = null;
         for (final ArchiveAviationMessage message : messages) {
             try {
-                loggingContext.enterMessage(message.getMessagePositionInFile());
+                loggingContext.enterBulletinMessage(message.getMessagePositionInFile());
                 if (message.getProcessingResult() == fi.fmi.avi.archiver.message.ProcessingResult.OK) {
                     databaseAccess.insertAviationMessage(message, loggingContext);
                     loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.ARCHIVED);
