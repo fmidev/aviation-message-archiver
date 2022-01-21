@@ -1,13 +1,6 @@
 package fi.fmi.avi.archiver;
 
-import com.google.common.base.Preconditions;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.convert.ApplicationConversionService;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.util.FileSystemUtils;
+import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,7 +9,15 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 
-import static java.util.Objects.requireNonNull;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.convert.ApplicationConversionService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.util.FileSystemUtils;
+
+import com.google.common.base.Preconditions;
 
 @Configuration
 public class TestConfig {
@@ -33,8 +34,7 @@ public class TestConfig {
     }
 
     @Bean
-    TestWorkDirHolder testWorkDirHolder(@Value("${testclass.workdir.path}") final Path workdirPath,
-                                        @Value("${testclass.name}") final String testclassName) {
+    TestWorkDirHolder testWorkDirHolder(@Value("${testclass.workdir.path}") final Path workdirPath, @Value("${testclass.name}") final String testclassName) {
         requireNonNull(workdirPath, "workdirPath");
         requireNonNull(testclassName, "testclassName; " + TEST_CLASS_NAME_MESSAGE);
         Preconditions.checkState(!workdirPath.toString().isEmpty(), "workdirPath must not be empty");

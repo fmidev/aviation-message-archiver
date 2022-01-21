@@ -1,8 +1,6 @@
 package fi.fmi.avi.archiver.spring.healthcontributor;
 
-import com.google.common.collect.ImmutableMap;
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import org.springframework.boot.actuate.health.*;
+import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
@@ -12,7 +10,15 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static java.util.Objects.requireNonNull;
+import org.springframework.boot.actuate.health.AbstractHealthIndicator;
+import org.springframework.boot.actuate.health.CompositeHealthContributor;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthContributor;
+import org.springframework.boot.actuate.health.NamedContributor;
+
+import com.google.common.collect.ImmutableMap;
+
+import fi.fmi.avi.archiver.config.model.AviationProduct;
 
 public class DirectoryPermissionHealthContributor implements CompositeHealthContributor {
 
@@ -20,11 +26,11 @@ public class DirectoryPermissionHealthContributor implements CompositeHealthCont
     private final String tempFilePrefix;
     private final String tempFileSuffix;
 
-    public DirectoryPermissionHealthContributor(final Map<String, AviationProduct> aviationProducts,
-                                                final String tempFilePrefix, final String tempFileSuffix) {
+    public DirectoryPermissionHealthContributor(final Map<String, AviationProduct> aviationProducts, final String tempFilePrefix, final String tempFileSuffix) {
         this.tempFilePrefix = requireNonNull(tempFilePrefix, "tempFilePrefix");
         this.tempFileSuffix = requireNonNull(tempFileSuffix, "tempFileSuffix");
-        healthContributors = aviationProducts.entrySet().stream()
+        healthContributors = aviationProducts.entrySet()
+                .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ProductDirectoryPermissionHealthContributor(entry.getValue())));
     }
 
@@ -36,8 +42,9 @@ public class DirectoryPermissionHealthContributor implements CompositeHealthCont
 
     @Override
     public Iterator<NamedContributor<HealthContributor>> iterator() {
-        return healthContributors.entrySet().stream()
-                .map((entry) -> NamedContributor.of(entry.getKey(), entry.getValue())).iterator();
+        return healthContributors.entrySet().stream()//
+                .map((entry) -> NamedContributor.of(entry.getKey(), entry.getValue()))//
+                .iterator();
     }
 
     private class ProductDirectoryPermissionHealthContributor implements CompositeHealthContributor {
@@ -46,10 +53,10 @@ public class DirectoryPermissionHealthContributor implements CompositeHealthCont
 
         public ProductDirectoryPermissionHealthContributor(final AviationProduct product) {
             requireNonNull(product, "product");
-            contributors = ImmutableMap.of(
-                    "input (" + product.getInputDir() + ")", new DirectoryPermissionHealthIndicator(product.getInputDir()),
-                    "archive (" + product.getArchiveDir() + ")", new DirectoryPermissionHealthIndicator(product.getArchiveDir()),
-                    "fail (" + product.getFailDir() + ")", new DirectoryPermissionHealthIndicator(product.getFailDir())
+            contributors = ImmutableMap.of(//
+                    "input (" + product.getInputDir() + ")", new DirectoryPermissionHealthIndicator(product.getInputDir()), //
+                    "archive (" + product.getArchiveDir() + ")", new DirectoryPermissionHealthIndicator(product.getArchiveDir()), //
+                    "fail (" + product.getFailDir() + ")", new DirectoryPermissionHealthIndicator(product.getFailDir())//
             );
         }
 
@@ -61,8 +68,9 @@ public class DirectoryPermissionHealthContributor implements CompositeHealthCont
 
         @Override
         public Iterator<NamedContributor<HealthContributor>> iterator() {
-            return contributors.entrySet().stream()
-                    .map((entry) -> NamedContributor.of(entry.getKey(), entry.getValue())).iterator();
+            return contributors.entrySet().stream()//
+                    .map((entry) -> NamedContributor.of(entry.getKey(), entry.getValue()))//
+                    .iterator();
         }
 
     }

@@ -1,11 +1,11 @@
 package fi.fmi.avi.archiver.config.model;
 
-import org.inferred.freebuilder.FreeBuilder;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.nio.file.Path;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkState;
+import org.inferred.freebuilder.FreeBuilder;
 
 @FreeBuilder
 public abstract class AviationProduct {

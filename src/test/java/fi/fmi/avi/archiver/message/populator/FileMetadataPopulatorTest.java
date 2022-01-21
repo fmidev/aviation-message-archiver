@@ -1,16 +1,6 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import com.google.common.collect.ImmutableMap;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.config.model.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -19,7 +9,20 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
+import com.google.common.collect.ImmutableMap;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 @SuppressWarnings("UnnecessaryLocalVariable")
 @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
@@ -53,9 +56,8 @@ class FileMetadataPopulatorTest {
             .collect(ImmutableMap.toImmutableMap(AviationProduct::getId, Function.identity()));
     private static final InputAviationMessage INPUT_MESSAGE_TEMPLATE = InputAviationMessage.builder()//
             .setFileMetadata(FileMetadata.builder()//
-                    .setProductIdentifier(PRODUCT_ID_1)//
+                    .setFileReference(FileReference.create(PRODUCT_ID_1, "taf.txt"))//
                     .setFileModified(FILE_MODIFIED)//
-                    .setFilename("taf.txt")//
                     .setFileConfig(FILE_CONFIG_1))//
             .buildPartial();
     private FileMetadataPopulator populator;
@@ -72,8 +74,7 @@ class FileMetadataPopulatorTest {
     })
     void populates_route(final String productId, final MessagePopulatorTests.RouteId expected) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(fileMetadata -> fileMetadata//
-                        .setProductIdentifier(productId)//
+                .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductIdentifier(productId))//
                         .setFileConfig(PRODUCTS.get(productId).getFileConfigs().get(0)))//
                 .build();
 
@@ -89,8 +90,7 @@ class FileMetadataPopulatorTest {
     })
     void populates_format(final String productId, final MessagePopulatorTests.FormatId expected) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(fileMetadata -> fileMetadata//
-                        .setProductIdentifier(productId)//
+                .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductIdentifier(productId))//
                         .setFileConfig(PRODUCTS.get(productId).getFileConfigs().get(0)))//
                 .build();
 

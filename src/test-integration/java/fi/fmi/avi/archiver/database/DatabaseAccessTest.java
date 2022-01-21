@@ -1,11 +1,16 @@
 package fi.fmi.avi.archiver.database;
 
-import fi.fmi.avi.archiver.AviationMessageArchiver;
-import fi.fmi.avi.archiver.TestConfig;
-import fi.fmi.avi.archiver.config.ConversionConfig;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
-import fi.fmi.avi.archiver.message.ProcessingResult;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,21 +26,21 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.util.Optional;
+import fi.fmi.avi.archiver.AviationMessageArchiver;
+import fi.fmi.avi.archiver.TestConfig;
+import fi.fmi.avi.archiver.config.ConversionConfig;
+import fi.fmi.avi.archiver.logging.LoggingContext;
+import fi.fmi.avi.archiver.logging.NoOpLoggingContext;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
+import fi.fmi.avi.archiver.message.ProcessingResult;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.database.DatabaseAccessTest"})
-@Sql(scripts = {"classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.database.DatabaseAccessTest" })
+@Sql(scripts = { "classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},//
+@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = {ConfigDataApplicationContextInitializer.class})
+        initializers = { ConfigDataApplicationContextInitializer.class })
 class DatabaseAccessTest {
 
     private static final Instant NOW = Instant.now();
@@ -64,10 +69,12 @@ class DatabaseAccessTest {
     private Clock clock;
 
     private DatabaseAccessTestUtil databaseAccessTestUtil;
+    private LoggingContext loggingContext;
 
     @BeforeEach
     public void setUp() {
-        this.databaseAccessTestUtil = new DatabaseAccessTestUtil(databaseAccess, clock.instant());
+        databaseAccessTestUtil = new DatabaseAccessTestUtil(databaseAccess, clock.instant());
+        loggingContext = NoOpLoggingContext.getInstance();
     }
 
     @Test
@@ -78,7 +85,7 @@ class DatabaseAccessTest {
 
     @Test
     void test_insert_aviation_message() {
-        final Number generatedId = databaseAccess.insertAviationMessage(TEST_MESSAGE);
+        final Number generatedId = databaseAccess.insertAviationMessage(TEST_MESSAGE, loggingContext);
         assertThat(generatedId.longValue()).isPositive();
         databaseAccessTestUtil.assertMessagesContains(TEST_MESSAGE);
     }
@@ -86,7 +93,7 @@ class DatabaseAccessTest {
     @Test
     void test_insert_aviation_message_with_nonexistent_station_id() {
         final ArchiveAviationMessage archiveAviationMessage = TEST_MESSAGE.toBuilder().setStationId(200).build();
-        assertThrows(DataIntegrityViolationException.class, () -> databaseAccess.insertAviationMessage(archiveAviationMessage));
+        assertThrows(DataIntegrityViolationException.class, () -> databaseAccess.insertAviationMessage(archiveAviationMessage, loggingContext));
     }
 
     @Test
@@ -96,7 +103,7 @@ class DatabaseAccessTest {
                         ArchiveAviationMessageIWXXMDetails.builder().setCollectIdentifier("test identifier").setXMLNamespace(IWXXM_2_1_NAMESPACE).build())
                 .build();
 
-        final Number generatedId = databaseAccess.insertAviationMessage(archiveAviationMessage);
+        final Number generatedId = databaseAccess.insertAviationMessage(archiveAviationMessage, loggingContext);
         assertThat(generatedId.longValue()).isPositive();
         databaseAccessTestUtil.assertMessagesContains(archiveAviationMessage);
     }
@@ -108,7 +115,7 @@ class DatabaseAccessTest {
                         ArchiveAviationMessageIWXXMDetails.builder().setCollectIdentifier("test identifier").setXMLNamespace("http://test.namespace").build())
                 .build();
 
-        final Number generatedId = databaseAccess.insertAviationMessage(archiveAviationMessage);
+        final Number generatedId = databaseAccess.insertAviationMessage(archiveAviationMessage, loggingContext);
         assertThat(generatedId.longValue()).isPositive();
         databaseAccessTestUtil.assertMessagesContains(archiveAviationMessage);
     }
@@ -119,7 +126,7 @@ class DatabaseAccessTest {
                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder().setCollectIdentifier("test identifier").build())
                 .build();
 
-        final Number generatedId = databaseAccess.insertAviationMessage(archiveAviationMessage);
+        final Number generatedId = databaseAccess.insertAviationMessage(archiveAviationMessage, loggingContext);
         assertThat(generatedId.longValue()).isPositive();
         databaseAccessTestUtil.assertMessagesContains(archiveAviationMessage);
     }
@@ -130,7 +137,7 @@ class DatabaseAccessTest {
                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder().setXMLNamespace(IWXXM_2_1_NAMESPACE).build())
                 .build();
 
-        final Number generatedId = databaseAccess.insertAviationMessage(archiveAviationMessage);
+        final Number generatedId = databaseAccess.insertAviationMessage(archiveAviationMessage, loggingContext);
         assertThat(generatedId.longValue()).isPositive();
         databaseAccessTestUtil.assertMessagesContains(archiveAviationMessage);
     }
@@ -142,7 +149,7 @@ class DatabaseAccessTest {
                 .when(jdbcTemplate)
                 .update(any(PreparedStatementCreator.class), any(KeyHolder.class));
 
-        final Number generatedId = databaseAccess.insertAviationMessage(TEST_MESSAGE);
+        final Number generatedId = databaseAccess.insertAviationMessage(TEST_MESSAGE, loggingContext);
         verify(jdbcTemplate, times(3)).update(any(PreparedStatementCreator.class), any(KeyHolder.class));
         assertThat(generatedId.longValue()).isPositive();
     }
@@ -152,7 +159,7 @@ class DatabaseAccessTest {
         final ArchiveAviationMessage archiveAviationMessage = TEST_MESSAGE.toBuilder().setProcessingResult(ProcessingResult.UNKNOWN_STATION_ICAO_CODE)//
                 .build();
 
-        final Number generatedId = databaseAccess.insertRejectedAviationMessage(archiveAviationMessage);
+        final Number generatedId = databaseAccess.insertRejectedAviationMessage(archiveAviationMessage, loggingContext);
         assertThat(generatedId.longValue()).isPositive();
         databaseAccessTestUtil.assertRejectedMessagesContains(archiveAviationMessage);
     }

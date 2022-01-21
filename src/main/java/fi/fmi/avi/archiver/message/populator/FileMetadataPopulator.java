@@ -26,9 +26,9 @@ public class FileMetadataPopulator implements MessagePopulator {
         requireNonNull(input, "input");
         requireNonNull(builder, "builder");
         final FileMetadata fileMetadata = input.getFileMetadata();
-        final AviationProduct product = products.get(fileMetadata.getProductIdentifier());
-        // TODO Logging / exception message
-        Preconditions.checkState(product != null, "Unknown product identifier: %s; unable to resolve route", fileMetadata.getProductIdentifier());
+        final AviationProduct product = products.get(fileMetadata.getFileReference().getProductIdentifier());
+        Preconditions.checkState(product != null, "Unknown product identifier: %s; unable to resolve route",
+                fileMetadata.getFileReference().getProductIdentifier());
 
         builder.setRoute(product.getRouteId())//
                 .setFormat(fileMetadata.getFileConfig().getFormatId())//

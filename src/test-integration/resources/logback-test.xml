@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-  <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
-  <logger name="fi.fmi.avi.archiver" level="INFO">
-    <appender-ref ref="CONSOLE"/>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+  <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+  <logger name="fi.fmi.avi.archiver" level="DEBUG">
+    <appender-ref ref="CONSOLE" />
   </logger>
 </configuration>

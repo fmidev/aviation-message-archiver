@@ -1,12 +1,12 @@
 package fi.fmi.avi.archiver;
 
+import static java.util.Objects.requireNonNull;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.integration.config.EnableIntegration;
-
-import static java.util.Objects.requireNonNull;
 
 @EnableIntegration
 @ComponentScan

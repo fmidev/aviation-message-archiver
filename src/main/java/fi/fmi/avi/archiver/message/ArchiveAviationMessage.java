@@ -1,10 +1,10 @@
 package fi.fmi.avi.archiver.message;
 
-import org.inferred.freebuilder.FreeBuilder;
-
 import java.time.Instant;
 import java.util.Optional;
 import java.util.OptionalInt;
+
+import org.inferred.freebuilder.FreeBuilder;
 
 /**
  * Model representing an aviation message in the database.
@@ -18,6 +18,8 @@ public abstract class ArchiveAviationMessage {
     public static Builder builder() {
         return new Builder();
     }
+
+    public abstract MessagePositionInFile getMessagePositionInFile();
 
     public abstract ProcessingResult getProcessingResult();
 
@@ -52,6 +54,7 @@ public abstract class ArchiveAviationMessage {
     public static class Builder extends ArchiveAviationMessage_Builder {
         Builder() {
             setProcessingResult(ProcessingResult.OK);
+            setMessagePositionInFile(MessagePositionInFile.getInitial());
         }
     }
 }

@@ -1,15 +1,20 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import fi.fmi.avi.archiver.AviationMessageArchiver;
-import fi.fmi.avi.archiver.TestConfig;
-import fi.fmi.avi.archiver.config.ConversionConfig;
-import fi.fmi.avi.archiver.config.IntegrationFlowConfig;
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.database.DatabaseAccess;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.MessageDiscardedException;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -27,28 +32,24 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
+import fi.fmi.avi.archiver.AviationMessageArchiver;
+import fi.fmi.avi.archiver.TestConfig;
+import fi.fmi.avi.archiver.config.ConversionConfig;
+import fi.fmi.avi.archiver.config.IntegrationFlowConfig;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.database.DatabaseAccess;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageDiscardedException;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
-import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.populator.DiscardingPopulatorTest"})
-@Sql(scripts = {"classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.populator.DiscardingPopulatorTest" })
+@Sql(scripts = { "classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class,
-        DiscardingPopulatorTest.DiscardingPopulatorConfig.class},//
+@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class,
+        DiscardingPopulatorTest.DiscardingPopulatorConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = {ConfigDataApplicationContextInitializer.class})
+        initializers = { ConfigDataApplicationContextInitializer.class })
 @ActiveProfiles("discardingPopulatorTest")
 public class DiscardingPopulatorTest {
 
@@ -82,25 +83,18 @@ public class DiscardingPopulatorTest {
         waitUntilFileExists(product.getFailDir().resolve(FILENAME));
 
         verify(successChannel).send(messageCaptor.capture());
-        @SuppressWarnings("unchecked") final List<ArchiveAviationMessage> successes = (List<ArchiveAviationMessage>) messageCaptor.getValue().getPayload();
+        @SuppressWarnings("unchecked")
+        final List<ArchiveAviationMessage> successes = (List<ArchiveAviationMessage>) messageCaptor.getValue().getPayload();
         assertThat(successes).hasSize(1);
         assertThat(successes.get(0).getStationIcaoCode()).isEqualTo("EFXX");
 
         verify(failChannel, times(0)).send(any(Message.class));
-        @SuppressWarnings("unchecked") final List<InputAviationMessage> failures = (List<InputAviationMessage>) messageCaptor.getValue()
-                .getHeaders()
-                .get(IntegrationFlowConfig.FAILED_MESSAGES);
-        assertThat(failures).isEmpty();
+        final boolean failures = IntegrationFlowConfig.hasProcessingErrors(messageCaptor.getValue().getHeaders());
+        assertThat(failures).isFalse();
 
-        @SuppressWarnings("unchecked") final List<InputAviationMessage> discards = (List<InputAviationMessage>) messageCaptor.getValue()
-                .getHeaders()
-                .get(IntegrationFlowConfig.DISCARDED_MESSAGES);
-        assertThat(discards).hasSize(1);
-        assertThat(discards.get(0).getMessage().getLocationIndicators().get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME)).isEqualTo("EFYY");
-
-        verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture());
+        verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture(), any());
         assertThat(databaseMessageCaptor.getValue().getStationIcaoCode()).isEqualTo("EFXX");
-        verify(databaseAccess, times(0)).insertRejectedAviationMessage(any());
+        verify(databaseAccess, times(0)).insertRejectedAviationMessage(any(), any());
     }
 
     public Path getInputFile() throws URISyntaxException {

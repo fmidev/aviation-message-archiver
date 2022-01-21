@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
@@ -46,9 +47,8 @@ import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
 class MessageDataPopulatorTest {
     private static final InputAviationMessage INPUT_MESSAGE_TEMPLATE = InputAviationMessage.builder()//
             .setFileMetadata(FileMetadata.builder()//
-                    .setProductIdentifier("testproduct")//
+                    .setFileReference(FileReference.create("testproduct", "taf.txt"))//
                     .setFileModified(Instant.parse("2000-01-02T03:05:34Z"))//
-                    .setFilename("taf.txt")//
                     .mutateFileConfig(fileConfig -> fileConfig//
                             .setFormat(MessagePopulatorTests.FormatId.TAC.getFormat())//
                             .setFormatId(MessagePopulatorTests.FormatId.TAC.getId())//
@@ -134,8 +134,7 @@ class MessageDataPopulatorTest {
             final String filename, @Nullable final Instant fileModified, final ZonedDateTime clock, final Instant expectedTime) {
         populator = newPopulator(Clock.fixed(clock.toInstant(), clock.getZone()));
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(filedata -> filedata//
-                        .setFilename(filename)//
+                .mutateFileMetadata(filedata -> filedata.mutateFileReference(ref -> ref.setFilename(filename))//
                         .setNullableFileModified(fileModified))//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
                         .setIssueTime(PartialOrCompleteTimeInstant.builder()//
@@ -202,8 +201,7 @@ class MessageDataPopulatorTest {
             @Nullable final Instant expectedValidFrom, @Nullable final Instant expectedValidTo) {
         populator = newPopulator(Clock.fixed(clock.toInstant(), clock.getZone()));
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(fileData -> fileData//
-                        .setFilename(filename)//
+                .mutateFileMetadata(fileData -> fileData.mutateFileReference(ref -> ref.setFilename(filename))//
                         .setNullableFileModified(fileModified))//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
                         .setIssueTime(partialOrCompleteTimeInstant(partialPrimaryReference, completePrimaryReference))//
@@ -237,8 +235,7 @@ class MessageDataPopulatorTest {
         final MessagePopulatorHelper helper = new MessagePopulatorHelper(Clock.fixed(clock.toInstant(), clock.getZone()));
         populator = newPopulator(helper);
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(fileData -> fileData//
-                        .setFilename(filename)//
+                .mutateFileMetadata(fileData -> fileData.mutateFileReference(ref -> ref.setFilename(filename))//
                         .setNullableFileModified(fileModified))//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
                         // Omitting issue time

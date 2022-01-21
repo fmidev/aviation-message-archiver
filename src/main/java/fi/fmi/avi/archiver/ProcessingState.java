@@ -1,18 +1,25 @@
 package fi.fmi.avi.archiver;
 
-import com.google.common.collect.ConcurrentHashMultiset;
-import com.google.common.collect.Multiset;
-import fi.fmi.avi.archiver.file.FileMetadata;
+import static java.util.Objects.requireNonNull;
 
 import java.time.Clock;
 import java.time.Duration;
-import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
-import static java.util.Objects.requireNonNull;
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
 
 public class ProcessingState {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessingState.class);
+
     private final Clock clock;
-    private final Multiset<FileUnderProcessing> filesUnderProcessing = ConcurrentHashMultiset.create();
+    private final ConcurrentMap<FileReference, Status> filesUnderProcessing = new ConcurrentHashMap<>();
 
     public ProcessingState(final Clock clock) {
         this.clock = requireNonNull(clock, "clock");
@@ -20,81 +27,69 @@ public class ProcessingState {
 
     public void start(final FileMetadata file) {
         requireNonNull(file, "file");
-        final FileUnderProcessing element = new FileUnderProcessing(file, clock);
-        filesUnderProcessing.add(element);
+        final Status newStatus = filesUnderProcessing.compute(file.getFileReference(),
+                (fileReference, status) -> status == null ? new Status(clock.millis()) : status.increaseProcessingCount());
+        if (newStatus.getProcessingCount() > 1) {
+            LOGGER.warn("Starting processing of file '{}', now being processed concurrently for {} times.", file.getFileReference(),
+                    newStatus.getProcessingCount());
+        }
     }
 
     public void finish(final FileMetadata file) {
         requireNonNull(file, "file");
-        final FileUnderProcessing element = new FileUnderProcessing(file, clock);
-        filesUnderProcessing.remove(element);
+        if (filesUnderProcessing.containsKey(file.getFileReference())) {
+            filesUnderProcessing.computeIfPresent(file.getFileReference(), (fileReference, status) -> status.decreaseProcessingCount());
+        } else {
+            LOGGER.warn("Attempted to finish processing of file '{}', but it is not under processing.", file.getFileReference());
+        }
     }
 
     public int getFileCountUnderProcessing() {
-        return filesUnderProcessing.elementSet().size();
+        return filesUnderProcessing.size();
     }
 
     public Duration getRunningFileProcessingMaxElapsed() {
         final long now = clock.millis();
-        return Duration.ofMillis(now - filesUnderProcessing.stream()//
-                .mapToLong(FileUnderProcessing::getStart)//
+        final long startMin = filesUnderProcessing.values().stream()//
+                .mapToLong(Status::getStart)//
                 .min()//
-                .orElse(now));
+                .orElse(now);
+        return Duration.ofMillis(now - startMin);
     }
 
-    public boolean isFileUnderProcessing(final String productIdentifier, final String filename) {
-        requireNonNull(productIdentifier, "productIdentifier");
-        requireNonNull(filename, "filename");
-        return filesUnderProcessing.elementSet().stream().anyMatch(underProcessing ->
-                underProcessing.getProductIdentifier().equals(productIdentifier) && underProcessing.getFilename().equals(filename));
+    public boolean isFileUnderProcessing(final FileReference fileReference) {
+        requireNonNull(fileReference, "fileReference");
+        return filesUnderProcessing.containsKey(fileReference);
     }
 
-    private static final class FileUnderProcessing {
-        private final FileMetadata fileMetadata;
+    private static final class Status {
         private final long start;
+        private final int processingCount;
 
-        public FileUnderProcessing(final FileMetadata fileMetadata, final Clock clock) {
-            this.fileMetadata = requireNonNull(fileMetadata, "fileMetadata");
-            this.start = requireNonNull(clock, "clock").millis();
+        Status(final long start) {
+            this(start, 1);
         }
 
-        public String getFilename() {
-            return fileMetadata.getFilename();
-        }
-
-        public String getProductIdentifier() {
-            return fileMetadata.getProductIdentifier();
-        }
-
-        public FileMetadata getFileMetadata() {
-            return fileMetadata;
+        private Status(final long start, final int processingCount) {
+            this.start = start;
+            this.processingCount = processingCount;
         }
 
         public long getStart() {
             return start;
         }
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(getProductIdentifier(), getFilename());
+        public int getProcessingCount() {
+            return processingCount;
         }
 
-        @Override
-        public boolean equals(final Object obj) {
-            if (obj == this) {
-                return true;
-            } else if (obj instanceof FileUnderProcessing) {
-                final FileUnderProcessing other = (FileUnderProcessing) obj;
-                return this.getProductIdentifier().equals(other.getProductIdentifier())//
-                        && this.getFilename().equals(other.getFilename());
-            } else {
-                return false;
-            }
+        public Status increaseProcessingCount() {
+            return new Status(start, processingCount + 1);
         }
 
-        @Override
-        public String toString() {
-            return getProductIdentifier() + ":" + getFilename();
+        @Nullable
+        public Status decreaseProcessingCount() {
+            return processingCount <= 1 ? null : new Status(start, processingCount - 1);
         }
     }
 }

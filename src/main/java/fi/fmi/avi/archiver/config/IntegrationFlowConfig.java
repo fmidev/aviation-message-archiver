@@ -1,19 +1,28 @@
 package fi.fmi.avi.archiver.config;
 
-import com.google.common.collect.ImmutableList;
-import fi.fmi.avi.archiver.ProcessingState;
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.config.model.FileConfig;
-import fi.fmi.avi.archiver.database.DatabaseService;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorService;
-import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
-import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
-import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
-import fi.fmi.avi.archiver.spring.integration.file.filters.ProcessingFileListFilter;
-import fi.fmi.avi.archiver.spring.retry.RetryAdviceFactory;
+import static fi.fmi.avi.archiver.config.SpringLoggingContextHelper.getLoggingContext;
+import static fi.fmi.avi.archiver.config.SpringLoggingContextHelper.withLoggingContext;
+import static fi.fmi.avi.archiver.config.SpringLoggingContextHelper.withPayloadAndLoggingContext;
+import static java.util.Objects.requireNonNull;
+import static org.springframework.integration.file.FileHeaders.FILENAME;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
 import org.aopalliance.aop.Advice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +43,6 @@ import org.springframework.integration.file.filters.ChainFileListFilter;
 import org.springframework.integration.file.filters.RegexPatternFileListFilter;
 import org.springframework.integration.file.support.FileExistsMode;
 import org.springframework.integration.file.transformer.FileToStringTransformer;
-import org.springframework.integration.handler.LoggingHandler;
 import org.springframework.integration.handler.advice.ExpressionEvaluatingRequestHandlerAdvice;
 import org.springframework.integration.handler.advice.RequestHandlerRetryAdvice;
 import org.springframework.integration.transformer.GenericTransformer;
@@ -45,99 +53,117 @@ import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.*;
-import java.util.stream.Stream;
+import com.google.common.collect.ImmutableList;
 
-import static java.util.Objects.requireNonNull;
-import static org.springframework.integration.file.FileHeaders.FILENAME;
+import fi.fmi.avi.archiver.ProcessingState;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.database.DatabaseService;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.logging.BulletinLogReference;
+import fi.fmi.avi.archiver.logging.FileProcessingStatistics;
+import fi.fmi.avi.archiver.logging.FileProcessingStatisticsImpl;
+import fi.fmi.avi.archiver.logging.LoggingContext;
+import fi.fmi.avi.archiver.logging.LoggingContextImpl;
+import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
+import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
+import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
+import fi.fmi.avi.archiver.spring.integration.file.filters.ProcessingFileListFilter;
+import fi.fmi.avi.archiver.spring.retry.RetryAdviceFactory;
 
 @Configuration
 public class IntegrationFlowConfig {
 
-    public static final String FILE_METADATA = "file_metadata";
-    public static final String FAILED_MESSAGES = "processing_failures";
-    public static final String DISCARDED_MESSAGES = "processing_discards";
-    public static final String FILE_PARSE_ERRORS = "file_parsed_partially";
+    public static final String FILE_METADATA = FileMetadata.class.getSimpleName();
+    public static final String PROCESSING_ERRORS = "processingErrors";
+    public static final String PROCESSING_IDENTIFIER = FileProcessingIdentifier.class.getSimpleName();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IntegrationFlowConfig.class);
 
-    @Nullable
-    private static Message<?> errorMessageToOriginalMessage(final ErrorMessage errorMessage) {
-        final Message<?> failedMessage;
-        if (errorMessage.getPayload() instanceof MessagingException) {
-            failedMessage = ((MessagingException) errorMessage.getPayload()).getFailedMessage();
-        }
-        // Attempt to use original message if the exception is not a MessagingException
-        else if (errorMessage.getOriginalMessage() != null) {
-            failedMessage = errorMessage.getOriginalMessage();
-        } else {
-            // Unable to get the original message, log the exception
-            LOGGER.error("Unable to extract message from error message", errorMessage.getPayload());
-            return null;
-        }
-        LOGGER.error("Processing message {} failed: ", failedMessage, errorMessage.getPayload());
-        return failedMessage;
+    public static boolean hasProcessingErrors(final MessageHeaders headers) {
+        return Optional.ofNullable(headers.get(PROCESSING_ERRORS, Boolean.class)).orElse(false);
     }
 
     @Bean
     IntegrationFlow archivalFlow(final FileToStringTransformer fileToStringTransformer, final RequestHandlerRetryAdvice fileReadingRetryAdvice,
-                                 final ParserConfig.FileParserService fileParserService, final MessagePopulatorService messagePopulatorService,
-                                 final DatabaseService databaseService, final MessageChannel processingChannel, final MessageChannel parserChannel,
-                                 final MessageChannel populatorChannel, final MessageChannel databaseChannel, final MessageChannel archiveChannel,
-                                 final MessageChannel successChannel, final MessageChannel failChannel) {
+            final ParserConfig.FileParserIntegrationService fileParserIntegrationService,
+            final MessagePopulatorConfig.MessagePopulationIntegrationService messagePopulationIntegrationService, final DatabaseService databaseService,
+            final MessageChannel processingChannel, final MessageChannel parserChannel, final MessageChannel populatorChannel,
+            final MessageChannel databaseChannel, final MessageChannel archiveChannel, final MessageChannel successChannel, final MessageChannel failChannel) {
         return IntegrationFlows.from(processingChannel)
-                .transform(Message.class, fileToStringTransformer::transform, spec -> spec.advice(fileReadingRetryAdvice))
+                .transform(fileToStringTransformer, spec -> spec.advice(fileReadingRetryAdvice))
                 .channel(parserChannel)
-                .<String>filter(content -> content != null && !content.isEmpty(), discards -> discards.discardChannel(failChannel))
-                .handle(fileParserService::parse)
-                .<List<InputAviationMessage>>filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))
+                .<String> filter(content -> content != null && !content.isEmpty(), discards -> discards.discardChannel(failChannel))
+                .handle(fileParserIntegrationService::parse)
+                .handle(withLoggingContext(this::loggingActionsAfterParse))
+                .<List<InputAviationMessage>> filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))
                 .channel(populatorChannel)
-                .handle(messagePopulatorService::populateMessages)
+                .handle(messagePopulationIntegrationService::populateMessages)
                 .channel(databaseChannel)
-                .<List<ArchiveAviationMessage>>handle((payload, headers) -> databaseService.insertMessages(payload))
+                .handle(withPayloadAndLoggingContext(databaseService::insertMessages))
                 .channel(archiveChannel)
-                .route("headers." + FAILED_MESSAGES + ".isEmpty()" //
-                        + " and !headers." + FILE_PARSE_ERRORS, r -> r//
-                        .channelMapping(true, successChannel)//
-                        .channelMapping(false, failChannel))//
+                .route(Message.class, message -> hasProcessingErrors(message.getHeaders()), spec -> spec//
+                        .channelMapping(false, successChannel)//
+                        .channelMapping(true, failChannel))
                 .get();
     }
 
-    @Bean
-    IntegrationFlow logSuccessFlow(final MessageChannel successChannel) {
-        return IntegrationFlows.from(successChannel).log("Archive").get();
+    private void loggingActionsAfterParse(final LoggingContext loggingContext) {
+        loggingContext.initStatistics();
+        logFileContentOverview(loggingContext);
+    }
+
+    private void logFileContentOverview(final LoggingContext loggingContext) {
+        if (LOGGER.isInfoEnabled()) {
+            final List<BulletinLogReference> bulletinLogReferences = loggingContext.getAllBulletinLogReferences();
+            if (bulletinLogReferences.size() == 1 && !bulletinLogReferences.get(0).getBulletinHeading().isPresent()) {
+                loggingContext.enterBulletin(0);
+                LOGGER.info("Messages in <{}>: {}", loggingContext, loggingContext.getBulletinMessageLogReferences());
+                loggingContext.leaveBulletin();
+            } else {
+                LOGGER.info("Bulletins in <{}>: {}", loggingContext, bulletinLogReferences);
+            }
+        }
     }
 
     @Bean
     IntegrationFlow finishFlow(final ProcessingState processingState, final MessageChannel finishChannel) {
         return IntegrationFlows.from(finishChannel)//
                 .handle(ServiceActivators.peekHeader(FileMetadata.class, FILE_METADATA, processingState::finish))//
+                .handle(this::logFinish)//
                 .nullChannel();
     }
 
+    private Object logFinish(final Object payload, final MessageHeaders headers) {
+        final LoggingContext loggingContext = getLoggingContext(headers);
+        loggingContext.leaveBulletin();
+        LOGGER.info("Finish processing <{}> {}. Statistics: {}", loggingContext, hasProcessingErrors(headers) ? "with errors" : "successfully",
+                loggingContext.getStatistics());
+        return payload;
+    }
+
     @Bean
-    IntegrationFlow errorMessageFlow(final MessageChannel errorMessageChannel, final MessageChannel failChannel) {
+    IntegrationFlow errorMessageFlow(final MessageChannel errorMessageChannel, final MessageChannel failChannel,
+            @SuppressWarnings("rawtypes") final GenericTransformer<Message, File> headerToFileTransformer,
+            @SuppressWarnings("rawtypes") final GenericTransformer<Message, Message> errorMessageToOriginalTransformer) {
         return IntegrationFlows.from(errorMessageChannel)//
-                .handle(ErrorMessage.class, (payload, headers) -> errorMessageToOriginalMessage(payload))
-                .transform(Message.class, m -> m.getHeaders().get(FileHeaders.ORIGINAL_FILE, File.class))//
+                .transform(Message.class, errorMessageToOriginalTransformer)//
+                .transform(Message.class, headerToFileTransformer)//
+                .enrichHeaders(spec -> spec.header(PROCESSING_ERRORS, true, true))//
                 .channel(failChannel)//
                 .get();
     }
 
     @Bean
-    IntegrationFlow errorLoggingFlow(final MessageChannel errorLoggingChannel, final MessageChannel finishChannel) {
+    IntegrationFlow errorLoggingFlow(final MessageChannel errorLoggingChannel, final MessageChannel finishChannel,
+            @SuppressWarnings("rawtypes") final GenericTransformer<Message, Message> errorMessageToOriginalTransformer) {
         return IntegrationFlows.from(errorLoggingChannel)//
-                .handle(ErrorMessage.class, (payload, headers) -> errorMessageToOriginalMessage(payload)).channel(finishChannel)//
+                .transform(Message.class, errorMessageToOriginalTransformer)//
+                .enrichHeaders(spec -> spec.header(PROCESSING_ERRORS, true, true))//
+                .channel(finishChannel)//
                 .get();
     }
 
@@ -149,8 +175,8 @@ public class IntegrationFlowConfig {
     }
 
     @Bean
-    FileNameGenerator timestampAppender(final Clock clock) {
-        return msg -> msg.getHeaders().get(FILENAME) + "." + clock.millis();
+    FileNameGenerator fileProcessingIdAppender() {
+        return message -> message.getHeaders().get(FILENAME) + "." + message.getHeaders().get(PROCESSING_IDENTIFIER);
     }
 
     // Trap exceptions to avoid infinite looping when the error message flow itself results in exceptions
@@ -164,10 +190,10 @@ public class IntegrationFlowConfig {
 
     @Bean
     RetryAdviceFactory retryAdviceFactory(//
-                                          @Value("${file-handler.retry.initial-interval}") final Duration initialInterval, //
-                                          @Value("${file-handler.retry.max-interval}") final Duration maxInterval, //
-                                          @Value("${file-handler.retry.multiplier}") final int retryMultiplier, //
-                                          @Value("${file-handler.retry.timeout}") final Duration timeout) {
+            @Value("${file-handler.retry.initial-interval}") final Duration initialInterval, //
+            @Value("${file-handler.retry.max-interval}") final Duration maxInterval, //
+            @Value("${file-handler.retry.multiplier}") final int retryMultiplier, //
+            @Value("${file-handler.retry.timeout}") final Duration timeout) {
         return new RetryAdviceFactory(initialInterval, maxInterval, retryMultiplier, timeout);
     }
 
@@ -202,10 +228,39 @@ public class IntegrationFlowConfig {
         return message -> message.getHeaders().get(FileHeaders.ORIGINAL_FILE, File.class);
     }
 
+    @Bean
+    @SuppressWarnings("rawtypes")
+    GenericTransformer<Message, Message> errorMessageToOriginalTransformer() {
+        return message -> {
+            if (!(message instanceof ErrorMessage)) {
+                return message;
+            }
+            final ErrorMessage errorMessage = (ErrorMessage) message;
+            final Throwable throwable = errorMessage.getPayload();
+            final Message<?> failedMessage;
+            if (throwable instanceof MessagingException) {
+                failedMessage = ((MessagingException) throwable).getFailedMessage();
+            }
+            // Attempt to use original message if the exception is not a MessagingException
+            else if (errorMessage.getOriginalMessage() != null) {
+                failedMessage = errorMessage.getOriginalMessage();
+            } else {
+                // Unable to get the original message, log the exception
+                LOGGER.error("Unable to extract original Spring Integration message from error message of processing <{}>.", getLoggingContext(message),
+                        throwable);
+                failedMessage = null;
+            }
+            final LoggingContext loggingContext = getLoggingContext(failedMessage);
+            final Throwable errorToLog = throwable instanceof MessagingException ? throwable.getCause() : throwable;
+            LOGGER.error("Error while processing <{}>: {}", loggingContext, errorToLog == null ? "" : errorToLog.getMessage(), errorToLog);
+            loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
+            return failedMessage;
+        };
+    }
+
     @Component
     static class ProductFlowsInitializer {
-        private static final String PRODUCT_KEY = "product";
-        private static final String INPUT_CATEGORY = "input";
+        private static final String PRODUCT_KEY = AviationProduct.class.getSimpleName();
 
         private final Set<IntegrationFlowContext.IntegrationFlowRegistration> registrations = new HashSet<>();
 
@@ -215,7 +270,7 @@ public class IntegrationFlowConfig {
         private final ProcessingState processingState;
         private final List<Advice> archiveAdviceChain;
         private final List<Advice> failAdviceChain;
-        private final FileNameGenerator timestampAppender;
+        private final FileNameGenerator fileProcessingIdAppender;
         @SuppressWarnings("rawtypes")
         private final GenericTransformer<Message, File> headerToFileTransformer;
         private final int filterQueueSize;
@@ -226,19 +281,19 @@ public class IntegrationFlowConfig {
         private final MessageChannel finishChannel;
 
         ProductFlowsInitializer(final IntegrationFlowContext context, final Map<String, AviationProduct> aviationProducts,
-                                final CompoundLifecycle inputReadersLifecycle, final ProcessingState processingState, final List<Advice> archiveAdviceChain,
-                                final List<Advice> failAdviceChain, final FileNameGenerator timestampAppender,
-                                @SuppressWarnings("rawtypes") final GenericTransformer<Message, File> headerToFileTransformer,
-                                @Value("${polling.filter-queue-size}") final int filterQueueSize, final MessageChannel processingChannel,
-                                final MessageChannel errorMessageChannel, final MessageChannel successChannel, final MessageChannel failChannel,
-                                final MessageChannel finishChannel) {
+                final CompoundLifecycle inputReadersLifecycle, final ProcessingState processingState, final List<Advice> archiveAdviceChain,
+                final List<Advice> failAdviceChain, final FileNameGenerator fileProcessingIdAppender,
+                @SuppressWarnings("rawtypes") final GenericTransformer<Message, File> headerToFileTransformer,
+                @Value("${polling.filter-queue-size}") final int filterQueueSize, final MessageChannel processingChannel,
+                final MessageChannel errorMessageChannel, final MessageChannel successChannel, final MessageChannel failChannel,
+                final MessageChannel finishChannel) {
             this.context = requireNonNull(context, "context");
             this.aviationProducts = requireNonNull(aviationProducts, "aviationProducts");
             this.inputReadersLifecycle = requireNonNull(inputReadersLifecycle, "inputReadersLifecycle");
             this.processingState = requireNonNull(processingState, "processingState");
             this.archiveAdviceChain = requireNonNull(archiveAdviceChain, "archiveAdviceChain");
             this.failAdviceChain = requireNonNull(failAdviceChain, "failAdviceChain");
-            this.timestampAppender = requireNonNull(timestampAppender, "timestampAppender");
+            this.fileProcessingIdAppender = requireNonNull(fileProcessingIdAppender, "fileProcessingIdAppender");
             this.headerToFileTransformer = requireNonNull(headerToFileTransformer, "headerToFileTransformer");
             this.filterQueueSize = filterQueueSize;
             this.processingChannel = requireNonNull(processingChannel, "processingChannel");
@@ -248,12 +303,17 @@ public class IntegrationFlowConfig {
             this.finishChannel = requireNonNull(finishChannel, "finishChannel");
         }
 
+        private static <T> T getNonNullHeader(final MessageHeaders headers, final Object key, final Class<T> type) {
+            final T header = headers.get(key, type);
+            assert header != null : key;
+            return header;
+        }
+
         private static FileMetadata createFileMetadata(final Message<?> message, final FileConfig fileConfig, final String productIdentifier) {
-            final String filename = requireNonNull(message.getHeaders().get(FILENAME, String.class), FILENAME);
+            final String filename = getNonNullHeader(message.getHeaders(), FILENAME, String.class);
             return FileMetadata.builder()
-                    .setFilename(filename)
+                    .setFileReference(FileReference.create(productIdentifier, filename))
                     .setFileConfig(fileConfig)
-                    .setProductIdentifier(productIdentifier)
                     .setFileModified(getFileModified(message))
                     .build();
         }
@@ -289,21 +349,35 @@ public class IntegrationFlowConfig {
                 registerAllIntegrationFlows(product.getFileConfigs().stream()//
                         .map(fileConfig -> IntegrationFlows.from(inputChannel)//
                                 .filter(new RegexPatternFileListFilter(fileConfig.getPattern())::accept)//
-                                .enrichHeaders(s -> s.header(PRODUCT_KEY, product)//
-                                        .headerFunction(MessageHeaders.ERROR_CHANNEL, message -> errorMessageChannel)
-                                        .headerFunction(FILE_METADATA, message -> createFileMetadata(message, fileConfig, product.getId())))
-                                .handle(ServiceActivators.peekHeader(FileMetadata.class, FILE_METADATA, processingState::start))//
-                                .log(LoggingHandler.Level.INFO, INPUT_CATEGORY)//
+                                .enrichHeaders(spec -> spec//
+                                        .header(PRODUCT_KEY, product)//
+                                        .errorChannel(errorMessageChannel)
+                                        .headerFunction(FILE_METADATA, message -> createFileMetadata(message, fileConfig, product.getId()))//
+                                        .headerFunction(PROCESSING_IDENTIFIER, message -> FileProcessingIdentifier.newInstance()))//
+                                .enrichHeaders(spec -> spec//
+                                        // New header enrichment is required to refer header values set earlier
+                                        .headerFunction(SpringLoggingContextHelper.HEADER_KEY, message -> createLoggingContext(
+                                                getNonNullHeader(message.getHeaders(), PROCESSING_IDENTIFIER, FileProcessingIdentifier.class))))//
+                                .handle((payload, headers) -> {
+                                    final FileMetadata fileMetadata = getNonNullHeader(headers, FILE_METADATA, FileMetadata.class);
+                                    processingState.start(fileMetadata);
+                                    final LoggingContext loggingContext = getLoggingContext(headers);
+                                    loggingContext.enterFile(fileMetadata.getFileReference());
+                                    LOGGER.info("Start processing <{}>", loggingContext);
+                                    return payload;
+                                })//
                                 .channel(processingChannel)//
                                 .get()//
                         ));
 
-                @SuppressWarnings("rawtypes") final GenericSelector<Message> productFilter = m -> Objects.equals(m.getHeaders().get(PRODUCT_KEY), product);
+                @SuppressWarnings("rawtypes")
+                final GenericSelector<Message> productFilter = m -> Objects.equals(m.getHeaders().get(PRODUCT_KEY), product);
 
                 registerIntegrationFlow(IntegrationFlows.from(successChannel)//
                         .filter(Message.class, productFilter)//
                         .transform(Message.class, headerToFileTransformer)//
                         .handle(createArchiveHandler(product.getArchiveDir()))//
+                        .handle(withLoggingContext(loggingContext -> LOGGER.debug("Moved <{}> to '{}'.", loggingContext, product.getArchiveDir())))//
                         .channel(finishChannel)//
                         .get());
 
@@ -311,9 +385,15 @@ public class IntegrationFlowConfig {
                         .filter(Message.class, productFilter)//
                         .transform(Message.class, headerToFileTransformer)//
                         .handle(createFailHandler(product.getFailDir()))//
+                        .handle(withLoggingContext(loggingContext -> LOGGER.debug("Moved <{}> to '{}'.", loggingContext, product.getFailDir())))//
                         .channel(finishChannel)//
                         .get());
             });
+        }
+
+        private LoggingContext createLoggingContext(final FileProcessingIdentifier fileProcessingIdentifier) {
+            return LoggingContext.asSynchronized(
+                    new LoggingContextImpl(fileProcessingIdentifier, FileProcessingStatistics.asSynchronized(new FileProcessingStatisticsImpl())));
         }
 
         @PreDestroy
@@ -350,7 +430,7 @@ public class IntegrationFlowConfig {
             archiveHandler.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
             archiveHandler.setDeleteSourceFiles(true);
             archiveHandler.setAdviceChain(archiveAdviceChain);
-            archiveHandler.setFileNameGenerator(timestampAppender);
+            archiveHandler.setFileNameGenerator(fileProcessingIdAppender);
             return archiveHandler;
         }
 
@@ -359,7 +439,7 @@ public class IntegrationFlowConfig {
             failHandler.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
             failHandler.setDeleteSourceFiles(true);
             failHandler.setAdviceChain(failAdviceChain);
-            failHandler.setFileNameGenerator(timestampAppender);
+            failHandler.setFileNameGenerator(fileProcessingIdAppender);
             return failHandler;
         }
     }

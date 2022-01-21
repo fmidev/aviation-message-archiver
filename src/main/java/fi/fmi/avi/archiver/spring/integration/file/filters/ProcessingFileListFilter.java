@@ -1,11 +1,13 @@
 package fi.fmi.avi.archiver.spring.integration.file.filters;
 
-import fi.fmi.avi.archiver.ProcessingState;
-import org.springframework.integration.file.filters.AbstractFileListFilter;
+import static java.util.Objects.requireNonNull;
 
 import java.io.File;
 
-import static java.util.Objects.requireNonNull;
+import org.springframework.integration.file.filters.AbstractFileListFilter;
+
+import fi.fmi.avi.archiver.ProcessingState;
+import fi.fmi.avi.archiver.file.FileReference;
 
 public class ProcessingFileListFilter extends AbstractFileListFilter<File> {
 
@@ -19,7 +21,7 @@ public class ProcessingFileListFilter extends AbstractFileListFilter<File> {
 
     @Override
     public boolean accept(final File file) {
-        return !processingState.isFileUnderProcessing(productIdentifier, file.getName());
+        return !processingState.isFileUnderProcessing(FileReference.create(productIdentifier, file.getName()));
     }
 
 }

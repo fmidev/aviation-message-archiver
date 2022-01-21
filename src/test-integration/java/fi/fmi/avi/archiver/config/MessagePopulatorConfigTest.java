@@ -1,10 +1,16 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.AviationMessageArchiver;
-import fi.fmi.avi.archiver.TestConfig;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.*;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
@@ -18,33 +24,37 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import fi.fmi.avi.archiver.AviationMessageArchiver;
+import fi.fmi.avi.archiver.TestConfig;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.populator.AbstractMessagePopulatorFactory;
+import fi.fmi.avi.archiver.message.populator.MessagePopulator;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatorFactory;
+import fi.fmi.avi.archiver.message.populator.ReflectionMessagePopulatorFactory;
+import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
 
-import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
-
-@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.config.MessagePopulatorConfigTest"})
-@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},//
+@SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.config.MessagePopulatorConfigTest" })
+@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = {ConfigDataApplicationContextInitializer.class})
-@Sql(scripts = {"classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+        initializers = { ConfigDataApplicationContextInitializer.class })
+@Sql(scripts = { "classpath:/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @ActiveProfiles("MessagePopulatorTest")
 class MessagePopulatorConfigTest {
 
     @Autowired
-    private MessagePopulatorService messagePopulatorService;
+    private MessagePopulatorConfig.MessagePopulationIntegrationService messagePopulationIntegrationService;
 
     @Test
     void testMessagePopulatorExecutionChain() {
-        final List<InputAviationMessage> inputMessages = Collections.singletonList(InputAviationMessage.builder().buildPartial());
-        final List<ArchiveAviationMessage> result = messagePopulatorService.populateMessages(inputMessages, new MessageHeaders(Collections.emptyMap()))//
+        final List<InputAviationMessage> inputMessages = Collections.singletonList(InputAviationMessage.builder()//
+                .setMessage(GenericAviationWeatherMessageImpl.builder()//
+                        .setOriginalMessage("message")//
+                        .buildPartial())//
+                .buildPartial());
+        final List<ArchiveAviationMessage> result = messagePopulationIntegrationService.populateMessages(inputMessages,
+                        new MessageHeaders(Collections.emptyMap()))//
                 .getPayload();
 
         final ArchiveAviationMessage expected = ArchiveAviationMessage.builder()//
