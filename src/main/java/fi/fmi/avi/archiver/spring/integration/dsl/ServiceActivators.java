@@ -1,11 +1,11 @@
 package fi.fmi.avi.archiver.spring.integration.dsl;
 
-import static java.util.Objects.requireNonNull;
+import org.springframework.integration.handler.GenericHandler;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.springframework.integration.handler.GenericHandler;
+import static java.util.Objects.requireNonNull;
 
 public final class ServiceActivators {
     private ServiceActivators() {
@@ -43,7 +43,7 @@ public final class ServiceActivators {
     }
 
     /**
-     * Return a {@code GenericHandler} that looks for specified header, and if it exists, executes provided action on it.
+     * Return a {@code GenericHandler} that looks for specified header, and if it exists, executes the provided action on it.
      * The returned handler passes / returns the payload as is.
      *
      * @param <P>
@@ -73,7 +73,7 @@ public final class ServiceActivators {
     }
 
     /**
-     * Return a {@code GenericHandler} that looks for two specified headers, and if both exist, executes provided action on them.
+     * Return a {@code GenericHandler} that looks for two specified headers, and if both exist, executes the provided action on them.
      * The returned handler passes / returns the payload as is.
      *
      * @param <P>

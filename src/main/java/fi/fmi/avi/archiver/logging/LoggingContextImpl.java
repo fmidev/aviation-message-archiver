@@ -1,23 +1,22 @@
 package fi.fmi.avi.archiver.logging;
 
-import static java.util.Objects.requireNonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
+import fi.fmi.avi.archiver.file.FileReference;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.IntFunction;
 
-import javax.annotation.Nullable;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
-import fi.fmi.avi.archiver.file.FileReference;
+import static java.util.Objects.requireNonNull;
 
 public class LoggingContextImpl extends AbstractAppendingLoggable implements LoggingContext {
     private static final char SEPARATOR = ':';
     /**
-     * Maximum file name length is set according to maximum length of mandatory file name files specified by
+     * Maximum file name length is set according to maximum length of mandatory file name fields specified by
      * WMO doc 386 Manual on the Global Telecommunication System, General file naming conventions
      */
     private static final int FILENAME_MAX_LENGTH = 128;
