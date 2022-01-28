@@ -28,7 +28,7 @@ public class FilenameMatcherTest {
 
     @ParameterizedTest
     @MethodSource("testArguments")
-    void populates_route(final String filename, final Pattern pattern, final ZonedDateTime expected) {
+    void match_filename_patterns(final String filename, final Pattern pattern, final ZonedDateTime expected) {
         final FilenameMatcher matcher = new FilenameMatcher(filename, pattern, UTC);
         final Optional<PartialOrCompleteTimeInstant> timestamp = matcher.getTimestamp(CLOCK);
         assertThat(timestamp).isPresent();
