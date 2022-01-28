@@ -53,6 +53,7 @@ public class MessagePopulatorFactoryConfig {
     MessagePopulatorFactory<FileNameDataPopulator> fileNameDataPopulatorFactory() {
         return builder(FileNameDataPopulator.class)//
                 .addDependencyArg(messagePopulatorHelper())//
+                .addDependencyArg(clock)//
                 .build();
     }
 

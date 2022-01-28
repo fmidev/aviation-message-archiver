@@ -186,7 +186,7 @@ public class MessagePopulatorHelper {
                                                                        final FileMetadata inputFileMetadata) {
         final List<PartialOrCompleteTimeInstant> builder = new ArrayList<>();
         builder.add(primaryInstant);
-        builder.add(inputFileMetadata.createFilenameMatcher().getTimestamp().orElse(null));
+        builder.add(inputFileMetadata.createFilenameMatcher().getTimestamp(clock).orElse(null));
         builder.add(inputFileMetadata.getFileModified()//
                 .map(fileModified -> PartialOrCompleteTimeInstant.of(fileModified.atZone(ZoneOffset.UTC)))//
                 .orElse(null));
