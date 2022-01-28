@@ -1,7 +1,13 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.tryGet;
-import static org.assertj.core.api.Assertions.assertThat;
+import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -9,15 +15,8 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-
-import fi.fmi.avi.archiver.config.model.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.tryGet;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class FileNameDataPopulatorTest {
     private static final InputAviationMessage INPUT_TEMPLATE = InputAviationMessage.builder()//
@@ -38,8 +37,9 @@ class FileNameDataPopulatorTest {
     })
     @ParameterizedTest
     void populates_messageTime_when_exists(final String fileName, final String expectedMessageTime) {
-        final MessagePopulatorHelper helper = new MessagePopulatorHelper(Clock.fixed(Instant.parse("2011-03-05T15:17:19.021Z"), ZoneOffset.UTC));
-        final FileNameDataPopulator populator = new FileNameDataPopulator(helper);
+        final Clock clock = Clock.fixed(Instant.parse("2011-03-05T15:17:19.021Z"), ZoneOffset.UTC);
+        final MessagePopulatorHelper helper = new MessagePopulatorHelper(clock);
+        final FileNameDataPopulator populator = new FileNameDataPopulator(helper, clock);
         final ArchiveAviationMessage.Builder targetBuilder = ArchiveAviationMessage.builder();
         final InputAviationMessage input = INPUT_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setFilename(fileName)))//
@@ -53,8 +53,9 @@ class FileNameDataPopulatorTest {
 
     @Test
     void populates_messageTime_completing_from_clock_when_fileModified_is_missing() {
-        final MessagePopulatorHelper helper = new MessagePopulatorHelper(Clock.fixed(Instant.parse("2011-03-05T15:17:19.021Z"), ZoneOffset.UTC));
-        final FileNameDataPopulator populator = new FileNameDataPopulator(helper);
+        final Clock clock = Clock.fixed(Instant.parse("2011-03-05T15:17:19.021Z"), ZoneOffset.UTC);
+        final MessagePopulatorHelper helper = new MessagePopulatorHelper(clock);
+        final FileNameDataPopulator populator = new FileNameDataPopulator(helper, clock);
         final InputAviationMessage input = INPUT_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(fileMetadata -> fileMetadata//
                         .mutateFileReference(ref -> ref.setFilename("msg-05-1608.txt"))//
