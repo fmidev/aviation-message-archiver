@@ -19,6 +19,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 
+import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.config.model.PopulatorInstanceSpec;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
@@ -26,7 +27,6 @@ import fi.fmi.avi.archiver.logging.LoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.MessagePopulationService;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.message.populator.StationIdPopulator;
 
 @ConstructorBinding

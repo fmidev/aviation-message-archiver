@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.message.populator;
+package fi.fmi.avi.archiver.util.instantiation;
 
 import static java.util.Objects.requireNonNull;
 
@@ -15,7 +15,7 @@ import org.springframework.core.convert.TypeDescriptor;
 /**
  * A {@code ConfigValueConverter} implementation delegating conversion to Spring {@link ConversionService}.
  */
-public class SpringConversionServiceConfigValueConverter implements AbstractMessagePopulatorFactory.ConfigValueConverter {
+public class SpringConversionServiceConfigValueConverter implements ConfigValueConverter {
     private final ConversionService conversionService;
 
     public SpringConversionServiceConfigValueConverter(final ConversionService conversionService) {
@@ -24,8 +24,23 @@ public class SpringConversionServiceConfigValueConverter implements AbstractMess
 
     @Nullable
     @Override
-    public Object convert(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
+    public Object toParameterType(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
         requireNonNull(targetExecutable, "targetExecutable");
+        if (parameterIndex < 0) {
+            throw new IllegalArgumentException("parameterIndex must not be negative; was: " + parameterIndex);
+        }
+        return convert(propertyConfigValue, targetExecutable, parameterIndex);
+    }
+
+    @Nullable
+    @Override
+    public Object toReturnValueType(@Nullable final Object propertyConfigValue, final Executable targetExecutable) {
+        requireNonNull(targetExecutable, "targetExecutable");
+        return convert(propertyConfigValue, targetExecutable, -1);
+    }
+
+    @Nullable
+    private Object convert(final @Nullable Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
         return propertyConfigValue == null
                 ? null
                 : conversionService.convert(propertyConfigValue, typeDescriptorForObject(propertyConfigValue),

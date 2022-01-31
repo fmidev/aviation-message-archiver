@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.message.populator;
+package fi.fmi.avi.archiver.util.instantiation;
 
 import static java.util.Objects.requireNonNull;
 
@@ -17,23 +17,23 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
- * A {@code MessagePopulatorFactory} constructing and populating any config properties using Java reflection API.
+ * A {@code ObjectFactory} constructing and injecting any config properties using Java reflection API.
  *
  * <p>
  * A new factory instance is built with a {@link Builder}, storing constant constructor parameter values, called <em>dependency args</em>, and names and
- * types of configuration options, called <em>config args</em>, in the order of declared constructor parameters. The {@code MessagePopulator} to construct
+ * types of configuration options, called <em>config args</em>, in the order of declared constructor parameters. The class to construct
  * must be accessible (public in most cases) and must have a <em>public</em> constructor matching configured constructor parameters.
  * </p>
  *
  * <p>
- * The factory instance name is by default the name provided by {@link MessagePopulatorFactory#getName()}, but may be set to custom value in the
+ * The factory instance name is by default the name provided by {@link ObjectFactory#getName()}, but may be set to custom value in the
  * {@link Builder#setName(String) builder}.
  * </p>
  *
  * @param <T>
- *         target {@code MessagePopulator} type this factory constructs
+ *         target object type this factory constructs
  */
-public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> extends AbstractMessagePopulatorFactory<T> {
+public class ReflectionObjectFactory<T> extends AbstractObjectFactory<T> {
     private final Class<T> type;
     private final ConfigValueConverter configValueConverter;
     private final Object[] constructorArgsTemplate;
@@ -42,7 +42,7 @@ public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> exten
     @Nullable
     private final String name;
 
-    private ReflectionMessagePopulatorFactory(final Builder<T> builder) {
+    private ReflectionObjectFactory(final Builder<T> builder) {
         this.configValueConverter = requireNonNull(builder.configValueConverter, "configValueConverter");
         this.type = requireNonNull(builder.type, "type");
         this.name = builder.name;
@@ -57,15 +57,15 @@ public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> exten
      * Create a new {@code Builder} for a factory creating instances of provided {@code type}.
      *
      * @param type
-     *         type of {@code MessagePopulator} this factory will construct
+     *         type of object this factory will construct
      * @param configValueConverter
      *         configuration value converter
      * @param <T>
-     *         type of {@code MessagePopulator} this factory will construct
+     *         type of object this factory will construct
      *
      * @return new builder instance
      */
-    public static <T extends MessagePopulator> Builder<T> builder(final Class<T> type, final ConfigValueConverter configValueConverter) {
+    public static <T> Builder<T> builder(final Class<T> type, final ConfigValueConverter configValueConverter) {
         return new Builder<>(type, configValueConverter);
     }
 
@@ -97,9 +97,9 @@ public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> exten
         try {
             return constructor.newInstance(constructorArgs);
         } catch (final InstantiationException | IllegalAccessException e) {
-            throw new IllegalStateException(String.format(Locale.ROOT, "Unable to construct MessagePopulator '%s' (%s)", getName(), type), e);
+            throw new IllegalStateException(String.format(Locale.ROOT, "Unable to construct '%s' (%s)", getName(), type), e);
         } catch (final InvocationTargetException e) {
-            throw new IllegalStateException(String.format(Locale.ROOT, "Error while constructing MessagePopulator '%s' (%s)", getName(), type), e.getCause());
+            throw new IllegalStateException(String.format(Locale.ROOT, "Error while constructing '%s' (%s)", getName(), type), e.getCause());
         }
     }
 
@@ -109,20 +109,19 @@ public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> exten
             final Object configValue = config.get(configOptionName);
             if (configValue == null && !config.containsKey(configOptionName)) {
                 throw new IllegalArgumentException(
-                        String.format(Locale.ROOT, "Missing required config option [%s] for MessagePopulator '%s' (%s)", configOptionName, getName(), type));
+                        String.format(Locale.ROOT, "Missing required config option [%s] for '%s' (%s)", configOptionName, getName(), type));
             }
             try {
-                args[constructorArgIndex] = configValueConverter.convert(configValue, constructor, constructorArgIndex);
+                args[constructorArgIndex] = configValueConverter.toParameterType(configValue, constructor, constructorArgIndex);
             } catch (final RuntimeException e) {
                 throw new IllegalArgumentException(
-                        String.format(Locale.ROOT, "Unable to convert config option [%s] value for MessagePopulator '%s' (%s)", configOptionName, getName(),
-                                type), e);
+                        String.format(Locale.ROOT, "Unable to convert config option [%s] value for '%s' (%s)", configOptionName, getName(), type), e);
             }
         });
         return args;
     }
 
-    public static class Builder<T extends MessagePopulator> {
+    public static class Builder<T> {
         private final Class<T> type;
         private final ConfigValueConverter configValueConverter;
 
@@ -145,11 +144,11 @@ public class ReflectionMessagePopulatorFactory<T extends MessagePopulator> exten
                     .collect(Collectors.joining(", ", "[", "]"));
         }
 
-        public ReflectionMessagePopulatorFactory<T> build() {
+        public ReflectionObjectFactory<T> build() {
             assert constructorArgsTemplate.size() == constructorParameterTypes.size() //
                     : "constructorArgsTemplate mismatches constructorParameterTypes in size";
             constructor = resolveConstructor();
-            return new ReflectionMessagePopulatorFactory<>(this);
+            return new ReflectionObjectFactory<>(this);
         }
 
         private Constructor<T> resolveConstructor() {
