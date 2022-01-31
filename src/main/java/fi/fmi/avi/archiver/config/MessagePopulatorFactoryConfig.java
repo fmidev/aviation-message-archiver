@@ -5,7 +5,6 @@ import static java.util.Objects.requireNonNull;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.springframework.context.annotation.Bean;
@@ -135,11 +134,12 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
-    MessagePopulatorFactory<ProductMessageTypesValidator> productMessageTypesValidatorFactory(final Map<MessageType, Integer> messageTypeIds) {
+    MessagePopulatorFactory<ProductMessageTypesValidator> productMessageTypesValidatorFactory(final Map<MessageType, Integer> messageTypeIds,
+            final Map<String, AviationProduct> aviationProducts) {
         return build(builder(ProductMessageTypesValidator.class)//
                 .addDependencyArg(messageTypeIds)//
-                .addConfigArg("productIdentifier", String.class)//
-                .addConfigArg("messageTypes", Set.class));
+                .addDependencyArg(aviationProducts)//
+                .addConfigArg("productMessageTypes", Map.class));
     }
 
     @Bean
