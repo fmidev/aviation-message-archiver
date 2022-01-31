@@ -11,7 +11,6 @@ import org.springframework.core.convert.ConversionService;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import static java.util.Objects.requireNonNull;
@@ -127,11 +126,11 @@ public class MessagePopulatorFactoryConfig {
 
     @Bean
     MessagePopulatorFactory<ProductMessageTypesValidator> productMessageTypesValidatorFactory(
-            final Map<MessageType, Integer> messageTypeIds) {
+            final Map<MessageType, Integer> messageTypeIds, final Map<String, AviationProduct> aviationProducts) {
         return builder(ProductMessageTypesValidator.class)//
                 .addDependencyArg(messageTypeIds)//
-                .addConfigArg("productIdentifier", String.class)//
-                .addConfigArg("messageTypes", Set.class)//
+                .addDependencyArg(aviationProducts)//
+                .addConfigArg("productMessageTypes", Map.class)//
                 .build();
     }
 
