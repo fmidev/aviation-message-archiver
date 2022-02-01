@@ -19,8 +19,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.*;
 
 public class ProductMessageTypesValidatorTest {
 
@@ -100,14 +99,14 @@ public class ProductMessageTypesValidatorTest {
 
     @Test
     void misconfigured_message_type() {
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThatIllegalArgumentException().isThrownBy(() ->
                 new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, PRODUCTS, ImmutableMap.of(TAF_PRODUCT, Collections.singleton(new MessageType("test")))));
 
     }
 
     @Test
     void misconfigured_product() {
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThatIllegalArgumentException().isThrownBy(() ->
                 new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, PRODUCTS, ImmutableMap.of(OTHER_PRODUCT, Collections.singleton(MessageType.METAR))));
     }
 
@@ -127,9 +126,9 @@ public class ProductMessageTypesValidatorTest {
     // Test constructor nulls
     @Test
     void testConstructorNulls() {
-        assertThrows(NullPointerException.class, () -> new ProductMessageTypesValidator(null, PRODUCTS, PRODUCT_MESSAGE_TYPES));
-        assertThrows(NullPointerException.class, () -> new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, null, PRODUCT_MESSAGE_TYPES));
-        assertThrows(NullPointerException.class, () -> new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, PRODUCTS, null));
+        assertThatNullPointerException().isThrownBy(() -> new ProductMessageTypesValidator(null, PRODUCTS, PRODUCT_MESSAGE_TYPES));
+        assertThatNullPointerException().isThrownBy(() -> new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, null, PRODUCT_MESSAGE_TYPES));
+        assertThatNullPointerException().isThrownBy(() -> new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, PRODUCTS, null));
     }
 
 }
