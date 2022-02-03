@@ -26,7 +26,14 @@ public final class MessagePopulatorTests {
         throw new AssertionError();
     }
 
-    enum FormatId implements NumericIdHolder {
+    /**
+     * A mapper between {@link fi.fmi.avi.model.GenericAviationWeatherMessage.Format} and numeric database id.
+     *
+     * <p>
+     * Values shall be kept in sync with h2-data/avidb_test_content.sql
+     * </p>
+     */
+    public enum FormatId implements NumericIdHolder {
         TAC(GenericAviationWeatherMessage.Format.TAC, 1), //
         IWXXM(GenericAviationWeatherMessage.Format.IWXXM, 2), //
         ;
@@ -57,9 +64,16 @@ public final class MessagePopulatorTests {
         }
     }
 
-    enum TypeId implements NumericIdHolder {
-        SPECI(MessageType.SPECI, 1), //
-        METAR(MessageType.METAR, 2), //
+    /**
+     * A mapper between {@link MessageType} and numeric database id.
+     *
+     * <p>
+     * Values shall be kept in sync with h2-data/avidb_test_content.sql
+     * </p>
+     */
+    public enum TypeId implements NumericIdHolder {
+        METAR(MessageType.METAR, 1), //
+        SPECI(MessageType.SPECI, 2), //
         TAF(MessageType.TAF, 3), //
         SIGMET(MessageType.SIGMET, 4), //
         AIRMET(MessageType.AIRMET, 5), //
@@ -95,9 +109,17 @@ public final class MessagePopulatorTests {
         }
     }
 
-    enum RouteId implements NumericIdHolder {
+    /**
+     * A mapper between route name string and numeric database id.
+     *
+     * <p>
+     * Values shall be kept in sync with h2-data/avidb_test_content.sql
+     * </p>
+     */
+    public enum RouteId implements NumericIdHolder {
         TEST(1), //
-        TEST2(2);
+        TEST2(2), //
+        ;
 
         private final int id;
 
@@ -105,11 +127,48 @@ public final class MessagePopulatorTests {
             this.id = id;
         }
 
-        public static RouteId valudOf(final int id) {
+        public static RouteId valueOf(final int id) {
             return NumericIdHolder.valueOf(id, values());
         }
 
         public String getName() {
+            return name();
+        }
+
+        @Override
+        public int getId() {
+            return id;
+        }
+    }
+
+    /**
+     * A mapper between ICAO airport code string and numeric database id.
+     *
+     * <p>
+     * Values shall be kept in sync with h2-data/avidb_test_content.sql
+     * </p>
+     */
+    public enum StationId implements NumericIdHolder {
+        EFXX(1), //
+        YUDO(2), //
+        YUDD(3), //
+        EETN(4), //
+        EFHA(5), //
+        EFKK(6), //
+        EFPO(7), //
+        ;
+
+        private final int id;
+
+        StationId(final int id) {
+            this.id = id;
+        }
+
+        public static StationId valueOf(final int id) {
+            return NumericIdHolder.valueOf(id, values());
+        }
+
+        public String getIcaoCode() {
             return name();
         }
 

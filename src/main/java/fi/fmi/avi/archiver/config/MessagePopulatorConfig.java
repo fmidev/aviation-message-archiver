@@ -28,6 +28,14 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.MessagePopulationService;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.archiver.message.populator.StationIdPopulator;
+import fi.fmi.avi.archiver.message.populator.conditional.ActivationCondition;
+import fi.fmi.avi.archiver.message.populator.conditional.ConditionPropertyReader;
+import fi.fmi.avi.archiver.message.populator.conditional.ConditionPropertyReaderFactory;
+import fi.fmi.avi.archiver.message.populator.conditional.ConditionPropertyReaderRegistry;
+import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
+import fi.fmi.avi.archiver.message.populator.conditional.GeneralPropertyPredicate;
+import fi.fmi.avi.archiver.message.populator.conditional.PropertyActivationCondition;
+import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 
 @ConstructorBinding
 @ConfigurationProperties(prefix = "message-populators")
@@ -46,16 +54,52 @@ public class MessagePopulatorConfig {
     }
 
     @Bean(name = "messagePopulators")
-    public List<MessagePopulator> messagePopulators(final List<MessagePopulatorFactory<?>> messagePopulatorFactories,
-            final List<PopulatorInstanceSpec> executionChain, final DatabaseAccess databaseAccess) {
+    List<MessagePopulator> messagePopulators(final List<MessagePopulatorFactory<?>> messagePopulatorFactories, final List<PopulatorInstanceSpec> executionChain,
+            final DatabaseAccess databaseAccess, final ConfigValueConverter messagePopulatorConfigValueConverter,
+            final ConditionPropertyReaderFactory conditionPropertyReaderFactory) {
         final Map<String, MessagePopulatorFactory<?>> factoriesByName = messagePopulatorFactories.stream()//
                 .collect(Collectors.toMap(MessagePopulatorFactory::getName, Function.identity()));
         final ArrayList<MessagePopulator> populators = executionChain.stream()//
-                .map(spec -> factoriesByName.get(spec.getName()).newInstance(spec.getConfig()))//
+                .map(spec -> createMessagePopulator(spec, factoriesByName, messagePopulatorConfigValueConverter, conditionPropertyReaderFactory))//
                 .collect(Collectors.toCollection(ArrayList::new));
         populators.add(new StationIdPopulator(databaseAccess));
         populators.trimToSize();
         return Collections.unmodifiableList(populators);
+    }
+
+    private MessagePopulator createMessagePopulator(final PopulatorInstanceSpec spec, final Map<String, MessagePopulatorFactory<?>> populatorFactoriesByName,
+            final ConfigValueConverter converter, final ConditionPropertyReaderFactory conditionPropertyReaderFactory) {
+        final MessagePopulator messagePopulator = populatorFactoriesByName.get(spec.getName()).newInstance(spec.getConfig());
+        return applyMessagePopulatorActivationCondition(messagePopulator, spec, converter, conditionPropertyReaderFactory);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private MessagePopulator applyMessagePopulatorActivationCondition(final MessagePopulator messagePopulator, final PopulatorInstanceSpec spec,
+            final ConfigValueConverter converter, final ConditionPropertyReaderFactory conditionPropertyReaderFactory) {
+        return spec.getActivateOn().entrySet().stream()//
+                .map(entry -> {
+                    try {
+                        final String propertyName = entry.getKey();
+                        final ConditionPropertyReader conditionPropertyReader = conditionPropertyReaderFactory.getInstance(propertyName);
+                        final GeneralPropertyPredicate<?> propertyPredicate = entry.getValue()
+                                .transform(element -> converter.toReturnValueType(element, conditionPropertyReader.getValueGetterForType()))//
+                                .validate(conditionPropertyReader::validate)//
+                                .build();
+                        return new PropertyActivationCondition(conditionPropertyReader, propertyPredicate);
+                    } catch (final RuntimeException e) {
+                        throw new IllegalStateException("Unable to initialize '" + spec.getName() + "' activateOn: " + e.getMessage(), e);
+                    }
+                })//
+                .collect(Collectors.collectingAndThen(Collectors.toList(), ActivationCondition::and))//
+                .<MessagePopulator> map(activationCondition -> new ConditionalMessagePopulator(activationCondition, messagePopulator))//
+                .orElse(messagePopulator);
+    }
+
+    @Bean
+    ConditionPropertyReaderFactory conditionPropertyReaderFactory(final List<ConditionPropertyReader<?>> propertyReaders) {
+        final ConditionPropertyReaderRegistry registry = new ConditionPropertyReaderRegistry();
+        propertyReaders.forEach(registry::register);
+        return registry;
     }
 
     @Bean

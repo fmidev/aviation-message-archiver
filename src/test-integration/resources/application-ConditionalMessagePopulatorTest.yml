@@ -1,0 +1,92 @@
+production-line-initialization:
+  products:
+    - id: testTAC
+      route: TEST
+      input-dir: ${testclass.workdir.path}/testTAC/input
+      archive-dir: ${testclass.workdir.path}/testTAC/archived
+      fail-dir: ${testclass.workdir.path}/testTAC/failed
+      files:
+        - pattern: '^.*\.txt$'
+          nameTimeZone: Z
+          format: TAC
+    - id: testIWXXM
+      route: TEST
+      input-dir: ${testclass.workdir.path}/testIWXXM/input
+      archive-dir: ${testclass.workdir.path}/testIWXXM/archived
+      fail-dir: ${testclass.workdir.path}/testIWXXM/failed
+      files:
+        - pattern: '^.*\.xml$'
+          nameTimeZone: Z
+          format: IWXXM
+    - id: test2TAC
+      route: TEST2
+      input-dir: ${testclass.workdir.path}/test2TAC/input
+      archive-dir: ${testclass.workdir.path}/test2TAC/archived
+      fail-dir: ${testclass.workdir.path}/test2TAC/failed
+      files:
+        - pattern: '^.*\.txt$'
+          nameTimeZone: Z
+          format: TAC
+    - id: test2IWXXM
+      route: TEST2
+      input-dir: ${testclass.workdir.path}/test2IWXXM/input
+      archive-dir: ${testclass.workdir.path}/test2IWXXM/archived
+      fail-dir: ${testclass.workdir.path}/test2IWXXM/failed
+      files:
+        - pattern: '^.*\.xml$'
+          nameTimeZone: Z
+          format: IWXXM
+
+message-populators:
+  executionChain:
+    - name: FileMetadataPopulator
+    - name: BulletinHeadingDataPopulator
+    - name: MessageDataPopulator
+    - name: MessageAppendingPopulator
+      activateOn:
+        testProductIdentifier:
+          isAnyOf:
+            - testTAC
+            - test2TAC
+      config:
+        content: 'is testTAC or test2TAC'
+    - name: MessageAppendingPopulator
+      activateOn:
+        testProductIdentifier:
+          isAnyOf:
+            - testIWXXM
+        testTargetMessageType:
+          isAnyOf:
+            - METAR
+          # Multiple conditions for a property
+          # This is logically redundant, but valid:
+          isNoneOf:
+            - SPECI
+          # This is logically redundant, but valid:
+          doesNotMatch: 'crap'
+      config:
+        content: 'is testIWXXM and METAR'
+    - name: MessageAppendingPopulator
+      activateOn:
+        # Multiple conditions on different properties
+        testProductIdentifier:
+          matches: '^test\d*IWXXM$'
+        testTargetMessageType:
+          isNoneOf:
+            - METAR
+            - SPECI
+      config:
+        content: 'is IWXXM and not METAR/SPECI'
+    - name: MessageAppendingPopulator
+      activateOn:
+        testInputValidFrom:
+          # Natural, but not preferred expression; see next MessageAppendingPopulator
+          isAbsent: true
+      config:
+        content: 'no validFrom'
+    - name: MessageAppendingPopulator
+      activateOn:
+        # The preferred way (for clarity): take advantage of StringToGeneralPropertyPredicateBuilderConverter
+        testInputValidTo: absent
+      config:
+        content: 'no validTo'
