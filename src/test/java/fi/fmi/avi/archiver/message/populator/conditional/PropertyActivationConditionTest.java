@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
@@ -42,6 +43,7 @@ class PropertyActivationConditionTest {
         mocks.close();
     }
 
+    @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT", justification = "mocking")
     @ParameterizedTest
     @CsvSource({ "true", "false" })
     void test_invokes_predicate_on_value_returned_by_conditionPropertyReader(final boolean expectedResult) {
@@ -54,5 +56,13 @@ class PropertyActivationConditionTest {
         verify(conditionPropertyReader).readValue(input, target);
         verify(propertyPredicate).test(value);
         assertThat(result).isEqualTo(expectedResult);
+    }
+
+    @Test
+    void toString_returns_separated_concatenation_of_conditionPropertyReader_and_propertyPredicate() {
+        when(conditionPropertyReader.toString()).thenReturn("myTestPropertyReader");
+        when(propertyPredicate.toString()).thenReturn("myPropertyPredicate");
+
+        assertThat(condition.toString()).isEqualTo("myTestPropertyReader: myPropertyPredicate");
     }
 }

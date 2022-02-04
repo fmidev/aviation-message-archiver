@@ -438,4 +438,52 @@ class GeneralPropertyPredicateTest {
                 .withMessageContaining("isAnyOf")//
                 .withMessageContaining(TEST_STRING2);
     }
+
+    @Test
+    void toString_returns_initially_constant_string() {
+        final String result = GeneralPropertyPredicate.builder()//
+                .build()//
+                .toString();
+        assertThat(result).isEqualTo("isAnything");
+    }
+
+    @Test
+    void toString_returns_constant_string_on_absent() {
+        final String result = GeneralPropertyPredicate.builder()//
+                .setIsAbsent(true)//
+                .build()//
+                .toString();
+        assertThat(result).isEqualTo("isAbsent");
+    }
+
+    @Test
+    void toString_returns_string_describing_only_condition() {
+        final String result = GeneralPropertyPredicate.<Integer> builder()//
+                .addIsNoneOf(4, 5, 6)//
+                .build()//
+                .toString();
+        assertThat(result).isEqualTo("isNoneOf{[4, 5, 6]}");
+    }
+
+    @Test
+    void toString_returns_string_describing_two_conditions() {
+        final String result = GeneralPropertyPredicate.<Integer> builder()//
+                .addIsNoneOf(4, 5, 6)//
+                .setMatches(Pattern.compile("^\\d$"))//
+                .build()//
+                .toString();
+        assertThat(result).isEqualTo("isNoneOf{[4, 5, 6]} & matches{^\\d$}");
+    }
+
+    @Test
+    void toString_returns_string_describing_all_conditions() {
+        final String result = GeneralPropertyPredicate.<Integer> builder()//
+                .addIsAnyOf(1, 2, 3)//
+                .addIsNoneOf(4, 5, 6)//
+                .setMatches(Pattern.compile("^\\d$"))//
+                .setDoesNotMatch(Pattern.compile("^[a-z]*$"))//
+                .build()//
+                .toString();
+        assertThat(result).isEqualTo("isAnyOf{[1, 2, 3]} & isNoneOf{[4, 5, 6]} & matches{^\\d$} & doesNotMatch{^[a-z]*$}");
+    }
 }

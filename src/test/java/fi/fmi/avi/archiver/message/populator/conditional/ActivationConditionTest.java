@@ -99,6 +99,19 @@ class ActivationConditionTest {
     }
 
     @Test
+    void and_toString_returns_condition_strings() {
+        when(condition1.toString()).thenReturn("condition1String");
+        when(condition2.toString()).thenReturn("condition2String");
+        when(condition3.toString()).thenReturn("condition3String");
+
+        @Nullable
+        final ActivationCondition resultCondition = ActivationCondition.and(Arrays.asList(condition1, condition2, condition3)).orElse(null);
+        assertThat(resultCondition).isNotNull();
+
+        assertThat(resultCondition.toString()).isEqualTo("[condition1String & condition2String & condition3String]");
+    }
+
+    @Test
     void or_given_empty_list_returns_empty() {
         final Optional<ActivationCondition> result = ActivationCondition.or(Collections.emptyList());
 
@@ -149,5 +162,18 @@ class ActivationConditionTest {
         assertThat(resultCondition).isNotNull();
         final boolean testResult = resultCondition.test(input, target);
         assertThat(testResult).isFalse();
+    }
+
+    @Test
+    void or_toString_returns_condition_strings() {
+        when(condition1.toString()).thenReturn("condition1String");
+        when(condition2.toString()).thenReturn("condition2String");
+        when(condition3.toString()).thenReturn("condition3String");
+
+        @Nullable
+        final ActivationCondition resultCondition = ActivationCondition.or(Arrays.asList(condition1, condition2, condition3)).orElse(null);
+        assertThat(resultCondition).isNotNull();
+
+        assertThat(resultCondition.toString()).isEqualTo("[condition1String | condition2String | condition3String]");
     }
 }

@@ -77,6 +77,7 @@ class AviationMessageArchiverTest {
     private Clock clock;
     private DatabaseAccessTestUtil databaseAccessTestUtil;
 
+    @SuppressWarnings("ConstantConditions")
     private static String readResourceToString(final String filename) throws IOException {
         return Resources.toString(AviationMessageArchiverTest.class.getResource(filename), StandardCharsets.UTF_8);
     }
@@ -555,7 +556,8 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/2.1")
                                                 .setCollectIdentifier("A_LTFI31EFKL301115_C_EFKL_201902011315--.xml")
                                                 .build())
-                                        .build()).build(),//
+                                        .build())//
+                        .build(), //
                 AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM 3.0 TAF Collect bulletin within GTS envelopes")//
                         .setProductName("test_iwxxm")//
@@ -610,7 +612,8 @@ class AviationMessageArchiverTest {
                                                 .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
                                                 .build())
                                         .build())
-                        .build(), AviationMessageArchiverTestCase.builder()//
+                        .build(), //
+                AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM 3.0 TAF Collect bulletin within GTS envelope")//
                         .setProductName("test_iwxxm")//
                         .setInputFileName("taf-gts-bulletin-collect-10.xml")//
@@ -664,7 +667,8 @@ class AviationMessageArchiverTest {
                                                 .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
                                                 .build())
                                         .build())
-                        .build(), AviationMessageArchiverTestCase.builder()//
+                        .build(), //
+                AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM 3.0 METAR")//
                         .setProductName("test_iwxxm")//
                         .setInputFileName("metar-iwxxm-30.xml")//
@@ -754,7 +758,8 @@ class AviationMessageArchiverTest {
                         .setInputFileName("spacewx-translation-failed.xml")//
                         .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))//
                         .expectFail()//
-                        .build(), AviationMessageArchiverTestCase.builder()//
+                        .build(), //
+                AviationMessageArchiverTestCase.builder()//
                         .setName("IWXXM 3.0 VA SIGMET")//
                         .setProductName("test_iwxxm")//
                         .setInputFileName("sigmet-iwxxm-30.xml")//
@@ -774,7 +779,13 @@ class AviationMessageArchiverTest {
                                         .setXMLNamespace("http://icao.int/iwxxm/3.0")//
                                         .build())
                                 .build())
-                        .build()////
+                        .build(), //
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("Discarded TAF")
+                        .setProductName("test_taf_bulletin")
+                        .setInputFileName("taf-tac-bulletin-discarded.bul")
+                        .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))
+                        .build()//
         );
     }
 
@@ -889,6 +900,7 @@ class AviationMessageArchiverTest {
             return new Builder();
         }
 
+        @SuppressWarnings("ConstantConditions")
         private static byte[] readResourceToByteArray(final String filename) throws IOException {
             return Resources.toByteArray(AviationMessageArchiverTest.class.getResource(filename));
         }

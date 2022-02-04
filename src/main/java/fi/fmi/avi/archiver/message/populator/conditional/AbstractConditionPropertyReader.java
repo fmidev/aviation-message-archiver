@@ -62,4 +62,9 @@ public abstract class AbstractConditionPropertyReader<T> implements ConditionPro
     public boolean validate(final T value) {
         return true;
     }
+
+    @Override
+    public String toString() {
+        return getPropertyName();
+    }
 }

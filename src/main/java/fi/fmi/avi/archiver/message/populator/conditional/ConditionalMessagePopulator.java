@@ -24,7 +24,11 @@ public class ConditionalMessagePopulator implements MessagePopulator {
         requireNonNull(input, "input");
         requireNonNull(builder, "builder");
         if (condition.test(input, builder)) {
-            delegate.populate(input, builder);
+            try {
+                delegate.populate(input, builder);
+            } catch (final MessageDiscardedException e) {
+                throw new MessageDiscardedException("Discarded message satisfying <" + condition + ">: " + e.getMessage(), e);
+            }
         }
     }
 }

@@ -1,6 +1,8 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -58,5 +60,21 @@ class ConditionalMessagePopulatorTest {
         populator.populate(input, target);
 
         verify(delegate, never()).populate(input, target);
+    }
+
+    @Test
+    void populate_wraps_MessageDiscardedException_describing_condition() throws MessageDiscardedException {
+        final String initialMessage = "test discard";
+        final String conditionDescription = "<my condition description>";
+        final MessageDiscardedException initialException = new MessageDiscardedException(initialMessage);
+        when(condition.test(any(), any())).thenReturn(true);
+        when(condition.toString()).thenReturn(conditionDescription);
+        doThrow(initialException).when(delegate).populate(any(), any());
+
+        assertThatExceptionOfType(MessageDiscardedException.class)//
+                .isThrownBy(() -> populator.populate(input, target))//
+                .withMessageContaining(initialMessage)//
+                .withMessageContaining(conditionDescription)//
+                .withCause(initialException);
     }
 }

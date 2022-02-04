@@ -16,6 +16,7 @@ import org.inferred.freebuilder.FreeBuilder;
 
 /*
  * When adding properties, check that new property is handled properly in
+ * * toString()
  * * Builder() (proper default value in constructor)
  * * Builder.validateState()
  * * Builder.transform()
@@ -23,6 +24,8 @@ import org.inferred.freebuilder.FreeBuilder;
  */
 @FreeBuilder
 public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
+    private static final String STRING_SEPARATOR = " & ";
+
     GeneralPropertyPredicate() {
     }
 
@@ -54,6 +57,8 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
                 && (getDoesNotMatch().pattern().isEmpty() || !getDoesNotMatch().matcher(valueAsString).matches());
     }
 
+    public abstract boolean getIsAbsent();
+
     public abstract Set<T> getIsAnyOf();
 
     public abstract Set<T> getIsNoneOf();
@@ -62,9 +67,35 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
 
     public abstract Pattern getDoesNotMatch();
 
-    public abstract boolean getIsAbsent();
-
     public abstract Builder<T> toBuilder();
+
+    @Override
+    public String toString() {
+        if (getIsAbsent()) {
+            return "isAbsent";
+        }
+        final StringBuilder builder = new StringBuilder();
+        appendCondition(builder, "isAnyOf", getIsAnyOf(), Set::isEmpty);
+        appendCondition(builder, "isNoneOf", getIsNoneOf(), Set::isEmpty);
+        appendCondition(builder, "matches", getMatches(), pattern -> pattern.pattern().isEmpty());
+        appendCondition(builder, "doesNotMatch", getDoesNotMatch(), pattern -> pattern.pattern().isEmpty());
+        if (builder.length() > 0) {
+            builder.setLength(builder.length() - STRING_SEPARATOR.length());
+        } else {
+            return "isAnything";
+        }
+        return builder.toString();
+    }
+
+    private <C> void appendCondition(final StringBuilder builder, final String conditionName, final C condition, final Predicate<C> conditionAbsent) {
+        if (!conditionAbsent.test(condition)) {
+            builder.append(conditionName)//
+                    .append('{')//
+                    .append(condition)//
+                    .append('}')//
+                    .append(STRING_SEPARATOR);
+        }
+    }
 
     public static class Builder<T> extends GeneralPropertyPredicate_Builder<T> {
         private static final Pattern EMPTY_PATTERN = Pattern.compile("");

@@ -22,4 +22,9 @@ public class PropertyActivationCondition<T> implements ActivationCondition {
         requireNonNull(aviationMessageBuilder, "aviationMessageBuilder");
         return propertyPredicate.test(conditionPropertyReader.readValue(inputAviationMessage, aviationMessageBuilder));
     }
+
+    @Override
+    public String toString() {
+        return conditionPropertyReader + ": " + propertyPredicate;
+    }
 }

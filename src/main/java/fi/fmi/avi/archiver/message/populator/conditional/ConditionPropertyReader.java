@@ -16,4 +16,6 @@ public interface ConditionPropertyReader<T> {
     T readValue(InputAviationMessage input, ArchiveAviationMessage.Builder target);
 
     boolean validate(final T value);
+
+    String toString();
 }

@@ -76,6 +76,12 @@ class AbstractConditionPropertyReaderTest {
         assertThat(new TestConditionPropertyReader().validate("anyString")).isTrue();
     }
 
+    @Test
+    void toString_returns_propertyName() {
+        final TestConditionPropertyReader reader = new TestConditionPropertyReader();
+        assertThat(reader.toString()).isEqualTo(reader.getPropertyName());
+    }
+
     private static class TestConditionPropertyReader extends AbstractConditionPropertyReader<String> {
         @Nullable
         @Override
