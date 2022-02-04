@@ -14,12 +14,12 @@ import org.springframework.core.convert.ConversionService;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingDataPopulator;
-import fi.fmi.avi.archiver.message.populator.DataDesignatorDiscarder;
 import fi.fmi.avi.archiver.message.populator.FileMetadataPopulator;
 import fi.fmi.avi.archiver.message.populator.FileNameDataPopulator;
 import fi.fmi.avi.archiver.message.populator.FixedDurationValidityPeriodPopulator;
 import fi.fmi.avi.archiver.message.populator.MessageContentTrimmer;
 import fi.fmi.avi.archiver.message.populator.MessageDataPopulator;
+import fi.fmi.avi.archiver.message.populator.MessageDiscarder;
 import fi.fmi.avi.archiver.message.populator.MessageFutureTimeValidator;
 import fi.fmi.avi.archiver.message.populator.MessageMaximumAgeValidator;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
@@ -143,9 +143,8 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
-    MessagePopulatorFactory<DataDesignatorDiscarder> dataDesignatorDiscarderFactory() {
-        return build(builder(DataDesignatorDiscarder.class)//
-                .addConfigArg("pattern", Pattern.class));
+    MessagePopulatorFactory<MessageDiscarder> messageDiscarderFactory() {
+        return build(builder(MessageDiscarder.class));
     }
 
     @Bean

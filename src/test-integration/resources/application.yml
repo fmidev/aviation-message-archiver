@@ -129,9 +129,10 @@ production-line-initialization:
 # START SNIPPET: messagepopulators
 message-populators:
   executionChain:
-    - name: DataDesignatorDiscarder
-      config:
-        pattern: '^....99$'
+    - name: MessageDiscarder
+      activateOn:
+        gtsOrCollectDataDesignator:
+          matches: '^....99$'
     - name: FileMetadataPopulator
     - name: FileNameDataPopulator
     - name: BulletinHeadingDataPopulator
