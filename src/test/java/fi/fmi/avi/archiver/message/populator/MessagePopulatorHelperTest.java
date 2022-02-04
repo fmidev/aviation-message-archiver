@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.message.populator;
 
+import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Clock;
@@ -10,6 +11,7 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
@@ -38,6 +40,11 @@ class MessagePopulatorHelperTest {
                 .setNullablePartialTime(partialTime)//
                 .setNullableCompleteTime(completeTime)//
                 .build());
+    }
+
+    @Test
+    void defaultBulletinHeadingSources_is_not_empty() {
+        assertThat(DEFAULT_BULLETIN_HEADING_SOURCES).isNotEmpty();
     }
 
     @ParameterizedTest
