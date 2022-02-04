@@ -165,6 +165,20 @@ class GeneralPropertyPredicateTest {
         assertThat(result).isTrue();
     }
 
+    /**
+     * Empty pattern is considered nonexistent, and therefore anything passes.
+     */
+    @Test
+    void test_given_any_value_matches_empty_pattern_returns_true() {
+        final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
+                .setMatches(Pattern.compile(""))//
+                .build();
+
+        final boolean result = predicate.test("any string");
+
+        assertThat(result).isTrue();
+    }
+
     @Test
     void test_given_value_not_matching_matches_returns_true() {
         final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
@@ -172,6 +186,56 @@ class GeneralPropertyPredicateTest {
                 .build();
 
         final boolean result = predicate.test(TEST_STRING1);
+
+        assertThat(result).isFalse();
+    }
+
+    /**
+     * Empty pattern is considered nonexistent, and therefore anything passes.
+     */
+    @Test
+    void test_given_null_matches_empty_pattern_returns_true() {
+        final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
+                .setMatches(Pattern.compile(""))//
+                .build();
+
+        final boolean result = predicate.test(null);
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    void test_given_null_matches_empty_string_pattern_returns_true() {
+        final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
+                .setMatches(Pattern.compile("^$"))//
+                .build();
+
+        final boolean result = predicate.test(null);
+
+        assertThat(result).isTrue();
+    }
+
+    /**
+     * Empty pattern is considered nonexistent, and therefore anything passes.
+     */
+    @Test
+    void test_given_null_doesNotMatch_empty_pattern_returns_true() {
+        final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
+                .setDoesNotMatch(Pattern.compile(""))//
+                .build();
+
+        final boolean result = predicate.test(null);
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    void test_given_null_doesNotMatch_empty_string_pattern_returns_true() {
+        final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
+                .setDoesNotMatch(Pattern.compile("^$"))//
+                .build();
+
+        final boolean result = predicate.test(null);
 
         assertThat(result).isFalse();
     }
@@ -194,6 +258,20 @@ class GeneralPropertyPredicateTest {
                 .build();
 
         final boolean result = predicate.test(TEST_STRING1);
+
+        assertThat(result).isTrue();
+    }
+
+    /**
+     * Empty pattern is considered nonexistent, and therefore anything passes.
+     */
+    @Test
+    void test_given_any_value_setDoesNotMatch_empty_pattern_returns_true() {
+        final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
+                .setDoesNotMatch(Pattern.compile(""))//
+                .build();
+
+        final boolean result = predicate.test("any string");
 
         assertThat(result).isTrue();
     }
