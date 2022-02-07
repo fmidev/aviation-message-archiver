@@ -1,5 +1,7 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
+import static java.util.Objects.requireNonNull;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,6 +62,7 @@ public abstract class AbstractConditionPropertyReader<T> implements ConditionPro
 
     @Override
     public boolean validate(final T value) {
+        requireNonNull(value, "value");
         return true;
     }
 

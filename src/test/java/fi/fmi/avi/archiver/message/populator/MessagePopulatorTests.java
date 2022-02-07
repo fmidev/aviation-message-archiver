@@ -1,13 +1,12 @@
 package fi.fmi.avi.archiver.message.populator;
 
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
@@ -17,10 +16,12 @@ public final class MessagePopulatorTests {
     public static final Pattern FILE_NAME_PATTERN = Pattern.compile("(metar|taf|tca|speci|sigmet|vaa|airmet|swx)"
             + "(?:_(?:(?<yyyy>\\d{4})-)?(?:(?<MM>\\d{2})-)?(?<dd>\\d{2})?T(?<hh>\\d{2})?(?::(?<mm>\\d{2}))?(?::(?<ss>\\d{2}))?)?" + "(?:\\.txt|\\.xml)");
     public static final ArchiveAviationMessage EMPTY_RESULT = ArchiveAviationMessage.builder().buildPartial();
-    public static final Map<GenericAviationWeatherMessage.Format, Integer> FORMAT_IDS = Arrays.stream(FormatId.values())//
-            .collect(Maps.toImmutableEnumMap(FormatId::getFormat, FormatId::getId));
-    public static final Map<MessageType, Integer> TYPE_IDS = Arrays.stream(TypeId.values())//
-            .collect(ImmutableMap.toImmutableMap(TypeId::getType, TypeId::getId));
+    public static final BiMap<GenericAviationWeatherMessage.Format, Integer> FORMAT_IDS = Arrays.stream(FormatId.values())//
+            .collect(ImmutableBiMap.toImmutableBiMap(FormatId::getFormat, FormatId::getId));
+    public static final BiMap<String, Integer> ROUTE_IDS = Arrays.stream(RouteId.values())//
+            .collect(ImmutableBiMap.toImmutableBiMap(RouteId::getName, RouteId::getId));
+    public static final BiMap<MessageType, Integer> TYPE_IDS = Arrays.stream(TypeId.values())//
+            .collect(ImmutableBiMap.toImmutableBiMap(TypeId::getType, TypeId::getId));
 
     private MessagePopulatorTests() {
         throw new AssertionError();

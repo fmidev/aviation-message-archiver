@@ -24,55 +24,48 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingSource;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingSourceSensitiveTester;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
-import fi.fmi.avi.model.bulletin.DataTypeDesignatorT1;
-import fi.fmi.avi.model.bulletin.DataTypeDesignatorT2;
 import fi.fmi.avi.model.bulletin.immutable.BulletinHeadingImpl;
 
 @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC")
-class DataDesignatorPropertyReaderTest {
-    private static final String GTS_DATA_DESIGNATOR = "SAXX17";
-    private static final String COLLECT_DATA_DESIGNATOR = "LAXX17";
+class OriginatorPropertyReaderTest {
+    private static final String GTS_ORIGINATOR = "YUDO";
+    private static final String COLLECT_ORIGINATOR = "YUDD";
     private static final InputAviationMessage INPUT = InputAviationMessage.builder()//
-            .setGtsBulletinHeading(inputBulletinHeading(GTS_DATA_DESIGNATOR))//
-            .setCollectIdentifier(inputBulletinHeading(COLLECT_DATA_DESIGNATOR))//
+            .setGtsBulletinHeading(inputBulletinHeading(GTS_ORIGINATOR))//
+            .setCollectIdentifier(inputBulletinHeading(COLLECT_ORIGINATOR))//
             .buildPartial();
     private static final Map<BulletinHeadingSource, String> EXPECTED_RESULTS = Maps.immutableEnumMap(ImmutableMap.of(//
-            BulletinHeadingSource.GTS_BULLETIN_HEADING, GTS_DATA_DESIGNATOR, //
-            BulletinHeadingSource.COLLECT_IDENTIFIER, COLLECT_DATA_DESIGNATOR//
+            BulletinHeadingSource.GTS_BULLETIN_HEADING, GTS_ORIGINATOR, //
+            BulletinHeadingSource.COLLECT_IDENTIFIER, COLLECT_ORIGINATOR//
     ));
 
-    private static InputBulletinHeading inputBulletinHeading(final String dataDesignator) {
+    private static InputBulletinHeading inputBulletinHeading(final String originator) {
         return InputBulletinHeading.builder()//
                 .setBulletinHeading(BulletinHeadingImpl.builder()//
-                        .setDataTypeDesignatorT1ForTAC(DataTypeDesignatorT1.fromCode(dataDesignator.charAt(0)))//
-                        .setDataTypeDesignatorT2(DataTypeDesignatorT2.fromExtensionCode(dataDesignator.charAt(1)))//
-                        .setBulletinNumber(Integer.parseInt(dataDesignator.substring(4)))//
-                        .setGeographicalDesignator(dataDesignator.substring(2, 4))//
+                        .setLocationIndicator(originator)//
                         .buildPartial())//
                 .build();
     }
 
     @ParameterizedTest
-    @CsvSource({ "AAAA00", "ZZZZ99", "ABCD12", "ZYXW87" })
-    void validate_given_valid_designator_returns_true(final String designator) {
-        final DataDesignatorPropertyReader propertyReader = new DataDesignatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
-        assertThat(propertyReader.validate(designator)).isTrue();
+    @CsvSource({ "YUDO", "AAAA", "ZZZZ" })
+    void validate_given_valid_originator_returns_true(final String originator) {
+        final OriginatorPropertyReader propertyReader = new OriginatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
+        assertThat(propertyReader.validate(originator)).isTrue();
     }
 
     @ParameterizedTest
-    @CsvSource({ "AAAAA00", "AAAA000", "AAA00", "AAAA0", //
-            "0AAA00", "A0AA00", "AA0A00", "AAA000", "AAAAA0", "AAAA0A", //
-            "/AAA00", "A/AA00", "AA/A00", "AAA/00", "AAAA/0", "AAAA0/" })
-    void validate_given_invalid_designator_returns_false(final String designator) {
-        final DataDesignatorPropertyReader propertyReader = new DataDesignatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
-        assertThat(propertyReader.validate(designator)).isFalse();
+    @CsvSource({ "UDO", "YUDOO", "/UDO", "Y/DO", "YU/O", "YUD/", "0UDO", "Y0DO", "YU0O", "YUD0" })
+    void validate_given_invalid_designator_returns_false(final String originator) {
+        final OriginatorPropertyReader propertyReader = new OriginatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
+        assertThat(propertyReader.validate(originator)).isFalse();
     }
 
     @Test
     void testGetValueGetterForType() {
         final class TestReader extends ConditionPropertyReaderTests.AbstractTestStringBulletinHeadingConditionPropertyReader {
         }
-        final DataDesignatorPropertyReader reader = new DataDesignatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
+        final OriginatorPropertyReader reader = new OriginatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
         final TestReader controlReader = new TestReader();
         assertThat(reader.getValueGetterForType().getGenericReturnType()).isEqualTo(controlReader.getValueGetterForType().getGenericReturnType());
     }
@@ -80,14 +73,14 @@ class DataDesignatorPropertyReaderTest {
     @ParameterizedTest
     @ArgumentsSource(ConditionPropertyReaderTests.BulletinHeadingSourcesPermutationsProvider.class)
     void testGetPropertyName(final List<BulletinHeadingSource> bulletinHeadingSources) {
-        final class DataDesignatorPropertyReader extends ConditionPropertyReaderTests.AbstractTestStringBulletinHeadingConditionPropertyReader {
-            public DataDesignatorPropertyReader(final List<BulletinHeadingSource> bulletinHeadingSources) {
+        final class OriginatorPropertyReader extends ConditionPropertyReaderTests.AbstractTestStringBulletinHeadingConditionPropertyReader {
+            public OriginatorPropertyReader(final List<BulletinHeadingSource> bulletinHeadingSources) {
                 super(bulletinHeadingSources);
             }
         }
-        final fi.fmi.avi.archiver.message.populator.conditional.DataDesignatorPropertyReader reader //
-                = new fi.fmi.avi.archiver.message.populator.conditional.DataDesignatorPropertyReader(bulletinHeadingSources);
-        final DataDesignatorPropertyReader controlReader = new DataDesignatorPropertyReader(bulletinHeadingSources);
+        final fi.fmi.avi.archiver.message.populator.conditional.OriginatorPropertyReader reader //
+                = new fi.fmi.avi.archiver.message.populator.conditional.OriginatorPropertyReader(bulletinHeadingSources);
+        final OriginatorPropertyReader controlReader = new OriginatorPropertyReader(bulletinHeadingSources);
         assertThat(reader.getPropertyName()).isEqualTo(controlReader.getPropertyName());
     }
 
@@ -101,8 +94,8 @@ class DataDesignatorPropertyReaderTest {
     @SuppressWarnings("UnstableApiUsage")
     @Test
     public void testNulls() {
-        final Class<?> classUnderTest = DataDesignatorPropertyReaderTest.class;
-        final DataDesignatorPropertyReader instance = new DataDesignatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
+        final Class<?> classUnderTest = OriginatorPropertyReader.class;
+        final OriginatorPropertyReader instance = new OriginatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
         final NullPointerTester tester = new NullPointerTester();
         final NullPointerTester.Visibility minimalVisibility = NullPointerTester.Visibility.PACKAGE;
         tester.setDefault(ArchiveAviationMessage.Builder.class, ArchiveAviationMessage.builder());
@@ -128,8 +121,8 @@ class DataDesignatorPropertyReaderTest {
         @Nullable
         @Override
         protected String invoke(final InputAviationMessage input, final List<BulletinHeadingSource> bulletinHeadingSources) {
-            final DataDesignatorPropertyReader reader = new DataDesignatorPropertyReader(bulletinHeadingSources);
-            return reader.readValue(input, ArchiveAviationMessage.builder());
+            final OriginatorPropertyReader propertyReader = new OriginatorPropertyReader(bulletinHeadingSources);
+            return propertyReader.readValue(input, ArchiveAviationMessage.builder());
         }
     }
 }

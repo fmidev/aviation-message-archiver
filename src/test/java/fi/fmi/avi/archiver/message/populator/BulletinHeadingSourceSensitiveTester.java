@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.message.populator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -9,6 +10,7 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -30,7 +32,8 @@ public abstract class BulletinHeadingSourceSensitiveTester<T> {
 
     @ParameterizedTest
     @ArgumentsSource(ActualIndexAndBulletinHeadingSourcesProvider.class)
-    final void test(final int actualIndex, final List<BulletinHeadingSource> bulletinHeadingSources) {
+    final void readValue_returns_first_found_value_in_order_of_bulletinHeadingSources(final int actualIndex,
+            final List<BulletinHeadingSource> bulletinHeadingSources) {
         final InputAviationMessage.Builder inputBuilder = getInput().toBuilder();
         bulletinHeadingSources.subList(0, actualIndex)//
                 .forEach(bulletinHeadingSource -> bulletinHeadingSource.set(inputBuilder, EMPTY_HEADING));
@@ -39,6 +42,18 @@ public abstract class BulletinHeadingSourceSensitiveTester<T> {
 
         final T expected = getExpectedResults().get(bulletinHeadingSources.get(actualIndex));
         assertThat(result).isEqualTo(expected);
+    }
+
+    @Test
+    final void readValue_given_empty_input_returns_null() {
+        final InputAviationMessage.Builder inputBuilder = getInput().toBuilder();
+        final List<BulletinHeadingSource> bulletinHeadingSources = Arrays.asList(BulletinHeadingSource.values());
+        bulletinHeadingSources//
+                .forEach(bulletinHeadingSource -> bulletinHeadingSource.set(inputBuilder, EMPTY_HEADING));
+
+        final T result = invoke(inputBuilder.build(), bulletinHeadingSources);
+
+        assertThat(result).isNull();
     }
 
     static final class ActualIndexAndBulletinHeadingSourcesProvider implements ArgumentsProvider {
