@@ -35,29 +35,30 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
 
     @Override
     public boolean test(@Nullable final T value) {
-        return (!getIsAbsent() || satisfiesAbsenceCondition(value)) && satisfiesPresenceConditions(value);
+        return getPresence().test(value) //
+                && (value == null || PresencePolicy.EMPTY.test(value) || satisfiesConditionsOnPresentValue(value));
     }
 
-    private boolean satisfiesAbsenceCondition(@Nullable final T value) {
-        return value == null || value instanceof Optional && !((Optional<?>) value).isPresent();
-    }
-
-    private boolean satisfiesPresenceConditions(@Nullable final T value) {
-        return (getIsAnyOf().isEmpty() || getIsAnyOf().contains(value)) //
-                && !getIsNoneOf().contains(value) //
+    private boolean satisfiesConditionsOnPresentValue(final T value) {
+        return satisfiesSetConditions(value) //
                 && satisfiesPatternConditions(value);
     }
 
-    private boolean satisfiesPatternConditions(@Nullable final T value) {
+    private boolean satisfiesSetConditions(final T value) {
+        return (getIsAnyOf().isEmpty() || getIsAnyOf().contains(value)) //
+                && !getIsNoneOf().contains(value);
+    }
+
+    private boolean satisfiesPatternConditions(final T value) {
         if (getMatches().pattern().isEmpty() && getDoesNotMatch().pattern().isEmpty()) {
             return true;
         }
-        final String valueAsString = value == null ? "" : value.toString();
+        final String valueAsString = value.toString();
         return (getMatches().pattern().isEmpty() || getMatches().matcher(valueAsString).matches()) //
                 && (getDoesNotMatch().pattern().isEmpty() || !getDoesNotMatch().matcher(valueAsString).matches());
     }
 
-    public abstract boolean getIsAbsent();
+    public abstract PresencePolicy getPresence();
 
     public abstract Set<T> getIsAnyOf();
 
@@ -71,10 +72,8 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
 
     @Override
     public String toString() {
-        if (getIsAbsent()) {
-            return "isAbsent";
-        }
         final StringBuilder builder = new StringBuilder();
+        appendCondition(builder, "presence", getPresence(), presence -> false);
         appendCondition(builder, "isAnyOf", getIsAnyOf(), Set::isEmpty);
         appendCondition(builder, "isNoneOf", getIsNoneOf(), Set::isEmpty);
         appendCondition(builder, "matches", getMatches(), pattern -> pattern.pattern().isEmpty());
@@ -87,8 +86,8 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
         return builder.toString();
     }
 
-    private <C> void appendCondition(final StringBuilder builder, final String conditionName, final C condition, final Predicate<C> conditionAbsent) {
-        if (!conditionAbsent.test(condition)) {
+    private <C> void appendCondition(final StringBuilder builder, final String conditionName, final C condition, final Predicate<C> conditionIsEmpty) {
+        if (!conditionIsEmpty.test(condition)) {
             builder.append(conditionName)//
                     .append('{')//
                     .append(condition)//
@@ -97,13 +96,45 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
         }
     }
 
+    public enum PresencePolicy {
+        PRESENT {
+            @Override
+            public boolean test(@Nullable final Object object) {
+                return toNullable(object) != null;
+            }
+        }, //
+        EMPTY {
+            @Override
+            public boolean test(@Nullable final Object object) {
+                return toNullable(object) == null;
+            }
+        }, //
+        OPTIONAL {
+            @Override
+            public boolean test(@Nullable final Object object) {
+                return true;
+            }
+        };
+
+        @Nullable
+        static Object toNullable(@Nullable final Object object) {
+            if (object instanceof Optional) {
+                return ((Optional<?>) object).orElse(null);
+            } else {
+                return object;
+            }
+        }
+
+        abstract boolean test(@Nullable final Object object);
+    }
+
     public static class Builder<T> extends GeneralPropertyPredicate_Builder<T> {
         private static final Pattern EMPTY_PATTERN = Pattern.compile("");
 
         Builder() {
             setMatches(EMPTY_PATTERN);
             setDoesNotMatch(EMPTY_PATTERN);
-            setIsAbsent(false);
+            setPresence(PresencePolicy.PRESENT);
         }
 
         @Override
@@ -119,12 +150,12 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
         }
 
         private void validateState() {
-            if (getIsAbsent() && (//
+            if (getPresence() == PresencePolicy.EMPTY && (//
                     !getIsAnyOf().isEmpty() //
                             || !getIsNoneOf().isEmpty() //
                             || !getMatches().pattern().isEmpty() //
                             || !getDoesNotMatch().pattern().isEmpty())) {
-                throw new IllegalStateException("isAbsent cannot be combined with other conditions");
+                throw new IllegalStateException("presence '" + PresencePolicy.EMPTY + "' cannot be combined with other conditions");
             }
         }
 
@@ -145,7 +176,7 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
                     .addAllIsNoneOf(getIsNoneOf().stream().map(function))//
                     .setMatches(getMatches())//
                     .setDoesNotMatch(getDoesNotMatch())//
-                    .setIsAbsent(getIsAbsent());
+                    .setPresence(getPresence());
         }
 
         public Builder<T> validate(final Predicate<T> validator) {

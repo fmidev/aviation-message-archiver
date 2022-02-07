@@ -159,15 +159,16 @@ class ConditionalMessagePopulatorConfigTest {
 
         final List<ArchiveAviationMessage> expected = Arrays.asList(//
                 setProductId(TEST_TAC_PRODUCT_ID, EXPECTED_TEMPLATE.toBuilder())//
-                        .setMessage("Original message; is testTAC or test2TAC")//
+                        .setMessage("Original message; is testTAC or test2TAC; possible validTo")//
                         .build(), //
                 setProductId(TEST_IWXXM_PRODUCT_ID, EXPECTED_TEMPLATE.toBuilder())//
-                        .setMessage("Original message; is testIWXXM and METAR")//
+                        .setMessage("Original message; is testIWXXM and METAR; possible validTo")//
                         .build(), //
                 setProductId(TEST2_TAC_PRODUCT_ID, EXPECTED_TEMPLATE.toBuilder())//
-                        .setMessage("Original message; is testTAC or test2TAC")//
+                        .setMessage("Original message; is testTAC or test2TAC; possible validTo")//
                         .build(), //
                 setProductId(TEST2_IWXXM_PRODUCT_ID, EXPECTED_TEMPLATE.toBuilder())//
+                        .setMessage("Original message; possible validTo")//
                         .build());
         assertThat(result).containsExactlyElementsOf(expected);
     }
@@ -206,29 +207,29 @@ class ConditionalMessagePopulatorConfigTest {
         final List<ArchiveAviationMessage> expected = Arrays.asList(//
                 setProductId(TEST_TAC_PRODUCT_ID, EXPECTED_TEMPLATE.toBuilder())//
                         .setType(TypeId.METAR.getId())//
-                        .setMessage("Original message; is testTAC or test2TAC")//
+                        .setMessage("Original message; is testTAC or test2TAC; possible validTo")//
                         .build(), //
                 setProductId(TEST_IWXXM_PRODUCT_ID, EXPECTED_TEMPLATE.toBuilder())//
                         .setType(TypeId.SPECI.getId())//
-                        .setMessage("Original message")//
+                        .setMessage("Original message; possible validTo")//
                         .build(), //
                 setProductId(TEST2_TAC_PRODUCT_ID, EXPECTED_TEMPLATE.toBuilder())//
                         .setType(TypeId.TAF.getId())//
-                        .setMessage("Original message; is testTAC or test2TAC")//
+                        .setMessage("Original message; is testTAC or test2TAC; possible validTo")//
                         .build(), //
                 setProductId(TEST2_IWXXM_PRODUCT_ID, EXPECTED_TEMPLATE.toBuilder())//
                         .setType(TypeId.TAF.getId())//
-                        .setMessage("Original message; is IWXXM and not METAR/SPECI")//
+                        .setMessage("Original message; is IWXXM and not METAR/SPECI; possible validTo")//
                         .build(), //
                 setProductId(TEST_IWXXM_PRODUCT_ID, EXPECTED_TEMPLATE.toBuilder())//
                         .setType(TypeId.SWX.getId())//
-                        .setMessage("Original message; is IWXXM and not METAR/SPECI")//
+                        .setMessage("Original message; is IWXXM and not METAR/SPECI; possible validTo")//
                         .build());
         assertThat(result).containsExactlyElementsOf(expected);
     }
 
     @Test
-    void testActivateOnAbsence() {
+    void testActivateOnEmptyValue() {
         final List<InputAviationMessage> inputMessages = Collections.singletonList(//
                 setProductId(TEST2_IWXXM_PRODUCT_ID, inputTemplate.toBuilder())//
                         .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
@@ -244,7 +245,7 @@ class ConditionalMessagePopulatorConfigTest {
                         .setType(TypeId.METAR.getId())//
                         .clearValidFrom()//
                         .clearValidTo()//
-                        .setMessage("Original message; no validFrom; no validTo")//
+                        .setMessage("Original message; no validFrom; possible validTo")//
                         .build());
         assertThat(result).containsExactlyElementsOf(expected);
     }

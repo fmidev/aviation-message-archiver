@@ -75,18 +75,18 @@ message-populators:
           isNoneOf:
             - METAR
             - SPECI
+          presence: PRESENT
       config:
         content: 'is IWXXM and not METAR/SPECI'
     - name: MessageAppendingPopulator
       activateOn:
         testInputValidFrom:
-          # Natural, but not preferred expression; see next MessageAppendingPopulator
-          isAbsent: true
+          presence: EMPTY
       config:
         content: 'no validFrom'
     - name: MessageAppendingPopulator
       activateOn:
-        # The preferred way (for clarity): take advantage of StringToGeneralPropertyPredicateBuilderConverter
-        testInputValidTo: absent
+        testInputValidTo:
+          presence: OPTIONAL
       config:
-        content: 'no validTo'
+        content: 'possible validTo'

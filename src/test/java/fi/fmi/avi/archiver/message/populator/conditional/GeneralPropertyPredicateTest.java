@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -14,6 +15,9 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
+
+import fi.fmi.avi.archiver.message.populator.conditional.GeneralPropertyPredicate.PresencePolicy;
 
 class GeneralPropertyPredicateTest {
     private static final String TEST_STRING1 = "testString1";
@@ -22,6 +26,15 @@ class GeneralPropertyPredicateTest {
     private static final String TEST_STRING4 = "testString4";
     private static final String TEST_STRING5 = "testString5";
     private static final Pattern TEST_PATTERN = Pattern.compile("testPattern");
+
+    @Test
+    void getPresence_returns_PRESENT_by_default() {
+        final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder().build();
+
+        final PresencePolicy result = predicate.getPresence();
+
+        assertThat(result).isEqualTo(PresencePolicy.PRESENT);
+    }
 
     @Test
     void getIsAnyOf_returns_empty_set_by_default() {
@@ -60,16 +73,16 @@ class GeneralPropertyPredicateTest {
     }
 
     @Test
-    void getIsAbsent_returns_false_by_default() {
+    void test_given_null_returns_false_by_default() {
         final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder().build();
 
-        final boolean result = predicate.getIsAbsent();
+        final boolean result = predicate.test(null);
 
         assertThat(result).isFalse();
     }
 
     @Test
-    void test_returns_true_by_default() {
+    void test_given_nonnull_value_returns_true_by_default() {
         final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder().build();
 
         final boolean result = predicate.test(TEST_STRING1);
@@ -78,9 +91,10 @@ class GeneralPropertyPredicateTest {
     }
 
     @Test
-    void test_given_null_returns_true_when_isAbsent_is_true() {
+    void test_given_null_returns_true_when_presence_is_OPTIONAL() {
         final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
-                .setIsAbsent(true)//
+                .setPresence(PresencePolicy.OPTIONAL)//
+                .addIsAnyOf("requiredValue")//
                 .build();
 
         final boolean result = predicate.test(null);
@@ -89,9 +103,31 @@ class GeneralPropertyPredicateTest {
     }
 
     @Test
-    void test_given_empty_Optional_returns_true_when_isAbsent_is_true() {
+    void test_given_null_returns_true_when_presence_is_EMPTY() {
+        final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
+                .setPresence(PresencePolicy.EMPTY)//
+                .build();
+
+        final boolean result = predicate.test(null);
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    void test_given_null_returns_false_when_presence_is_PRESENT() {
+        final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
+                .setPresence(PresencePolicy.PRESENT)//
+                .build();
+
+        final boolean result = predicate.test(null);
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void test_given_empty_Optional_returns_true_when_presence_is_EMPTY() {
         final GeneralPropertyPredicate<Optional<String>> predicate = GeneralPropertyPredicate.<Optional<String>> builder()//
-                .setIsAbsent(true)//
+                .setPresence(PresencePolicy.EMPTY)//
                 .build();
 
         final boolean result = predicate.test(Optional.empty());
@@ -100,9 +136,9 @@ class GeneralPropertyPredicateTest {
     }
 
     @Test
-    void test_given_an_object_returns_false_when_isAbsent_is_true() {
+    void test_given_nonnull_value_returns_false_when_presence_is_EMPTY() {
         final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
-                .setIsAbsent(true)//
+                .setPresence(PresencePolicy.EMPTY)//
                 .build();
 
         final boolean result = predicate.test(TEST_STRING1);
@@ -111,9 +147,9 @@ class GeneralPropertyPredicateTest {
     }
 
     @Test
-    void test_given_Optional_with_value_returns_false_when_isAbsent_is_true() {
+    void test_given_Optional_with_value_returns_false_when_presence_is_EMPTY() {
         final GeneralPropertyPredicate<Optional<String>> predicate = GeneralPropertyPredicate.<Optional<String>> builder()//
-                .setIsAbsent(true)//
+                .setPresence(PresencePolicy.EMPTY)//
                 .build();
 
         final boolean result = predicate.test(Optional.of(TEST_STRING1));
@@ -193,52 +229,6 @@ class GeneralPropertyPredicateTest {
     /**
      * Empty pattern is considered nonexistent, and therefore anything passes.
      */
-    @Test
-    void test_given_null_matches_empty_pattern_returns_true() {
-        final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
-                .setMatches(Pattern.compile(""))//
-                .build();
-
-        final boolean result = predicate.test(null);
-
-        assertThat(result).isTrue();
-    }
-
-    @Test
-    void test_given_null_matches_empty_string_pattern_returns_true() {
-        final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
-                .setMatches(Pattern.compile("^$"))//
-                .build();
-
-        final boolean result = predicate.test(null);
-
-        assertThat(result).isTrue();
-    }
-
-    /**
-     * Empty pattern is considered nonexistent, and therefore anything passes.
-     */
-    @Test
-    void test_given_null_doesNotMatch_empty_pattern_returns_true() {
-        final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
-                .setDoesNotMatch(Pattern.compile(""))//
-                .build();
-
-        final boolean result = predicate.test(null);
-
-        assertThat(result).isTrue();
-    }
-
-    @Test
-    void test_given_null_doesNotMatch_empty_string_pattern_returns_true() {
-        final GeneralPropertyPredicate<String> predicate = GeneralPropertyPredicate.<String> builder()//
-                .setDoesNotMatch(Pattern.compile("^$"))//
-                .build();
-
-        final boolean result = predicate.test(null);
-
-        assertThat(result).isFalse();
-    }
 
     @Test
     void test_given_value_matching_doesNotMatch_returns_false() {
@@ -306,43 +296,43 @@ class GeneralPropertyPredicateTest {
     }
 
     @Test
-    void builder_build_throws_exception_when_absent_is_true_and_isAnyOf_has_values() {
+    void builder_build_throws_exception_when_presence_is_EMPTY_and_isAnyOf_has_values() {
         final GeneralPropertyPredicate.Builder<?> builder = GeneralPropertyPredicate.builder()//
-                .setIsAbsent(true)//
+                .setPresence(PresencePolicy.EMPTY)//
                 .addIsAnyOf(TEST_STRING1);
 
         assertThatIllegalStateException().isThrownBy(builder::build)//
-                .withMessageContaining("isAbsent");
+                .withMessageContaining(PresencePolicy.EMPTY.toString());
     }
 
     @Test
-    void builder_build_throws_exception_when_absent_is_true_and_isNoneOf_has_values() {
+    void builder_build_throws_exception_when_presence_is_EMPTY_and_isNoneOf_has_values() {
         final GeneralPropertyPredicate.Builder<?> builder = GeneralPropertyPredicate.builder()//
-                .setIsAbsent(true)//
+                .setPresence(PresencePolicy.EMPTY)//
                 .addIsNoneOf(TEST_STRING1);
 
         assertThatIllegalStateException().isThrownBy(builder::build)//
-                .withMessageContaining("isAbsent");
+                .withMessageContaining(PresencePolicy.EMPTY.toString());
     }
 
     @Test
-    void builder_build_throws_exception_when_absent_is_true_and_matches_is_non_empty_pattern() {
+    void builder_build_throws_exception_when_presence_is_EMPTY_and_matches_is_non_empty_pattern() {
         final GeneralPropertyPredicate.Builder<?> builder = GeneralPropertyPredicate.builder()//
-                .setIsAbsent(true)//
+                .setPresence(PresencePolicy.EMPTY)//
                 .setMatches(TEST_PATTERN);
 
         assertThatIllegalStateException().isThrownBy(builder::build)//
-                .withMessageContaining("isAbsent");
+                .withMessageContaining(PresencePolicy.EMPTY.toString());
     }
 
     @Test
-    void builder_build_throws_exception_when_absent_is_true_and_doesNotMatch_is_non_empty_pattern() {
+    void builder_build_throws_exception_when_presence_is_EMPTY_and_doesNotMatch_is_non_empty_pattern() {
         final GeneralPropertyPredicate.Builder<?> builder = GeneralPropertyPredicate.builder()//
-                .setIsAbsent(true)//
+                .setPresence(PresencePolicy.EMPTY)//
                 .setDoesNotMatch(TEST_PATTERN);
 
         assertThatIllegalStateException().isThrownBy(builder::build)//
-                .withMessageContaining("isAbsent");
+                .withMessageContaining(PresencePolicy.EMPTY.toString());
     }
 
     @Test
@@ -418,15 +408,15 @@ class GeneralPropertyPredicateTest {
     }
 
     @ParameterizedTest
-    @CsvSource({ "true", "false" })
-    void builder_transform_returns_new_builder_with_isAbsent_as_is(final boolean absent) {
+    @EnumSource(PresencePolicy.class)
+    void builder_transform_returns_new_builder_with_presence_as_is(final PresencePolicy presencePolicy) {
         final GeneralPropertyPredicate.Builder<?> builder = GeneralPropertyPredicate.builder()//
-                .setIsAbsent(absent);
+                .setPresence(presencePolicy);
 
         final GeneralPropertyPredicate.Builder<String> result = builder.transform(Object::toString);
 
         assertThat(result).isNotSameAs(builder);
-        assertThat(result.getIsAbsent()).isEqualTo(absent);
+        assertThat(result.getPresence()).isEqualTo(presencePolicy);
     }
 
     @Test
@@ -496,19 +486,19 @@ class GeneralPropertyPredicateTest {
     }
 
     @Test
-    void validate_passes_regardless_of_isAbsent_being_true() {
+    void validate_passes_regardless_of_presence_being_EMPTY() {
         final GeneralPropertyPredicate.Builder<String> builder = GeneralPropertyPredicate.<String> builder()//
-                .setIsAbsent(true);
+                .setPresence(PresencePolicy.EMPTY);
         final Collection<String> validValues = Arrays.asList(TEST_STRING1, TEST_STRING2, TEST_STRING3);
 
         builder.validate(validValues::contains);
     }
 
     @Test
-    void validate_throws_exception_regardless_of_isAbsent_being_true() {
+    void validate_throws_exception_regardless_of_presence_being_EMPTY() {
         final GeneralPropertyPredicate.Builder<String> builder = GeneralPropertyPredicate.<String> builder()//
                 .addIsAnyOf(TEST_STRING2)//
-                .setIsAbsent(true);
+                .setPresence(PresencePolicy.EMPTY);
         final Collection<String> validValues = Collections.singleton(TEST_STRING1);
 
         assertThatIllegalStateException()//
@@ -518,50 +508,51 @@ class GeneralPropertyPredicateTest {
     }
 
     @Test
-    void toString_returns_initially_constant_string() {
-        final String result = GeneralPropertyPredicate.builder()//
-                .build()//
+    void toString_returns_initially_only_default_presence() {
+        final GeneralPropertyPredicate<Object> predicate = GeneralPropertyPredicate.builder()//
+                .build();
+        final String result = predicate//
                 .toString();
-        assertThat(result).isEqualTo("isAnything");
+        assertThat(result).isEqualTo(String.format(Locale.ROOT, "presence{%s}", predicate.getPresence()));
     }
 
-    @Test
-    void toString_returns_constant_string_on_absent() {
+    @ParameterizedTest
+    @EnumSource(PresencePolicy.class)
+    void toString_returns_presence_value(final PresencePolicy presencePolicy) {
         final String result = GeneralPropertyPredicate.builder()//
-                .setIsAbsent(true)//
+                .setPresence(presencePolicy)//
                 .build()//
                 .toString();
-        assertThat(result).isEqualTo("isAbsent");
+        assertThat(result).isEqualTo(String.format(Locale.ROOT, "presence{%s}", presencePolicy));
     }
 
     @Test
     void toString_returns_string_describing_only_condition() {
         final String result = GeneralPropertyPredicate.<Integer> builder()//
-                .addIsNoneOf(4, 5, 6)//
+                .setPresence(PresencePolicy.EMPTY)//
                 .build()//
                 .toString();
-        assertThat(result).isEqualTo("isNoneOf{[4, 5, 6]}");
+        assertThat(result).isEqualTo("presence{EMPTY}");
     }
 
     @Test
     void toString_returns_string_describing_two_conditions() {
         final String result = GeneralPropertyPredicate.<Integer> builder()//
-                .addIsNoneOf(4, 5, 6)//
-                .setMatches(Pattern.compile("^\\d$"))//
+                .setPresence(PresencePolicy.PRESENT).addIsNoneOf(4, 5, 6)//
                 .build()//
                 .toString();
-        assertThat(result).isEqualTo("isNoneOf{[4, 5, 6]} & matches{^\\d$}");
+        assertThat(result).isEqualTo("presence{PRESENT} & isNoneOf{[4, 5, 6]}");
     }
 
     @Test
     void toString_returns_string_describing_all_conditions() {
         final String result = GeneralPropertyPredicate.<Integer> builder()//
-                .addIsAnyOf(1, 2, 3)//
+                .setPresence(PresencePolicy.OPTIONAL).addIsAnyOf(1, 2, 3)//
                 .addIsNoneOf(4, 5, 6)//
                 .setMatches(Pattern.compile("^\\d$"))//
                 .setDoesNotMatch(Pattern.compile("^[a-z]*$"))//
                 .build()//
                 .toString();
-        assertThat(result).isEqualTo("isAnyOf{[1, 2, 3]} & isNoneOf{[4, 5, 6]} & matches{^\\d$} & doesNotMatch{^[a-z]*$}");
+        assertThat(result).isEqualTo("presence{OPTIONAL} & isAnyOf{[1, 2, 3]} & isNoneOf{[4, 5, 6]} & matches{^\\d$} & doesNotMatch{^[a-z]*$}");
     }
 }

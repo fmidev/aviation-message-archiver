@@ -7,7 +7,6 @@ import org.springframework.core.convert.support.DefaultConversionService;
 
 import fi.fmi.avi.archiver.spring.convert.MapValuesToCollectionConverter;
 import fi.fmi.avi.archiver.spring.convert.StringToDurationConverter;
-import fi.fmi.avi.archiver.spring.convert.StringToGeneralPropertyPredicateBuilderConverter;
 import fi.fmi.avi.archiver.spring.convert.StringToInstantConverter;
 import fi.fmi.avi.archiver.spring.convert.StringToPatternConverter;
 
@@ -20,7 +19,6 @@ public class ConversionConfig {
 
         conversionService.addConverter(new MapValuesToCollectionConverter(conversionService));
         conversionService.addConverter(new StringToDurationConverter());
-        conversionService.addConverter(new StringToGeneralPropertyPredicateBuilderConverter());
         conversionService.addConverter(new StringToInstantConverter());
         conversionService.addConverter(new StringToPatternConverter());
 
