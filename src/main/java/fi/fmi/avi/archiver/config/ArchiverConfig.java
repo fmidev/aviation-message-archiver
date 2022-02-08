@@ -6,8 +6,6 @@ import fi.fmi.avi.archiver.spring.context.GracefulShutdownManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.dsl.Pollers;
-import org.springframework.integration.scheduling.PollerMetadata;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -39,11 +37,6 @@ public class ArchiverConfig {
     @Bean
     ProcessingState processingState() {
         return new ProcessingState(clock());
-    }
-
-    @Bean(name = PollerMetadata.DEFAULT_POLLER)
-    PollerMetadata poller(@Value("${polling.delay}") final int pollingDelay) {
-        return Pollers.fixedDelay(pollingDelay).get();
     }
 
 }
