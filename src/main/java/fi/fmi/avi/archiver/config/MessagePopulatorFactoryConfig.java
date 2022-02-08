@@ -17,6 +17,7 @@ import fi.fmi.avi.archiver.message.populator.BulletinHeadingDataPopulator;
 import fi.fmi.avi.archiver.message.populator.FileMetadataPopulator;
 import fi.fmi.avi.archiver.message.populator.FileNameDataPopulator;
 import fi.fmi.avi.archiver.message.populator.FixedDurationValidityPeriodPopulator;
+import fi.fmi.avi.archiver.message.populator.FixedRoutePopulator;
 import fi.fmi.avi.archiver.message.populator.MessageContentTrimmer;
 import fi.fmi.avi.archiver.message.populator.MessageDataPopulator;
 import fi.fmi.avi.archiver.message.populator.MessageDiscarder;
@@ -96,6 +97,13 @@ public class MessagePopulatorFactoryConfig {
                 .addDependencyArg(messageTypeIds)//
                 .addConfigArg("messageType", MessageType.class)//
                 .addConfigArg("validityEndOffset", Duration.class));
+    }
+
+    @Bean
+    MessagePopulatorFactory<FixedRoutePopulator> fixedRoutePopulatorFactory(final Map<String, Integer> routeIds) {
+        return build(builder(FixedRoutePopulator.class)//
+                .addDependencyArgs(routeIds)//
+                .addConfigArg("route", String.class));
     }
 
     @Bean
