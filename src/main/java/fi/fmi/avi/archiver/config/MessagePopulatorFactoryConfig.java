@@ -18,6 +18,7 @@ import fi.fmi.avi.archiver.message.populator.FileMetadataPopulator;
 import fi.fmi.avi.archiver.message.populator.FileNameDataPopulator;
 import fi.fmi.avi.archiver.message.populator.FixedDurationValidityPeriodPopulator;
 import fi.fmi.avi.archiver.message.populator.FixedRoutePopulator;
+import fi.fmi.avi.archiver.message.populator.FixedTypePopulator;
 import fi.fmi.avi.archiver.message.populator.MessageContentTrimmer;
 import fi.fmi.avi.archiver.message.populator.MessageDataPopulator;
 import fi.fmi.avi.archiver.message.populator.MessageDiscarder;
@@ -148,6 +149,13 @@ public class MessagePopulatorFactoryConfig {
                 .addDependencyArg(messageTypeIds)//
                 .addDependencyArg(aviationProducts)//
                 .addConfigArg("productMessageTypes", Map.class));
+    }
+
+    @Bean
+    MessagePopulatorFactory<FixedTypePopulator> typePopulatorFactory(final Map<MessageType, Integer> typeIds) {
+        return build(builder(FixedTypePopulator.class)//
+                .addDependencyArgs(typeIds)//
+                .addConfigArg("type", MessageType.class));
     }
 
     @Bean
