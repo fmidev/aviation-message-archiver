@@ -143,9 +143,12 @@ message-populators:
     - name: MessageDataPopulator
     - name: MessageContentTrimmer
     - name: FixedDurationValidityPeriodPopulator
+      activateOn:
+        type:
+          isAnyOf:
+            - SPACE_WEATHER_ADVISORY
       config:
-        messageType: SPACE_WEATHER_ADVISORY
-        validityEndOffset: PT30H
+        validityEndOffset: PT24H
 # END SNIPPET: messagepopulators
 
 ##############################################

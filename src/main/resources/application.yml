@@ -166,6 +166,13 @@ message-populators:
           - GTS_BULLETIN_HEADING
           - COLLECT_IDENTIFIER
     - name: MessageDataPopulator
+    - name: FixedDurationValidityPeriodPopulator
+      activateOn:
+        type:
+          isAnyOf:
+            - SPACE_WEATHER_ADVISORY
+      config:
+        validityEndOffset: PT24H
 # END SNIPPET: messagepopulators
 ---
 

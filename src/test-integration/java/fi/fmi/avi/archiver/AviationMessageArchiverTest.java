@@ -724,7 +724,7 @@ class AviationMessageArchiverTest {
                                 .setHeading("LNXX01 YUDO 110715")
                                 .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))
                                 .setValidFrom(Instant.parse("2016-11-08T00:00:00Z"))
-                                .setValidTo(Instant.parse("2016-11-09T06:00:00Z"))
+                                .setValidTo(Instant.parse("2016-11-09T00:00:00Z"))
                                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
                                         .setXMLNamespace("http://icao.int/iwxxm/3.0")//
                                         .build())//
@@ -746,7 +746,7 @@ class AviationMessageArchiverTest {
                                 .setHeading("LNXX01 YUDO 110715")
                                 .setFileModified(Instant.parse("2016-11-07T23:30:00Z"))
                                 .setValidFrom(Instant.parse("2016-11-08T00:00:00Z"))
-                                .setValidTo(Instant.parse("2016-11-09T06:00:00Z"))
+                                .setValidTo(Instant.parse("2016-11-09T00:00:00Z"))
                                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
                                         .setXMLNamespace("http://icao.int/iwxxm/3.0")//
                                         .build())//

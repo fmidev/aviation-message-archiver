@@ -93,10 +93,8 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
-    MessagePopulatorFactory<FixedDurationValidityPeriodPopulator> fixedDurationValidityPeriodPopulatorFactory(final Map<MessageType, Integer> messageTypeIds) {
+    MessagePopulatorFactory<FixedDurationValidityPeriodPopulator> fixedDurationValidityPeriodPopulatorFactory() {
         return build(builder(FixedDurationValidityPeriodPopulator.class)//
-                .addDependencyArg(messageTypeIds)//
-                .addConfigArg("messageType", MessageType.class)//
                 .addConfigArg("validityEndOffset", Duration.class));
     }
 
