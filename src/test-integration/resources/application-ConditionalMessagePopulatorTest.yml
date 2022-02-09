@@ -53,15 +53,13 @@ message-populators:
     - name: MessageAppendingPopulator
       activateOn:
         testProductIdentifier:
-          isAnyOf:
-            - testIWXXM
+          is: testIWXXM
         testTargetMessageType:
           isAnyOf:
             - METAR
           # Multiple conditions for a property
           # This is logically redundant, but valid:
-          isNoneOf:
-            - SPECI
+          isNot: SPECI
           # This is logically redundant, but valid:
           doesNotMatch: 'crap'
       config:

@@ -301,7 +301,9 @@ class GeneralPropertyPredicateTest {
                 .setPresence(PresencePolicy.EMPTY)//
                 .addIsAnyOf(TEST_STRING1);
 
-        assertThatIllegalStateException().isThrownBy(builder::build)//
+        assertThatIllegalStateException()//
+                .isThrownBy(builder::build)//
+                .withMessageContaining("presence")//
                 .withMessageContaining(PresencePolicy.EMPTY.toString());
     }
 
@@ -311,7 +313,9 @@ class GeneralPropertyPredicateTest {
                 .setPresence(PresencePolicy.EMPTY)//
                 .addIsNoneOf(TEST_STRING1);
 
-        assertThatIllegalStateException().isThrownBy(builder::build)//
+        assertThatIllegalStateException()//
+                .isThrownBy(builder::build)//
+                .withMessageContaining("presence")//
                 .withMessageContaining(PresencePolicy.EMPTY.toString());
     }
 
@@ -321,7 +325,9 @@ class GeneralPropertyPredicateTest {
                 .setPresence(PresencePolicy.EMPTY)//
                 .setMatches(TEST_PATTERN);
 
-        assertThatIllegalStateException().isThrownBy(builder::build)//
+        assertThatIllegalStateException()//
+                .isThrownBy(builder::build)//
+                .withMessageContaining("presence")//
                 .withMessageContaining(PresencePolicy.EMPTY.toString());
     }
 
@@ -331,8 +337,46 @@ class GeneralPropertyPredicateTest {
                 .setPresence(PresencePolicy.EMPTY)//
                 .setDoesNotMatch(TEST_PATTERN);
 
-        assertThatIllegalStateException().isThrownBy(builder::build)//
+        assertThatIllegalStateException()//
+                .isThrownBy(builder::build)//
+                .withMessageContaining("presence")//
                 .withMessageContaining(PresencePolicy.EMPTY.toString());
+    }
+
+    @Test
+    void builder_build_throws_exception_when_both_is_and_isAnyOf_were_invoked() {
+        final GeneralPropertyPredicate.Builder<String> builder = GeneralPropertyPredicate.<String> builder()//
+                .setIs(TEST_STRING1)//
+                .setIsAnyOf(Collections.singleton(TEST_STRING2));
+
+        assertThatIllegalStateException()//
+                .isThrownBy(builder::build)//
+                .withMessageMatching(".*\\bis\\b.*")//
+                .withMessageMatching(".*\\bisAnyOf\\b.*");
+    }
+
+    @Test
+    void builder_build_throws_exception_when_both_isNot_and_isNoneOf_were_invoked() {
+        final GeneralPropertyPredicate.Builder<String> builder = GeneralPropertyPredicate.<String> builder()//
+                .setIsNot(TEST_STRING1)//
+                .setIsNoneOf(Collections.singleton(TEST_STRING2));
+
+        assertThatIllegalStateException()//
+                .isThrownBy(builder::build)//
+                .withMessageMatching(".*\\bisNot\\b.*")//
+                .withMessageMatching(".*\\bisNoneOf\\b.*");
+    }
+
+    @Test
+    void builder_setIs_replaces_existing_values_with_given_value() {
+        final GeneralPropertyPredicate.Builder<String> builder = GeneralPropertyPredicate.<String> builder()//
+                .addIsAnyOf(TEST_STRING1, TEST_STRING2);
+        final String replacement = TEST_STRING3;
+
+        final Set<String> result = builder.setIs(replacement)//
+                .getIsAnyOf();
+
+        assertThat(result).containsExactlyInAnyOrder(replacement);
     }
 
     @Test
@@ -345,6 +389,18 @@ class GeneralPropertyPredicateTest {
                 .getIsAnyOf();
 
         assertThat(result).containsExactlyInAnyOrderElementsOf(replacement);
+    }
+
+    @Test
+    void builder_setIsNot_replaces_existing_values_with_given_value() {
+        final GeneralPropertyPredicate.Builder<String> builder = GeneralPropertyPredicate.<String> builder()//
+                .addIsNoneOf(TEST_STRING1, TEST_STRING2);
+        final String replacement = TEST_STRING3;
+
+        final Set<String> result = builder.setIsNot(replacement)//
+                .getIsNoneOf();
+
+        assertThat(result).containsExactlyInAnyOrder(replacement);
     }
 
     @Test

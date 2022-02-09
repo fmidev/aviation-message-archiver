@@ -2,7 +2,11 @@ package fi.fmi.avi.archiver.message.populator.conditional;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -21,6 +25,7 @@ import org.inferred.freebuilder.FreeBuilder;
  * * Builder.validateState()
  * * Builder.transform()
  * * Builder.validate()
+ * * Builder.property()
  */
 @FreeBuilder
 public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
@@ -31,6 +36,18 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
 
     public static <T> Builder<T> builder() {
         return new Builder<>();
+    }
+
+    private static <C> StringBuilder appendCondition(final StringBuilder builder, final String conditionName, final C condition,
+            final Predicate<C> conditionIsEmpty) {
+        if (!conditionIsEmpty.test(condition)) {
+            builder.append(conditionName)//
+                    .append('{')//
+                    .append(condition)//
+                    .append('}')//
+                    .append(STRING_SEPARATOR);
+        }
+        return builder;
     }
 
     @Override
@@ -86,16 +103,6 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
         return builder.toString();
     }
 
-    private <C> void appendCondition(final StringBuilder builder, final String conditionName, final C condition, final Predicate<C> conditionIsEmpty) {
-        if (!conditionIsEmpty.test(condition)) {
-            builder.append(conditionName)//
-                    .append('{')//
-                    .append(condition)//
-                    .append('}')//
-                    .append(STRING_SEPARATOR);
-        }
-    }
-
     public enum PresencePolicy {
         PRESENT {
             @Override
@@ -130,6 +137,7 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
 
     public static class Builder<T> extends GeneralPropertyPredicate_Builder<T> {
         private static final Pattern EMPTY_PATTERN = Pattern.compile("");
+        private final EnumSet<Property> setProperties = EnumSet.noneOf(Property.class);
 
         Builder() {
             setMatches(EMPTY_PATTERN);
@@ -155,17 +163,35 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
                             || !getIsNoneOf().isEmpty() //
                             || !getMatches().pattern().isEmpty() //
                             || !getDoesNotMatch().pattern().isEmpty())) {
-                throw new IllegalStateException("presence '" + PresencePolicy.EMPTY + "' cannot be combined with other conditions");
+                throw new IllegalStateException(//
+                        appendCondition(new StringBuilder(), "presence", PresencePolicy.EMPTY, presence -> false)//
+                                .append(" is mutually exclusive with any other conditions")//
+                                .toString());
             }
+            Property.checkContradicting(setProperties);
+        }
+
+        public Builder<T> setIs(final T value) {
+            requireNonNull(value, "value");
+            setProperties.add(Property.is);
+            return clearIsAnyOf().addIsAnyOf(value);
         }
 
         public Builder<T> setIsAnyOf(final Set<T> elements) {
             requireNonNull(elements, "elements");
+            setProperties.add(Property.isAnyOf);
             return clearIsAnyOf().addAllIsAnyOf(elements);
+        }
+
+        public Builder<T> setIsNot(final T value) {
+            requireNonNull(value, "value");
+            setProperties.add(Property.isNot);
+            return clearIsNoneOf().addIsNoneOf(value);
         }
 
         public Builder<T> setIsNoneOf(final Set<T> elements) {
             requireNonNull(elements, "elements");
+            setProperties.add(Property.isNoneOf);
             return clearIsNoneOf().addAllIsNoneOf(elements);
         }
 
@@ -192,6 +218,37 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
                     .collect(Collectors.toList());
             if (!invalidValues.isEmpty()) {
                 throw new IllegalStateException(name + ": invalid values: " + invalidValues);
+            }
+        }
+
+        private enum Property {
+            // Values are in lower camel case format instead of upper underscore to avoid need for transformation in toString().
+            is, isAnyOf, isNot, isNoneOf;
+
+            private static final Map<Property, Property> CONTRADICTING_PROPERTIES = createContradictingProperties();
+
+            private static Map<Property, Property> createContradictingProperties() {
+                final EnumMap<Property, Property> builder = new EnumMap<>(Property.class);
+                builder.put(is, isAnyOf);
+                builder.put(isAnyOf, is);
+                builder.put(isNot, isNoneOf);
+                builder.put(isNoneOf, isNot);
+                return Collections.unmodifiableMap(builder);
+            }
+
+            public static void checkContradicting(final Set<Property> setProperties) {
+                for (final Property property : setProperties) {
+                    @Nullable
+                    final Property contradictingProperty = property.getContradicting();
+                    if (setProperties.contains(contradictingProperty)) {
+                        throw new IllegalStateException("'" + property + "' is mutually exclusive with '" + contradictingProperty + "'");
+                    }
+                }
+            }
+
+            @Nullable
+            public Property getContradicting() {
+                return CONTRADICTING_PROPERTIES.get(this);
             }
         }
     }
