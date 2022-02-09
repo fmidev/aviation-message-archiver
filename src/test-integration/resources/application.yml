@@ -75,7 +75,7 @@ health-indicator:
 ##############################################
 # START SNIPPET: products
 polling:
-  delay: 50
+  delay: PT0.050S
   filter-queue-size: 5000
 
 production-line-initialization:
