@@ -12,7 +12,6 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingSource;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
 
 public final class ConditionPropertyReaderTests {
     private ConditionPropertyReaderTests() {
@@ -32,7 +31,7 @@ public final class ConditionPropertyReaderTests {
         private final List<BulletinHeadingSource> bulletinHeadingSources;
 
         protected AbstractTestStringBulletinHeadingConditionPropertyReader() {
-            this(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
+            this(BulletinHeadingSource.DEFAULT_SOURCES);
         }
 
         protected AbstractTestStringBulletinHeadingConditionPropertyReader(final List<BulletinHeadingSource> bulletinHeadingSources) {

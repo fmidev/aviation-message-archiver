@@ -23,7 +23,6 @@ import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingSource;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingSourceSensitiveTester;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
 import fi.fmi.avi.model.bulletin.immutable.BulletinHeadingImpl;
 
 @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC")
@@ -50,14 +49,14 @@ class OriginatorPropertyReaderTest {
     @ParameterizedTest
     @CsvSource({ "YUDO", "AAAA", "ZZZZ" })
     void validate_given_valid_originator_returns_true(final String originator) {
-        final OriginatorPropertyReader propertyReader = new OriginatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
+        final OriginatorPropertyReader propertyReader = new OriginatorPropertyReader(BulletinHeadingSource.DEFAULT_SOURCES);
         assertThat(propertyReader.validate(originator)).isTrue();
     }
 
     @ParameterizedTest
     @CsvSource({ "UDO", "YUDOO", "/UDO", "Y/DO", "YU/O", "YUD/", "0UDO", "Y0DO", "YU0O", "YUD0" })
     void validate_given_invalid_designator_returns_false(final String originator) {
-        final OriginatorPropertyReader propertyReader = new OriginatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
+        final OriginatorPropertyReader propertyReader = new OriginatorPropertyReader(BulletinHeadingSource.DEFAULT_SOURCES);
         assertThat(propertyReader.validate(originator)).isFalse();
     }
 
@@ -65,7 +64,7 @@ class OriginatorPropertyReaderTest {
     void testGetValueGetterForType() {
         final class TestReader extends ConditionPropertyReaderTests.AbstractTestStringBulletinHeadingConditionPropertyReader {
         }
-        final OriginatorPropertyReader reader = new OriginatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
+        final OriginatorPropertyReader reader = new OriginatorPropertyReader(BulletinHeadingSource.DEFAULT_SOURCES);
         final TestReader controlReader = new TestReader();
         assertThat(reader.getValueGetterForType().getGenericReturnType()).isEqualTo(controlReader.getValueGetterForType().getGenericReturnType());
     }
@@ -95,7 +94,7 @@ class OriginatorPropertyReaderTest {
     @Test
     public void testNulls() {
         final Class<?> classUnderTest = OriginatorPropertyReader.class;
-        final OriginatorPropertyReader instance = new OriginatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
+        final OriginatorPropertyReader instance = new OriginatorPropertyReader(BulletinHeadingSource.DEFAULT_SOURCES);
         final NullPointerTester tester = new NullPointerTester();
         final NullPointerTester.Visibility minimalVisibility = NullPointerTester.Visibility.PACKAGE;
         tester.setDefault(ArchiveAviationMessage.Builder.class, ArchiveAviationMessage.builder());

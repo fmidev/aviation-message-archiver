@@ -23,7 +23,6 @@ import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingSource;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingSourceSensitiveTester;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
 import fi.fmi.avi.model.bulletin.DataTypeDesignatorT1;
 import fi.fmi.avi.model.bulletin.DataTypeDesignatorT2;
 import fi.fmi.avi.model.bulletin.immutable.BulletinHeadingImpl;
@@ -55,7 +54,7 @@ class DataDesignatorPropertyReaderTest {
     @ParameterizedTest
     @CsvSource({ "AAAA00", "ZZZZ99", "ABCD12", "ZYXW87" })
     void validate_given_valid_designator_returns_true(final String designator) {
-        final DataDesignatorPropertyReader propertyReader = new DataDesignatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
+        final DataDesignatorPropertyReader propertyReader = new DataDesignatorPropertyReader(BulletinHeadingSource.DEFAULT_SOURCES);
         assertThat(propertyReader.validate(designator)).isTrue();
     }
 
@@ -64,7 +63,7 @@ class DataDesignatorPropertyReaderTest {
             "0AAA00", "A0AA00", "AA0A00", "AAA000", "AAAAA0", "AAAA0A", //
             "/AAA00", "A/AA00", "AA/A00", "AAA/00", "AAAA/0", "AAAA0/" })
     void validate_given_invalid_designator_returns_false(final String designator) {
-        final DataDesignatorPropertyReader propertyReader = new DataDesignatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
+        final DataDesignatorPropertyReader propertyReader = new DataDesignatorPropertyReader(BulletinHeadingSource.DEFAULT_SOURCES);
         assertThat(propertyReader.validate(designator)).isFalse();
     }
 
@@ -72,7 +71,7 @@ class DataDesignatorPropertyReaderTest {
     void testGetValueGetterForType() {
         final class TestReader extends ConditionPropertyReaderTests.AbstractTestStringBulletinHeadingConditionPropertyReader {
         }
-        final DataDesignatorPropertyReader reader = new DataDesignatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
+        final DataDesignatorPropertyReader reader = new DataDesignatorPropertyReader(BulletinHeadingSource.DEFAULT_SOURCES);
         final TestReader controlReader = new TestReader();
         assertThat(reader.getValueGetterForType().getGenericReturnType()).isEqualTo(controlReader.getValueGetterForType().getGenericReturnType());
     }
@@ -102,7 +101,7 @@ class DataDesignatorPropertyReaderTest {
     @Test
     public void testNulls() {
         final Class<?> classUnderTest = DataDesignatorPropertyReaderTest.class;
-        final DataDesignatorPropertyReader instance = new DataDesignatorPropertyReader(MessagePopulatorHelper.DEFAULT_BULLETIN_HEADING_SOURCES);
+        final DataDesignatorPropertyReader instance = new DataDesignatorPropertyReader(BulletinHeadingSource.DEFAULT_SOURCES);
         final NullPointerTester tester = new NullPointerTester();
         final NullPointerTester.Visibility minimalVisibility = NullPointerTester.Visibility.PACKAGE;
         tester.setDefault(ArchiveAviationMessage.Builder.class, ArchiveAviationMessage.builder());

@@ -1,5 +1,7 @@
 package fi.fmi.avi.archiver.message.populator;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
@@ -32,6 +34,8 @@ public enum BulletinHeadingSource {
             inputAviationMessageBuilder.setCollectIdentifier(inputBulletinHeading);
         }
     };
+
+    public static final List<BulletinHeadingSource> DEFAULT_SOURCES = Collections.unmodifiableList(Arrays.asList(values()));
 
     private static final List<List<BulletinHeadingSource>> PERMUTATIONS = ImmutableList.of(//
             ImmutableList.of(BulletinHeadingSource.GTS_BULLETIN_HEADING), //
