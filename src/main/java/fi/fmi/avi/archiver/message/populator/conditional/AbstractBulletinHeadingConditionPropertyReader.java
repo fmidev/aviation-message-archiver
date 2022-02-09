@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -14,6 +15,13 @@ import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingSource;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
 
+/**
+ * An abstract implementation of {@code ConditionPropertyReader} for properties of bulletin heading, that applies convention over code principle.
+ * Main difference to {@link AbstractConditionPropertyReader} is in the {@link #getPropertyName() property name geneartion}.
+ *
+ * @param <T>
+ *         property type
+ */
 public abstract class AbstractBulletinHeadingConditionPropertyReader<T> extends AbstractConditionPropertyReader<T> {
     public static final String GTS_BULLETIN_HEADING_PREFIX = "Gts";
     public static final String COLLECT_IDENTIFIER_PREFIX = "Collect";
@@ -28,12 +36,40 @@ public abstract class AbstractBulletinHeadingConditionPropertyReader<T> extends 
         return Collections.unmodifiableMap(builder);
     }
 
+    /**
+     * Return bulletin heading sources to read property form in preferred order.
+     *
+     * @return bulletin heading sources to read property form in preferred order
+     */
     protected abstract List<BulletinHeadingSource> getBulletinHeadingSources();
 
+    /**
+     * A helper method to invoke {@link MessagePopulatorHelper#getFirstNonNullFromBulletinHeading(Collection, InputAviationMessage, Function)}.
+     * It adds bulletin heading sources from {@link #getBulletinHeadingSources()} in the invocation.
+     *
+     * @param input
+     *         input aviation message
+     * @param fn
+     *         function to get an optional value from the input heading
+     *
+     * @return non-null value if present
+     */
     protected Optional<String> getFirstNonNullFromBulletinHeading(final InputAviationMessage input, final Function<InputBulletinHeading, Optional<String>> fn) {
         return MessagePopulatorHelper.getFirstNonNullFromBulletinHeading(getBulletinHeadingSources(), input, fn);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * In addition the name is prefixed with {@value GTS_BULLETIN_HEADING_PREFIX} and/or {@value COLLECT_IDENTIFIER_PREFIX}, separated by word 'Or' if
+     * necessary. The result is formatted as lower camel case.
+     * E.g. if implementation class name is {@code MyCustomPropertyReader} and bulletin heading sources is {@code [GTS_BULLETIN_HEADING, COLLECT_IDENTIFIER]},
+     * the resulting name would be {@code gtsOrCollectMyCustom}.
+     * </p>
+     *
+     * @return @inheritDoc
+     */
     @Override
     public String getPropertyName() {
         final List<BulletinHeadingSource> bulletinHeadingSources = getBulletinHeadingSources();

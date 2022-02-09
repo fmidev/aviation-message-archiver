@@ -10,6 +10,16 @@ import java.util.List;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
+/**
+ * An abstract implementation of {@code ConditionPropertyReader}, that applies convention over code principle.
+ *
+ * <p>
+ * Condition property readers returning properties of bulletin heading are recommended to extend {@link AbstractBulletinHeadingConditionPropertyReader} instead.
+ * </p>
+ *
+ * @param <T>
+ *         property type
+ */
 public abstract class AbstractConditionPropertyReader<T> implements ConditionPropertyReader<T> {
     private static final List<String> SUFFIXES = initSuffixes();
 
@@ -28,6 +38,18 @@ public abstract class AbstractConditionPropertyReader<T> implements ConditionPro
         return Collections.unmodifiableList(suffixes);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * This implementation returns the {@link #readValue(InputAviationMessage, ArchiveAviationMessage.Builder)} method of this object.
+     * </p>
+     *
+     * @return {@inheritDoc}
+     *
+     * @throws IllegalStateException
+     *         if the method cannot be resolved or method return type is {@code Object}.
+     */
     @Override
     public Method getValueGetterForType() {
         final Method method;
@@ -43,6 +65,16 @@ public abstract class AbstractConditionPropertyReader<T> implements ConditionPro
         return method;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * This implementation returns property name based on the implementation class name, starting with a lower case letter and removing suffix containing all
+     * or any last words of {@code ConditionPropertyReader}.
+     * </p>
+     *
+     * @return {@inheritDoc}
+     */
     @Override
     public String getPropertyName() {
         final String simpleName = getClass().getSimpleName();
@@ -60,12 +92,33 @@ public abstract class AbstractConditionPropertyReader<T> implements ConditionPro
         return builder.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * This implementation returns always {@code true}. Subclasses should override this method whenever a constraint is applied on the value.
+     * </p>
+     *
+     * @param value
+     *         value to validate
+     *
+     * @return @inheritDoc
+     */
     @Override
     public boolean validate(final T value) {
         requireNonNull(value, "value");
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * This implementation returns {@link #getPropertyName() property name}.
+     * </p>
+     *
+     * @return {@inheritDoc}
+     */
     @Override
     public String toString() {
         return getPropertyName();
