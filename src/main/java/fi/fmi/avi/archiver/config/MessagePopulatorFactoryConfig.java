@@ -13,10 +13,12 @@ import org.springframework.core.convert.ConversionService;
 
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
+import fi.fmi.avi.archiver.message.ProcessingResult;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingDataPopulator;
 import fi.fmi.avi.archiver.message.populator.FileMetadataPopulator;
 import fi.fmi.avi.archiver.message.populator.FileNameDataPopulator;
 import fi.fmi.avi.archiver.message.populator.FixedDurationValidityPeriodPopulator;
+import fi.fmi.avi.archiver.message.populator.FixedProcessingResultPopulator;
 import fi.fmi.avi.archiver.message.populator.FixedRoutePopulator;
 import fi.fmi.avi.archiver.message.populator.FixedTypePopulator;
 import fi.fmi.avi.archiver.message.populator.MessageContentTrimmer;
@@ -26,9 +28,7 @@ import fi.fmi.avi.archiver.message.populator.MessageFutureTimeValidator;
 import fi.fmi.avi.archiver.message.populator.MessageMaximumAgeValidator;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
-import fi.fmi.avi.archiver.message.populator.OriginatorAuthorizer;
 import fi.fmi.avi.archiver.message.populator.ProductMessageTypesValidator;
-import fi.fmi.avi.archiver.message.populator.StationIcaoCodeAuthorizer;
 import fi.fmi.avi.archiver.message.populator.StationIcaoCodeReplacer;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
@@ -79,6 +79,12 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
+    MessagePopulatorFactory<FixedProcessingResultPopulator> fixedProcessingResultPopulatorFactory() {
+        return build(builder(FixedProcessingResultPopulator.class)//
+                .addConfigArg("result", ProcessingResult.class));
+    }
+
+    @Bean
     MessagePopulatorFactory<BulletinHeadingDataPopulator> bulletinHeadingDataPopulatorFactory(final Map<MessageType, Integer> messageTypeIds,
             final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
         return build(builder(BulletinHeadingDataPopulator.class)//
@@ -124,20 +130,6 @@ public class MessagePopulatorFactoryConfig {
         return build(builder(StationIcaoCodeReplacer.class)//
                 .addConfigArg("pattern", Pattern.class)//
                 .addConfigArg("replacement", String.class));
-    }
-
-    @Bean
-    MessagePopulatorFactory<StationIcaoCodeAuthorizer> stationIcaoCodeAuthorizerFactory() {
-        return build(builder(StationIcaoCodeAuthorizer.class)//
-                .addConfigArg("originatorPattern", Pattern.class)//
-                .addConfigArg("stationPattern", Pattern.class));
-    }
-
-    @Bean
-    MessagePopulatorFactory<OriginatorAuthorizer> originatorAuthorizerFactory() {
-        return build(builder(OriginatorAuthorizer.class)//
-                .addConfigArg("originatorPattern", Pattern.class)//
-                .addConfigArg("stationPattern", Pattern.class));
     }
 
     @Bean
