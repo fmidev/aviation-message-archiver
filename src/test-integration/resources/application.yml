@@ -127,6 +127,9 @@ production-line-initialization:
 #
 ##############################################
 # START SNIPPET: messagepopulators
+---
+spring.config.activate.on-profile: (!testMissingMessagePopulatorExecutionChain)
+
 message-populators:
   executionChain:
     - name: FileMetadataPopulator
@@ -143,6 +146,7 @@ message-populators:
         messageType: SPACE_WEATHER_ADVISORY
         validityEndOffset: PT30H
 # END SNIPPET: messagepopulators
+---
 
 ##############################################
 #
@@ -165,13 +169,25 @@ file-handler:
 #
 ##############################################
 # START SNIPPET: Message static values
+---
+spring.config.activate.on-profile: (!testMissingStaticRouteIds & !testEmptyStaticRouteIds)
+
 message-static-values:
   routeIds:
     TEST: 1
     TEST2: 2
+
+---
+spring.config.activate.on-profile: (!testMissingStaticFormatIds & !testEmptyStaticFormatIds)
+
+message-static-values:
   formatIds:
     TAC: 1
     IWXXM: 2
+---
+spring.config.activate.on-profile: (!testMissingStaticTypeIds & !testEmptyStaticTypeIds)
+
+message-static-values:
   typeIds:
     METAR: 1
     SPECI: 2
