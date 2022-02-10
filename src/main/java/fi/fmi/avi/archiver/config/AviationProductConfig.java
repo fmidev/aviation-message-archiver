@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Bean;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.FileConfig;
@@ -67,6 +68,14 @@ public class AviationProductConfig {
         productFailDirs.asMap().forEach((failDir, productIds) -> {
             final Set<String> conflictingProducts = productInputDirs.get(failDir);
             checkState(conflictingProducts.isEmpty(), errorMessageTemplate, productIds, "fail", "input", conflictingProducts, failDir);
+        });
+        Sets.intersection(productArchiveDirs.keySet(), productFailDirs.keySet()).forEach(commonPath -> {
+            final Set<String> archiveDirProducts = productArchiveDirs.get(commonPath);
+            final Set<String> failDirProducts = productFailDirs.get(commonPath);
+            checkState(archiveDirProducts.equals(failDirProducts),
+                    "Invalid configuration: archive directory of product(s) <%s> is equal to fail directory of <%s>: <%s>; "
+                            + "this is allowed only when both archive and fail directories are the same", archiveDirProducts,
+                    Sets.difference(failDirProducts, archiveDirProducts), commonPath);
         });
     }
 
