@@ -5,7 +5,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -31,17 +30,9 @@ public class AviationProductConfig {
         this.productBuilders = requireNonNull(products, "products");
     }
 
-    @Bean
-    Map<String, AviationProduct> aviationProducts(final Map<String, Integer> messageRouteIds,
-                                                  final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
-        return buildProducts(productBuilders, messageRouteIds, messageFormatIds);
-    }
-
-    private static Map<String, AviationProduct> buildProducts(final List<AviationProduct.Builder> productBuilders,
-                                                              final Map<String, Integer> messageRouteIds,
-                                                              final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
-        checkState(!productBuilders.isEmpty(), "Products are missing");
-        validateInputDirPatterns(productBuilders);
+    private static Map<String, AviationProduct> buildProducts(final List<AviationProduct.Builder> productBuilders, final Map<String, Integer> messageRouteIds,
+            final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
+        validateProducts(productBuilders);
         final ImmutableMap.Builder<String, AviationProduct> builder = ImmutableMap.builder();
         iterateProducts(productBuilders, productBuilder -> {
             mapRouteToId(productBuilder, messageRouteIds);
@@ -52,14 +43,17 @@ public class AviationProductConfig {
         return builder.build();
     }
 
+    private static void validateProducts(final List<AviationProduct.Builder> productBuilders) {
+        checkState(!productBuilders.isEmpty(), "Products are missing");
+        validateInputDirPatterns(productBuilders);
+    }
+
     private static void validateInputDirPatterns(final List<AviationProduct.Builder> productBuilders) {
         final SetMultimap<Path, String> inputPatterns = HashMultimap.create();
-        productBuilders.forEach(builder -> builder.getFiles().forEach(fileConfig -> {
+        iterateProducts(productBuilders, builder -> builder.getFiles().forEach(fileConfig -> {
             final Path inputDir = builder.getInputDir();
             final String pattern = fileConfig.getPattern().pattern();
-            if (inputPatterns.containsEntry(inputDir, pattern)) {
-                throw new IllegalStateException(String.format(Locale.ROOT, "Duplicate pattern <%s> for input dir <%s>", pattern, inputDir));
-            }
+            checkState(!inputPatterns.containsEntry(inputDir, pattern), "Duplicate pattern <%s> for input dir <%s>", pattern, inputDir);
             inputPatterns.put(inputDir, pattern);
         }));
     }
@@ -73,29 +67,29 @@ public class AviationProductConfig {
             try {
                 productConsumer.accept(productBuilders.get(i));
             } catch (final RuntimeException e) {
-                throw new IllegalStateException("Product at index <" + i + "> is invalid", e);
+                throw new IllegalStateException("Product at index <" + i + "> is invalid: " + e.getMessage(), e);
             }
         }
     }
 
     private static void mapRouteToId(final AviationProduct.Builder product, final Map<String, Integer> messageRouteIds) {
         final Integer routeId = messageRouteIds.get(product.getRoute());
-        if (routeId == null) {
-            throw new IllegalStateException(String.format(Locale.ROOT, "Unknown route <%s> for product <%s>", product.getRoute(), product.getId()));
-        }
+        checkState(routeId != null, "Unknown route <%s> for product <%s>", product.getRoute(), product.getId());
         product.setRouteId(routeId);
     }
 
-    private static void mapFormatsToIds(final AviationProduct.Builder product,
-                                        final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
+    private static void mapFormatsToIds(final AviationProduct.Builder product, final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
         for (final FileConfig.Builder file : product.getFiles()) {
             final Integer formatId = messageFormatIds.get(file.getFormat());
-            if (formatId == null) {
-                throw new IllegalStateException(
-                        String.format(Locale.ROOT, "Unknown file message format <%s> for product <%s>", file.getFormat(), product.getId()));
-            }
+            checkState(formatId != null, "Unknown file message format <%s> for product <%s>", file.getFormat(), product.getId());
             file.setFormatId(formatId);
         }
+    }
+
+    @Bean
+    Map<String, AviationProduct> aviationProducts(final Map<String, Integer> messageRouteIds,
+            final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
+        return buildProducts(productBuilders, messageRouteIds, messageFormatIds);
     }
 
 }
