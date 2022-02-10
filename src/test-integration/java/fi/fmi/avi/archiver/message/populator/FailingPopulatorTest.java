@@ -36,9 +36,12 @@ import fi.fmi.avi.archiver.TestConfig;
 import fi.fmi.avi.archiver.config.ConversionConfig;
 import fi.fmi.avi.archiver.config.IntegrationFlowConfig;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
+import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
 @SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.populator.FailingPopulatorTest" })
@@ -125,9 +128,8 @@ class FailingPopulatorTest {
     @Profile("failingPopulatorTest")
     static class FailingPopulatorConfig {
         @Bean
-        public MessagePopulatorFactory<FailingPopulator> failingPopulatorFactory(
-                final AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter) {
-            return ReflectionMessagePopulatorFactory.builder(FailingPopulator.class, messagePopulatorConfigValueConverter).build();
+        public MessagePopulatorFactory<FailingPopulator> failingPopulatorFactory(final ConfigValueConverter messagePopulatorConfigValueConverter) {
+            return new MessagePopulatorFactory<>(ReflectionObjectFactory.builder(FailingPopulator.class, messagePopulatorConfigValueConverter).build());
         }
     }
 }

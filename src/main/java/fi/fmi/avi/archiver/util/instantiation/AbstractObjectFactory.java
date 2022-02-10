@@ -1,8 +1,7 @@
-package fi.fmi.avi.archiver.message.populator;
+package fi.fmi.avi.archiver.util.instantiation;
 
 import static java.util.Objects.requireNonNull;
 
-import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -13,17 +12,15 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
 /**
- * A skeletal {@code MessagePopulatorFactory} implementation.
+ * A skeletal {@code ObjectFactory} implementation.
  * It separates config entries to instantiation config (constructor parameters) and property config (bean setter parameters). After a new instance is
  * created, it sets all property config values by invoking corresponding setters via reflection, converting config values to appropriate types.
  *
  * @param <T>
- *         {@code MessagePopulator} type this factory produces
+ *         type of objects this factory produces
  */
-public abstract class AbstractMessagePopulatorFactory<T extends MessagePopulator> implements MessagePopulatorFactory<T> {
+public abstract class AbstractObjectFactory<T> implements ObjectFactory<T> {
     private static String classString(final Object object) {
         return object == null ? "null" : object.getClass().toString();
     }
@@ -36,12 +33,12 @@ public abstract class AbstractMessagePopulatorFactory<T extends MessagePopulator
     protected abstract ConfigValueConverter getConfigValueConverter();
 
     /**
-     * Creates a new MessagePopulator instance.
+     * Creates a new object instance.
      *
      * @param instantiationConfig
      *         instantiation config values flagged by {@link #isInstantiationConfigOption(String)}.
      *
-     * @return a new MessagePopulator instance
+     * @return a new object instance
      */
     protected abstract T createInstance(final Map<String, ?> instantiationConfig);
 
@@ -65,7 +62,7 @@ public abstract class AbstractMessagePopulatorFactory<T extends MessagePopulator
     }
 
     /**
-     * Create a new {@code MessagePopulator} instance, applying provided configuration.
+     * Create a new object instance, applying provided configuration.
      * Typically there is no need ot override this method.
      *
      * @param config
@@ -98,25 +95,22 @@ public abstract class AbstractMessagePopulatorFactory<T extends MessagePopulator
     private void setConfigProperty(final String propertyName, final Object propertyConfigValue, final T instance, final Map<String, Method> setters) {
         final Method setterMethod = setters.get(setterName(propertyName));
         if (setterMethod == null) {
-            throw new IllegalArgumentException(
-                    String.format(Locale.ROOT, "Unknown config option '%s' for MessagePopulator '%s' (%s)", propertyName, getName(), getType()));
+            throw new IllegalArgumentException(String.format(Locale.ROOT, "Unknown config option '%s' for '%s' (%s)", propertyName, getName(), getType()));
         }
         final Object propertyValue;
         try {
-            propertyValue = getConfigValueConverter().convert(propertyConfigValue, setterMethod, 0);
+            propertyValue = getConfigValueConverter().toParameterType(propertyConfigValue, setterMethod, 0);
         } catch (final RuntimeException e) {
             throw new IllegalStateException(
-                    String.format(Locale.ROOT, "Unable to convert MessagePopulator '%s' (%s) config option '%s' value of from [%s] to [%s]", getName(),
-                            getType(), propertyName, classString(propertyConfigValue), setterMethod.getParameterTypes()[0]), e);
+                    String.format(Locale.ROOT, "Unable to convert '%s' (%s) config option '%s' value of from [%s] to [%s]", getName(), getType(), propertyName,
+                            classString(propertyConfigValue), setterMethod.getParameterTypes()[0]), e);
         }
         try {
             setterMethod.invoke(instance, propertyValue);
         } catch (final IllegalAccessException e) {
-            throw new IllegalStateException(
-                    String.format(Locale.ROOT, "Unable to set MessagePopulator '%s' (%s) config option '%s'", getName(), getType(), propertyName), e);
+            throw new IllegalStateException(String.format(Locale.ROOT, "Unable to set '%s' (%s) config option '%s'", getName(), getType(), propertyName), e);
         } catch (final InvocationTargetException e) {
-            throw new IllegalStateException(
-                    String.format(Locale.ROOT, "Error while setting MessagePopulator '%s' (%s) config option '%s'", getName(), getType(), propertyName),
+            throw new IllegalStateException(String.format(Locale.ROOT, "Error while setting '%s' (%s) config option '%s'", getName(), getType(), propertyName),
                     e.getCause());
         }
     }
@@ -141,22 +135,4 @@ public abstract class AbstractMessagePopulatorFactory<T extends MessagePopulator
         return "set" + Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
     }
 
-    @FunctionalInterface
-    public interface ConfigValueConverter {
-        /**
-         * Convert provided {@code propertyConfigValue} to type of {@code targetExecutable} parameter at index {@code parameterIndex}.
-         * May throw any type of {@code RuntimeException} if conversion fails.
-         *
-         * @param propertyConfigValue
-         *         value to convert
-         * @param targetExecutable
-         *         an {@code Executable} holding target type as its parameter
-         * @param parameterIndex
-         *         index of {@code Executable} parameter for target type
-         *
-         * @return converted value
-         */
-        @Nullable
-        Object convert(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex);
-    }
 }

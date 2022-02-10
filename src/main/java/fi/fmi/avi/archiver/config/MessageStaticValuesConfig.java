@@ -1,16 +1,19 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import fi.fmi.avi.model.MessageType;
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
+
+import java.util.Map;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.context.annotation.Bean;
 
-import java.util.Collections;
-import java.util.Map;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import fi.fmi.avi.model.MessageType;
 
 /**
  * Holder for static values of messages.
@@ -23,7 +26,7 @@ public class MessageStaticValuesConfig {
     private final Map<MessageType, Integer> typeIds;
 
     MessageStaticValuesConfig(final Map<String, Integer> routeIds, final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
-                              final Map<MessageType, Integer> typeIds) {
+            final Map<MessageType, Integer> typeIds) {
         this.routeIds = requireNonNull(routeIds, "routeIds");
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");
@@ -34,17 +37,17 @@ public class MessageStaticValuesConfig {
     }
 
     @Bean
-    Map<String, Integer> messageRouteIds() {
-        return Collections.unmodifiableMap(routeIds);
+    BiMap<String, Integer> messageRouteIds() {
+        return ImmutableBiMap.copyOf(routeIds);
     }
 
     @Bean
-    Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds() {
-        return Collections.unmodifiableMap(formatIds);
+    BiMap<GenericAviationWeatherMessage.Format, Integer> messageFormatIds() {
+        return ImmutableBiMap.copyOf(formatIds);
     }
 
     @Bean
-    Map<MessageType, Integer> messageTypeIds() {
-        return Collections.unmodifiableMap(typeIds);
+    BiMap<MessageType, Integer> messageTypeIds() {
+        return ImmutableBiMap.copyOf(typeIds);
     }
 }

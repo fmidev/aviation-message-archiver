@@ -41,7 +41,7 @@ public class MessagePopulationService {
                         .setStatus(PopulationResult.Status.STORE);
             } catch (final MessageDiscardedException e) {
                 builder.setStatus(PopulationResult.Status.DISCARD);
-                LOGGER.info("Discarded message <{}>", loggingContext, e);
+                LOGGER.info("Discarded message <{}>: {}", loggingContext, e.getMessage());
                 loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.DISCARDED);
             } catch (final Exception e) {
                 builder.setStatus(PopulationResult.Status.FAIL);

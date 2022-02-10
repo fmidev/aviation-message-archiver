@@ -24,14 +24,15 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.AviationMessageArchiver;
 import fi.fmi.avi.archiver.TestConfig;
+import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.AbstractMessagePopulatorFactory;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorFactory;
-import fi.fmi.avi.archiver.message.populator.ReflectionMessagePopulatorFactory;
+import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
+import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
 import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
 
 @SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.config.MessagePopulatorConfigTest" })
@@ -110,6 +111,7 @@ class MessagePopulatorConfigTest {
             this.messageTime = requireNonNull(messageTime, "messageTime");
         }
 
+        @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Irrelevant in test class")
         public void setValidityPeriod(final List<Instant> validityPeriod) {
             requireNonNull(validityPeriod, "validityPeriod");
             if (validityPeriod.size() > 2) {
@@ -189,26 +191,23 @@ class MessagePopulatorConfigTest {
     @Profile("MessagePopulatorTest")
     static class MessagePopulatorTestConfig {
         @Bean
-        public MessagePopulatorFactory<FixedValueTestPopulator1> fixedValueTestPopulator1(
-                final AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter) {
-            return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator1.class, messagePopulatorConfigValueConverter).build();
+        public MessagePopulatorFactory<FixedValueTestPopulator1> fixedValueTestPopulator1(final ConfigValueConverter messagePopulatorConfigValueConverter) {
+            return new MessagePopulatorFactory<>(ReflectionObjectFactory.builder(FixedValueTestPopulator1.class, messagePopulatorConfigValueConverter).build());
         }
 
         @Bean
-        public MessagePopulatorFactory<FixedValueTestPopulator2> fixedValueTestPopulator2(
-                final AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter) {
-            return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator2.class, messagePopulatorConfigValueConverter)//
+        public MessagePopulatorFactory<FixedValueTestPopulator2> fixedValueTestPopulator2(final ConfigValueConverter messagePopulatorConfigValueConverter) {
+            return new MessagePopulatorFactory<>(ReflectionObjectFactory.builder(FixedValueTestPopulator2.class, messagePopulatorConfigValueConverter)//
                     .addConfigArg("station", String.class)//
-                    .build();
+                    .build());
         }
 
         @Bean
-        public MessagePopulatorFactory<FixedValueTestPopulator3> fixedValueTestPopulator3(
-                final AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter) {
-            return ReflectionMessagePopulatorFactory.builder(FixedValueTestPopulator3.class, messagePopulatorConfigValueConverter)//
+        public MessagePopulatorFactory<FixedValueTestPopulator3> fixedValueTestPopulator3(final ConfigValueConverter messagePopulatorConfigValueConverter) {
+            return new MessagePopulatorFactory<>(ReflectionObjectFactory.builder(FixedValueTestPopulator3.class, messagePopulatorConfigValueConverter)//
                     .addDependencyArg(Clock.fixed(Instant.parse("2001-02-03T04:05:06.789Z"), ZoneOffset.UTC))//
                     .addConfigArg("fileModifiedFromNow", Duration.class)//
-                    .build();
+                    .build());
         }
     }
 }

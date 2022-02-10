@@ -1,8 +1,8 @@
-package fi.fmi.avi.archiver.message.populator;
+package fi.fmi.avi.archiver.util.instantiation;
 
 import java.util.Map;
 
-public interface MessagePopulatorFactory<T extends MessagePopulator> {
+public interface ObjectFactory<T> {
     Class<T> getType();
 
     default String getName() {

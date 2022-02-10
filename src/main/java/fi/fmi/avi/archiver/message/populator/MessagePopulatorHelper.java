@@ -1,5 +1,21 @@
 package fi.fmi.avi.archiver.message.populator;
 
+import static java.util.Objects.requireNonNull;
+
+import java.time.Clock;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.function.Function;
+
+import javax.annotation.Nullable;
+
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
@@ -8,22 +24,10 @@ import fi.fmi.avi.model.PartialDateTime;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
 
-import javax.annotation.Nullable;
-import java.time.Clock;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.*;
-import java.util.function.Function;
-
-import static java.util.Objects.requireNonNull;
-
 /**
  * A helper class primarily used by {@link MessagePopulator} implementations.
  */
 public class MessagePopulatorHelper {
-    public static final List<BulletinHeadingSource> DEFAULT_BULLETIN_HEADING_SOURCES = Collections.unmodifiableList(
-            Arrays.asList(BulletinHeadingSource.values()));
-
     private final Clock clock;
 
     public MessagePopulatorHelper(final Clock clock) {
