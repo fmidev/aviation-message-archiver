@@ -1,16 +1,17 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import fi.fmi.avi.model.MessageType;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
-import org.springframework.context.annotation.Bean;
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
 
 import java.util.Collections;
 import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
+import org.springframework.context.annotation.Bean;
+
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import fi.fmi.avi.model.MessageType;
 
 /**
  * Holder for static values of messages.
@@ -28,9 +29,9 @@ public class MessageStaticValuesConfig {
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");
 
-        checkArgument(!routeIds.isEmpty(), "routeIds cannot be empty");
-        checkArgument(!formatIds.isEmpty(), "messageTypeIds cannot be empty");
-        checkArgument(!typeIds.isEmpty(), "typeIds cannot be empty");
+        checkArgument(!routeIds.isEmpty(), "Invalid configuration: routeIds is empty");
+        checkArgument(!formatIds.isEmpty(), "Invalid configuration: formatIds is empty");
+        checkArgument(!typeIds.isEmpty(), "Invalid configuration: typeIds is empty");
     }
 
     @Bean

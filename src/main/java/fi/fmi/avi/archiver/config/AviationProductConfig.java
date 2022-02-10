@@ -46,7 +46,7 @@ public class AviationProductConfig {
     }
 
     private static void validateProducts(final List<AviationProduct.Builder> productBuilders) {
-        checkState(!productBuilders.isEmpty(), "Products are missing");
+        checkState(!productBuilders.isEmpty(), "Invalid configuration: products is empty");
         validateInputDirs(productBuilders);
         validateInputDirPatterns(productBuilders);
     }
@@ -98,7 +98,7 @@ public class AviationProductConfig {
             try {
                 productConsumer.accept(productBuilders.get(i));
             } catch (final RuntimeException e) {
-                throw new IllegalStateException("Product at index <" + i + "> is invalid: " + e.getMessage(), e);
+                throw new IllegalStateException("Invalid product configuration at index <" + i + ">: " + e.getMessage(), e);
             }
         }
     }
