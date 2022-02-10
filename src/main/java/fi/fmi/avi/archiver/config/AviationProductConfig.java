@@ -6,6 +6,7 @@ import static java.util.Objects.requireNonNull;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -45,7 +46,28 @@ public class AviationProductConfig {
 
     private static void validateProducts(final List<AviationProduct.Builder> productBuilders) {
         checkState(!productBuilders.isEmpty(), "Products are missing");
+        validateInputDirs(productBuilders);
         validateInputDirPatterns(productBuilders);
+    }
+
+    private static void validateInputDirs(final List<AviationProduct.Builder> productBuilders) {
+        final SetMultimap<Path, String> productInputDirs = HashMultimap.create();
+        final SetMultimap<Path, String> productArchiveDirs = HashMultimap.create();
+        final SetMultimap<Path, String> productFailDirs = HashMultimap.create();
+        iterateProducts(productBuilders, builder -> {
+            productInputDirs.put(builder.getInputDir(), builder.getId());
+            productArchiveDirs.put(builder.getArchiveDir(), builder.getId());
+            productFailDirs.put(builder.getFailDir(), builder.getId());
+        });
+        final String errorMessageTemplate = "Invalid configuration: product(s) <%s> have %s directory equal to %s directory of <%s>: <%s>";
+        productArchiveDirs.asMap().forEach((archiveDir, productIds) -> {
+            final Set<String> conflictingProducts = productInputDirs.get(archiveDir);
+            checkState(conflictingProducts.isEmpty(), errorMessageTemplate, productIds, "archive", "input", conflictingProducts, archiveDir);
+        });
+        productFailDirs.asMap().forEach((failDir, productIds) -> {
+            final Set<String> conflictingProducts = productInputDirs.get(failDir);
+            checkState(conflictingProducts.isEmpty(), errorMessageTemplate, productIds, "fail", "input", conflictingProducts, failDir);
+        });
     }
 
     private static void validateInputDirPatterns(final List<AviationProduct.Builder> productBuilders) {
