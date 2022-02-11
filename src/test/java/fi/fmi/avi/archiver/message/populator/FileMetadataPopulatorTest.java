@@ -80,7 +80,7 @@ class FileMetadataPopulatorTest {
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(inputMessage, builder);
-        assertThat(MessagePopulatorTests.RouteId.valudOf(builder.getRoute())).isEqualTo(expected);
+        assertThat(MessagePopulatorTests.RouteId.valueOf(builder.getRoute())).isEqualTo(expected);
     }
 
     @ParameterizedTest

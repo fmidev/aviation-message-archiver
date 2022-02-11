@@ -75,7 +75,7 @@ health-indicator:
 ##############################################
 # START SNIPPET: products
 polling:
-  delay: 50
+  delay: PT0.050S
   filter-queue-size: 5000
 
 production-line-initialization:
@@ -132,6 +132,10 @@ spring.config.activate.on-profile: (!testMissingMessagePopulatorExecutionChain)
 
 message-populators:
   executionChain:
+    - name: MessageDiscarder
+      activateOn:
+        gtsOrCollectDataDesignator:
+          matches: '^....99$'
     - name: FileMetadataPopulator
     - name: FileNameDataPopulator
     - name: BulletinHeadingDataPopulator
@@ -142,9 +146,11 @@ message-populators:
     - name: MessageDataPopulator
     - name: MessageContentTrimmer
     - name: FixedDurationValidityPeriodPopulator
+      activateOn:
+        type:
+          is: SPACE_WEATHER_ADVISORY
       config:
-        messageType: SPACE_WEATHER_ADVISORY
-        validityEndOffset: PT30H
+        validityEndOffset: PT24H
 # END SNIPPET: messagepopulators
 ---
 

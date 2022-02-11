@@ -37,10 +37,13 @@ import fi.fmi.avi.archiver.TestConfig;
 import fi.fmi.avi.archiver.config.ConversionConfig;
 import fi.fmi.avi.archiver.config.IntegrationFlowConfig;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
+import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
+import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
 @SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.populator.DiscardingPopulatorTest" })
@@ -134,9 +137,8 @@ public class DiscardingPopulatorTest {
     @Profile("discardingPopulatorTest")
     static class DiscardingPopulatorConfig {
         @Bean
-        public MessagePopulatorFactory<DiscardingPopulator> discardingPopulatorFactory(
-                final AbstractMessagePopulatorFactory.ConfigValueConverter messagePopulatorConfigValueConverter) {
-            return ReflectionMessagePopulatorFactory.builder(DiscardingPopulator.class, messagePopulatorConfigValueConverter).build();
+        public MessagePopulatorFactory<DiscardingPopulator> discardingPopulatorFactory(final ConfigValueConverter messagePopulatorConfigValueConverter) {
+            return new MessagePopulatorFactory<>(ReflectionObjectFactory.builder(DiscardingPopulator.class, messagePopulatorConfigValueConverter).build());
         }
     }
 }

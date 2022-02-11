@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.message.populator;
+package fi.fmi.avi.archiver.util.instantiation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -16,11 +16,12 @@ import com.google.common.testing.NullPointerTester;
 
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.ReflectionMessagePopulatorFactory.Builder;
+import fi.fmi.avi.archiver.message.populator.MessagePopulator;
+import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory.Builder;
 
-class ReflectionMessagePopulatorFactoryTest {
+class ReflectionObjectFactoryTest {
     private static Builder<TestPopulator> builder() {
-        return ReflectionMessagePopulatorFactory.builder(TestPopulator.class, AbstractMessagePopulatorFactoryTest.TestConverter.INSTANCE);
+        return ReflectionObjectFactory.builder(TestPopulator.class, AbstractObjectFactoryTest.TestConverter.INSTANCE);
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -28,11 +29,11 @@ class ReflectionMessagePopulatorFactoryTest {
     public void testNulls() {
         final NullPointerTester tester = new NullPointerTester();
         @SuppressWarnings("rawtypes")
-        final Class<ReflectionMessagePopulatorFactory> classUnderTest = ReflectionMessagePopulatorFactory.class;
+        final Class<ReflectionObjectFactory> classUnderTest = ReflectionObjectFactory.class;
         final NullPointerTester.Visibility minimalVisibility = NullPointerTester.Visibility.PACKAGE;
         tester.testStaticMethods(classUnderTest, minimalVisibility);
         tester.testConstructors(classUnderTest, minimalVisibility);
-        final ReflectionMessagePopulatorFactory<TestPopulator> instance = builder().build();
+        final ReflectionObjectFactory<TestPopulator> instance = builder().build();
         tester.testInstanceMethods(instance, minimalVisibility);
     }
 
@@ -50,38 +51,38 @@ class ReflectionMessagePopulatorFactoryTest {
 
     @Test
     void default_name_is_class_simple_name() {
-        final ReflectionMessagePopulatorFactory<TestPopulator> factory = builder().build();
-        assertThat(factory.getName()).isEqualTo(AbstractMessagePopulatorFactoryTest.TestPopulator.class.getSimpleName());
+        final ReflectionObjectFactory<TestPopulator> factory = builder().build();
+        assertThat(factory.getName()).isEqualTo(AbstractObjectFactoryTest.TestPopulator.class.getSimpleName());
     }
 
     @Test
     void custom_name() {
         final String customFactoryName = "CustomFactoryName";
-        final ReflectionMessagePopulatorFactory<TestPopulator> factory = builder().setName(customFactoryName).build();
+        final ReflectionObjectFactory<TestPopulator> factory = builder().setName(customFactoryName).build();
         assertThat(factory.getName()).isEqualTo(customFactoryName);
     }
 
     @Test
     void clearing_name_restores_default_name() {
-        final ReflectionMessagePopulatorFactory<TestPopulator> factory = builder()//
+        final ReflectionObjectFactory<TestPopulator> factory = builder()//
                 .setName("CustomName")//
                 .clearName()//
                 .build();
-        assertThat(factory.getName()).isEqualTo(AbstractMessagePopulatorFactoryTest.TestPopulator.class.getSimpleName());
+        assertThat(factory.getName()).isEqualTo(AbstractObjectFactoryTest.TestPopulator.class.getSimpleName());
     }
 
     @Test
     void setting_null_as_name_restores_default_name() {
-        final ReflectionMessagePopulatorFactory<TestPopulator> factory = builder()//
+        final ReflectionObjectFactory<TestPopulator> factory = builder()//
                 .setName("CustomName")//
                 .setNullableName(null)//
                 .build();
-        assertThat(factory.getName()).isEqualTo(AbstractMessagePopulatorFactoryTest.TestPopulator.class.getSimpleName());
+        assertThat(factory.getName()).isEqualTo(AbstractObjectFactoryTest.TestPopulator.class.getSimpleName());
     }
 
     @Test
     void newInstance_ingores_properties_missing_in_config() {
-        final ReflectionMessagePopulatorFactory<TestPopulator> factory = builder().build();
+        final ReflectionObjectFactory<TestPopulator> factory = builder().build();
         final TestPopulator instance = factory.newInstance(Collections.emptyMap());
         assertThat(instance).isNotNull();
         assertThat(instance.getInstantiation1()).as("instantiation1").isEqualTo(0);
@@ -97,7 +98,7 @@ class ReflectionMessagePopulatorFactoryTest {
         config.put("instantiation1", 1);
         config.put("instantiation2", 2);
         config.put("configString", "configuration string");
-        final ReflectionMessagePopulatorFactory<TestPopulator> factory = builder()//
+        final ReflectionObjectFactory<TestPopulator> factory = builder()//
                 .addConfigArg("instantiation1", int.class)//
                 .addConfigArg("instantiation2", int.class)//
                 .build();
@@ -116,7 +117,7 @@ class ReflectionMessagePopulatorFactoryTest {
         config.put("configString", configString);
         config.put("configInt", "17");
         config.put("configBoolean", "true");
-        final ReflectionMessagePopulatorFactory<TestPopulator> factory = builder()//
+        final ReflectionObjectFactory<TestPopulator> factory = builder()//
                 .addConfigArg("instantiation1", int.class)//
                 .build();
 
@@ -132,7 +133,7 @@ class ReflectionMessagePopulatorFactoryTest {
         final Map<String, Object> config = new HashMap<>();
         final String unknownConfigName = "unknownConfig";
         config.put(unknownConfigName, "any value");
-        final ReflectionMessagePopulatorFactory<TestPopulator> factory = builder().build();
+        final ReflectionObjectFactory<TestPopulator> factory = builder().build();
 
         assertThatIllegalArgumentException().isThrownBy(() -> factory.newInstance(Collections.unmodifiableMap(config)))//
                 .withMessageContaining(unknownConfigName);
@@ -143,7 +144,7 @@ class ReflectionMessagePopulatorFactoryTest {
         final Map<String, Object> config = new HashMap<>();
         final String unknownConfigName = "failingProperty";
         config.put(unknownConfigName, "any value");
-        final ReflectionMessagePopulatorFactory<TestPopulator> factory = builder().build();
+        final ReflectionObjectFactory<TestPopulator> factory = builder().build();
 
         assertThatIllegalStateException().isThrownBy(() -> factory.newInstance(Collections.unmodifiableMap(config)))//
                 .withMessageContaining(unknownConfigName);
@@ -165,7 +166,7 @@ class ReflectionMessagePopulatorFactoryTest {
     void newInstance_provides_instantiation_config_and_dependencies_to_constructor() {
         final String dependency1 = "dep1";
         final Double dependency2 = 12.3;
-        final ReflectionMessagePopulatorFactory<TestPopulator> factory = builder()//
+        final ReflectionObjectFactory<TestPopulator> factory = builder()//
                 .addDependencyArg(dependency1)//
                 .addConfigArg("instantiation1", int.class)//
                 .addDependencyArg(dependency2)//
@@ -186,7 +187,7 @@ class ReflectionMessagePopulatorFactoryTest {
     void newInstance_fails_on_missing_instantiation_config_option() {
         final String dependency1 = "dep1";
         final Double dependency2 = 12.3;
-        final ReflectionMessagePopulatorFactory<TestPopulator> factory = builder()//
+        final ReflectionObjectFactory<TestPopulator> factory = builder()//
                 .addDependencyArg(dependency1)//
                 .addConfigArg("instantiation1", int.class)//
                 .addDependencyArg(dependency2)//
@@ -204,7 +205,7 @@ class ReflectionMessagePopulatorFactoryTest {
 
     @Test
     void newInstance_fails_on_config_value_conversion_failure() {
-        final ReflectionMessagePopulatorFactory<TestPopulator> factory = builder()//
+        final ReflectionObjectFactory<TestPopulator> factory = builder()//
                 .addConfigArg("inconvertible", StringBuilder.class)//
                 .build();
         final Map<String, Object> config = new HashMap<>();
@@ -219,7 +220,7 @@ class ReflectionMessagePopulatorFactoryTest {
 
     @Test
     void newInstance_fails_on_constructor_throwing_exception() {
-        final ReflectionMessagePopulatorFactory<TestPopulator> factory = builder()//
+        final ReflectionObjectFactory<TestPopulator> factory = builder()//
                 .addConfigArg("fail", boolean.class)//
                 .build();
         final Map<String, Object> config = new HashMap<>();

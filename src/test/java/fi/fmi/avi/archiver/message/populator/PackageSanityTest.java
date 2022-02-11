@@ -16,6 +16,7 @@ import com.google.common.testing.AbstractPackageSanityTests;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
@@ -32,6 +33,8 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
         setDefault(DatabaseAccess.class, mock(DatabaseAccess.class));
         setDefault(FileMetadata.class, FileMetadata.builder().buildPartial());
         setDefault(InputAviationMessage.class, InputAviationMessage.builder().buildPartial());
+        setDefault(InputAviationMessage.Builder.class, InputAviationMessage.builder());
+        setDefault(InputBulletinHeading.class, InputBulletinHeading.builder().buildPartial());
         setDefault(MessageHeaders.class, new MessageHeaders(Collections.emptyMap()));
         setDefault(MessagePopulationService.PopulationResult.class, MessagePopulationService.PopulationResult.builder().buildPartial());
         setDefault(MessagePopulatorHelper.class, new MessagePopulatorHelper(Clock.systemUTC()));

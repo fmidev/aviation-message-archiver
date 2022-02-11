@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.message.populator;
+package fi.fmi.avi.archiver.util.instantiation;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -6,10 +6,12 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 import java.lang.reflect.Executable;
+import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,8 +19,9 @@ import org.junit.jupiter.api.Test;
 
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 
-public class AbstractMessagePopulatorFactoryTest {
+public class AbstractObjectFactoryTest {
     private TestFactory factory;
 
     @BeforeEach
@@ -93,17 +96,31 @@ public class AbstractMessagePopulatorFactoryTest {
                 .withMessageContaining(unknownConfigName);
     }
 
-    public enum TestConverter implements AbstractMessagePopulatorFactory.ConfigValueConverter {
+    public enum TestConverter implements ConfigValueConverter {
         INSTANCE;
 
         @Nullable
         @Override
-        public Object convert(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
+        public Object toParameterType(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
             if (propertyConfigValue == null) {
                 return null;
             }
+            final Type parameterType = targetExecutable.getParameterTypes()[parameterIndex];
+            return convert(propertyConfigValue, parameterType);
+        }
+
+        @Nullable
+        @Override
+        public Object toReturnValueType(@Nullable final Object propertyConfigValue, final Executable targetExecutable) {
+            if (propertyConfigValue == null) {
+                return null;
+            }
+            final Type parameterType = targetExecutable.getAnnotatedReturnType().getType();
+            return convert(propertyConfigValue, parameterType);
+        }
+
+        private Object convert(final @Nonnull Object propertyConfigValue, final Type parameterType) {
             final String propertyConfigValueString = String.valueOf(propertyConfigValue);
-            final Class<?> parameterType = targetExecutable.getParameterTypes()[parameterIndex];
             if (String.class.equals(parameterType)) {
                 return propertyConfigValueString;
             } else if (int.class.equals(parameterType)) {
@@ -116,7 +133,7 @@ public class AbstractMessagePopulatorFactoryTest {
         }
     }
 
-    static class TestFactory extends AbstractMessagePopulatorFactory<TestPopulator> {
+    static class TestFactory extends AbstractObjectFactory<TestPopulator> {
         @Override
         protected boolean isInstantiationConfigOption(final String configOptionName) {
             return configOptionName.startsWith("instantiation");

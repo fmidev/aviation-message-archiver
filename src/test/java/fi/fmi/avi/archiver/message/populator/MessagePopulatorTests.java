@@ -1,13 +1,12 @@
 package fi.fmi.avi.archiver.message.populator;
 
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
@@ -17,16 +16,25 @@ public final class MessagePopulatorTests {
     public static final Pattern FILE_NAME_PATTERN = Pattern.compile("(metar|taf|tca|speci|sigmet|vaa|airmet|swx)"
             + "(?:_(?:(?<yyyy>\\d{4})-)?(?:(?<MM>\\d{2})-)?(?<dd>\\d{2})?T(?<hh>\\d{2})?(?::(?<mm>\\d{2}))?(?::(?<ss>\\d{2}))?)?" + "(?:\\.txt|\\.xml)");
     public static final ArchiveAviationMessage EMPTY_RESULT = ArchiveAviationMessage.builder().buildPartial();
-    public static final Map<GenericAviationWeatherMessage.Format, Integer> FORMAT_IDS = Arrays.stream(FormatId.values())//
-            .collect(Maps.toImmutableEnumMap(FormatId::getFormat, FormatId::getId));
-    public static final Map<MessageType, Integer> TYPE_IDS = Arrays.stream(TypeId.values())//
-            .collect(ImmutableMap.toImmutableMap(TypeId::getType, TypeId::getId));
+    public static final BiMap<GenericAviationWeatherMessage.Format, Integer> FORMAT_IDS = Arrays.stream(FormatId.values())//
+            .collect(ImmutableBiMap.toImmutableBiMap(FormatId::getFormat, FormatId::getId));
+    public static final BiMap<String, Integer> ROUTE_IDS = Arrays.stream(RouteId.values())//
+            .collect(ImmutableBiMap.toImmutableBiMap(RouteId::getName, RouteId::getId));
+    public static final BiMap<MessageType, Integer> TYPE_IDS = Arrays.stream(TypeId.values())//
+            .collect(ImmutableBiMap.toImmutableBiMap(TypeId::getType, TypeId::getId));
 
     private MessagePopulatorTests() {
         throw new AssertionError();
     }
 
-    enum FormatId implements NumericIdHolder {
+    /**
+     * A mapper between {@link fi.fmi.avi.model.GenericAviationWeatherMessage.Format} and numeric database id.
+     *
+     * <p>
+     * Values shall be kept in sync with h2-data/avidb_test_content.sql
+     * </p>
+     */
+    public enum FormatId implements NumericIdHolder {
         TAC(GenericAviationWeatherMessage.Format.TAC, 1), //
         IWXXM(GenericAviationWeatherMessage.Format.IWXXM, 2), //
         ;
@@ -57,9 +65,16 @@ public final class MessagePopulatorTests {
         }
     }
 
-    enum TypeId implements NumericIdHolder {
-        SPECI(MessageType.SPECI, 1), //
-        METAR(MessageType.METAR, 2), //
+    /**
+     * A mapper between {@link MessageType} and numeric database id.
+     *
+     * <p>
+     * Values shall be kept in sync with h2-data/avidb_test_content.sql
+     * </p>
+     */
+    public enum TypeId implements NumericIdHolder {
+        METAR(MessageType.METAR, 1), //
+        SPECI(MessageType.SPECI, 2), //
         TAF(MessageType.TAF, 3), //
         SIGMET(MessageType.SIGMET, 4), //
         AIRMET(MessageType.AIRMET, 5), //
@@ -95,9 +110,17 @@ public final class MessagePopulatorTests {
         }
     }
 
-    enum RouteId implements NumericIdHolder {
+    /**
+     * A mapper between route name string and numeric database id.
+     *
+     * <p>
+     * Values shall be kept in sync with h2-data/avidb_test_content.sql
+     * </p>
+     */
+    public enum RouteId implements NumericIdHolder {
         TEST(1), //
-        TEST2(2);
+        TEST2(2), //
+        ;
 
         private final int id;
 
@@ -105,11 +128,48 @@ public final class MessagePopulatorTests {
             this.id = id;
         }
 
-        public static RouteId valudOf(final int id) {
+        public static RouteId valueOf(final int id) {
             return NumericIdHolder.valueOf(id, values());
         }
 
         public String getName() {
+            return name();
+        }
+
+        @Override
+        public int getId() {
+            return id;
+        }
+    }
+
+    /**
+     * A mapper between ICAO airport code string and numeric database id.
+     *
+     * <p>
+     * Values shall be kept in sync with h2-data/avidb_test_content.sql
+     * </p>
+     */
+    public enum StationId implements NumericIdHolder {
+        EFXX(1), //
+        YUDO(2), //
+        YUDD(3), //
+        EETN(4), //
+        EFHA(5), //
+        EFKK(6), //
+        EFPO(7), //
+        ;
+
+        private final int id;
+
+        StationId(final int id) {
+            this.id = id;
+        }
+
+        public static StationId valueOf(final int id) {
+            return NumericIdHolder.valueOf(id, values());
+        }
+
+        public String getIcaoCode() {
             return name();
         }
 
