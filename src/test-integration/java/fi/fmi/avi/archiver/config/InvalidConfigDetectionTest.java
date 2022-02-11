@@ -18,6 +18,7 @@ import fi.fmi.avi.archiver.AviationMessageArchiver;
 import fi.fmi.avi.archiver.TestConfig;
 
 public class InvalidConfigDetectionTest {
+    private static final String TEST_CONFIG_LOCATION = "classpath:" + InvalidConfigDetectionTest.class.getName().replace('.', '/') + ".yml";
 
     private ConfigurableApplicationContext applicationContext;
 
@@ -27,7 +28,7 @@ public class InvalidConfigDetectionTest {
                 .sources(AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class)//
                 .properties(//
                         "testclass.name=fi.fmi.avi.archiver.config.InvalidConfigDetectionTest", //
-                        "spring.config.location=classpath:application.yml,classpath:" + InvalidConfigDetectionTest.class.getName().replace('.', '/') + ".yml" //
+                        "spring.config.location=classpath:application.yml," + TEST_CONFIG_LOCATION //
                 )//
                 .profiles("local", "h2", testProfile)//
                 .build();

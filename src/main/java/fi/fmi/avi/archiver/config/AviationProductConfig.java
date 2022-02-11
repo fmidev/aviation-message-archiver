@@ -60,6 +60,7 @@ public class AviationProductConfig {
             productArchiveDirs.put(builder.getArchiveDir(), builder.getId());
             productFailDirs.put(builder.getFailDir(), builder.getId());
         });
+
         final String errorMessageTemplate = "Invalid configuration: product(s) <%s> have %s directory equal to %s directory of <%s>: <%s>";
         productArchiveDirs.asMap().forEach((archiveDir, productIds) -> {
             final Set<String> conflictingProducts = productInputDirs.get(archiveDir);
@@ -69,6 +70,7 @@ public class AviationProductConfig {
             final Set<String> conflictingProducts = productInputDirs.get(failDir);
             checkState(conflictingProducts.isEmpty(), errorMessageTemplate, productIds, "fail", "input", conflictingProducts, failDir);
         });
+
         Sets.intersection(productArchiveDirs.keySet(), productFailDirs.keySet()).forEach(commonPath -> {
             final Set<String> archiveDirProducts = productArchiveDirs.get(commonPath);
             final Set<String> failDirProducts = productFailDirs.get(commonPath);

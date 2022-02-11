@@ -176,7 +176,6 @@ message-static-values:
   routeIds:
     TEST: 1
     TEST2: 2
-
 ---
 spring.config.activate.on-profile: (!testMissingStaticFormatIds & !testEmptyStaticFormatIds)
 
