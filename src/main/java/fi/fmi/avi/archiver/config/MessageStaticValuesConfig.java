@@ -31,9 +31,9 @@ public class MessageStaticValuesConfig {
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");
 
-        checkArgument(!routeIds.isEmpty(), "routeIds cannot be empty");
-        checkArgument(!formatIds.isEmpty(), "messageTypeIds cannot be empty");
-        checkArgument(!typeIds.isEmpty(), "typeIds cannot be empty");
+        checkArgument(!routeIds.isEmpty(), "Invalid configuration: routeIds is empty");
+        checkArgument(!formatIds.isEmpty(), "Invalid configuration: formatIds is empty");
+        checkArgument(!typeIds.isEmpty(), "Invalid configuration: typeIds is empty");
     }
 
     @Bean

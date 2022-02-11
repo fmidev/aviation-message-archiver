@@ -1,0 +1,559 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+testclass:
+  name: fi.fmi.avi.archiver.config.InvalidConfigDetectionTest
+---
+spring.config.activate.on-profile: testProductOk
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testMissingProductId
+
+production-line-initialization:
+  products:
+    - route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testMissingProductRoute
+
+production-line-initialization:
+  products:
+    - id: product1
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testMissingProductInputDir
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testMissingProductArchiveDir
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testMissingProductFailDir
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testMissingProductFiles
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+---
+spring.config.activate.on-profile: testMissingProductFilePattern
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testMissingProductFileNameTimeZone
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          format: TAC
+---
+spring.config.activate.on-profile: testMissingProductFileFormat
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+---
+spring.config.activate.on-profile: testEmptyProducts
+
+production-line-initialization:
+  products:
+---
+spring.config.activate.on-profile: testEmptyProductId
+
+production-line-initialization:
+  products:
+    - productId: ''
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testEmptyProductRoute
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: ''
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testEmptyProductInputDir
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ''
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testEmptyProductArchiveDir
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ''
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testEmptyProductFailDir
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ''
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testEmptyProductFiles
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files: [ ]
+---
+spring.config.activate.on-profile: testEmptyProductFilePattern
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ''
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testEmptyProductFileNameTimeZone
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: ''
+          format: TAC
+---
+spring.config.activate.on-profile: testEmptyProductFileFormat
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: ''
+---
+spring.config.activate.on-profile: testInvalidProductRoute
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: INVALID_ROUTE
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testInvalidProductFilePattern
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: '('
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testInvalidProductFileNameTimeZone
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: INVALID_ZONE
+          format: TAC
+---
+spring.config.activate.on-profile: testInvalidProductFileFormat
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: INVALID_FORMAT
+---
+spring.config.activate.on-profile: testDuplicateProductId
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/archived
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input2
+      archive-dir: ${testclass.workdir.path}/archived2
+      fail-dir: ${testclass.workdir.path}/failed2
+      files:
+        - pattern: ^.*\.txt2$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testDuplicateProductFilePattern
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/archived
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testDuplicateProductFilePatternInDifferentProduct
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/archived
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+    - id: product2
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/archived
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testInputDirEqualToArchiveDir
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/input
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testInputDirEqualToArchiveDirInOtherProduct
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/archived
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+    - id: product2
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input2
+      archive-dir: ${testclass.workdir.path}/input
+      fail-dir: ${testclass.workdir.path}/failed2
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testInputDirEqualToFailDir
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/archived
+      fail-dir: ${testclass.workdir.path}/input
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testInputDirEqualToFailDirInOtherProduct
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/archived
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+    - id: product2
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input2
+      archive-dir: ${testclass.workdir.path}/archived2
+      fail-dir: ${testclass.workdir.path}/input
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testArchiveDirEqualToFailDirInOtherProduct
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/archived
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+    - id: product2
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input2
+      archive-dir: ${testclass.workdir.path}/archived2
+      fail-dir: ${testclass.workdir.path}/archived
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testFailDirEqualToArchiveDirInOtherProduct
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/failed2
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+    - id: product2
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input2
+      archive-dir: ${testclass.workdir.path}/archived2
+      fail-dir: ${testclass.workdir.path}/failed2
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testEqualArchiveAndFailDirsInMultipleProductsOk
+
+production-line-initialization:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/output
+      fail-dir: ${testclass.workdir.path}/output
+      files:
+        - pattern: ^.*\.txt$
+          nameTimeZone: Z
+          format: TAC
+    - id: product2
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/output
+      fail-dir: ${testclass.workdir.path}/output
+      files:
+        - pattern: ^.*\.txt2$
+          nameTimeZone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testMissingMessagePopulatorExecutionChain
+
+message-populators:
+---
+spring.config.activate.on-profile: testEmptyMessagePopulatorExecutionChain
+
+message-populators:
+  executionChain: [ ]
+---
+spring.config.activate.on-profile: testMissingStaticRouteIds
+
+message-static-values:
+---
+spring.config.activate.on-profile: testMissingStaticFormatIds
+
+message-static-values:
+---
+spring.config.activate.on-profile: testMissingStaticTypeIds
+
+message-static-values:
+---
+spring.config.activate.on-profile: testEmptyStaticRouteIds
+
+message-static-values:
+  routeIds: { }
+---
+spring.config.activate.on-profile: testEmptyStaticFormatIds
+
+message-static-values:
+  formatIds: { }
+---
+spring.config.activate.on-profile: testEmptyStaticTypeIds
+
+message-static-values:
+  typeIds: { }
