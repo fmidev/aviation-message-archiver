@@ -91,7 +91,7 @@ server:
   shutdown: graceful
 spring:
   lifecycle:
-    timeout-per-shutdown-phase: "20s"
+    timeout-per-shutdown-phase: 20s
 processing-flow:
   gracefulShutdown:
     timeout: PT20S
@@ -105,6 +105,29 @@ processing-flow:
 #
 ##############################################
 # START SNIPPET: actuators
+info:
+  app:
+    name: '@project.name@'
+    description: '@project.description@'
+    groupId: '@project.groupId@'
+    artifactId: '@project.artifactId@'
+    version: '@project.version@'
+    profiles: '${spring.profiles.active}'
+
+management:
+  info:
+    build.enabled: true
+    env.enabled: true
+    git.enabled: true
+    java.enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
 health-indicator:
   directoryPermission:
     tempFilePrefix: .temp
