@@ -1,15 +1,9 @@
 package fi.fmi.avi.archiver.database;
 
-import static java.util.Objects.requireNonNull;
-
-import java.sql.Types;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.Optional;
-
-import javax.annotation.Nullable;
-
+import com.google.common.annotations.VisibleForTesting;
+import fi.fmi.avi.archiver.logging.Loggable;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -18,11 +12,14 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.retry.support.RetryTemplate;
 
-import com.google.common.annotations.VisibleForTesting;
+import javax.annotation.Nullable;
+import java.sql.Types;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.Optional;
 
-import fi.fmi.avi.archiver.logging.Loggable;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
+import static java.util.Objects.requireNonNull;
 
 public class DatabaseAccess {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseAccess.class);
@@ -52,7 +49,8 @@ public class DatabaseAccess {
                 .usingGeneratedKeyColumns("rejected_message_id");
         this.insertIwxxmDetails = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate())//
                 .withSchemaName(schema)//
-                .withTableName("avidb_message_iwxxm_details");
+                .withTableName("avidb_message_iwxxm_details")
+                .usingGeneratedKeyColumns("id");
         this.insertRejectedIwxxmDetails = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate())//
                 .withSchemaName(schema)//
                 .withTableName("avidb_rejected_message_iwxxm_details");

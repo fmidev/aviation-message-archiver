@@ -58,7 +58,8 @@ CREATE TABLE public.avidb_stations
 
 CREATE TABLE public.avidb_message_iwxxm_details
 (
-    message_id         bigint PRIMARY KEY NOT NULL,
+    id                 bigint auto_increment PRIMARY KEY NOT NULL,
+    message_id         bigint NOT NULL,
     collect_identifier text,
     iwxxm_version      text
 );
