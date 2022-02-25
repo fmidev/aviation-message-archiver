@@ -5,7 +5,7 @@
   <parent>
     <groupId>fi.fmi</groupId>
     <artifactId>fmi-os-parent-pom</artifactId>
-    <version>0.8.2-SNAPSHOT</version>
+    <version>0.8.2</version>
   </parent>
 
   <groupId>fi.fmi.avi.archiver</groupId>
@@ -59,8 +59,8 @@
 
   <properties>
     <spring-boot.version>2.6.3</spring-boot.version>
-    <auto-value.version>1.8.1</auto-value.version>
-    <guava.version>30.1-jre</guava.version>
+    <auto-value.version>1.9</auto-value.version>
+    <guava.version>31.0.1-jre</guava.version>
   </properties>
 
   <dependencyManagement>
@@ -126,17 +126,17 @@
     <dependency>
       <groupId>fi.fmi.avi.converter</groupId>
       <artifactId>fmi-avi-messageconverter</artifactId>
-      <version>5.0.2-arch10-SNAPSHOT</version>
+      <version>6.0.0</version>
     </dependency>
     <dependency>
       <groupId>fi.fmi.avi.converter</groupId>
       <artifactId>fmi-avi-messageconverter-tac</artifactId>
-      <version>4.0.1-arch10-SNAPSHOT</version>
+      <version>5.0.0</version>
     </dependency>
     <dependency>
       <groupId>fi.fmi.avi.converter</groupId>
       <artifactId>fmi-avi-messageconverter-iwxxm</artifactId>
-      <version>3.0.1-arch10-SNAPSHOT</version>
+      <version>4.0.0</version>
     </dependency>
 
     <dependency>
