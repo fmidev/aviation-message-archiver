@@ -43,6 +43,18 @@ final class BulletinLogReferenceTest {
     }
 
     @Test
+    void readableCopy_returns_same_instance() {
+        final BulletinLogReference bulletinLogReference = builder().buildPartial();
+        assertThat(bulletinLogReference.readableCopy()).isSameAs(bulletinLogReference);
+    }
+
+    @Test
+    void getStructureName_returns_expected_name() {
+        final BulletinLogReference bulletinLogReference = builder().buildPartial();
+        assertThat(bulletinLogReference.getStructureName()).isEqualTo("bulletinLogReference");
+    }
+
+    @Test
     void bulletinIndex_below_zero_is_forbidden() {
         assertThatIllegalArgumentException().isThrownBy(() -> builder().setBulletinIndex(-1));
     }

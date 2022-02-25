@@ -7,7 +7,7 @@ import org.inferred.freebuilder.FreeBuilder;
 import com.google.common.base.Preconditions;
 
 @FreeBuilder
-public abstract class BulletinLogReference extends AbstractMemoizingLoggable {
+public abstract class BulletinLogReference extends AbstractMemoizingStructuredLoggable {
     private static final int HEADING_MAX_LENGTH = 44;
     private static final int BULLETIN_INDEX_LENGTH_ESTIMATE = 3;
     private static final int CHAR_INDEX_LENGTH_ESTIMATE = 7;

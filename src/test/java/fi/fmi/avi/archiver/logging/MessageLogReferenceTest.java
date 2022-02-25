@@ -17,6 +17,18 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 
 final class MessageLogReferenceTest {
     @Test
+    void readableCopy_returns_same_instance() {
+        final MessageLogReference messageLogReference = MessageLogReference.builder().buildPartial();
+        assertThat(messageLogReference.readableCopy()).isSameAs(messageLogReference);
+    }
+
+    @Test
+    void getStructureName_returns_expected_name() {
+        final MessageLogReference messageLogReference = MessageLogReference.builder().buildPartial();
+        assertThat(messageLogReference.getStructureName()).isEqualTo("messageLogReference");
+    }
+
+    @Test
     void messageIndex_below_zero_is_forbidden() {
         assertThatIllegalArgumentException().isThrownBy(() -> builder().setMessageIndex(-1));
     }

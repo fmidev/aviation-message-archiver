@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.logging;
 
-public abstract class AbstractMemoizingLoggable extends AbstractLoggable {
+public abstract class AbstractMemoizingStructuredLoggable extends AbstractLoggable implements StructuredLoggable {
     private String string;
 
     protected abstract void appendOnceTo(final StringBuilder builder);
@@ -16,5 +16,10 @@ public abstract class AbstractMemoizingLoggable extends AbstractLoggable {
         } else {
             return string;
         }
+    }
+
+    @Override
+    public AbstractMemoizingStructuredLoggable readableCopy() {
+        return this;
     }
 }

@@ -9,7 +9,7 @@ import org.inferred.freebuilder.FreeBuilder;
 import com.google.common.base.Preconditions;
 
 @FreeBuilder
-public abstract class MessageLogReference extends AbstractMemoizingLoggable {
+public abstract class MessageLogReference extends AbstractMemoizingStructuredLoggable {
     private static final Pattern XML_EXCERPT_PATTERN = Pattern.compile("^\\s*<[^>]+[:\\s]id\\s*=\\s*\"([^\"]+)\"");
     private static final int MESSAGE_INDEX_LENGTH_ESTIMATE = 4;
     private static final int EXCERPT_MAX_LENGTH = 42;

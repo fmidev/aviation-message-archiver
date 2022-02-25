@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-final class AbstractMemoizingLoggableTest {
+final class AbstractMemoizingStructuredLoggableTest {
     @Test
     void subsequent_invocations_to_toString_do_not_delegate_to_toStringOnce() {
         final String logString = "any log string";
@@ -19,7 +19,21 @@ final class AbstractMemoizingLoggableTest {
         assertThat(loggable.getInvocations()).isEqualTo(1);
     }
 
-    static final class TestLoggable extends AbstractMemoizingLoggable {
+    @Test
+    void readableCopy_returns_same_instance() {
+        final TestLoggable loggable = new TestLoggable("log string");
+
+        assertThat(loggable.readableCopy()).isSameAs(loggable);
+    }
+
+    @Test
+    void getStructureName_returns_expected_name() {
+        final TestLoggable loggable = new TestLoggable("log string");
+
+        assertThat(loggable.getStructureName()).isEqualTo("testLoggable");
+    }
+
+    static final class TestLoggable extends AbstractMemoizingStructuredLoggable {
         private final String logString;
         private int invocations = 0;
 
