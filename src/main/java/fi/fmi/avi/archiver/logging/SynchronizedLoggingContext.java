@@ -8,6 +8,7 @@ import java.util.function.UnaryOperator;
 
 import javax.annotation.Nullable;
 
+import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
@@ -41,6 +42,62 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
+    public ReadableLoggingContext readableCopy() {
+        synchronized (mutex) {
+            return delegate.readableCopy();
+        }
+    }
+
+    @Override
+    public String getStructureName() {
+        synchronized (mutex) {
+            return delegate.getStructureName();
+        }
+    }
+
+    @Override
+    public FileProcessingIdentifier getFileProcessingIdentifier() {
+        synchronized (mutex) {
+            return delegate.getFileProcessingIdentifier();
+        }
+    }
+
+    @Override
+    public Optional<FileReference> getFileReference() {
+        synchronized (mutex) {
+            return delegate.getFileReference();
+        }
+    }
+
+    @Override
+    public Optional<BulletinLogReference> getBulletinLogReference() {
+        synchronized (mutex) {
+            return delegate.getBulletinLogReference();
+        }
+    }
+
+    @Override
+    public int getBulletinIndex() {
+        synchronized (mutex) {
+            return delegate.getBulletinIndex();
+        }
+    }
+
+    @Override
+    public Optional<MessageLogReference> getMessageLogReference() {
+        synchronized (mutex) {
+            return delegate.getMessageLogReference();
+        }
+    }
+
+    @Override
+    public int getMessageIndex() {
+        synchronized (mutex) {
+            return delegate.getMessageIndex();
+        }
+    }
+
+    @Override
     public void enterFile(@Nullable final FileReference fileReference) {
         synchronized (mutex) {
             delegate.enterFile(fileReference);
@@ -51,13 +108,6 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     public void leaveFile() {
         synchronized (mutex) {
             delegate.leaveFile();
-        }
-    }
-
-    @Override
-    public Optional<FileReference> getFileReference() {
-        synchronized (mutex) {
-            return delegate.getFileReference();
         }
     }
 
@@ -83,13 +133,6 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public Optional<BulletinLogReference> getBulletinLogReference() {
-        synchronized (mutex) {
-            return delegate.getBulletinLogReference();
-        }
-    }
-
-    @Override
     public List<BulletinLogReference> getAllBulletinLogReferences() {
         synchronized (mutex) {
             return delegate.getAllBulletinLogReferences();
@@ -100,13 +143,6 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     public void modifyBulletinLogReference(final UnaryOperator<BulletinLogReference> operator) {
         synchronized (mutex) {
             delegate.modifyBulletinLogReference(operator);
-        }
-    }
-
-    @Override
-    public int getBulletinIndex() {
-        synchronized (mutex) {
-            return delegate.getBulletinIndex();
         }
     }
 
@@ -139,13 +175,6 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public Optional<MessageLogReference> getMessageLogReference() {
-        synchronized (mutex) {
-            return delegate.getMessageLogReference();
-        }
-    }
-
-    @Override
     public List<MessageLogReference> getBulletinMessageLogReferences() {
         synchronized (mutex) {
             return delegate.getBulletinMessageLogReferences();
@@ -156,13 +185,6 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     public void modifyMessageLogReference(final UnaryOperator<MessageLogReference> operator) {
         synchronized (mutex) {
             delegate.modifyMessageLogReference(operator);
-        }
-    }
-
-    @Override
-    public int getMessageIndex() {
-        synchronized (mutex) {
-            return delegate.getMessageIndex();
         }
     }
 

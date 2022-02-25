@@ -48,26 +48,8 @@ class LoggingContextImplTest {
                 .build();
     }
 
-    @BeforeEach
-    void setUp() {
-        mocksCloseable = MockitoAnnotations.openMocks(this);
-        id = FileProcessingIdentifier.newInstance();
-        loggingContext = new LoggingContextImpl(id, statistics);
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        if (mocksCloseable != null) {
-            mocksCloseable.close();
-        }
-    }
-
-    private void assertEmptyState() {
-        assertState(null, null, null);
-    }
-
-    private void assertState(@Nullable final FileReference expectedFileReference, final @Nullable BulletinLogReference expectedBulletinLogReference,
-            final @Nullable MessageLogReference expectedMessageLogReference) {
+    private static void assertState(final ReadableLoggingContext loggingContext, final @Nullable FileReference expectedFileReference,
+            final @Nullable BulletinLogReference expectedBulletinLogReference, final @Nullable MessageLogReference expectedMessageLogReference) {
         final int expectedBulletinIndex = expectedBulletinLogReference == null ? -1 : expectedBulletinLogReference.getBulletinIndex();
         final int expectedMessageIndex = expectedMessageLogReference == null ? -1 : expectedMessageLogReference.getMessageIndex();
         assertSoftly(softly -> {
@@ -89,9 +71,48 @@ class LoggingContextImplTest {
         });
     }
 
+    @BeforeEach
+    void setUp() {
+        mocksCloseable = MockitoAnnotations.openMocks(this);
+        id = FileProcessingIdentifier.newInstance();
+        loggingContext = new LoggingContextImpl(id, statistics);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        if (mocksCloseable != null) {
+            mocksCloseable.close();
+        }
+    }
+
+    private void assertEmptyState() {
+        assertState(null, null, null);
+    }
+
+    private void assertState(@Nullable final FileReference expectedFileReference, final @Nullable BulletinLogReference expectedBulletinLogReference,
+            final @Nullable MessageLogReference expectedMessageLogReference) {
+        assertState(loggingContext, expectedFileReference, expectedBulletinLogReference, expectedMessageLogReference);
+    }
+
     @Test
     void has_initially_empty_state() {
         assertEmptyState();
+    }
+
+    @Test
+    void readableCopy_returns_ImmutableLoggingContext() {
+        final ReadableLoggingContext copy = loggingContext.readableCopy();
+
+        assertThat(copy).isInstanceOf(ImmutableLoggingContext.class);
+        assertThat(copy.getStructureName()).as("getStructureName")//
+                .isEqualTo(loggingContext.getStructureName());
+        assertState(copy, loggingContext.getFileReference().orElse(null), loggingContext.getBulletinLogReference().orElse(null),
+                loggingContext.getMessageLogReference().orElse(null));
+    }
+
+    @Test
+    void getStructureName_returns_expected_name() {
+        assertThat(loggingContext.getStructureName()).isEqualTo("processingContext");
     }
 
     @Test

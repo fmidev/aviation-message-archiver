@@ -1,25 +1,20 @@
 package fi.fmi.avi.archiver.logging;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
-import fi.fmi.avi.archiver.file.FileReference;
+import static java.util.Objects.requireNonNull;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.IntFunction;
 
-import static java.util.Objects.requireNonNull;
+import javax.annotation.Nullable;
 
-public class LoggingContextImpl extends AbstractAppendingLoggable implements LoggingContext {
-    private static final char SEPARATOR = ':';
-    /**
-     * Maximum file name length is set according to maximum length of mandatory file name fields specified by
-     * WMO doc 386 Manual on the Global Telecommunication System, General file naming conventions
-     */
-    private static final int FILENAME_MAX_LENGTH = 128;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
+import fi.fmi.avi.archiver.file.FileReference;
+
+public class LoggingContextImpl extends AbstractLoggingContext implements LoggingContext {
 
     private final FileProcessingIdentifier fileProcessingIdentifier;
     private final FileProcessingStatistics fileProcessingStatistics;
@@ -28,7 +23,6 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
 
     @Nullable
     private FileReference fileReference;
-
     private int bulletinIndex = -1;
     private int messageIndex = -1;
 
@@ -45,48 +39,8 @@ public class LoggingContextImpl extends AbstractAppendingLoggable implements Log
     }
 
     @Override
-    public void appendTo(final StringBuilder builder) {
-        builder.append(fileProcessingIdentifier);
-        if (fileReference != null) {
-            builder//
-                    .append(SEPARATOR)//
-                    .append(fileReference.getProductIdentifier())//
-                    .append('/')//
-                    .append(LoggableUtils.sanitize(fileReference.getFilename(), FILENAME_MAX_LENGTH));
-        }
-        if (bulletinIndex >= 0) {
-            if (fileReference == null) {
-                builder.append(SEPARATOR);
-            }
-            builder.append(SEPARATOR)//
-                    .append(bulletinLogReferences.get(bulletinIndex));
-            if (messageIndex >= 0) {
-                builder.append(SEPARATOR)//
-                        .append(bulletinMessageLogReferences.get(bulletinIndex).get(messageIndex));
-            }
-        }
-    }
-
-    @Override
-    public int estimateLogStringLength() {
-        return fileProcessingIdentifier.toString().length() //
-                + estimateFileReferenceLength() //
-                + estimateBulletinLogReferenceLength() //
-                + estimateMessageLogReferenceLength();
-    }
-
-    private int estimateFileReferenceLength() {
-        return fileReference == null
-                ? 0
-                : fileReference.getProductIdentifier().length() + Math.min(fileReference.getFilename().length(), FILENAME_MAX_LENGTH) + 2;
-    }
-
-    private int estimateBulletinLogReferenceLength() {
-        return bulletinIndex < 0 ? 0 : bulletinLogReferences.get(bulletinIndex).estimateLogStringLength() + 1;
-    }
-
-    private int estimateMessageLogReferenceLength() {
-        return bulletinIndex < 0 || messageIndex < 0 ? 0 : bulletinMessageLogReferences.get(bulletinIndex).get(messageIndex).estimateLogStringLength() + 1;
+    public FileProcessingIdentifier getFileProcessingIdentifier() {
+        return fileProcessingIdentifier;
     }
 
     @Override

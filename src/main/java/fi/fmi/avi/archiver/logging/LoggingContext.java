@@ -1,14 +1,14 @@
 package fi.fmi.avi.archiver.logging;
 
-import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.message.MessagePositionInFile;
+import static java.util.Objects.requireNonNull;
 
-import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.UnaryOperator;
 
-import static java.util.Objects.requireNonNull;
+import javax.annotation.Nullable;
+
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
 /**
  * A class implementing this interface stores the state of file processing in terms of bulletins within a file and messages within a bulletin, and produces a
@@ -18,13 +18,15 @@ import static java.util.Objects.requireNonNull;
  * All bulletin and message indices in the API start from {@code 0}, but {@link #toString()} outputs indices starting from {@code 1}.
  * </p>
  */
-public interface LoggingContext extends AppendingLoggable {
+public interface LoggingContext extends ReadableLoggingContext {
     /**
      * Return a {@code LoggingContext} that synchronizes each method call backed by the provided {@code loggingContext} instance.
      * This makes the returned object thread-safe in terms of <em>serial</em> invocations from different threads and logging output. But it does
      * <strong>not</strong> guarantee safe <em>parallel</em> processing of different messages within a file.
      *
-     * @param loggingContext the logging context to be wrapped
+     * @param loggingContext
+     *         the logging context to be wrapped
+     *
      * @return a {@code LoggingContext} that synchronizes each method call backed by provided {@code loggingContext} instance
      */
     @SuppressWarnings("ClassReferencesSubclass")
@@ -41,7 +43,8 @@ public interface LoggingContext extends AppendingLoggable {
      * See method description for details.
      * </p>
      *
-     * @param fileReference reference to the file currently under processing, or {@code null} to indicate end of processing
+     * @param fileReference
+     *         reference to the file currently under processing, or {@code null} to indicate end of processing
      */
     void enterFile(@Nullable FileReference fileReference);
 
@@ -64,13 +67,6 @@ public interface LoggingContext extends AppendingLoggable {
     }
 
     /**
-     * Return {@code FileReference} referring to the file currently under processing, if one is registered, otherwise empty.
-     *
-     * @return {@code FileReference} referring to the file currently under processing, if one is registered, otherwise empty
-     */
-    Optional<FileReference> getFileReference();
-
-    /**
      * Register a bulletin referred by the provided {@code bulletinLogReference} as under processing.
      * A previously registered {@code BulletinLogReference} with the same {@link BulletinLogReference#getBulletinIndex() bulletin index} is replaced with the provided
      * {@code BulletinLogReference}.
@@ -81,7 +77,8 @@ public interface LoggingContext extends AppendingLoggable {
      * See method description for details.
      * </p>
      *
-     * @param bulletinLogReference reference to the bulletin currently under processing, or {@code null} to indicate end of processing
+     * @param bulletinLogReference
+     *         reference to the bulletin currently under processing, or {@code null} to indicate end of processing
      */
     void enterBulletin(@Nullable BulletinLogReference bulletinLogReference);
 
@@ -97,7 +94,8 @@ public interface LoggingContext extends AppendingLoggable {
      * See method description for details.
      * </p>
      *
-     * @param index index of a bulletin within a file starting from {@code 0} currently under processing, or {@code -1} to indicate end of processing
+     * @param index
+     *         index of a bulletin within a file starting from {@code 0} currently under processing, or {@code -1} to indicate end of processing
      */
     void enterBulletin(int index);
 
@@ -116,13 +114,6 @@ public interface LoggingContext extends AppendingLoggable {
     default void leaveBulletin() {
         enterBulletin(null);
     }
-
-    /**
-     * Return a {@code BulletinLogReference} referring to the bulletin currently under processing, if one is registered, otherwise empty.
-     *
-     * @return a {@code BulletinLogReference} referring to the bulletin currently under processing, if one is registered, otherwise empty.
-     */
-    Optional<BulletinLogReference> getBulletinLogReference();
 
     /**
      * Return all registered {@code BulletinLogReference}s in order of appearance within a file.
@@ -155,29 +146,16 @@ public interface LoggingContext extends AppendingLoggable {
      * It is also the default implementation.
      * </p>
      *
-     * @param operator operator to apply on the {@code BulletinLogReference} referring to the bulletin currently under processing
-     * @throws NullPointerException if {@code operator} is {@code null}
+     * @param operator
+     *         operator to apply on the {@code BulletinLogReference} referring to the bulletin currently under processing
+     *
+     * @throws NullPointerException
+     *         if {@code operator} is {@code null}
      */
     default void modifyBulletinLogReference(final UnaryOperator<BulletinLogReference> operator) {
         getBulletinLogReference()//
                 .map(operator)//
                 .ifPresent(this::enterBulletin);
-    }
-
-    /**
-     * Return the index of the currently processed bulletin within a file starting from index {@code 0}. Returns {@code -1} if no bulletin is currently
-     * being processed.
-     *
-     * <p>
-     * The default implementation returns the bulletin index of {@code BulletinLogReference} returned by {@link #getBulletinLogReference()}.
-     * </p>
-     *
-     * @return index of bulletin currently under processing, or {@code -1}
-     */
-    default int getBulletinIndex() {
-        return getBulletinLogReference()//
-                .map(BulletinLogReference::getBulletinIndex)//
-                .orElse(-1);
     }
 
     /**
@@ -192,7 +170,8 @@ public interface LoggingContext extends AppendingLoggable {
      * See method description for details.
      * </p>
      *
-     * @param messageLogReference reference to message being currently under processing, or {@code null} to indicate end of processing
+     * @param messageLogReference
+     *         reference to message being currently under processing, or {@code null} to indicate end of processing
      */
     void enterMessage(@Nullable MessageLogReference messageLogReference);
 
@@ -209,7 +188,8 @@ public interface LoggingContext extends AppendingLoggable {
      * See method description for details.
      * </p>
      *
-     * @param index index of message within bulletin starting from {@code 0} being currently under processing, or {@code -1} to indicate end of processing
+     * @param index
+     *         index of message within bulletin starting from {@code 0} being currently under processing, or {@code -1} to indicate end of processing
      */
     void enterMessage(int index);
 
@@ -225,8 +205,11 @@ public interface LoggingContext extends AppendingLoggable {
      * The default implementation invokes {@link #enterBulletin(int)} and {@link #enterMessage(int)} with indices in provided {@code messagePositionInFile}.
      * </p>
      *
-     * @param messagePositionInFile message position in file being currently under processing
-     * @throws NullPointerException if {@code messagePositionInFile} is {@code null}
+     * @param messagePositionInFile
+     *         message position in file being currently under processing
+     *
+     * @throws NullPointerException
+     *         if {@code messagePositionInFile} is {@code null}
      */
     default void enterBulletinMessage(final MessagePositionInFile messagePositionInFile) {
         requireNonNull(messagePositionInFile, "messagePositionInFile");
@@ -248,13 +231,6 @@ public interface LoggingContext extends AppendingLoggable {
     default void leaveMessage() {
         enterMessage(null);
     }
-
-    /**
-     * Return a {@code MessageLogReference} referring to the message being currently processed, if one is registered, otherwise empty.
-     *
-     * @return {@code MessageLogReference} referring to message being currently under processing, if one is registered, otherwise empty
-     */
-    Optional<MessageLogReference> getMessageLogReference();
 
     /**
      * Return all registered {@code MessageLogReference}s of the bulletin being currently processed in order of appearance within the bulletin.
@@ -287,27 +263,16 @@ public interface LoggingContext extends AppendingLoggable {
      * It is also the default implementation.
      * </p>
      *
-     * @param operator operator to apply on the {@code MessageLogReference} referring to message being currently under processing
-     * @throws NullPointerException if {@code operator} is {@code null}
+     * @param operator
+     *         operator to apply on the {@code MessageLogReference} referring to message being currently under processing
+     *
+     * @throws NullPointerException
+     *         if {@code operator} is {@code null}
      */
     default void modifyMessageLogReference(final UnaryOperator<MessageLogReference> operator) {
         getMessageLogReference()//
                 .map(operator)//
                 .ifPresent(this::enterMessage);
-    }
-
-    /**
-     * Return the index of the currently processed message within a bulletin starting from index {@code 0}. Returns {@code -1} if no message is currently being
-     * processed.
-     *
-     * <p>
-     * The default implementation returns the message index of {@code MessageLogReference} returned by {@link #getMessageLogReference()}.
-     * </p>
-     *
-     * @return index of message being currently under processing, or {@code -1}
-     */
-    default int getMessageIndex() {
-        return getMessageLogReference().map(MessageLogReference::getMessageIndex).orElse(-1);
     }
 
     /**
@@ -335,7 +300,8 @@ public interface LoggingContext extends AppendingLoggable {
      * The default implementation tests the current state of a bulletin and a message invoking {@link #getBulletinIndex()} and {@link #getMessageIndex()}.
      * </p>
      *
-     * @param processingResult processing result to record on current state
+     * @param processingResult
+     *         processing result to record on current state
      */
     default void recordProcessingResult(final FileProcessingStatistics.ProcessingResult processingResult) {
         requireNonNull(processingResult, "processingResult");
