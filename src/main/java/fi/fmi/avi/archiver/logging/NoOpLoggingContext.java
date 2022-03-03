@@ -16,6 +16,7 @@ import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
 public final class NoOpLoggingContext extends AbstractNoOpLoggable implements LoggingContext {
     private static final NoOpLoggingContext INSTANCE = new NoOpLoggingContext();
+    private static final FileProcessingIdentifier PROCESSING_ID = FileProcessingIdentifier.newInstance();
 
     private NoOpLoggingContext() {
     }
@@ -32,7 +33,7 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
 
     @Override
     public FileProcessingIdentifier getProcessingId() {
-        return FileProcessingIdentifier.newInstance();
+        return PROCESSING_ID;
     }
 
     @Override
