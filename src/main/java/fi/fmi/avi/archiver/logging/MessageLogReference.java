@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 
 import org.inferred.freebuilder.FreeBuilder;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 
 @FreeBuilder
@@ -18,12 +19,13 @@ public abstract class MessageLogReference extends AbstractMemoizingStructuredLog
         return new Builder();
     }
 
-    public abstract int getMessageIndex();
+    public abstract int getIndex();
 
-    public abstract Optional<String> getMessageContent();
+    @JsonIgnore
+    public abstract Optional<String> getContent();
 
-    public Optional<String> getMessageExcerpt() {
-        return getMessageContent()//
+    public Optional<String> getExcerpt() {
+        return getContent()//
                 .map(content -> {
                     final Matcher matcher = XML_EXCERPT_PATTERN.matcher(content);
                     if (matcher.find()) {
@@ -36,8 +38,8 @@ public abstract class MessageLogReference extends AbstractMemoizingStructuredLog
 
     @Override
     protected void appendOnceTo(final StringBuilder builder) {
-        builder.append(getMessageIndex() + 1);
-        getMessageExcerpt().ifPresent(messageExcerpt -> builder.append('(').append(messageExcerpt).append(')'));
+        builder.append(getIndex() + 1);
+        getExcerpt().ifPresent(excerpt -> builder.append('(').append(excerpt).append(')'));
     }
 
     @Override
@@ -52,9 +54,9 @@ public abstract class MessageLogReference extends AbstractMemoizingStructuredLog
         }
 
         @Override
-        public Builder setMessageIndex(final int messageIndex) {
-            Preconditions.checkArgument(messageIndex >= 0, "messageIndex must be non-negative; was: %s", messageIndex);
-            return super.setMessageIndex(messageIndex);
+        public Builder setIndex(final int index) {
+            Preconditions.checkArgument(index >= 0, "index must be non-negative; was: %s", index);
+            return super.setIndex(index);
         }
     }
 }

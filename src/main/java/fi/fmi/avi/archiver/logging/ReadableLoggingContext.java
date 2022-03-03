@@ -2,9 +2,16 @@ package fi.fmi.avi.archiver.logging;
 
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
 
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public interface ReadableLoggingContext extends AppendingLoggable, StructuredLoggable {
     /**
      * {@inheritDoc}
@@ -35,35 +42,38 @@ public interface ReadableLoggingContext extends AppendingLoggable, StructuredLog
      *
      * @return file processing identifier
      */
-    FileProcessingIdentifier getFileProcessingIdentifier();
+    @JsonProperty(index = 0)
+    @JsonSerialize(using = ToStringSerializer.class)
+    FileProcessingIdentifier getProcessingId();
 
     /**
      * Return {@code FileReference} referring to the file currently under processing, if one is registered, otherwise empty.
      *
      * @return {@code FileReference} referring to the file currently under processing, if one is registered, otherwise empty
      */
-    Optional<FileReference> getFileReference();
+    Optional<FileReference> getFile();
 
     /**
      * Return a {@code BulletinLogReference} referring to the bulletin currently under processing, if one is registered, otherwise empty.
      *
      * @return a {@code BulletinLogReference} referring to the bulletin currently under processing, if one is registered, otherwise empty.
      */
-    Optional<BulletinLogReference> getBulletinLogReference();
+    Optional<BulletinLogReference> getBulletin();
 
     /**
      * Return the index of the currently processed bulletin within a file starting from index {@code 0}. Returns {@code -1} if no bulletin is currently
      * being processed.
      *
      * <p>
-     * The default implementation returns the bulletin index of {@code BulletinLogReference} returned by {@link #getBulletinLogReference()}.
+     * The default implementation returns the bulletin index of {@code BulletinLogReference} returned by {@link #getBulletin()}.
      * </p>
      *
      * @return index of bulletin currently under processing, or {@code -1}
      */
+    @JsonIgnore
     default int getBulletinIndex() {
-        return getBulletinLogReference()//
-                .map(BulletinLogReference::getBulletinIndex)//
+        return getBulletin()//
+                .map(BulletinLogReference::getIndex)//
                 .orElse(-1);
     }
 
@@ -72,21 +82,22 @@ public interface ReadableLoggingContext extends AppendingLoggable, StructuredLog
      *
      * @return {@code MessageLogReference} referring to message being currently under processing, if one is registered, otherwise empty
      */
-    Optional<MessageLogReference> getMessageLogReference();
+    Optional<MessageLogReference> getMessage();
 
     /**
      * Return the index of the currently processed message within a bulletin starting from index {@code 0}. Returns {@code -1} if no message is currently being
      * processed.
      *
      * <p>
-     * The default implementation returns the message index of {@code MessageLogReference} returned by {@link #getMessageLogReference()}.
+     * The default implementation returns the message index of {@code MessageLogReference} returned by {@link #getMessage()}.
      * </p>
      *
      * @return index of message being currently under processing, or {@code -1}
      */
+    @JsonIgnore
     default int getMessageIndex() {
-        return getMessageLogReference()//
-                .map(MessageLogReference::getMessageIndex)//
+        return getMessage()//
+                .map(MessageLogReference::getIndex)//
                 .orElse(-1);
     }
 }

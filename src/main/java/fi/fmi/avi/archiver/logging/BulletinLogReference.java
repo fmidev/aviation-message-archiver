@@ -16,16 +16,16 @@ public abstract class BulletinLogReference extends AbstractMemoizingStructuredLo
         return new Builder();
     }
 
-    public abstract int getBulletinIndex();
+    public abstract int getIndex();
 
-    public abstract Optional<String> getBulletinHeading();
+    public abstract Optional<String> getHeading();
 
     public abstract int getCharIndex();
 
     @Override
     protected void appendOnceTo(final StringBuilder builder) {
-        builder.append(getBulletinIndex() + 1);
-        getBulletinHeading().ifPresent(bulletinHeading -> builder.append('(').append(LoggableUtils.sanitize(bulletinHeading, HEADING_MAX_LENGTH)).append(')'));
+        builder.append(getIndex() + 1);
+        getHeading().ifPresent(heading -> builder.append('(').append(LoggableUtils.sanitize(heading, HEADING_MAX_LENGTH)).append(')'));
         if (getCharIndex() >= 0) {
             builder.append('@').append(getCharIndex() + 1);
         }
@@ -48,9 +48,9 @@ public abstract class BulletinLogReference extends AbstractMemoizingStructuredLo
         }
 
         @Override
-        public Builder setBulletinIndex(final int bulletinIndex) {
-            Preconditions.checkArgument(bulletinIndex >= 0, "bulletinIndex must be non-negative; was: %s", bulletinIndex);
-            return super.setBulletinIndex(bulletinIndex);
+        public Builder setIndex(final int index) {
+            Preconditions.checkArgument(index >= 0, "index must be non-negative; was: %s", index);
+            return super.setIndex(index);
         }
 
         @Override

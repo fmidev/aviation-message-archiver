@@ -12,9 +12,9 @@ public abstract class ImmutableLoggingContext extends AbstractLoggingContext {
             return (ImmutableLoggingContext) input;
         }
         return new AutoValue_ImmutableLoggingContext(//
-                input.getFileProcessingIdentifier(), //
-                input.getFileReference(), //
-                input.getBulletinLogReference(), //
-                input.getMessageLogReference());
+                input.getProcessingId(), //
+                input.getFile(), //
+                input.getBulletin(), //
+                input.getMessage());
     }
 }

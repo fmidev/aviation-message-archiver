@@ -74,7 +74,7 @@ class FileMetadataPopulatorTest {
     })
     void populates_route(final String productId, final MessagePopulatorTests.RouteId expected) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductIdentifier(productId))//
+                .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductId(productId))//
                         .setFileConfig(PRODUCTS.get(productId).getFileConfigs().get(0)))//
                 .build();
 
@@ -90,7 +90,7 @@ class FileMetadataPopulatorTest {
     })
     void populates_format(final String productId, final MessagePopulatorTests.FormatId expected) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductIdentifier(productId))//
+                .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductId(productId))//
                         .setFileConfig(PRODUCTS.get(productId).getFileConfigs().get(0)))//
                 .build();
 

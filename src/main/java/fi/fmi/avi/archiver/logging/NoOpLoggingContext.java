@@ -31,17 +31,17 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public FileProcessingIdentifier getFileProcessingIdentifier() {
+    public FileProcessingIdentifier getProcessingId() {
         return FileProcessingIdentifier.newInstance();
     }
 
     @Override
-    public Optional<FileReference> getFileReference() {
+    public Optional<FileReference> getFile() {
         return Optional.empty();
     }
 
     @Override
-    public Optional<BulletinLogReference> getBulletinLogReference() {
+    public Optional<BulletinLogReference> getBulletin() {
         return Optional.empty();
     }
 
@@ -51,7 +51,7 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public Optional<MessageLogReference> getMessageLogReference() {
+    public Optional<MessageLogReference> getMessage() {
         return Optional.empty();
     }
 
@@ -61,7 +61,7 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public void enterFile(@Nullable final FileReference fileReference) {
+    public void enterFile(@Nullable final FileReference file) {
     }
 
     @Override
@@ -69,7 +69,7 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public void enterBulletin(@Nullable final BulletinLogReference bulletinLogReference) {
+    public void enterBulletin(@Nullable final BulletinLogReference bulletin) {
     }
 
     @Override
@@ -81,17 +81,17 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public List<BulletinLogReference> getAllBulletinLogReferences() {
+    public List<BulletinLogReference> getAllBulletins() {
         return Collections.emptyList();
     }
 
     @Override
-    public void modifyBulletinLogReference(final UnaryOperator<BulletinLogReference> operator) {
+    public void modifyBulletin(final UnaryOperator<BulletinLogReference> operator) {
         requireNonNull(operator, "operator");
     }
 
     @Override
-    public void enterMessage(@Nullable final MessageLogReference messageLogReference) {
+    public void enterMessage(@Nullable final MessageLogReference message) {
     }
 
     @Override
@@ -108,12 +108,12 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public List<MessageLogReference> getBulletinMessageLogReferences() {
+    public List<MessageLogReference> getBulletinMessages() {
         return Collections.emptyList();
     }
 
     @Override
-    public void modifyMessageLogReference(final UnaryOperator<MessageLogReference> operator) {
+    public void modifyMessage(final UnaryOperator<MessageLogReference> operator) {
         requireNonNull(operator, "operator");
     }
 

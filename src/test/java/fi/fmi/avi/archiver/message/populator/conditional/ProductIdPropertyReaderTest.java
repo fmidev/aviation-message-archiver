@@ -135,7 +135,7 @@ class ProductIdPropertyReaderTest {
                     .mutateFileMetadata(metadataBuilder -> metadataBuilder//
                             .setFileConfig(fileConfig)//
                             .setFileReference(FileReference.builder()//
-                                    .setProductIdentifier(getId())//
+                                    .setProductId(getId())//
                                     .setFilename(TEST_PRODUCT_FILENAMES.get(formatId))//
                                     .build()))//
                     .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//

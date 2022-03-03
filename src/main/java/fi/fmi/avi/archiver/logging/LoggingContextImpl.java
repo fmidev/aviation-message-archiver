@@ -16,18 +16,18 @@ import fi.fmi.avi.archiver.file.FileReference;
 
 public class LoggingContextImpl extends AbstractLoggingContext implements LoggingContext {
 
-    private final FileProcessingIdentifier fileProcessingIdentifier;
+    private final FileProcessingIdentifier processingId;
     private final FileProcessingStatistics fileProcessingStatistics;
-    private final ArrayList<BulletinLogReference> bulletinLogReferences = new ArrayList<>(0);
-    private final ArrayList<ArrayList<MessageLogReference>> bulletinMessageLogReferences = new ArrayList<>(0);
+    private final ArrayList<BulletinLogReference> bulletins = new ArrayList<>(0);
+    private final ArrayList<ArrayList<MessageLogReference>> bulletinMessages = new ArrayList<>(0);
 
     @Nullable
-    private FileReference fileReference;
+    private FileReference file;
     private int bulletinIndex = -1;
     private int messageIndex = -1;
 
-    public LoggingContextImpl(final FileProcessingIdentifier fileProcessingIdentifier, final FileProcessingStatistics fileProcessingStatistics) {
-        this.fileProcessingIdentifier = requireNonNull(fileProcessingIdentifier, "fileProcessingIdentifier");
+    public LoggingContextImpl(final FileProcessingIdentifier processingId, final FileProcessingStatistics fileProcessingStatistics) {
+        this.processingId = requireNonNull(processingId, "processingId");
         this.fileProcessingStatistics = requireNonNull(fileProcessingStatistics, "fileProcessingStatistics");
     }
 
@@ -39,42 +39,42 @@ public class LoggingContextImpl extends AbstractLoggingContext implements Loggin
     }
 
     @Override
-    public FileProcessingIdentifier getFileProcessingIdentifier() {
-        return fileProcessingIdentifier;
+    public FileProcessingIdentifier getProcessingId() {
+        return processingId;
     }
 
     @Override
-    public void enterFile(@Nullable final FileReference fileReference) {
+    public void enterFile(@Nullable final FileReference file) {
         leaveBulletin();
-        if (fileReference == null || !fileReference.equals(this.fileReference)) {
+        if (file == null || !file.equals(this.file)) {
             clearLogReferenceCachesAndStatistics();
         }
-        this.fileReference = fileReference;
+        this.file = file;
     }
 
     private void clearLogReferenceCachesAndStatistics() {
-        bulletinLogReferences.clear();
-        bulletinLogReferences.trimToSize();
-        bulletinMessageLogReferences.clear();
-        bulletinMessageLogReferences.trimToSize();
+        bulletins.clear();
+        bulletins.trimToSize();
+        bulletinMessages.clear();
+        bulletinMessages.trimToSize();
         fileProcessingStatistics.clear();
     }
 
     @Override
-    public Optional<FileReference> getFileReference() {
-        return Optional.ofNullable(fileReference);
+    public Optional<FileReference> getFile() {
+        return Optional.ofNullable(file);
     }
 
     @Override
-    public void enterBulletin(@Nullable final BulletinLogReference bulletinLogReference) {
+    public void enterBulletin(@Nullable final BulletinLogReference bulletin) {
         leaveMessage();
-        if (bulletinLogReference == null) {
+        if (bulletin == null) {
             bulletinIndex = -1;
             return;
         }
-        final int index = bulletinLogReference.getBulletinIndex();
+        final int index = bulletin.getIndex();
         ensureBulletinLogReferencesHasIndex(index);
-        bulletinLogReferences.set(index, bulletinLogReference);
+        bulletins.set(index, bulletin);
         bulletinIndex = index;
     }
 
@@ -90,17 +90,17 @@ public class LoggingContextImpl extends AbstractLoggingContext implements Loggin
     }
 
     private void ensureBulletinLogReferencesHasIndex(final int expectedIndex) {
-        ensureSizeAtLeast(bulletinLogReferences, expectedIndex + 1, i -> BulletinLogReference.builder().setBulletinIndex(i).build());
+        ensureSizeAtLeast(bulletins, expectedIndex + 1, i -> BulletinLogReference.builder().setIndex(i).build());
     }
 
     @Override
-    public Optional<BulletinLogReference> getBulletinLogReference() {
-        return bulletinIndex < 0 ? Optional.empty() : Optional.of(bulletinLogReferences.get(bulletinIndex));
+    public Optional<BulletinLogReference> getBulletin() {
+        return bulletinIndex < 0 ? Optional.empty() : Optional.of(bulletins.get(bulletinIndex));
     }
 
     @Override
-    public List<BulletinLogReference> getAllBulletinLogReferences() {
-        return Collections.unmodifiableList(bulletinLogReferences);
+    public List<BulletinLogReference> getAllBulletins() {
+        return Collections.unmodifiableList(bulletins);
     }
 
     @Override
@@ -109,18 +109,18 @@ public class LoggingContextImpl extends AbstractLoggingContext implements Loggin
     }
 
     @Override
-    public void enterMessage(@Nullable final MessageLogReference messageLogReference) {
-        if (messageLogReference == null) {
+    public void enterMessage(@Nullable final MessageLogReference message) {
+        if (message == null) {
             messageIndex = -1;
             return;
         }
         if (bulletinIndex < 0) {
             enterBulletin(0);
         }
-        final int index = messageLogReference.getMessageIndex();
+        final int index = message.getIndex();
         ensureMessageLogReferencesHasIndex(bulletinIndex, index);
-        final List<MessageLogReference> messageLogReferences = bulletinMessageLogReferences.get(bulletinIndex);
-        messageLogReferences.set(index, messageLogReference);
+        final List<MessageLogReference> messages = bulletinMessages.get(bulletinIndex);
+        messages.set(index, message);
         messageIndex = index;
     }
 
@@ -138,20 +138,20 @@ public class LoggingContextImpl extends AbstractLoggingContext implements Loggin
     }
 
     private void ensureMessageLogReferencesHasIndex(final int bulletinIndex, final int messageIndex) {
-        ensureSizeAtLeast(bulletinMessageLogReferences, bulletinIndex + 1, i -> new ArrayList<>(0));
-        ensureSizeAtLeast(bulletinMessageLogReferences.get(bulletinIndex), messageIndex + 1, i -> MessageLogReference.builder().setMessageIndex(i).build());
+        ensureSizeAtLeast(bulletinMessages, bulletinIndex + 1, i -> new ArrayList<>(0));
+        ensureSizeAtLeast(bulletinMessages.get(bulletinIndex), messageIndex + 1, i -> MessageLogReference.builder().setIndex(i).build());
     }
 
     @Override
-    public Optional<MessageLogReference> getMessageLogReference() {
-        return bulletinIndex < 0 || messageIndex < 0 ? Optional.empty() : Optional.of(bulletinMessageLogReferences.get(bulletinIndex).get(messageIndex));
+    public Optional<MessageLogReference> getMessage() {
+        return bulletinIndex < 0 || messageIndex < 0 ? Optional.empty() : Optional.of(bulletinMessages.get(bulletinIndex).get(messageIndex));
     }
 
     @Override
-    public List<MessageLogReference> getBulletinMessageLogReferences() {
-        return bulletinIndex < 0 || bulletinIndex >= bulletinMessageLogReferences.size()
+    public List<MessageLogReference> getBulletinMessages() {
+        return bulletinIndex < 0 || bulletinIndex >= bulletinMessages.size()
                 ? Collections.emptyList()
-                : Collections.unmodifiableList(bulletinMessageLogReferences.get(bulletinIndex));
+                : Collections.unmodifiableList(bulletinMessages.get(bulletinIndex));
     }
 
     @Override
@@ -167,9 +167,9 @@ public class LoggingContextImpl extends AbstractLoggingContext implements Loggin
 
     @Override
     public void initStatistics() {
-        fileProcessingStatistics.initBulletins(bulletinLogReferences.size());
-        for (int bulletinIndex = 0, size = bulletinMessageLogReferences.size(); bulletinIndex < size; bulletinIndex++) {
-            fileProcessingStatistics.initMessages(bulletinIndex, bulletinMessageLogReferences.get(bulletinIndex).size());
+        fileProcessingStatistics.initBulletins(bulletins.size());
+        for (int bulletinIndex = 0, size = bulletinMessages.size(); bulletinIndex < size; bulletinIndex++) {
+            fileProcessingStatistics.initMessages(bulletinIndex, bulletinMessages.get(bulletinIndex).size());
         }
     }
 }

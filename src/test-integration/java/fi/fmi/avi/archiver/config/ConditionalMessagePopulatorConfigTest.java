@@ -127,7 +127,7 @@ class ConditionalMessagePopulatorConfigTest {
                 .mutateFileMetadata(metadataBuilder -> metadataBuilder//
                         .setFileConfig(fileConfig)//
                         .setFileReference(FileReference.builder()//
-                                .setProductIdentifier(productId)//
+                                .setProductId(productId)//
                                 .setFilename(FILENAMES.get(formatId))//
                                 .build()))//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
@@ -266,7 +266,7 @@ class ConditionalMessagePopulatorConfigTest {
     public static class TestProductIdentifierPropertyReader extends AbstractConditionPropertyReader<String> {
         @Override
         public String readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
-            return input.getFileMetadata().getFileReference().getProductIdentifier();
+            return input.getFileMetadata().getFileReference().getProductId();
         }
     }
 

@@ -56,23 +56,23 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public FileProcessingIdentifier getFileProcessingIdentifier() {
+    public FileProcessingIdentifier getProcessingId() {
         synchronized (mutex) {
-            return delegate.getFileProcessingIdentifier();
+            return delegate.getProcessingId();
         }
     }
 
     @Override
-    public Optional<FileReference> getFileReference() {
+    public Optional<FileReference> getFile() {
         synchronized (mutex) {
-            return delegate.getFileReference();
+            return delegate.getFile();
         }
     }
 
     @Override
-    public Optional<BulletinLogReference> getBulletinLogReference() {
+    public Optional<BulletinLogReference> getBulletin() {
         synchronized (mutex) {
-            return delegate.getBulletinLogReference();
+            return delegate.getBulletin();
         }
     }
 
@@ -84,9 +84,9 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public Optional<MessageLogReference> getMessageLogReference() {
+    public Optional<MessageLogReference> getMessage() {
         synchronized (mutex) {
-            return delegate.getMessageLogReference();
+            return delegate.getMessage();
         }
     }
 
@@ -98,9 +98,9 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public void enterFile(@Nullable final FileReference fileReference) {
+    public void enterFile(@Nullable final FileReference file) {
         synchronized (mutex) {
-            delegate.enterFile(fileReference);
+            delegate.enterFile(file);
         }
     }
 
@@ -112,9 +112,9 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public void enterBulletin(@Nullable final BulletinLogReference bulletinLogReference) {
+    public void enterBulletin(@Nullable final BulletinLogReference bulletin) {
         synchronized (mutex) {
-            delegate.enterBulletin(bulletinLogReference);
+            delegate.enterBulletin(bulletin);
         }
     }
 
@@ -133,23 +133,23 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public List<BulletinLogReference> getAllBulletinLogReferences() {
+    public List<BulletinLogReference> getAllBulletins() {
         synchronized (mutex) {
-            return delegate.getAllBulletinLogReferences();
+            return delegate.getAllBulletins();
         }
     }
 
     @Override
-    public void modifyBulletinLogReference(final UnaryOperator<BulletinLogReference> operator) {
+    public void modifyBulletin(final UnaryOperator<BulletinLogReference> operator) {
         synchronized (mutex) {
-            delegate.modifyBulletinLogReference(operator);
+            delegate.modifyBulletin(operator);
         }
     }
 
     @Override
-    public void enterMessage(@Nullable final MessageLogReference messageLogReference) {
+    public void enterMessage(@Nullable final MessageLogReference message) {
         synchronized (mutex) {
-            delegate.enterMessage(messageLogReference);
+            delegate.enterMessage(message);
         }
     }
 
@@ -175,16 +175,16 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public List<MessageLogReference> getBulletinMessageLogReferences() {
+    public List<MessageLogReference> getBulletinMessages() {
         synchronized (mutex) {
-            return delegate.getBulletinMessageLogReferences();
+            return delegate.getBulletinMessages();
         }
     }
 
     @Override
-    public void modifyMessageLogReference(final UnaryOperator<MessageLogReference> operator) {
+    public void modifyMessage(final UnaryOperator<MessageLogReference> operator) {
         synchronized (mutex) {
-            delegate.modifyMessageLogReference(operator);
+            delegate.modifyMessage(operator);
         }
     }
 

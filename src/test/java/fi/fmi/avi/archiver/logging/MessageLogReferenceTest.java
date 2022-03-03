@@ -30,14 +30,14 @@ final class MessageLogReferenceTest {
 
     @Test
     void messageIndex_below_zero_is_forbidden() {
-        assertThatIllegalArgumentException().isThrownBy(() -> builder().setMessageIndex(-1));
+        assertThatIllegalArgumentException().isThrownBy(() -> builder().setIndex(-1));
     }
 
     @Test
     void estimateLogStringLength_returns_decent_estimate() {
         final MessageLogReference messageLogReference = builder()//
-                .setMessageIndex(100)//
-                .setMessageContent(LoggableTests.createString(100))//
+                .setIndex(100)//
+                .setContent(LoggableTests.createString(100))//
                 .build();
         LoggableTests.assertDecentLengthEstimate(messageLogReference);
     }
@@ -54,15 +54,15 @@ final class MessageLogReferenceTest {
     @ParameterizedTest
     void messageExcerpt_is_expected(final String expectedStringTemplate, @Nullable final String expectedExcerpt,
             final MessageLogReference messageLogReference) {
-        assertThat(messageLogReference.getMessageExcerpt().orElse(null)).isEqualTo(expectedExcerpt);
+        assertThat(messageLogReference.getExcerpt().orElse(null)).isEqualTo(expectedExcerpt);
     }
 
     @Test
     void getMessageExcerpt_returns_empty_when_getMessageContent_returns_empty() {
         final MessageLogReference messageLogReference = builder()//
-                .clearMessageContent()//
+                .clearContent()//
                 .buildPartial();
-        assertThat(messageLogReference.getMessageExcerpt()).isEmpty();
+        assertThat(messageLogReference.getExcerpt()).isEmpty();
     }
 
     static class TestValuesProvider implements ArgumentsProvider {
@@ -75,23 +75,23 @@ final class MessageLogReferenceTest {
         public Stream<Arguments> provideArguments(final ExtensionContext context) {
             return Stream.of(//
                     args("1", null, MessageLogReference.builder()//
-                            .setMessageIndex(0)//
+                            .setIndex(0)//
                             .build()), //
                     args("2", null, MessageLogReference.builder()//
-                            .setMessageIndex(1)//
-                            .clearMessageContent()//
+                            .setIndex(1)//
+                            .clearContent()//
                             .build()), //
                     args("4(%s)", "message content", MessageLogReference.builder()//
-                            .setMessageIndex(3)//
-                            .setMessageContent("message content")//
+                            .setIndex(3)//
+                            .setContent("message content")//
                             .build()), //
                     args("6(%s)", "Overlong message content with ?œø? char...", MessageLogReference.builder()//
-                            .setMessageIndex(5)//
-                            .setMessageContent("Overlong \n message \t\t content     with €œø\u0000\u0888 characters and extra whitespaces")//
+                            .setIndex(5)//
+                            .setContent("Overlong \n message \t\t content     with €œø\u0000\u0888 characters and extra whitespaces")//
                             .build()), //
                     args("7(%s)", "my-test-iwxxm-document-id", MessageLogReference.builder()//
-                            .setMessageIndex(6)//
-                            .setMessageContent(//
+                            .setIndex(6)//
+                            .setContent(//
                                     "<iwxxm:iwxxmMessage " //
                                             + "attr1=\"value1\" \n\t" //
                                             + "iwxxm:attr2=\"value2\"   " //
@@ -101,19 +101,19 @@ final class MessageLogReferenceTest {
                                             + "</iwxxm:iwxxmMessage>")//
                             .build()), //
                     args("8(%s)", "my-?very??-#!?œø?-overly-long-test-@iwx...", MessageLogReference.builder()//
-                            .setMessageIndex(7)//
-                            .setMessageContent(//
+                            .setIndex(7)//
+                            .setContent(//
                                     "<iwxxmMessage id=\"my-(very:)-#!€œø\u0000\u0888-overly-long-test-@iwxxm-document-id-of-plain-crap\">" //
                                             + "\n\t...\n" //
                                             + "</iwxxmMessage>")//
                             .build()), //
                     args("9(%s)", "min-msg", MessageLogReference.builder()//
-                            .setMessageIndex(8)//
-                            .setMessageContent("<minimalMsg id=\"min-msg\" />")//
+                            .setIndex(8)//
+                            .setContent("<minimalMsg id=\"min-msg\" />")//
                             .build()), //
                     args("10(%s)", "?any uid=\"123\"?...?/any?", MessageLogReference.builder()//
-                            .setMessageIndex(9)//
-                            .setMessageContent("<any uid=\"123\">...</any>")//
+                            .setIndex(9)//
+                            .setContent("<any uid=\"123\">...</any>")//
                             .build()));
         }
     }

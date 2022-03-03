@@ -15,29 +15,29 @@ final class BulletinLogReferenceTest {
     static Stream<Arguments> toString_returns_expected_value() {
         return Stream.of(//
                 Arguments.of("1", BulletinLogReference.builder()//
-                        .setBulletinIndex(0)//
+                        .setIndex(0)//
                         .build()), //
                 Arguments.of("2", BulletinLogReference.builder()//
-                        .setBulletinIndex(1)//
-                        .clearBulletinHeading()//
+                        .setIndex(1)//
+                        .clearHeading()//
                         .setCharIndex(-5)//
                         .build()), //
                 Arguments.of("3@426", BulletinLogReference.builder()//
-                        .setBulletinIndex(2)//
+                        .setIndex(2)//
                         .setCharIndex(425)//
                         .build()), //
                 Arguments.of("4(bulletin heading)", BulletinLogReference.builder()//
-                        .setBulletinIndex(3)//
-                        .setBulletinHeading("bulletin heading")//
+                        .setIndex(3)//
+                        .setHeading("bulletin heading")//
                         .build()), //
                 Arguments.of("5(BULL HEAD)@7943", BulletinLogReference.builder()//
-                        .setBulletinIndex(4)//
-                        .setBulletinHeading("BULL HEAD")//
+                        .setIndex(4)//
+                        .setHeading("BULL HEAD")//
                         .setCharIndex(7942)//
                         .build()), //
                 Arguments.of("6(Overlong bulletin heading with ?œø? chara...)@16255", BulletinLogReference.builder()//
-                        .setBulletinIndex(5)//
-                        .setBulletinHeading("Overlong \n bulletin \t\t heading     with €œø\u0000\u0888 characters and extra whitespaces")//
+                        .setIndex(5)//
+                        .setHeading("Overlong \n bulletin \t\t heading     with €œø\u0000\u0888 characters and extra whitespaces")//
                         .setCharIndex(16_254)//
                         .build()));
     }
@@ -56,7 +56,7 @@ final class BulletinLogReferenceTest {
 
     @Test
     void bulletinIndex_below_zero_is_forbidden() {
-        assertThatIllegalArgumentException().isThrownBy(() -> builder().setBulletinIndex(-1));
+        assertThatIllegalArgumentException().isThrownBy(() -> builder().setIndex(-1));
     }
 
     @Test
@@ -70,8 +70,8 @@ final class BulletinLogReferenceTest {
     @Test
     void estimateLogStringLength_returns_decent_estimate() {
         final BulletinLogReference bulletinLogReference = builder()//
-                .setBulletinIndex(100)//
-                .setBulletinHeading(LoggableTests.createString(100))//
+                .setIndex(100)//
+                .setHeading(LoggableTests.createString(100))//
                 .setCharIndex(100_000)//
                 .build();
         LoggableTests.assertDecentLengthEstimate(bulletinLogReference);

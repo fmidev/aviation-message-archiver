@@ -1,14 +1,15 @@
 package fi.fmi.avi.archiver.message.populator;
 
+import static java.util.Objects.requireNonNull;
+
+import java.util.Map;
+
 import com.google.common.base.Preconditions;
+
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-
-import java.util.Map;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Populate {@link ArchiveAviationMessage.Builder} properties from file metadata in {@link InputAviationMessage}, including product information related to
@@ -26,9 +27,8 @@ public class FileMetadataPopulator implements MessagePopulator {
         requireNonNull(input, "input");
         requireNonNull(builder, "builder");
         final FileMetadata fileMetadata = input.getFileMetadata();
-        final AviationProduct product = products.get(fileMetadata.getFileReference().getProductIdentifier());
-        Preconditions.checkState(product != null, "Unknown product identifier: %s; unable to resolve route",
-                fileMetadata.getFileReference().getProductIdentifier());
+        final AviationProduct product = products.get(fileMetadata.getFileReference().getProductId());
+        Preconditions.checkState(product != null, "Unknown product identifier: %s; unable to resolve route", fileMetadata.getFileReference().getProductId());
 
         builder.setRoute(product.getRouteId())//
                 .setFormat(fileMetadata.getFileConfig().getFormatId())//

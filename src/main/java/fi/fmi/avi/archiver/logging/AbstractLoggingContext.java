@@ -14,36 +14,36 @@ public abstract class AbstractLoggingContext extends AbstractAppendingLoggable i
 
     @Override
     public void appendTo(final StringBuilder builder) {
-        builder.append(getFileProcessingIdentifier());
+        builder.append(getProcessingId());
         @Nullable
-        final FileReference fileReference = getFileReference().orElse(null);
-        if (fileReference != null) {
+        final FileReference file = getFile().orElse(null);
+        if (file != null) {
             builder//
                     .append(SEPARATOR)//
-                    .append(fileReference.getProductIdentifier())//
+                    .append(file.getProductId())//
                     .append('/')//
-                    .append(LoggableUtils.sanitize(fileReference.getFilename(), FILENAME_MAX_LENGTH));
+                    .append(LoggableUtils.sanitize(file.getFilename(), FILENAME_MAX_LENGTH));
         }
         @Nullable
-        final BulletinLogReference bulletinLogReference = getBulletinLogReference().orElse(null);
-        if (bulletinLogReference != null) {
-            if (fileReference == null) {
+        final BulletinLogReference bulletin = getBulletin().orElse(null);
+        if (bulletin != null) {
+            if (file == null) {
                 builder.append(SEPARATOR);
             }
             builder.append(SEPARATOR)//
-                    .append(bulletinLogReference);
+                    .append(bulletin);
             @Nullable
-            final MessageLogReference messageLogReference = getMessageLogReference().orElse(null);
-            if (messageLogReference != null) {
+            final MessageLogReference message = getMessage().orElse(null);
+            if (message != null) {
                 builder.append(SEPARATOR)//
-                        .append(messageLogReference);
+                        .append(message);
             }
         }
     }
 
     @Override
     public int estimateLogStringLength() {
-        return getFileProcessingIdentifier().toString().length() //
+        return getProcessingId().toString().length() //
                 + estimateFileReferenceLength() //
                 + estimateBulletinLogReferenceLength() //
                 + estimateMessageLogReferenceLength();
@@ -51,21 +51,19 @@ public abstract class AbstractLoggingContext extends AbstractAppendingLoggable i
 
     private int estimateFileReferenceLength() {
         @Nullable
-        final FileReference fileReference = getFileReference().orElse(null);
-        return fileReference == null
-                ? 0
-                : fileReference.getProductIdentifier().length() + Math.min(fileReference.getFilename().length(), FILENAME_MAX_LENGTH) + 2;
+        final FileReference file = getFile().orElse(null);
+        return file == null ? 0 : file.getProductId().length() + Math.min(file.getFilename().length(), FILENAME_MAX_LENGTH) + 2;
     }
 
     private int estimateBulletinLogReferenceLength() {
         @Nullable
-        final BulletinLogReference bulletinLogReference = getBulletinLogReference().orElse(null);
-        return bulletinLogReference == null ? 0 : bulletinLogReference.estimateLogStringLength() + 1;
+        final BulletinLogReference bulletin = getBulletin().orElse(null);
+        return bulletin == null ? 0 : bulletin.estimateLogStringLength() + 1;
     }
 
     private int estimateMessageLogReferenceLength() {
         @Nullable
-        final MessageLogReference messageLogReference = getMessageLogReference().orElse(null);
-        return messageLogReference == null ? 0 : messageLogReference.estimateLogStringLength() + 1;
+        final MessageLogReference message = getMessage().orElse(null);
+        return message == null ? 0 : message.estimateLogStringLength() + 1;
     }
 }

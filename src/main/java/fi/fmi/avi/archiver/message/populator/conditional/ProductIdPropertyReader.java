@@ -12,10 +12,10 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 public class ProductIdPropertyReader extends AbstractConditionPropertyReader<String> {
-    private final Set<String> productIdentifiers;
+    private final Set<String> productIds;
 
     public ProductIdPropertyReader(final Map<String, AviationProduct> aviationProducts) {
-        this.productIdentifiers = requireNonNull(aviationProducts, "aviationProducts").keySet();
+        this.productIds = requireNonNull(aviationProducts, "aviationProducts").keySet();
     }
 
     @Nullable
@@ -23,12 +23,12 @@ public class ProductIdPropertyReader extends AbstractConditionPropertyReader<Str
     public String readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
         requireNonNull(input, "input");
         requireNonNull(target, "target");
-        return input.getFileMetadata().getFileReference().getProductIdentifier();
+        return input.getFileMetadata().getFileReference().getProductId();
     }
 
     @Override
     public boolean validate(final String value) {
         requireNonNull(value, "value");
-        return productIdentifiers.contains(value);
+        return productIds.contains(value);
     }
 }

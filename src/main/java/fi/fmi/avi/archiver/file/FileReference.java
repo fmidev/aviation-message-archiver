@@ -13,12 +13,12 @@ public abstract class FileReference {
 
     public static FileReference create(final String productIdentifier, final String filename) {
         return FileReference.builder()//
-                .setProductIdentifier(productIdentifier)//
+                .setProductId(productIdentifier)//
                 .setFilename(filename)//
                 .build();
     }
 
-    public abstract String getProductIdentifier();
+    public abstract String getProductId();
 
     public abstract String getFilename();
 
@@ -26,7 +26,7 @@ public abstract class FileReference {
 
     @Override
     public String toString() {
-        return getProductIdentifier() + "/" + getFilename();
+        return getProductId() + "/" + getFilename();
     }
 
     public static class Builder extends FileReference_Builder {

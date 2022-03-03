@@ -27,7 +27,7 @@ import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
 class LoggingContextImplTest {
     private static final FileReference FILE_REFERENCE = FileReference.create("productId", "test_file.txt");
-    private static final String FILE_REFERENCE_STRING = FILE_REFERENCE.getProductIdentifier() + "/" + FILE_REFERENCE.getFilename();
+    private static final String FILE_REFERENCE_STRING = FILE_REFERENCE.getProductId() + "/" + FILE_REFERENCE.getFilename();
 
     private FileProcessingIdentifier id;
     private LoggingContextImpl loggingContext;
@@ -38,31 +38,31 @@ class LoggingContextImplTest {
 
     private static BulletinLogReference bulletinLogReference(final int bulletinIndex) {
         return BulletinLogReference.builder()//
-                .setBulletinIndex(bulletinIndex)//
+                .setIndex(bulletinIndex)//
                 .build();
     }
 
     private static MessageLogReference messageLogReference(final int messageIndex) {
         return MessageLogReference.builder()//
-                .setMessageIndex(messageIndex)//
+                .setIndex(messageIndex)//
                 .build();
     }
 
     private static void assertState(final ReadableLoggingContext loggingContext, final @Nullable FileReference expectedFileReference,
             final @Nullable BulletinLogReference expectedBulletinLogReference, final @Nullable MessageLogReference expectedMessageLogReference) {
-        final int expectedBulletinIndex = expectedBulletinLogReference == null ? -1 : expectedBulletinLogReference.getBulletinIndex();
-        final int expectedMessageIndex = expectedMessageLogReference == null ? -1 : expectedMessageLogReference.getMessageIndex();
+        final int expectedBulletinIndex = expectedBulletinLogReference == null ? -1 : expectedBulletinLogReference.getIndex();
+        final int expectedMessageIndex = expectedMessageLogReference == null ? -1 : expectedMessageLogReference.getIndex();
         assertSoftly(softly -> {
-            softly.assertThat(loggingContext.getFileReference().orElse(null))//
+            softly.assertThat(loggingContext.getFile().orElse(null))//
                     .as("fileReference")//
                     .isEqualTo(expectedFileReference);
-            softly.assertThat(loggingContext.getBulletinLogReference().orElse(null))//
+            softly.assertThat(loggingContext.getBulletin().orElse(null))//
                     .as("bulletinLogReference")//
                     .isEqualTo(expectedBulletinLogReference);
             softly.assertThat(loggingContext.getBulletinIndex())//
                     .as("bulletinIndex")//
                     .isEqualTo(expectedBulletinIndex);
-            softly.assertThat(loggingContext.getMessageLogReference().orElse(null))//
+            softly.assertThat(loggingContext.getMessage().orElse(null))//
                     .as("messageLogReference")//
                     .isEqualTo(expectedMessageLogReference);
             softly.assertThat(loggingContext.getMessageIndex())//
@@ -106,8 +106,7 @@ class LoggingContextImplTest {
         assertThat(copy).isInstanceOf(ImmutableLoggingContext.class);
         assertThat(copy.getStructureName()).as("getStructureName")//
                 .isEqualTo(loggingContext.getStructureName());
-        assertState(copy, loggingContext.getFileReference().orElse(null), loggingContext.getBulletinLogReference().orElse(null),
-                loggingContext.getMessageLogReference().orElse(null));
+        assertState(copy, loggingContext.getFile().orElse(null), loggingContext.getBulletin().orElse(null), loggingContext.getMessage().orElse(null));
     }
 
     @Test
@@ -157,7 +156,7 @@ class LoggingContextImplTest {
 
         loggingContext.enterFile(fileReference2);
 
-        assertThat(loggingContext.getAllBulletinLogReferences()).containsExactly(bulletinLogReference(0), bulletinLogReference(1), bulletinLogReference(2));
+        assertThat(loggingContext.getAllBulletins()).containsExactly(bulletinLogReference(0), bulletinLogReference(1), bulletinLogReference(2));
     }
 
     @Test
@@ -171,11 +170,11 @@ class LoggingContextImplTest {
 
         assertSoftly(softly -> {
             loggingContext.enterBulletin(0);
-            softly.assertThat(loggingContext.getBulletinMessageLogReferences()).as("bulletin 0").isEmpty();
+            softly.assertThat(loggingContext.getBulletinMessages()).as("bulletin 0").isEmpty();
             loggingContext.enterBulletin(1);
-            softly.assertThat(loggingContext.getBulletinMessageLogReferences()).as("bulletin 1").isEmpty();
+            softly.assertThat(loggingContext.getBulletinMessages()).as("bulletin 1").isEmpty();
             loggingContext.enterBulletin(2);
-            softly.assertThat(loggingContext.getBulletinMessageLogReferences())
+            softly.assertThat(loggingContext.getBulletinMessages())
                     .as("bulletin 2")
                     .containsExactly(messageLogReference(0), messageLogReference(1), messageLogReference(2), messageLogReference(3));
         });
@@ -203,7 +202,7 @@ class LoggingContextImplTest {
 
         loggingContext.enterFile(fileReference2);
 
-        assertThat(loggingContext.getAllBulletinLogReferences()).isEmpty();
+        assertThat(loggingContext.getAllBulletins()).isEmpty();
     }
 
     @Test
@@ -220,11 +219,11 @@ class LoggingContextImplTest {
 
         assertSoftly(softly -> {
             loggingContext.enterBulletin(0);
-            softly.assertThat(loggingContext.getBulletinMessageLogReferences()).as("bulletin 0").isEmpty();
+            softly.assertThat(loggingContext.getBulletinMessages()).as("bulletin 0").isEmpty();
             loggingContext.enterBulletin(1);
-            softly.assertThat(loggingContext.getBulletinMessageLogReferences()).as("bulletin 1").isEmpty();
+            softly.assertThat(loggingContext.getBulletinMessages()).as("bulletin 1").isEmpty();
             loggingContext.enterBulletin(2);
-            softly.assertThat(loggingContext.getBulletinMessageLogReferences()).as("bulletin 2").isEmpty();
+            softly.assertThat(loggingContext.getBulletinMessages()).as("bulletin 2").isEmpty();
         });
     }
 
@@ -271,7 +270,7 @@ class LoggingContextImplTest {
 
         loggingContext.leaveFile();
 
-        assertThat(loggingContext.getAllBulletinLogReferences()).isEmpty();
+        assertThat(loggingContext.getAllBulletins()).isEmpty();
     }
 
     @Test
@@ -284,11 +283,11 @@ class LoggingContextImplTest {
 
         assertSoftly(softly -> {
             loggingContext.enterBulletin(0);
-            softly.assertThat(loggingContext.getBulletinMessageLogReferences()).as("bulletin 0").isEmpty();
+            softly.assertThat(loggingContext.getBulletinMessages()).as("bulletin 0").isEmpty();
             loggingContext.enterBulletin(1);
-            softly.assertThat(loggingContext.getBulletinMessageLogReferences()).as("bulletin 1").isEmpty();
+            softly.assertThat(loggingContext.getBulletinMessages()).as("bulletin 1").isEmpty();
             loggingContext.enterBulletin(2);
-            softly.assertThat(loggingContext.getBulletinMessageLogReferences()).as("bulletin 2").isEmpty();
+            softly.assertThat(loggingContext.getBulletinMessages()).as("bulletin 2").isEmpty();
         });
     }
 
@@ -305,8 +304,8 @@ class LoggingContextImplTest {
     @Test
     void enterBulletin_BulletinLogReference_sets_bulletinLogReference() {
         final BulletinLogReference bulletinLogReference = BulletinLogReference.builder()//
-                .setBulletinIndex(1)//
-                .setBulletinHeading("TEST HEADING")//
+                .setIndex(1)//
+                .setHeading("TEST HEADING")//
                 .setCharIndex(123)//
                 .build();
 
@@ -318,12 +317,12 @@ class LoggingContextImplTest {
     @Test
     void enterBulletin_BulletinLogReference_sets_bulletinLogReference_on_subsequent_invocations() {
         final BulletinLogReference bulletinLogReference1a = BulletinLogReference.builder()//
-                .setBulletinIndex(1)//
-                .setBulletinHeading("TEST HEADING")//
+                .setIndex(1)//
+                .setHeading("TEST HEADING")//
                 .setCharIndex(123)//
                 .build();
         final BulletinLogReference bulletinLogReference1b = bulletinLogReference1a.toBuilder()//
-                .setBulletinHeading("MODIFIED HEADING")//
+                .setHeading("MODIFIED HEADING")//
                 .build();
 
         loggingContext.enterBulletin(bulletinLogReference1a);
@@ -335,8 +334,8 @@ class LoggingContextImplTest {
     @Test
     void enterBulletin_equal_BulletinLogReference_resets_message() {
         final BulletinLogReference bulletinLogReference = BulletinLogReference.builder()//
-                .setBulletinIndex(1)//
-                .setBulletinHeading("TEST HEADING")//
+                .setIndex(1)//
+                .setHeading("TEST HEADING")//
                 .setCharIndex(123)//
                 .build();
         loggingContext.enterBulletin(bulletinLogReference);
@@ -350,12 +349,12 @@ class LoggingContextImplTest {
     @Test
     void enterBulletin_different_BulletinLogReference_resets_message() {
         final BulletinLogReference bulletinLogReference1a = BulletinLogReference.builder()//
-                .setBulletinIndex(1)//
-                .setBulletinHeading("TEST HEADING")//
+                .setIndex(1)//
+                .setHeading("TEST HEADING")//
                 .setCharIndex(123)//
                 .build();
         final BulletinLogReference bulletinLogReference1b = bulletinLogReference1a.toBuilder()//
-                .setBulletinHeading("MODIFIED HEADING")//
+                .setHeading("MODIFIED HEADING")//
                 .build();
         loggingContext.enterBulletin(bulletinLogReference1a);
         loggingContext.enterMessage(3);
@@ -395,8 +394,8 @@ class LoggingContextImplTest {
     @Test
     void enterBulletin_BulletinLogReference_and_index_restores_previously_stored_bulletinLogReference() {
         final BulletinLogReference bulletinLogReference1 = BulletinLogReference.builder()//
-                .setBulletinIndex(1)//
-                .setBulletinHeading("TEST HEADING")//
+                .setIndex(1)//
+                .setHeading("TEST HEADING")//
                 .setCharIndex(123)//
                 .build();
         final BulletinLogReference bulletinLogReference2 = bulletinLogReference(2);
@@ -433,15 +432,15 @@ class LoggingContextImplTest {
 
     @Test
     void getAllBulletinLogReferences_returns_initially_empty() {
-        assertThat(loggingContext.getAllBulletinLogReferences()).isEmpty();
+        assertThat(loggingContext.getAllBulletins()).isEmpty();
     }
 
     @Test
     void getAllBulletinLogReferences_returns_all_recorded_and_implicitly_created_bulletinLogReferences() {
         final BulletinLogReference bulletinLogReference0 = bulletinLogReference(0);
         final BulletinLogReference bulletinLogReference1 = BulletinLogReference.builder()//
-                .setBulletinIndex(1)//
-                .setBulletinHeading("TEST HEADING")//
+                .setIndex(1)//
+                .setHeading("TEST HEADING")//
                 .setCharIndex(123)//
                 .build();
         final BulletinLogReference bulletinLogReference2 = bulletinLogReference(2);
@@ -450,24 +449,24 @@ class LoggingContextImplTest {
         // enter order does not matter
         loggingContext.enterBulletin(bulletinLogReference1);
 
-        final List<BulletinLogReference> result = loggingContext.getAllBulletinLogReferences();
+        final List<BulletinLogReference> result = loggingContext.getAllBulletins();
 
         assertThat(result).containsExactly(bulletinLogReference0, bulletinLogReference1, bulletinLogReference2);
     }
 
     @Test
     void modifyBulletinReference_does_nothing_when_missing() {
-        loggingContext.modifyBulletinLogReference(ref -> ref.toBuilder().setBulletinHeading("MODIFIED HEADING").build());
+        loggingContext.modifyBulletin(ref -> ref.toBuilder().setHeading("MODIFIED HEADING").build());
 
         assertEmptyState();
     }
 
     @Test
     void modifyBulletinReference_modifies_current_BulletinLogReference_when_exists() {
-        final BulletinLogReference modifiedReference = bulletinLogReference(1).toBuilder().setBulletinHeading("MODIFIED HEADING").build();
+        final BulletinLogReference modifiedReference = bulletinLogReference(1).toBuilder().setHeading("MODIFIED HEADING").build();
         loggingContext.enterBulletin(1);
 
-        loggingContext.modifyBulletinLogReference(ref -> modifiedReference);
+        loggingContext.modifyBulletin(ref -> modifiedReference);
 
         assertState(null, modifiedReference, null);
     }
@@ -475,32 +474,32 @@ class LoggingContextImplTest {
     @Test
     void modifyBulletinReference_handles_change_of_bulletinIndex() {
         final BulletinLogReference bulletinLogReference = BulletinLogReference.builder()//
-                .setBulletinIndex(1)//
-                .setBulletinHeading("TEST HEADING")//
+                .setIndex(1)//
+                .setHeading("TEST HEADING")//
                 .setCharIndex(123)//
                 .build();
         final BulletinLogReference modifiedReference = bulletinLogReference.toBuilder()//
-                .setBulletinIndex(2)//
+                .setIndex(2)//
                 .build();
         loggingContext.enterBulletin(bulletinLogReference);
 
-        loggingContext.modifyBulletinLogReference(ref -> modifiedReference);
+        loggingContext.modifyBulletin(ref -> modifiedReference);
 
         assertState(null, modifiedReference, null);
-        loggingContext.enterBulletin(bulletinLogReference.getBulletinIndex());
+        loggingContext.enterBulletin(bulletinLogReference.getIndex());
         assertState(null, bulletinLogReference, null);
     }
 
     @Test
     void enterMessage_MessageLogReference_sets_messageLogReference() {
         final BulletinLogReference bulletinLogReference = BulletinLogReference.builder()//
-                .setBulletinIndex(1)//
-                .setBulletinHeading("TEST HEADING")//
+                .setIndex(1)//
+                .setHeading("TEST HEADING")//
                 .setCharIndex(123)//
                 .build();
         final MessageLogReference messageLogReference = MessageLogReference.builder()//
-                .setMessageIndex(2)//
-                .setMessageContent("MESSAGE CONTENT")//
+                .setIndex(2)//
+                .setContent("MESSAGE CONTENT")//
                 .build();
         loggingContext.enterBulletin(bulletinLogReference);
 
@@ -512,8 +511,8 @@ class LoggingContextImplTest {
     @Test
     void enterMessage_MessageLogReference_sets_initial_bulletinLogReference_if_absent() {
         final MessageLogReference messageLogReference = MessageLogReference.builder()//
-                .setMessageIndex(2)//
-                .setMessageContent("MESSAGE CONTENT")//
+                .setIndex(2)//
+                .setContent("MESSAGE CONTENT")//
                 .build();
 
         loggingContext.enterMessage(messageLogReference);
@@ -524,11 +523,11 @@ class LoggingContextImplTest {
     @Test
     void enterMessage_MessageLogReference_sets_messageLogReference_on_subsequent_invocations() {
         final MessageLogReference messageLogReference1a = MessageLogReference.builder()//
-                .setMessageIndex(1)//
-                .setMessageContent("TEST MESSAGE")//
+                .setIndex(1)//
+                .setContent("TEST MESSAGE")//
                 .build();
         final MessageLogReference messageLogReference1b = messageLogReference1a.toBuilder()//
-                .setMessageContent("MODIFIED MESSAGE")//
+                .setContent("MODIFIED MESSAGE")//
                 .build();
 
         loggingContext.enterMessage(messageLogReference1a);
@@ -547,13 +546,13 @@ class LoggingContextImplTest {
     @Test
     void enterMessage_MessageLogReference_and_index_restores_previously_stored_messageLogReference() {
         final BulletinLogReference bulletinLogReference = BulletinLogReference.builder()//
-                .setBulletinIndex(1)//
-                .setBulletinHeading("TEST HEADING")//
+                .setIndex(1)//
+                .setHeading("TEST HEADING")//
                 .setCharIndex(321)//
                 .build();
         final MessageLogReference messageLogReference2 = MessageLogReference.builder()//
-                .setMessageIndex(2)//
-                .setMessageContent("TEST MESSAGE")//
+                .setIndex(2)//
+                .setContent("TEST MESSAGE")//
                 .build();
         final MessageLogReference messageLogReference3 = messageLogReference(3);
         loggingContext.enterFile(FILE_REFERENCE);
@@ -597,15 +596,15 @@ class LoggingContextImplTest {
 
     @Test
     void getBulletinMessageLogReferences_returns_initially_empty() {
-        assertThat(loggingContext.getBulletinMessageLogReferences()).isEmpty();
+        assertThat(loggingContext.getBulletinMessages()).isEmpty();
     }
 
     @Test
     void getBulletinMessageLogReferences_returns_all_recorded_and_implicitly_created_bulletinLogReferences() {
         final MessageLogReference messageLogReference0 = messageLogReference(0);
         final MessageLogReference messageLogReference1 = MessageLogReference.builder()//
-                .setMessageIndex(1)//
-                .setMessageContent("TEST HEADING")//
+                .setIndex(1)//
+                .setContent("TEST HEADING")//
                 .build();
         final MessageLogReference messageLogReference2 = messageLogReference(2);
         // loggingContext.enterMessage(0); is implicit
@@ -613,24 +612,24 @@ class LoggingContextImplTest {
         // enter order does not matter
         loggingContext.enterMessage(messageLogReference1);
 
-        final List<MessageLogReference> result = loggingContext.getBulletinMessageLogReferences();
+        final List<MessageLogReference> result = loggingContext.getBulletinMessages();
 
         assertThat(result).containsExactly(messageLogReference0, messageLogReference1, messageLogReference2);
     }
 
     @Test
     void modifyMessageLogReference_does_nothing_when_missing() {
-        loggingContext.modifyMessageLogReference(ref -> ref.toBuilder().setMessageContent("MODIFIED CONTENT").build());
+        loggingContext.modifyMessage(ref -> ref.toBuilder().setContent("MODIFIED CONTENT").build());
 
         assertEmptyState();
     }
 
     @Test
     void modifyMessageLogReference_modifies_current_MessageLogReference_when_exists() {
-        final MessageLogReference modifiedReference = messageLogReference(1).toBuilder().setMessageContent("MODIFIED CONTENT").build();
+        final MessageLogReference modifiedReference = messageLogReference(1).toBuilder().setContent("MODIFIED CONTENT").build();
         loggingContext.enterMessage(1);
 
-        loggingContext.modifyMessageLogReference(ref -> modifiedReference);
+        loggingContext.modifyMessage(ref -> modifiedReference);
 
         assertState(null, bulletinLogReference(0), modifiedReference);
     }
@@ -639,18 +638,18 @@ class LoggingContextImplTest {
     void modifyMessageLogReference_handles_change_of_messageIndex() {
         final BulletinLogReference bulletinLogReference = bulletinLogReference(0);
         final MessageLogReference messageLogReference = MessageLogReference.builder()//
-                .setMessageIndex(1)//
-                .setMessageContent("TEST CONTENT")//
+                .setIndex(1)//
+                .setContent("TEST CONTENT")//
                 .build();
         final MessageLogReference modifiedReference = messageLogReference.toBuilder()//
-                .setMessageIndex(2)//
+                .setIndex(2)//
                 .build();
         loggingContext.enterMessage(messageLogReference);
 
-        loggingContext.modifyMessageLogReference(ref -> modifiedReference);
+        loggingContext.modifyMessage(ref -> modifiedReference);
 
         assertState(null, bulletinLogReference, modifiedReference);
-        loggingContext.enterMessage(messageLogReference.getMessageIndex());
+        loggingContext.enterMessage(messageLogReference.getIndex());
         assertState(null, bulletinLogReference, messageLogReference);
     }
 
@@ -662,18 +661,18 @@ class LoggingContextImplTest {
     @Test
     void estimateLogStringLength_returns_decent_estimate_on_long_content() {
         loggingContext.enterFile(FileReference.builder()//
-                .setProductIdentifier("a_product_identifier_for_a_test")//
+                .setProductId("a_product_identifier_for_a_test")//
                 .setFilename("A long file name just for testing purposes that is assumable going to be truncated at some point but to achieve this goal "
                         + "the file name must be over 128 characters long.txt")//
                 .build());
         loggingContext.enterBulletin(BulletinLogReference.builder()//
-                .setBulletinIndex(100)//
-                .setBulletinHeading("TEST HEADING THAT IS QUITE LONG FOR A HEADING STILL BEING JUST A DUMMY STRING")//
+                .setIndex(100)//
+                .setHeading("TEST HEADING THAT IS QUITE LONG FOR A HEADING STILL BEING JUST A DUMMY STRING")//
                 .setCharIndex(123456)//
                 .build());
         loggingContext.enterMessage(MessageLogReference.builder()//
-                .setMessageIndex(1000)//
-                .setMessageContent("TEST CONTENT THAT IS VERY LONG CONTAINING NO INFORMATION OF WHATEVER SUBJECT AND GOES JUST BLA BLA BLA...")//
+                .setIndex(1000)//
+                .setContent("TEST CONTENT THAT IS VERY LONG CONTAINING NO INFORMATION OF WHATEVER SUBJECT AND GOES JUST BLA BLA BLA...")//
                 .build());
 
         LoggableTests.assertDecentLengthEstimate(loggingContext);
@@ -694,8 +693,8 @@ class LoggingContextImplTest {
     @Test
     void toString_file_bulletin() {
         final BulletinLogReference bulletinLogReference = BulletinLogReference.builder()//
-                .setBulletinIndex(1)//
-                .setBulletinHeading("TEST HEADING")//
+                .setIndex(1)//
+                .setHeading("TEST HEADING")//
                 .setCharIndex(321)//
                 .build();
         loggingContext.enterFile(FILE_REFERENCE);
@@ -707,13 +706,13 @@ class LoggingContextImplTest {
     @Test
     void toString_file_bulletin_message() {
         final BulletinLogReference bulletinLogReference = BulletinLogReference.builder()//
-                .setBulletinIndex(1)//
-                .setBulletinHeading("TEST HEADING")//
+                .setIndex(1)//
+                .setHeading("TEST HEADING")//
                 .setCharIndex(321)//
                 .build();
         final MessageLogReference messageLogReference = MessageLogReference.builder()//
-                .setMessageIndex(2)//
-                .setMessageContent("MESSAGE CONTENT")//
+                .setIndex(2)//
+                .setContent("MESSAGE CONTENT")//
                 .build();
         loggingContext.enterFile(FILE_REFERENCE);
         loggingContext.enterBulletin(bulletinLogReference);
@@ -725,13 +724,13 @@ class LoggingContextImplTest {
     @Test
     void toString_bulletin_message() {
         final BulletinLogReference bulletinLogReference = BulletinLogReference.builder()//
-                .setBulletinIndex(1)//
-                .setBulletinHeading("TEST HEADING")//
+                .setIndex(1)//
+                .setHeading("TEST HEADING")//
                 .setCharIndex(321)//
                 .build();
         final MessageLogReference messageLogReference = MessageLogReference.builder()//
-                .setMessageIndex(2)//
-                .setMessageContent("MESSAGE CONTENT")//
+                .setIndex(2)//
+                .setContent("MESSAGE CONTENT")//
                 .build();
         loggingContext.enterBulletin(bulletinLogReference);
         loggingContext.enterMessage(messageLogReference);

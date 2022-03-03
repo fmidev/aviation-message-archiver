@@ -14,7 +14,7 @@ public class FileReferenceTest {
     void create_creates_populated_instance() {
         final FileReference fileReference = FileReference.create(PRODUCT_ID, FILENAME);
         assertSoftly(softly -> {
-            softly.assertThat(fileReference.getProductIdentifier()).as("getProductIdentifier").isEqualTo(PRODUCT_ID);
+            softly.assertThat(fileReference.getProductId()).as("getProductId").isEqualTo(PRODUCT_ID);
             softly.assertThat(fileReference.getFilename()).as("getFilename").isEqualTo(FILENAME);
         });
     }

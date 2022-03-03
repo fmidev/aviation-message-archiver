@@ -7,6 +7,8 @@ import java.util.function.UnaryOperator;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
@@ -35,23 +37,23 @@ public interface LoggingContext extends ReadableLoggingContext {
     }
 
     /**
-     * Register a file referred by the provided {@code fileReference} as being processed.
+     * Register a file referred by the provided {@code file} reference as being processed.
      * Resets current {@link #leaveBulletin() bulletin} and {@link #leaveMessage() message} state.
      *
      * <p>
-     * If the provided {@code fileReference} is {@code null}, behavior is equivalent to {@link #leaveFile()}, latter being the preferred method.
+     * If the provided {@code file} is {@code null}, behavior is equivalent to {@link #leaveFile()}, latter being the preferred method.
      * See method description for details.
      * </p>
      *
-     * @param fileReference
+     * @param file
      *         reference to the file currently under processing, or {@code null} to indicate end of processing
      */
-    void enterFile(@Nullable FileReference fileReference);
+    void enterFile(@Nullable FileReference file);
 
     /**
      * Register the processing of the currently registered file finished.
      * This completely clears the current state, resetting current file, {@link #leaveBulletin() bulletin} and {@link #leaveMessage() message}, forgets all
-     * registered {@link #getAllBulletinLogReferences() BulletinLogReference}s and {@link #getBulletinMessageLogReferences() MessageLogReference}s, and
+     * registered {@link #getAllBulletins() BulletinLogReference}s and {@link #getBulletinMessages() MessageLogReference}s, and
      * {@link FileProcessingStatistics#clear() clears statistics}.
      *
      * <p>
@@ -67,20 +69,20 @@ public interface LoggingContext extends ReadableLoggingContext {
     }
 
     /**
-     * Register a bulletin referred by the provided {@code bulletinLogReference} as under processing.
-     * A previously registered {@code BulletinLogReference} with the same {@link BulletinLogReference#getBulletinIndex() bulletin index} is replaced with the provided
+     * Register a bulletin referred by the provided {@code bulletin} reference as under processing.
+     * A previously registered {@code BulletinLogReference} with the same {@link BulletinLogReference#getIndex() bulletin index} is replaced with the provided
      * {@code BulletinLogReference}.
      * Resets current {@link #leaveMessage() message} state.
      *
      * <p>
-     * If the provided {@code bulletinLogReference} is {@code null}, behavior is equivalent to {@link #leaveBulletin()}, latter being the preferred method.
+     * If the provided {@code bulletin} is {@code null}, behavior is equivalent to {@link #leaveBulletin()}, latter being the preferred method.
      * See method description for details.
      * </p>
      *
-     * @param bulletinLogReference
+     * @param bulletin
      *         reference to the bulletin currently under processing, or {@code null} to indicate end of processing
      */
-    void enterBulletin(@Nullable BulletinLogReference bulletinLogReference);
+    void enterBulletin(@Nullable BulletinLogReference bulletin);
 
     /**
      * Register a bulletin at the provided {@code index} within the currently processed file,  starting from {@code 0}.
@@ -125,7 +127,8 @@ public interface LoggingContext extends ReadableLoggingContext {
      *
      * @return all registered {@code BulletinLogReference}s
      */
-    List<BulletinLogReference> getAllBulletinLogReferences();
+    @JsonIgnore
+    List<BulletinLogReference> getAllBulletins();
 
     /**
      * Modify the {@code BulletinLogReference} referring to the bulletin currently under processing, applying the provided {@code operator} on it.
@@ -137,7 +140,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * This is equivalent to
      * </p>
      * <pre><code>
-     * getBulletinLogReference()
+     * getBulletin()
      *         .map(operator)
      *         .ifPresent(this::enterBulletin);
      * </code></pre>
@@ -152,28 +155,28 @@ public interface LoggingContext extends ReadableLoggingContext {
      * @throws NullPointerException
      *         if {@code operator} is {@code null}
      */
-    default void modifyBulletinLogReference(final UnaryOperator<BulletinLogReference> operator) {
-        getBulletinLogReference()//
+    default void modifyBulletin(final UnaryOperator<BulletinLogReference> operator) {
+        getBulletin()//
                 .map(operator)//
                 .ifPresent(this::enterBulletin);
     }
 
     /**
-     * Register a message referred by the provided {@code messageLogReference} as currently being processed within the current bulletin.
-     * A previously registered {@code MessageLogReference} with same {@link MessageLogReference#getMessageIndex() message index} is replaced with provided
+     * Register a message referred by the provided {@code message} reference as currently being processed within the current bulletin.
+     * A previously registered {@code MessageLogReference} with same {@link MessageLogReference#getIndex() message index} is replaced with provided
      * {@code MessageLogReference}.
      * If no bulletin is registered to be under processing, this method will implicitly register a {@code BulletinLogReference} at index {@code 0} as
      * under processing.
      *
      * <p>
-     * If the provided {@code messageLogReference} is {@code null}, behavior is equivalent to {@link #leaveMessage()}, latter being the preferred method.
+     * If the provided {@code message} is {@code null}, behavior is equivalent to {@link #leaveMessage()}, latter being the preferred method.
      * See method description for details.
      * </p>
      *
-     * @param messageLogReference
+     * @param message
      *         reference to message being currently under processing, or {@code null} to indicate end of processing
      */
-    void enterMessage(@Nullable MessageLogReference messageLogReference);
+    void enterMessage(@Nullable MessageLogReference message);
 
     /**
      * Register a message as currently being processed at the provided {@code index} within the current bulletin starting from {@code 0}.
@@ -243,7 +246,8 @@ public interface LoggingContext extends ReadableLoggingContext {
      *
      * @return all {@code MessageLogReference}s registered for bulletin being currently under processing, or an empty list
      */
-    List<MessageLogReference> getBulletinMessageLogReferences();
+    @JsonIgnore
+    List<MessageLogReference> getBulletinMessages();
 
     /**
      * Modify the {@code MessageLogReference} referring to the message being currently processed, applying the provided {@code operator} on it.
@@ -254,7 +258,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * This is equivalent to
      * </p>
      * <pre><code>
-     * getMessageLogReference()
+     * getMessage()
      *         .map(operator)
      *         .ifPresent(this::enterMessage);
      * </code></pre>
@@ -269,8 +273,8 @@ public interface LoggingContext extends ReadableLoggingContext {
      * @throws NullPointerException
      *         if {@code operator} is {@code null}
      */
-    default void modifyMessageLogReference(final UnaryOperator<MessageLogReference> operator) {
-        getMessageLogReference()//
+    default void modifyMessage(final UnaryOperator<MessageLogReference> operator) {
+        getMessage()//
                 .map(operator)//
                 .ifPresent(this::enterMessage);
     }
@@ -280,6 +284,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      *
      * @return file processing statistics of this context
      */
+    @JsonIgnore
     FileProcessingStatistics getStatistics();
 
     /**
