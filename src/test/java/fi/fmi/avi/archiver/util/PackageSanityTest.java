@@ -13,7 +13,7 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
     public void setUp() throws Exception {
         super.setUp();
 
-        ignoreClasses(GeneratedClasses::isKnownGeneratedClass);
+        ignoreClasses(GeneratedClasses::isKnownGenerated);
 
         setDefault(PartialDateTime.class, PartialDateTime.ofHour(0));
         setDefault(ZoneId.class, ZoneOffset.UTC);

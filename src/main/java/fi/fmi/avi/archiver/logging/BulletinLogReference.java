@@ -8,6 +8,7 @@ import com.google.common.base.Preconditions;
 
 @FreeBuilder
 public abstract class BulletinLogReference extends AbstractMemoizingStructuredLoggable {
+    private static final String STRUCTURE_NAME = StructuredLoggables.defaultStructureName(BulletinLogReference.class);
     private static final int HEADING_MAX_LENGTH = 44;
     private static final int BULLETIN_INDEX_LENGTH_ESTIMATE = 3;
     private static final int CHAR_INDEX_LENGTH_ESTIMATE = 7;
@@ -34,6 +35,11 @@ public abstract class BulletinLogReference extends AbstractMemoizingStructuredLo
     @Override
     public int estimateLogStringLength() {
         return BULLETIN_INDEX_LENGTH_ESTIMATE + 2 + HEADING_MAX_LENGTH + CHAR_INDEX_LENGTH_ESTIMATE;
+    }
+
+    @Override
+    public String getStructureName() {
+        return STRUCTURE_NAME;
     }
 
     public abstract Builder toBuilder();

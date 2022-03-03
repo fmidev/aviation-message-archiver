@@ -4,12 +4,20 @@ import java.util.Locale;
 
 import fi.fmi.avi.archiver.util.GeneratedClasses;
 
-final class StructuredLoggableInternals {
-    private StructuredLoggableInternals() {
+final class StructuredLoggables {
+    private StructuredLoggables() {
         throw new AssertionError();
     }
 
-    static String structureName(final Class<? extends StructuredLoggable> forClass) {
+    /**
+     * Return default {@link StructuredLoggable#getStructureName() structure name} for a {@code StructuredLoggable} class.
+     *
+     * @param forClass
+     *         class to get default structure name for
+     *
+     * @return default structure name for profided {@code forClass}
+     */
+    public static String defaultStructureName(final Class<? extends StructuredLoggable> forClass) {
         final Class<? extends StructuredLoggable> classForName = resolveClassForStructureName(forClass);
         final String simpleName = classForName.getSimpleName();
         if (simpleName.isEmpty()) {
@@ -39,7 +47,7 @@ final class StructuredLoggableInternals {
         Class<?> superclass = classForName.getSuperclass();
         while (superclass != null //
                 && StructuredLoggable.class.isAssignableFrom(superclass) //
-                && GeneratedClasses.isKnownGeneratedClass(classForName.getName())) {
+                && GeneratedClasses.isKnownGenerated(classForName)) {
             //noinspection unchecked
             classForName = (Class<? extends StructuredLoggable>) superclass;
             superclass = classForName.getSuperclass();

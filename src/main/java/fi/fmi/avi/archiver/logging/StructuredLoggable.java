@@ -20,19 +20,27 @@ public interface StructuredLoggable extends Loggable {
 
     /**
      * Returns default name for this structured object.
-     * When no other name for a structured loggable object is provided by context, this name can be used. This is the case when this object is the root
+     * When no other name for a structured loggable object is provided by context, this name is used. This is the case when this object is the root
      * object, and not a named property of another object.
      *
      * <p>
-     * The default implementation returns the {@link Class#getSimpleName() simple class name} with first character converted to lower case.
-     * For {@link com.google.auto.value.AutoValue} and {@link org.inferred.freebuilder.FreeBuilder} classes the name of declaration class is returned,
-     * not the generated class name.
+     * The recommended implementation for this method is:
+     * </p>
+     *
+     * <pre><code>
+     * private static final String STRUCTURE_NAME = StructuredLoggables.defaultStructureName(MyStructuredLoggable.class);
+     * &#64;Override
+     * public String getStructureName() {
+     *     return STRUCTURE_NAME;
+     * }
+     * </code></pre>
+     *
+     * <p>
+     * Alternatively, if a specific name is desired, the method should simply return the desired {@code String} literal.
      * </p>
      *
      * @return default name for this structured object
      */
     @JsonIgnore
-    default String getStructureName() {
-        return StructuredLoggableInternals.structureName(getClass());
-    }
+    String getStructureName();
 }

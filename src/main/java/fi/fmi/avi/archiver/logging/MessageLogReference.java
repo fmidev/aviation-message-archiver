@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 
 @FreeBuilder
 public abstract class MessageLogReference extends AbstractMemoizingStructuredLoggable {
+    private static final String STRUCTURE_NAME = StructuredLoggables.defaultStructureName(MessageLogReference.class);
     private static final Pattern XML_EXCERPT_PATTERN = Pattern.compile("^\\s*<[^>]+[:\\s]id\\s*=\\s*\"([^\"]+)\"");
     private static final int MESSAGE_INDEX_LENGTH_ESTIMATE = 4;
     private static final int EXCERPT_MAX_LENGTH = 42;
@@ -45,6 +46,11 @@ public abstract class MessageLogReference extends AbstractMemoizingStructuredLog
     @Override
     public int estimateLogStringLength() {
         return MESSAGE_INDEX_LENGTH_ESTIMATE + EXCERPT_MAX_LENGTH + 2;
+    }
+
+    @Override
+    public String getStructureName() {
+        return STRUCTURE_NAME;
     }
 
     public abstract Builder toBuilder();

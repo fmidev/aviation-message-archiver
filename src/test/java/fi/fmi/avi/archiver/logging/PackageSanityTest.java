@@ -11,7 +11,7 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
     protected void setUp() throws Exception {
         super.setUp();
 
-        ignoreClasses(GeneratedClasses::isKnownGeneratedClass);
+        ignoreClasses(GeneratedClasses::isKnownGenerated);
 
         setDefault(BulletinLogReference.class, BulletinLogReference.builder().buildPartial());
         setDefault(FileProcessingIdentifier.class, FileProcessingIdentifier.newInstance());

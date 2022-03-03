@@ -7,27 +7,27 @@ public final class GeneratedClasses {
         throw new AssertionError();
     }
 
-    public static boolean isKnownGeneratedClass(@Nullable final Class<?> cls) {
-        return cls != null && isKnownGeneratedClass(cls.getName());
+    public static boolean isKnownGenerated(@Nullable final Class<?> cls) {
+        return cls != null && isKnownGenerated(cls.getName());
     }
 
-    public static boolean isKnownGeneratedClass(@Nullable final String className) {
-        return isAutoValueClass(className) || isFreeBuilderClass(className);
+    private static boolean isKnownGenerated(@Nullable final String className) {
+        return isAutoValueGenerated(className) || isFreeBuilderGenerated(className);
     }
 
-    public static boolean isAutoValueClass(@Nullable final Class<?> cls) {
-        return cls != null && isAutoValueClass(cls.getName());
+    public static boolean isAutoValueGenerated(@Nullable final Class<?> cls) {
+        return cls != null && isAutoValueGenerated(cls.getName());
     }
 
-    public static boolean isAutoValueClass(@Nullable final String className) {
+    private static boolean isAutoValueGenerated(@Nullable final String className) {
         return className != null && className.substring(className.lastIndexOf('.') + 1).startsWith("AutoValue_");
     }
 
-    public static boolean isFreeBuilderClass(@Nullable final Class<?> cls) {
-        return cls != null && isFreeBuilderClass(cls.getName());
+    public static boolean isFreeBuilderGenerated(@Nullable final Class<?> cls) {
+        return cls != null && isFreeBuilderGenerated(cls.getName());
     }
 
-    public static boolean isFreeBuilderClass(@Nullable final String className) {
+    private static boolean isFreeBuilderGenerated(@Nullable final String className) {
         return className != null && (className.contains("_Builder$") || className.endsWith("_Builder"));
     }
 }

@@ -34,6 +34,7 @@ final class AbstractMemoizingStructuredLoggableTest {
     }
 
     static final class TestLoggable extends AbstractMemoizingStructuredLoggable {
+        private static final String STRUCTURE_NAME = StructuredLoggables.defaultStructureName(TestLoggable.class);
         private final String logString;
         private int invocations = 0;
 
@@ -54,6 +55,11 @@ final class AbstractMemoizingStructuredLoggableTest {
         @Override
         public int estimateLogStringLength() {
             return logString.length();
+        }
+
+        @Override
+        public String getStructureName() {
+            return STRUCTURE_NAME;
         }
     }
 }
