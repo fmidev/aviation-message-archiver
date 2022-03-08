@@ -1,14 +1,5 @@
 package fi.fmi.avi.archiver.logging;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
-import static java.util.Objects.requireNonNull;
-
 /**
  * An implementation of this interface records the processing results of a file, bulletins within a file and messages within bulletins. It produces a loggable
  * statistics output of the recorded data.
@@ -19,13 +10,14 @@ import static java.util.Objects.requireNonNull;
  * Likewise, a file processing result is the maximum of all bulletin and message results of the file and the explicitly recorded file processing result for the file itself.
  * </p>
  */
-public interface FileProcessingStatistics extends AppendingLoggable {
-    ProcessingResult INITIAL_PROCESSING_RESULT = ProcessingResult.NOTHING;
+public interface FileProcessingStatistics extends ReadableFileProcessingStatistics {
 
     /**
      * Return a {@code FileProcessingStatistics} that synchronizes each method call backed by the provided {@code fileProcessingStatistics} instance.
      *
-     * @param fileProcessingStatistics the file processing statistics instance to be wrapped
+     * @param fileProcessingStatistics
+     *         the file processing statistics instance to be wrapped
+     *
      * @return a {@code FileProcessingStatistics} that synchronizes each method call backed by the provided {@code fileProcessingStatistics} instance
      */
     @SuppressWarnings("ClassReferencesSubclass")
@@ -46,7 +38,8 @@ public interface FileProcessingStatistics extends AppendingLoggable {
      * The processing result of each bulletin up to {@code amount} is initialized to {@link #INITIAL_PROCESSING_RESULT}, unless a processing result is already
      * recorded for the bulletin.
      *
-     * @param amount minimum amount of bulletins to report statistics for
+     * @param amount
+     *         minimum amount of bulletins to report statistics for
      */
     void initBulletins(int amount);
 
@@ -55,8 +48,10 @@ public interface FileProcessingStatistics extends AppendingLoggable {
      * The processing result of each message up to {@code amount} is initialized to {@link #INITIAL_PROCESSING_RESULT}, unless a processing result is already
      * recorded for the message.
      *
-     * @param bulletinIndex index of target bulletin starting from {@code 0}
-     * @param amount        minimum amount of messages to report statistics for
+     * @param bulletinIndex
+     *         index of target bulletin starting from {@code 0}
+     * @param amount
+     *         minimum amount of messages to report statistics for
      */
     void initMessages(int bulletinIndex, int amount);
 
@@ -65,9 +60,12 @@ public interface FileProcessingStatistics extends AppendingLoggable {
      * If an earlier record for the message exists, the provided {@code processingResult} is recorded only if it is considered greater than
      * an existing processing result by the comparator returned from {@link ProcessingResult#getComparator()}.
      *
-     * @param bulletinIndex    index of bulletin within file starting from {@code 0}
-     * @param messageIndex     index of message within bulletin starting from {@code 0}
-     * @param processingResult message processing result to record
+     * @param bulletinIndex
+     *         index of bulletin within file starting from {@code 0}
+     * @param messageIndex
+     *         index of message within bulletin starting from {@code 0}
+     * @param processingResult
+     *         message processing result to record
      */
     void recordMessageResult(int bulletinIndex, int messageIndex, ProcessingResult processingResult);
 
@@ -76,8 +74,10 @@ public interface FileProcessingStatistics extends AppendingLoggable {
      * If an earlier record for the bulletin in question exists, the provided {@code processingResult} is recorded only if it is considered greater than
      * an existing processing result by the comparator returned from {@link ProcessingResult#getComparator()}.
      *
-     * @param bulletinIndex    index of bulletin within file starting from {@code 0}
-     * @param processingResult bulletin processing result to record
+     * @param bulletinIndex
+     *         index of bulletin within file starting from {@code 0}
+     * @param processingResult
+     *         bulletin processing result to record
      */
     void recordBulletinResult(int bulletinIndex, ProcessingResult processingResult);
 
@@ -86,54 +86,9 @@ public interface FileProcessingStatistics extends AppendingLoggable {
      * If an earlier record for the file exists, the provided {@code processingResult} is recorded only if it is considered greater than an existing
      * processing result by the comparator returned from {@link ProcessingResult#getComparator()}.
      *
-     * @param processingResult file processing result to record
+     * @param processingResult
+     *         file processing result to record
      */
     void recordFileResult(ProcessingResult processingResult);
 
-    /**
-     * Result of processing a file, bulletin or a message.
-     */
-    enum ProcessingResult {
-        /**
-         * Item was not processed, and/or no final processing result was recorded.
-         */
-        NOTHING("N"),
-        /**
-         * Item was archived successfully.
-         */
-        ARCHIVED("A"),
-        /**
-         * Item was discarded during process.
-         */
-        DISCARDED("D"),
-        /**
-         * Item was rejected during process.
-         */
-        REJECTED("R"),
-        /**
-         * Processing of item failed.
-         */
-        FAILED("F");
-
-        private static final List<ProcessingResult> VALUES = Collections.unmodifiableList(Arrays.asList(ProcessingResult.values()));
-
-        private final String abbreviatedName;
-
-        ProcessingResult(final String abbreviatedName) {
-            this.abbreviatedName = requireNonNull(abbreviatedName, "abbreviatedName");
-        }
-
-        public static Comparator<ProcessingResult> getComparator() {
-            return Comparator.naturalOrder();
-        }
-
-        @SuppressFBWarnings(value = "MS_EXPOSE_REP", justification = "immutable value")
-        public static List<ProcessingResult> getValues() {
-            return VALUES;
-        }
-
-        String getAbbreviatedName() {
-            return abbreviatedName;
-        }
-    }
 }

@@ -22,7 +22,7 @@ import org.mockito.MockitoAnnotations;
 
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.logging.FileProcessingStatistics.ProcessingResult;
+import fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult;
 import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
 class LoggingContextImplTest {

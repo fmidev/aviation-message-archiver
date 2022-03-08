@@ -72,4 +72,53 @@ public final class SynchronizedFileProcessingStatistics implements FileProcessin
             return delegate.toString();
         }
     }
+
+    @Override
+    public ReadableFileProcessingStatistics readableCopy() {
+        synchronized (mutex) {
+            return delegate.readableCopy();
+        }
+    }
+
+    @Override
+    public String getStructureName() {
+        synchronized (mutex) {
+            return delegate.getStructureName();
+        }
+    }
+
+    @Override
+    public ProcessingResult getFile() {
+        synchronized (mutex) {
+            return delegate.getFile();
+        }
+    }
+
+    @Override
+    public ResultStatistics getBulletin() {
+        synchronized (mutex) {
+            return delegate.getBulletin();
+        }
+    }
+
+    @Override
+    public int getBulletinTotal() {
+        synchronized (mutex) {
+            return delegate.getBulletinTotal();
+        }
+    }
+
+    @Override
+    public ResultStatistics getMessage() {
+        synchronized (mutex) {
+            return delegate.getMessage();
+        }
+    }
+
+    @Override
+    public int getMessageTotal() {
+        synchronized (mutex) {
+            return delegate.getBulletinTotal();
+        }
+    }
 }
