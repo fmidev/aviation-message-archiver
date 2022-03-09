@@ -14,28 +14,28 @@ import org.junit.jupiter.params.provider.MethodSource;
 final class BulletinLogReferenceTest {
     static Stream<Arguments> toString_returns_expected_value() {
         return Stream.of(//
-                Arguments.of("1", BulletinLogReference.builder()//
+                Arguments.of("0", BulletinLogReference.builder()//
                         .setIndex(0)//
                         .build()), //
-                Arguments.of("2", BulletinLogReference.builder()//
+                Arguments.of("1", BulletinLogReference.builder()//
                         .setIndex(1)//
                         .clearHeading()//
                         .setCharIndex(-5)//
                         .build()), //
-                Arguments.of("3@426", BulletinLogReference.builder()//
+                Arguments.of("2@425", BulletinLogReference.builder()//
                         .setIndex(2)//
                         .setCharIndex(425)//
                         .build()), //
-                Arguments.of("4(bulletin heading)", BulletinLogReference.builder()//
+                Arguments.of("3(bulletin heading)", BulletinLogReference.builder()//
                         .setIndex(3)//
                         .setHeading("bulletin heading")//
                         .build()), //
-                Arguments.of("5(BULL HEAD)@7943", BulletinLogReference.builder()//
+                Arguments.of("4(BULL HEAD)@7942", BulletinLogReference.builder()//
                         .setIndex(4)//
                         .setHeading("BULL HEAD")//
                         .setCharIndex(7942)//
                         .build()), //
-                Arguments.of("6(Overlong bulletin heading with ?œø? chara...)@16255", BulletinLogReference.builder()//
+                Arguments.of("5(Overlong bulletin heading with ?œø? chara...)@16254", BulletinLogReference.builder()//
                         .setIndex(5)//
                         .setHeading("Overlong \n bulletin \t\t heading     with €œø\u0000\u0888 characters and extra whitespaces")//
                         .setCharIndex(16_254)//

@@ -39,7 +39,7 @@ public abstract class MessageLogReference extends AbstractMemoizingStructuredLog
 
     @Override
     protected void appendOnceTo(final StringBuilder builder) {
-        builder.append(getIndex() + 1);
+        builder.append(getIndex());
         getExcerpt().ifPresent(excerpt -> builder.append('(').append(excerpt).append(')'));
     }
 

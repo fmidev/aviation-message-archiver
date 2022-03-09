@@ -25,10 +25,10 @@ public abstract class BulletinLogReference extends AbstractMemoizingStructuredLo
 
     @Override
     protected void appendOnceTo(final StringBuilder builder) {
-        builder.append(getIndex() + 1);
+        builder.append(getIndex());
         getHeading().ifPresent(heading -> builder.append('(').append(LoggableUtils.sanitize(heading, HEADING_MAX_LENGTH)).append(')'));
         if (getCharIndex() >= 0) {
-            builder.append('@').append(getCharIndex() + 1);
+            builder.append('@').append(getCharIndex());
         }
     }
 

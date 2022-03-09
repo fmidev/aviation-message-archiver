@@ -17,7 +17,7 @@ import fi.fmi.avi.archiver.message.MessagePositionInFile;
  * loggable output of the current state.
  *
  * <p>
- * All bulletin and message indices in the API start from {@code 0}, but {@link #toString()} outputs indices starting from {@code 1}.
+ * All bulletin and message indices start from {@code 0}.
  * </p>
  */
 public interface LoggingContext extends ReadableLoggingContext {

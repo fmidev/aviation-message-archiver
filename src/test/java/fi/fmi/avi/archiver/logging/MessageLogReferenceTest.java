@@ -74,22 +74,22 @@ final class MessageLogReferenceTest {
         @Override
         public Stream<Arguments> provideArguments(final ExtensionContext context) {
             return Stream.of(//
-                    args("1", null, MessageLogReference.builder()//
+                    args("0", null, MessageLogReference.builder()//
                             .setIndex(0)//
                             .build()), //
-                    args("2", null, MessageLogReference.builder()//
+                    args("1", null, MessageLogReference.builder()//
                             .setIndex(1)//
                             .clearContent()//
                             .build()), //
-                    args("4(%s)", "message content", MessageLogReference.builder()//
+                    args("3(%s)", "message content", MessageLogReference.builder()//
                             .setIndex(3)//
                             .setContent("message content")//
                             .build()), //
-                    args("6(%s)", "Overlong message content with ?œø? char...", MessageLogReference.builder()//
+                    args("5(%s)", "Overlong message content with ?œø? char...", MessageLogReference.builder()//
                             .setIndex(5)//
                             .setContent("Overlong \n message \t\t content     with €œø\u0000\u0888 characters and extra whitespaces")//
                             .build()), //
-                    args("7(%s)", "my-test-iwxxm-document-id", MessageLogReference.builder()//
+                    args("6(%s)", "my-test-iwxxm-document-id", MessageLogReference.builder()//
                             .setIndex(6)//
                             .setContent(//
                                     "<iwxxm:iwxxmMessage " //
@@ -100,18 +100,18 @@ final class MessageLogReferenceTest {
                                             + "\n\t...\n" //
                                             + "</iwxxm:iwxxmMessage>")//
                             .build()), //
-                    args("8(%s)", "my-?very??-#!?œø?-overly-long-test-@iwx...", MessageLogReference.builder()//
+                    args("7(%s)", "my-?very??-#!?œø?-overly-long-test-@iwx...", MessageLogReference.builder()//
                             .setIndex(7)//
                             .setContent(//
                                     "<iwxxmMessage id=\"my-(very:)-#!€œø\u0000\u0888-overly-long-test-@iwxxm-document-id-of-plain-crap\">" //
                                             + "\n\t...\n" //
                                             + "</iwxxmMessage>")//
                             .build()), //
-                    args("9(%s)", "min-msg", MessageLogReference.builder()//
+                    args("8(%s)", "min-msg", MessageLogReference.builder()//
                             .setIndex(8)//
                             .setContent("<minimalMsg id=\"min-msg\" />")//
                             .build()), //
-                    args("10(%s)", "?any uid=\"123\"?...?/any?", MessageLogReference.builder()//
+                    args("9(%s)", "?any uid=\"123\"?...?/any?", MessageLogReference.builder()//
                             .setIndex(9)//
                             .setContent("<any uid=\"123\">...</any>")//
                             .build()));
