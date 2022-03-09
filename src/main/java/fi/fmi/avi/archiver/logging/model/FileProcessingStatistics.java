@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
 /**
  * An implementation of this interface records the processing results of a file, bulletins within a file and messages within bulletins. It produces a loggable

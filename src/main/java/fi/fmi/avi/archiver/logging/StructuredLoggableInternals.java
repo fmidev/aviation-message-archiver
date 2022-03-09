@@ -4,28 +4,9 @@ import java.util.Locale;
 
 import fi.fmi.avi.archiver.util.GeneratedClasses;
 
-final class StructuredLoggables {
-    private StructuredLoggables() {
+final class StructuredLoggableInternals {
+    private StructuredLoggableInternals() {
         throw new AssertionError();
-    }
-
-    /**
-     * Return default {@link StructuredLoggable#getStructureName() structure name} for a {@code StructuredLoggable} class.
-     *
-     * @param forClass
-     *         class to get default structure name for
-     *
-     * @return default structure name for profided {@code forClass}
-     */
-    public static String defaultStructureName(final Class<? extends StructuredLoggable> forClass) {
-        final Class<? extends StructuredLoggable> classForName = resolveClassForStructureName(forClass);
-        final String simpleName = classForName.getSimpleName();
-        if (simpleName.isEmpty()) {
-            final String className = classForName.getName();
-            return startingWithLowerCase(className.substring(className.lastIndexOf('.') + 1).replace('$', '_'));
-        } else {
-            return startingWithLowerCase(simpleName);
-        }
     }
 
     /**
@@ -42,7 +23,7 @@ final class StructuredLoggables {
      *
      * @return structure name class
      */
-    private static Class<? extends StructuredLoggable> resolveClassForStructureName(final Class<? extends StructuredLoggable> forClass) {
+    static Class<? extends StructuredLoggable> resolveClassForStructureName(final Class<? extends StructuredLoggable> forClass) {
         Class<? extends StructuredLoggable> classForName = forClass;
         Class<?> superclass = classForName.getSuperclass();
         while (superclass != null //
@@ -55,7 +36,7 @@ final class StructuredLoggables {
         return classForName;
     }
 
-    private static String startingWithLowerCase(final String string) {
+    static String startingWithLowerCase(final String string) {
         final int length = string.length();
         if (length > 1) {
             return Character.toLowerCase(string.charAt(0)) + string.substring(1);

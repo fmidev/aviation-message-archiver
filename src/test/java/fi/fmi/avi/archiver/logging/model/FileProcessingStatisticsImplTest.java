@@ -1,11 +1,11 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
 import static fi.fmi.avi.archiver.logging.LoggableTests.assertDecentLengthEstimate;
-import static fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult.ARCHIVED;
-import static fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult.DISCARDED;
-import static fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult.FAILED;
-import static fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult.NOTHING;
-import static fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult.REJECTED;
+import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.ARCHIVED;
+import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.DISCARDED;
+import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.FAILED;
+import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.NOTHING;
+import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.REJECTED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
@@ -18,8 +18,9 @@ import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult;
-import fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ResultStatistics;
+import fi.fmi.avi.archiver.logging.StructuredLoggable;
+import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult;
+import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ResultStatistics;
 
 class FileProcessingStatisticsImplTest {
     private FileProcessingStatisticsImpl statistics;
@@ -46,7 +47,7 @@ class FileProcessingStatisticsImplTest {
 
     @Test
     void getStructureName_returns_default_name_for_FileProcessingStatistics() {
-        assertThat(statistics.getStructureName()).isEqualTo(StructuredLoggables.defaultStructureName(FileProcessingStatistics.class));
+        assertThat(statistics.getStructureName()).isEqualTo(StructuredLoggable.defaultStructureName(FileProcessingStatistics.class));
     }
 
     @Test

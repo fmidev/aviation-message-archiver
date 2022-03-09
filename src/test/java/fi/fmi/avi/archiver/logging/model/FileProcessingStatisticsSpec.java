@@ -1,6 +1,6 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
-import static fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult.NOTHING;
+import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.NOTHING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.Mockito.when;
@@ -10,8 +10,8 @@ import java.util.Map;
 import org.inferred.freebuilder.FreeBuilder;
 import org.mockito.Mockito;
 
-import fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult;
-import fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ResultStatistics;
+import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult;
+import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ResultStatistics;
 
 @FreeBuilder
 public abstract class FileProcessingStatisticsSpec {

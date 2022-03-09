@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
 import static java.util.Objects.requireNonNull;
 
@@ -12,7 +12,9 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.logging.ImmutableFileProcessingStatistics.ImmutableResultStatistics;
+import fi.fmi.avi.archiver.logging.AppendingLoggable;
+import fi.fmi.avi.archiver.logging.StructuredLoggable;
+import fi.fmi.avi.archiver.logging.model.ImmutableFileProcessingStatistics.ImmutableResultStatistics;
 
 public interface ReadableFileProcessingStatistics extends AppendingLoggable, StructuredLoggable {
     ProcessingResult INITIAL_PROCESSING_RESULT = ProcessingResult.NOTHING;

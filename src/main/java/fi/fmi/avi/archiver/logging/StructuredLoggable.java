@@ -8,6 +8,25 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  */
 public interface StructuredLoggable extends Loggable {
     /**
+     * Return default {@link StructuredLoggable#getStructureName() structure name} for a {@code StructuredLoggable} class.
+     *
+     * @param forClass
+     *         class to get default structure name for
+     *
+     * @return default structure name for profided {@code forClass}
+     */
+    static String defaultStructureName(final Class<? extends StructuredLoggable> forClass) {
+        final Class<? extends StructuredLoggable> classForName = StructuredLoggableInternals.resolveClassForStructureName(forClass);
+        final String simpleName = classForName.getSimpleName();
+        if (simpleName.isEmpty()) {
+            final String className = classForName.getName();
+            return StructuredLoggableInternals.startingWithLowerCase(className.substring(className.lastIndexOf('.') + 1).replace('$', '_'));
+        } else {
+            return StructuredLoggableInternals.startingWithLowerCase(simpleName);
+        }
+    }
+
+    /**
      * Return a copy of this loggable, which represents a snapshot of current state, that can be read asynchronously later.
      * The purpose of this method is to support asynchronous logging.
      * The returned instance may be a read-only copy, or a mutable object, and doesn't have to be an instance of the same class.
@@ -28,7 +47,7 @@ public interface StructuredLoggable extends Loggable {
      * </p>
      *
      * <pre><code>
-     * private static final String STRUCTURE_NAME = StructuredLoggables.defaultStructureName(MyStructuredLoggable.class);
+     * private static final String STRUCTURE_NAME = StructuredLoggable.defaultStructureName(MyStructuredLoggable.class);
      * &#64;Override
      * public String getStructureName() {
      *     return STRUCTURE_NAME;

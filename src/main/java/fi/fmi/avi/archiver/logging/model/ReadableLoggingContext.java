@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
 import java.util.Optional;
 
@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.logging.AppendingLoggable;
+import fi.fmi.avi.archiver.logging.StructuredLoggable;
 
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public interface ReadableLoggingContext extends AppendingLoggable, StructuredLoggable {

@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
 import static java.util.Objects.requireNonNull;
 
@@ -11,7 +11,7 @@ import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import fi.fmi.avi.archiver.logging.ImmutableFileProcessingStatistics.ImmutableResultStatistics;
+import fi.fmi.avi.archiver.logging.model.ImmutableFileProcessingStatistics.ImmutableResultStatistics;
 
 public final class FileProcessingStatisticsImpl extends AbstractFileProcessingStatistics implements FileProcessingStatistics {
     private final ArrayList<ArrayList<ProcessingResult>> recordedBulletinMessageResults = new ArrayList<>(0);

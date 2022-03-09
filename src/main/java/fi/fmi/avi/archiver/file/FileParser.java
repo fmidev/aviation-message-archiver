@@ -27,10 +27,10 @@ import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import fi.fmi.avi.archiver.logging.BulletinLogReference;
-import fi.fmi.avi.archiver.logging.FileProcessingStatistics;
-import fi.fmi.avi.archiver.logging.LoggingContext;
-import fi.fmi.avi.archiver.logging.MessageLogReference;
+import fi.fmi.avi.archiver.logging.model.BulletinLogReference;
+import fi.fmi.avi.archiver.logging.model.FileProcessingStatistics;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
+import fi.fmi.avi.archiver.logging.model.MessageLogReference;
 import fi.fmi.avi.archiver.message.MessagePositionInFile;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.converter.ConversionHints;

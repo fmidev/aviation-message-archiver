@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
@@ -22,7 +22,8 @@ import org.mockito.MockitoAnnotations;
 
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult;
+import fi.fmi.avi.archiver.logging.LoggableTests;
+import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult;
 import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
 class LoggingContextImplTest {

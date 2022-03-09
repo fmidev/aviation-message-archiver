@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
 import static java.util.Objects.requireNonNull;
 
@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.logging.AbstractNoOpLoggable;
 import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
 public final class NoOpLoggingContext extends AbstractNoOpLoggable implements LoggingContext {

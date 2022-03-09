@@ -1,11 +1,12 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.util.StdConverter;
 
-import fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult;
-import fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ResultStatistics;
+import fi.fmi.avi.archiver.logging.StructuredLoggable;
+import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult;
+import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ResultStatistics;
 
 final class FileProcessingStatisticsInternals {
     private FileProcessingStatisticsInternals() {
@@ -13,7 +14,7 @@ final class FileProcessingStatisticsInternals {
     }
 
     static String getStructureName() {
-        return StructuredLoggables.defaultStructureName(FileProcessingStatistics.class);
+        return StructuredLoggable.defaultStructureName(FileProcessingStatistics.class);
     }
 
     static class ResultStatisticsToMapConverter extends StdConverter<ResultStatistics, Map<ProcessingResult, Integer>> {

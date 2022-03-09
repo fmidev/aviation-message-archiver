@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
 import static java.util.Objects.requireNonNull;
 
@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.logging.AbstractNoOpLoggable;
 
 public final class NoOpFileProcessingStatistics extends AbstractNoOpLoggable implements FileProcessingStatistics {
     private static final NoOpFileProcessingStatistics INSTANCE = new NoOpFileProcessingStatistics();

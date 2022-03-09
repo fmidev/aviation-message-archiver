@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -9,9 +9,13 @@ import org.inferred.freebuilder.FreeBuilder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 
+import fi.fmi.avi.archiver.logging.AbstractMemoizingStructuredLoggable;
+import fi.fmi.avi.archiver.logging.LoggableUtils;
+import fi.fmi.avi.archiver.logging.StructuredLoggable;
+
 @FreeBuilder
 public abstract class MessageLogReference extends AbstractMemoizingStructuredLoggable {
-    private static final String STRUCTURE_NAME = StructuredLoggables.defaultStructureName(MessageLogReference.class);
+    private static final String STRUCTURE_NAME = StructuredLoggable.defaultStructureName(MessageLogReference.class);
     private static final Pattern XML_EXCERPT_PATTERN = Pattern.compile("^\\s*<[^>]+[:\\s]id\\s*=\\s*\"([^\"]+)\"");
     private static final int MESSAGE_INDEX_LENGTH_ESTIMATE = 4;
     private static final int EXCERPT_MAX_LENGTH = 42;

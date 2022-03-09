@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
 import java.util.Optional;
 
@@ -6,9 +6,13 @@ import org.inferred.freebuilder.FreeBuilder;
 
 import com.google.common.base.Preconditions;
 
+import fi.fmi.avi.archiver.logging.AbstractMemoizingStructuredLoggable;
+import fi.fmi.avi.archiver.logging.LoggableUtils;
+import fi.fmi.avi.archiver.logging.StructuredLoggable;
+
 @FreeBuilder
 public abstract class BulletinLogReference extends AbstractMemoizingStructuredLoggable {
-    private static final String STRUCTURE_NAME = StructuredLoggables.defaultStructureName(BulletinLogReference.class);
+    private static final String STRUCTURE_NAME = StructuredLoggable.defaultStructureName(BulletinLogReference.class);
     private static final int HEADING_MAX_LENGTH = 44;
     private static final int BULLETIN_INDEX_LENGTH_ESTIMATE = 3;
     private static final int CHAR_INDEX_LENGTH_ESTIMATE = 7;

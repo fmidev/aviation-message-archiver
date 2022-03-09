@@ -1,4 +1,6 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
+
+import fi.fmi.avi.archiver.logging.AbstractAppendingLoggable;
 
 public abstract class AbstractFileProcessingStatistics extends AbstractAppendingLoggable implements ReadableFileProcessingStatistics {
     private static final int FILE_STATISTICS_LENGTH_ESTIMATE = 4;

@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.logging;
 
-import static fi.fmi.avi.archiver.logging.StructuredLoggables.defaultStructureName;
+import static fi.fmi.avi.archiver.logging.StructuredLoggable.defaultStructureName;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.inferred.freebuilder.FreeBuilder;
@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.auto.value.AutoValue;
 
-class StructuredLoggablesTest {
+class StructuredLoggableTest {
     @Test
     void getStructureName_returns_class_name_starting_with_lower_case_letter() {
         class SimpleNamedLoggable extends TestStructuredLoggable {
@@ -27,7 +27,7 @@ class StructuredLoggablesTest {
     void getStructureName_returns_name_for_anonymous_class() {
         final TestStructuredLoggable loggable = new TestStructuredLoggable() {
         };
-        assertThat(defaultStructureName(loggable.getClass())).isEqualTo("structuredLoggablesTest_1");
+        assertThat(defaultStructureName(loggable.getClass())).isEqualTo("structuredLoggableTest_1");
     }
 
     @Test
@@ -67,14 +67,14 @@ class StructuredLoggablesTest {
 
     @FreeBuilder
     static abstract class FreeBuilderLoggable extends TestStructuredLoggable {
-        static class Builder extends StructuredLoggablesTest_FreeBuilderLoggable_Builder {
+        static class Builder extends StructuredLoggableTest_FreeBuilderLoggable_Builder {
         }
     }
 
     @AutoValue
     static abstract class AutoValueLoggable extends TestStructuredLoggable {
         static AutoValueLoggable newInstance() {
-            return new AutoValue_StructuredLoggablesTest_AutoValueLoggable();
+            return new AutoValue_StructuredLoggableTest_AutoValueLoggable();
         }
     }
 }

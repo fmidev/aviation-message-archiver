@@ -14,7 +14,7 @@ import org.springframework.messaging.MessageHeaders;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileParser;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.logging.LoggingContext;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import fi.fmi.avi.converter.AviMessageConverter;
 
 @Configuration

@@ -23,8 +23,8 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import fi.fmi.avi.archiver.config.AviMessageConverterConfig;
 import fi.fmi.avi.archiver.config.model.FileConfig;
-import fi.fmi.avi.archiver.logging.LoggingContext;
-import fi.fmi.avi.archiver.logging.NoOpLoggingContext;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
+import fi.fmi.avi.archiver.logging.model.NoOpLoggingContext;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;

@@ -1,6 +1,6 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
-import static fi.fmi.avi.archiver.logging.BulletinLogReference.builder;
+import static fi.fmi.avi.archiver.logging.model.BulletinLogReference.builder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import fi.fmi.avi.archiver.logging.LoggableTests;
 
 final class BulletinLogReferenceTest {
     static Stream<Arguments> toString_returns_expected_value() {

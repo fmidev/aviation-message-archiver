@@ -13,8 +13,8 @@ import org.springframework.integration.handler.GenericHandler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 
-import fi.fmi.avi.archiver.logging.LoggingContext;
-import fi.fmi.avi.archiver.logging.NoOpLoggingContext;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
+import fi.fmi.avi.archiver.logging.model.NoOpLoggingContext;
 import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
 
 public final class SpringLoggingContextHelper {

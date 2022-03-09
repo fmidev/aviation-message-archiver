@@ -1,8 +1,10 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
 import javax.annotation.Nullable;
 
 import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.logging.AbstractAppendingLoggable;
+import fi.fmi.avi.archiver.logging.LoggableUtils;
 
 public abstract class AbstractLoggingContext extends AbstractAppendingLoggable implements ReadableLoggingContext {
     private static final char SEPARATOR = ':';

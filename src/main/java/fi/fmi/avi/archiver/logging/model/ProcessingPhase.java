@@ -1,4 +1,6 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
+
+import fi.fmi.avi.archiver.logging.StructuredLoggable;
 
 public enum ProcessingPhase implements StructuredLoggable {
     START, //
@@ -11,7 +13,7 @@ public enum ProcessingPhase implements StructuredLoggable {
     FINISH, //
     ;
 
-    private static final String STRUCTURE_NAME = StructuredLoggables.defaultStructureName(ProcessingPhase.class);
+    private static final String STRUCTURE_NAME = StructuredLoggable.defaultStructureName(ProcessingPhase.class);
 
     @Override
     public int estimateLogStringLength() {

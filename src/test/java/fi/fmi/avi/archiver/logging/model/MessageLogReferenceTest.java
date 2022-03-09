@@ -1,6 +1,6 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
-import static fi.fmi.avi.archiver.logging.MessageLogReference.builder;
+import static fi.fmi.avi.archiver.logging.model.MessageLogReference.builder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
@@ -14,6 +14,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+
+import fi.fmi.avi.archiver.logging.LoggableTests;
 
 final class MessageLogReferenceTest {
     @Test

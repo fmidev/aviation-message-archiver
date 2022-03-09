@@ -34,7 +34,7 @@ final class AbstractMemoizingStructuredLoggableTest {
     }
 
     static final class TestLoggable extends AbstractMemoizingStructuredLoggable {
-        private static final String STRUCTURE_NAME = StructuredLoggables.defaultStructureName(TestLoggable.class);
+        private static final String STRUCTURE_NAME = StructuredLoggable.defaultStructureName(TestLoggable.class);
         private final String logString;
         private int invocations = 0;
 

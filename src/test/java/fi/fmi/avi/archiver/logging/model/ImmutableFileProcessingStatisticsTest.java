@@ -1,10 +1,10 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
-import static fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult.ARCHIVED;
-import static fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult.DISCARDED;
-import static fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult.FAILED;
-import static fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult.NOTHING;
-import static fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult.REJECTED;
+import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.ARCHIVED;
+import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.DISCARDED;
+import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.FAILED;
+import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.NOTHING;
+import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.REJECTED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
@@ -17,9 +17,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.logging.ImmutableFileProcessingStatistics.ImmutableResultStatistics;
-import fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ProcessingResult;
-import fi.fmi.avi.archiver.logging.ReadableFileProcessingStatistics.ResultStatistics;
+import fi.fmi.avi.archiver.logging.model.ImmutableFileProcessingStatistics.ImmutableResultStatistics;
+import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult;
+import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ResultStatistics;
 
 @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC")
 class ImmutableFileProcessingStatisticsTest {

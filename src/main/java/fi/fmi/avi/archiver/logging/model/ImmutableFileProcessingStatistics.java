@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.logging;
+package fi.fmi.avi.archiver.logging.model;
 
 import static java.util.Objects.requireNonNull;
 
@@ -7,7 +7,7 @@ import java.util.Iterator;
 import com.google.auto.value.AutoValue;
 
 @AutoValue
-abstract class ImmutableFileProcessingStatistics extends AbstractFileProcessingStatistics {
+public abstract class ImmutableFileProcessingStatistics extends AbstractFileProcessingStatistics {
     public static ImmutableFileProcessingStatistics create(final ProcessingResult file, final ResultStatistics bulletin, final ResultStatistics message) {
         return new AutoValue_ImmutableFileProcessingStatistics(requireNonNull(file, "file"),
                 ImmutableResultStatistics.copyOf(requireNonNull(bulletin, "bulletin")), ImmutableResultStatistics.copyOf(requireNonNull(message, "message")));
