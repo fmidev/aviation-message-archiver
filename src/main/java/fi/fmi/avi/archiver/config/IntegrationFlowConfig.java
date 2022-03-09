@@ -68,6 +68,8 @@ import fi.fmi.avi.archiver.logging.FileProcessingStatistics;
 import fi.fmi.avi.archiver.logging.FileProcessingStatisticsImpl;
 import fi.fmi.avi.archiver.logging.LoggingContext;
 import fi.fmi.avi.archiver.logging.LoggingContextImpl;
+import fi.fmi.avi.archiver.logging.ProcessingPhase;
+import fi.fmi.avi.archiver.logging.log4j.Log4JLoggables;
 import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
 import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
 import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
@@ -94,16 +96,24 @@ public class IntegrationFlowConfig {
             final MessageChannel processingChannel, final MessageChannel parserChannel, final MessageChannel populatorChannel,
             final MessageChannel databaseChannel, final MessageChannel archiveChannel, final MessageChannel successChannel, final MessageChannel failChannel) {
         return IntegrationFlows.from(processingChannel)
+                .handle(ServiceActivators.execute(() -> Log4JLoggables.putMDC(ProcessingPhase.READ)))
                 .transform(fileToStringTransformer, spec -> spec.advice(fileReadingRetryAdvice))
+                .handle(ServiceActivators.execute(() -> Log4JLoggables.removeMDC(ProcessingPhase.READ)))
                 .channel(parserChannel)
+                .handle(ServiceActivators.execute(() -> Log4JLoggables.putMDC(ProcessingPhase.PARSE)))
                 .<String> filter(content -> content != null && !content.isEmpty(), discards -> discards.discardChannel(failChannel))
                 .handle(fileParserIntegrationService::parse)
                 .handle(withLoggingContext(this::loggingActionsAfterParse))
                 .<List<InputAviationMessage>> filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))
+                .handle(ServiceActivators.execute(() -> Log4JLoggables.removeMDC(ProcessingPhase.PARSE)))
                 .channel(populatorChannel)
+                .handle(ServiceActivators.execute(() -> Log4JLoggables.putMDC(ProcessingPhase.POPULATE)))
                 .handle(messagePopulationIntegrationService::populateMessages)
+                .handle(ServiceActivators.execute(() -> Log4JLoggables.removeMDC(ProcessingPhase.POPULATE)))
                 .channel(databaseChannel)
+                .handle(ServiceActivators.execute(() -> Log4JLoggables.putMDC(ProcessingPhase.STORE)))
                 .handle(withPayloadAndLoggingContext(databaseService::insertMessages))
+                .handle(ServiceActivators.execute(() -> Log4JLoggables.removeMDC(ProcessingPhase.STORE)))
                 .channel(archiveChannel)
                 .route(Message.class, message -> hasProcessingErrors(message.getHeaders()), spec -> spec//
                         .channelMapping(false, successChannel)//
@@ -132,8 +142,10 @@ public class IntegrationFlowConfig {
     @Bean
     IntegrationFlow finishFlow(final ProcessingState processingState, final MessageChannel finishChannel) {
         return IntegrationFlows.from(finishChannel)//
+                .handle(ServiceActivators.execute(() -> Log4JLoggables.putMDC(ProcessingPhase.FINISH)))//
                 .handle(ServiceActivators.peekHeader(FileMetadata.class, FILE_METADATA, processingState::finish))//
                 .handle(this::logFinish)//
+                .handle(ServiceActivators.execute(() -> Log4JLoggables.removeMDC(ProcessingPhase.FINISH)))//
                 .nullChannel();
     }
 
@@ -348,6 +360,7 @@ public class IntegrationFlowConfig {
                 // Integration flow for file name filtering
                 registerAllIntegrationFlows(product.getFileConfigs().stream()//
                         .map(fileConfig -> IntegrationFlows.from(inputChannel)//
+                                .handle(ServiceActivators.execute(() -> Log4JLoggables.putMDC(ProcessingPhase.START)))//
                                 .filter(new RegexPatternFileListFilter(fileConfig.getPattern())::accept)//
                                 .enrichHeaders(spec -> spec//
                                         .header(PRODUCT_KEY, product)//
@@ -366,6 +379,7 @@ public class IntegrationFlowConfig {
                                     LOGGER.info("Start processing <{}>", loggingContext);
                                     return payload;
                                 })//
+                                .handle(ServiceActivators.execute(() -> Log4JLoggables.removeMDC(ProcessingPhase.START)))//
                                 .channel(processingChannel)//
                                 .get()//
                         ));
@@ -374,18 +388,22 @@ public class IntegrationFlowConfig {
                 final GenericSelector<Message> productFilter = m -> Objects.equals(m.getHeaders().get(PRODUCT_KEY), product);
 
                 registerIntegrationFlow(IntegrationFlows.from(successChannel)//
+                        .handle(ServiceActivators.execute(() -> Log4JLoggables.putMDC(ProcessingPhase.SUCCESS)))//
                         .filter(Message.class, productFilter)//
                         .transform(Message.class, headerToFileTransformer)//
                         .handle(createArchiveHandler(product.getArchiveDir()))//
                         .handle(withLoggingContext(loggingContext -> LOGGER.debug("Moved <{}> to '{}'.", loggingContext, product.getArchiveDir())))//
+                        .handle(ServiceActivators.execute(() -> Log4JLoggables.removeMDC(ProcessingPhase.SUCCESS)))//
                         .channel(finishChannel)//
                         .get());
 
                 registerIntegrationFlow(IntegrationFlows.from(failChannel)//
+                        .handle(ServiceActivators.execute(() -> Log4JLoggables.putMDC(ProcessingPhase.FAIL)))//
                         .filter(Message.class, productFilter)//
                         .transform(Message.class, headerToFileTransformer)//
                         .handle(createFailHandler(product.getFailDir()))//
                         .handle(withLoggingContext(loggingContext -> LOGGER.debug("Moved <{}> to '{}'.", loggingContext, product.getFailDir())))//
+                        .handle(ServiceActivators.execute(() -> Log4JLoggables.removeMDC(ProcessingPhase.FAIL)))//
                         .channel(finishChannel)//
                         .get());
             });

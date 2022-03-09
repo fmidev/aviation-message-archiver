@@ -1,15 +1,33 @@
 package fi.fmi.avi.archiver.spring.integration.dsl;
 
-import org.springframework.integration.handler.GenericHandler;
+import static java.util.Objects.requireNonNull;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import static java.util.Objects.requireNonNull;
+import org.springframework.integration.handler.GenericHandler;
 
 public final class ServiceActivators {
     private ServiceActivators() {
         throw new AssertionError();
+    }
+
+    /**
+     * Return a {@code GenericHandler} that executes provided {@code Runnable} and passes / returns the payload as is.
+     *
+     * @param action
+     *         action to execute
+     * @param <P>
+     *         payload type
+     *
+     * @return handler to execute provided action
+     */
+    public static <P> GenericHandler<P> execute(final Runnable action) {
+        requireNonNull(action, "action");
+        return ((payload, headers) -> {
+            action.run();
+            return payload;
+        });
     }
 
     /**
