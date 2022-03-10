@@ -1,11 +1,11 @@
-package fi.fmi.avi.archiver.logging.log4j;
+package fi.fmi.avi.archiver.logging.slf4j;
 
 import org.slf4j.MDC;
 
 import fi.fmi.avi.archiver.logging.StructuredLoggable;
 
-public final class Log4JLoggables {
-    private Log4JLoggables() {
+public final class SLF4JLoggables {
+    private SLF4JLoggables() {
         throw new AssertionError();
     }
 
