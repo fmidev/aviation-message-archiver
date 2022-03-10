@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+Default logback configuration provided for import.
+Import before org/springframework/boot/logging/logback/defaults.xml
+-->
+
+<included>
+  <property name="LOG_PROCESSING_PATTERN" value="${LOG_PROCESSING_PATTERN:-[%15X{processingId:-0}:%3.-3X{processingPhase:-null}]}" />
+  <property name="LOG_LEVEL_PATTERN" value="${LOG_LEVEL_PATTERN:-${LOG_PROCESSING_PATTERN} %5p}" />
+</included>

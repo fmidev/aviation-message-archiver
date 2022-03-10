@@ -2,7 +2,10 @@ package fi.fmi.avi.archiver.file;
 
 import java.math.BigInteger;
 
-public final class FileProcessingIdentifier {
+import fi.fmi.avi.archiver.logging.StructuredLoggable;
+
+public final class FileProcessingIdentifier implements StructuredLoggable {
+    private static final String STRUCTURE_NAME = "processingId";
     private final String idString = newIdString();
 
     private FileProcessingIdentifier() {
@@ -20,7 +23,22 @@ public final class FileProcessingIdentifier {
     }
 
     @Override
+    public int estimateLogStringLength() {
+        return idString.length();
+    }
+
+    @Override
     public String toString() {
         return idString;
+    }
+
+    @Override
+    public StructuredLoggable readableCopy() {
+        return this;
+    }
+
+    @Override
+    public String getStructureName() {
+        return STRUCTURE_NAME;
     }
 }

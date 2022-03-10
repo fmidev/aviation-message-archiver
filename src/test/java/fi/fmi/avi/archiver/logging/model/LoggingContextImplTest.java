@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.logging.LoggableTests;
 import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult;
@@ -30,7 +29,6 @@ class LoggingContextImplTest {
     private static final FileReference FILE_REFERENCE = FileReference.create("productId", "test_file.txt");
     private static final String FILE_REFERENCE_STRING = FILE_REFERENCE.getProductId() + "/" + FILE_REFERENCE.getFilename();
 
-    private FileProcessingIdentifier id;
     private LoggingContextImpl loggingContext;
 
     private AutoCloseable mocksCloseable;
@@ -75,8 +73,7 @@ class LoggingContextImplTest {
     @BeforeEach
     void setUp() {
         mocksCloseable = MockitoAnnotations.openMocks(this);
-        id = FileProcessingIdentifier.newInstance();
-        loggingContext = new LoggingContextImpl(id, statistics);
+        loggingContext = new LoggingContextImpl(statistics);
     }
 
     @AfterEach
@@ -680,15 +677,15 @@ class LoggingContextImplTest {
     }
 
     @Test
-    void toString_returns_initially_only_fileProcessingIdentifier() {
-        assertThat(loggingContext.toString()).isEqualTo(id + "");
+    void toString_returns_initially_empty() {
+        assertThat(loggingContext.toString()).isEmpty();
     }
 
     @Test
     void toString_file() {
         loggingContext.enterFile(FILE_REFERENCE);
 
-        assertThat(loggingContext.toString()).isEqualTo(id + ":" + FILE_REFERENCE_STRING);
+        assertThat(loggingContext.toString()).isEqualTo(FILE_REFERENCE_STRING);
     }
 
     @Test
@@ -701,7 +698,7 @@ class LoggingContextImplTest {
         loggingContext.enterFile(FILE_REFERENCE);
         loggingContext.enterBulletin(bulletinLogReference);
 
-        assertThat(loggingContext.toString()).isEqualTo(id + ":" + FILE_REFERENCE_STRING + ":" + bulletinLogReference);
+        assertThat(loggingContext.toString()).isEqualTo(FILE_REFERENCE_STRING + ":" + bulletinLogReference);
     }
 
     @Test
@@ -719,7 +716,7 @@ class LoggingContextImplTest {
         loggingContext.enterBulletin(bulletinLogReference);
         loggingContext.enterMessage(messageLogReference);
 
-        assertThat(loggingContext.toString()).isEqualTo(id + ":" + FILE_REFERENCE_STRING + ":" + bulletinLogReference + ":" + messageLogReference);
+        assertThat(loggingContext.toString()).isEqualTo(FILE_REFERENCE_STRING + ":" + bulletinLogReference + ":" + messageLogReference);
     }
 
     @Test
@@ -736,7 +733,7 @@ class LoggingContextImplTest {
         loggingContext.enterBulletin(bulletinLogReference);
         loggingContext.enterMessage(messageLogReference);
 
-        assertThat(loggingContext.toString()).isEqualTo(id + "::" + bulletinLogReference + ":" + messageLogReference);
+        assertThat(loggingContext.toString()).isEqualTo(":" + bulletinLogReference + ":" + messageLogReference);
     }
 
     @Test

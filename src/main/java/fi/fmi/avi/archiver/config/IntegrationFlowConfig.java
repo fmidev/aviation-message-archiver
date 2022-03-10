@@ -26,6 +26,7 @@ import javax.annotation.PreDestroy;
 import org.aopalliance.aop.Advice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,6 +44,7 @@ import org.springframework.integration.file.filters.ChainFileListFilter;
 import org.springframework.integration.file.filters.RegexPatternFileListFilter;
 import org.springframework.integration.file.support.FileExistsMode;
 import org.springframework.integration.file.transformer.FileToStringTransformer;
+import org.springframework.integration.handler.GenericHandler;
 import org.springframework.integration.handler.advice.ExpressionEvaluatingRequestHandlerAdvice;
 import org.springframework.integration.handler.advice.RequestHandlerRetryAdvice;
 import org.springframework.integration.transformer.GenericTransformer;
@@ -78,15 +80,31 @@ import fi.fmi.avi.archiver.spring.retry.RetryAdviceFactory;
 
 @Configuration
 public class IntegrationFlowConfig {
-
     public static final String FILE_METADATA = FileMetadata.class.getSimpleName();
     public static final String PROCESSING_ERRORS = "processingErrors";
     public static final String PROCESSING_IDENTIFIER = FileProcessingIdentifier.class.getSimpleName();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IntegrationFlowConfig.class);
 
+    private static final List<String> LOGGING_ENV_MDC_KEYS = ImmutableList.of(//
+            FileProcessingIdentifier.newInstance().getStructureName(), //
+            ProcessingPhase.START.getStructureName());
+
     public static boolean hasProcessingErrors(final MessageHeaders headers) {
         return Optional.ofNullable(headers.get(PROCESSING_ERRORS, Boolean.class)).orElse(false);
+    }
+
+    private static GenericHandler<?> setLoggingEnv(final ProcessingPhase processingPhase) {
+        return (payload, headers) -> {
+            Optional.ofNullable(headers.get(PROCESSING_IDENTIFIER, FileProcessingIdentifier.class))//
+                    .ifPresent(SLF4JLoggables::putMDC);
+            SLF4JLoggables.putMDC(processingPhase);
+            return payload;
+        };
+    }
+
+    private static GenericHandler<Object> unsetLoggingEnv() {
+        return ServiceActivators.execute(() -> LOGGING_ENV_MDC_KEYS.forEach(MDC::remove));
     }
 
     @Bean
@@ -96,24 +114,24 @@ public class IntegrationFlowConfig {
             final MessageChannel processingChannel, final MessageChannel parserChannel, final MessageChannel populatorChannel,
             final MessageChannel databaseChannel, final MessageChannel archiveChannel, final MessageChannel successChannel, final MessageChannel failChannel) {
         return IntegrationFlows.from(processingChannel)
-                .handle(ServiceActivators.execute(() -> SLF4JLoggables.putMDC(ProcessingPhase.READ)))
+                .handle(setLoggingEnv(ProcessingPhase.READ))
                 .transform(fileToStringTransformer, spec -> spec.advice(fileReadingRetryAdvice))
-                .handle(ServiceActivators.execute(() -> SLF4JLoggables.removeMDC(ProcessingPhase.READ)))
+                .handle(unsetLoggingEnv())
                 .channel(parserChannel)
-                .handle(ServiceActivators.execute(() -> SLF4JLoggables.putMDC(ProcessingPhase.PARSE)))
+                .handle(setLoggingEnv(ProcessingPhase.PARSE))
                 .<String> filter(content -> content != null && !content.isEmpty(), discards -> discards.discardChannel(failChannel))
                 .handle(fileParserIntegrationService::parse)
                 .handle(withLoggingContext(this::loggingActionsAfterParse))
                 .<List<InputAviationMessage>> filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))
-                .handle(ServiceActivators.execute(() -> SLF4JLoggables.removeMDC(ProcessingPhase.PARSE)))
+                .handle(unsetLoggingEnv())
                 .channel(populatorChannel)
-                .handle(ServiceActivators.execute(() -> SLF4JLoggables.putMDC(ProcessingPhase.POPULATE)))
+                .handle(setLoggingEnv(ProcessingPhase.POPULATE))
                 .handle(messagePopulationIntegrationService::populateMessages)
-                .handle(ServiceActivators.execute(() -> SLF4JLoggables.removeMDC(ProcessingPhase.POPULATE)))
+                .handle(unsetLoggingEnv())
                 .channel(databaseChannel)
-                .handle(ServiceActivators.execute(() -> SLF4JLoggables.putMDC(ProcessingPhase.STORE)))
+                .handle(setLoggingEnv(ProcessingPhase.STORE))
                 .handle(withPayloadAndLoggingContext(databaseService::insertMessages))
-                .handle(ServiceActivators.execute(() -> SLF4JLoggables.removeMDC(ProcessingPhase.STORE)))
+                .handle(unsetLoggingEnv())
                 .channel(archiveChannel)
                 .route(Message.class, message -> hasProcessingErrors(message.getHeaders()), spec -> spec//
                         .channelMapping(false, successChannel)//
@@ -142,10 +160,10 @@ public class IntegrationFlowConfig {
     @Bean
     IntegrationFlow finishFlow(final ProcessingState processingState, final MessageChannel finishChannel) {
         return IntegrationFlows.from(finishChannel)//
-                .handle(ServiceActivators.execute(() -> SLF4JLoggables.putMDC(ProcessingPhase.FINISH)))//
+                .handle(setLoggingEnv(ProcessingPhase.FINISH))//
                 .handle(ServiceActivators.peekHeader(FileMetadata.class, FILE_METADATA, processingState::finish))//
                 .handle(this::logFinish)//
-                .handle(ServiceActivators.execute(() -> SLF4JLoggables.removeMDC(ProcessingPhase.FINISH)))//
+                .handle(unsetLoggingEnv())//
                 .nullChannel();
     }
 
@@ -360,17 +378,15 @@ public class IntegrationFlowConfig {
                 // Integration flow for file name filtering
                 registerAllIntegrationFlows(product.getFileConfigs().stream()//
                         .map(fileConfig -> IntegrationFlows.from(inputChannel)//
-                                .handle(ServiceActivators.execute(() -> SLF4JLoggables.putMDC(ProcessingPhase.START)))//
+                                .handle(setLoggingEnv(ProcessingPhase.START))//
                                 .filter(new RegexPatternFileListFilter(fileConfig.getPattern())::accept)//
                                 .enrichHeaders(spec -> spec//
                                         .header(PRODUCT_KEY, product)//
                                         .errorChannel(errorMessageChannel)
                                         .headerFunction(FILE_METADATA, message -> createFileMetadata(message, fileConfig, product.getId()))//
-                                        .headerFunction(PROCESSING_IDENTIFIER, message -> FileProcessingIdentifier.newInstance()))//
-                                .enrichHeaders(spec -> spec//
-                                        // New header enrichment is required to refer header values set earlier
-                                        .headerFunction(SpringLoggingContextHelper.HEADER_KEY, message -> createLoggingContext(
-                                                getNonNullHeader(message.getHeaders(), PROCESSING_IDENTIFIER, FileProcessingIdentifier.class))))//
+                                        .headerFunction(PROCESSING_IDENTIFIER, message -> FileProcessingIdentifier.newInstance())//
+                                        .headerFunction(SpringLoggingContextHelper.HEADER_KEY, message -> createLoggingContext()))//
+                                .handle(setLoggingEnv(ProcessingPhase.START))// refresh to include processingId
                                 .handle((payload, headers) -> {
                                     final FileMetadata fileMetadata = getNonNullHeader(headers, FILE_METADATA, FileMetadata.class);
                                     processingState.start(fileMetadata);
@@ -379,7 +395,7 @@ public class IntegrationFlowConfig {
                                     LOGGER.info("Start processing <{}>", loggingContext);
                                     return payload;
                                 })//
-                                .handle(ServiceActivators.execute(() -> SLF4JLoggables.removeMDC(ProcessingPhase.START)))//
+                                .handle(unsetLoggingEnv())//
                                 .channel(processingChannel)//
                                 .get()//
                         ));
@@ -388,30 +404,29 @@ public class IntegrationFlowConfig {
                 final GenericSelector<Message> productFilter = m -> Objects.equals(m.getHeaders().get(PRODUCT_KEY), product);
 
                 registerIntegrationFlow(IntegrationFlows.from(successChannel)//
-                        .handle(ServiceActivators.execute(() -> SLF4JLoggables.putMDC(ProcessingPhase.SUCCESS)))//
+                        .handle(setLoggingEnv(ProcessingPhase.SUCCESS))//
                         .filter(Message.class, productFilter)//
                         .transform(Message.class, headerToFileTransformer)//
                         .handle(createArchiveHandler(product.getArchiveDir()))//
                         .handle(withLoggingContext(loggingContext -> LOGGER.debug("Moved <{}> to '{}'.", loggingContext, product.getArchiveDir())))//
-                        .handle(ServiceActivators.execute(() -> SLF4JLoggables.removeMDC(ProcessingPhase.SUCCESS)))//
+                        .handle(unsetLoggingEnv())//
                         .channel(finishChannel)//
                         .get());
 
                 registerIntegrationFlow(IntegrationFlows.from(failChannel)//
-                        .handle(ServiceActivators.execute(() -> SLF4JLoggables.putMDC(ProcessingPhase.FAIL)))//
+                        .handle(setLoggingEnv(ProcessingPhase.FAIL))//
                         .filter(Message.class, productFilter)//
                         .transform(Message.class, headerToFileTransformer)//
                         .handle(createFailHandler(product.getFailDir()))//
                         .handle(withLoggingContext(loggingContext -> LOGGER.debug("Moved <{}> to '{}'.", loggingContext, product.getFailDir())))//
-                        .handle(ServiceActivators.execute(() -> SLF4JLoggables.removeMDC(ProcessingPhase.FAIL)))//
+                        .handle(unsetLoggingEnv())//
                         .channel(finishChannel)//
                         .get());
             });
         }
 
-        private LoggingContext createLoggingContext(final FileProcessingIdentifier fileProcessingIdentifier) {
-            return LoggingContext.asSynchronized(
-                    new LoggingContextImpl(fileProcessingIdentifier, FileProcessingStatistics.asSynchronized(new FileProcessingStatisticsImpl())));
+        private LoggingContext createLoggingContext() {
+            return LoggingContext.asSynchronized(new LoggingContextImpl(FileProcessingStatistics.asSynchronized(new FileProcessingStatisticsImpl())));
         }
 
         @PreDestroy

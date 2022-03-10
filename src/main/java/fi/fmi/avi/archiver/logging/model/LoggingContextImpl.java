@@ -11,12 +11,10 @@ import java.util.function.IntFunction;
 import javax.annotation.Nullable;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
 
 public class LoggingContextImpl extends AbstractLoggingContext implements LoggingContext {
 
-    private final FileProcessingIdentifier processingId;
     private final FileProcessingStatistics fileProcessingStatistics;
     private final ArrayList<BulletinLogReference> bulletins = new ArrayList<>(0);
     private final ArrayList<ArrayList<MessageLogReference>> bulletinMessages = new ArrayList<>(0);
@@ -26,8 +24,7 @@ public class LoggingContextImpl extends AbstractLoggingContext implements Loggin
     private int bulletinIndex = -1;
     private int messageIndex = -1;
 
-    public LoggingContextImpl(final FileProcessingIdentifier processingId, final FileProcessingStatistics fileProcessingStatistics) {
-        this.processingId = requireNonNull(processingId, "processingId");
+    public LoggingContextImpl(final FileProcessingStatistics fileProcessingStatistics) {
         this.fileProcessingStatistics = requireNonNull(fileProcessingStatistics, "fileProcessingStatistics");
     }
 
@@ -36,11 +33,6 @@ public class LoggingContextImpl extends AbstractLoggingContext implements Loggin
         for (int nextIndex = list.size(); nextIndex < minSize; nextIndex++) {
             list.add(defaultElement.apply(nextIndex));
         }
-    }
-
-    @Override
-    public FileProcessingIdentifier getProcessingId() {
-        return processingId;
     }
 
     @Override

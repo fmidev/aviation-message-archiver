@@ -1,5 +1,7 @@
 package fi.fmi.avi.archiver.logging.model;
 
+import static java.util.Objects.requireNonNull;
+
 import javax.annotation.Nullable;
 
 import fi.fmi.avi.archiver.file.FileReference;
@@ -16,12 +18,11 @@ public abstract class AbstractLoggingContext extends AbstractAppendingLoggable i
 
     @Override
     public void appendTo(final StringBuilder builder) {
-        builder.append(getProcessingId());
+        requireNonNull(builder, "builder");
         @Nullable
         final FileReference file = getFile().orElse(null);
         if (file != null) {
             builder//
-                    .append(SEPARATOR)//
                     .append(file.getProductId())//
                     .append('/')//
                     .append(LoggableUtils.sanitize(file.getFilename(), FILENAME_MAX_LENGTH));
@@ -29,9 +30,6 @@ public abstract class AbstractLoggingContext extends AbstractAppendingLoggable i
         @Nullable
         final BulletinLogReference bulletin = getBulletin().orElse(null);
         if (bulletin != null) {
-            if (file == null) {
-                builder.append(SEPARATOR);
-            }
             builder.append(SEPARATOR)//
                     .append(bulletin);
             @Nullable
@@ -45,8 +43,7 @@ public abstract class AbstractLoggingContext extends AbstractAppendingLoggable i
 
     @Override
     public int estimateLogStringLength() {
-        return getProcessingId().toString().length() //
-                + estimateFileReferenceLength() //
+        return estimateFileReferenceLength() //
                 + estimateBulletinLogReferenceLength() //
                 + estimateMessageLogReferenceLength();
     }

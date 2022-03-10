@@ -8,7 +8,6 @@ import java.util.function.UnaryOperator;
 
 import javax.annotation.Nullable;
 
-import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
@@ -52,13 +51,6 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     public String getStructureName() {
         synchronized (mutex) {
             return delegate.getStructureName();
-        }
-    }
-
-    @Override
-    public FileProcessingIdentifier getProcessingId() {
-        synchronized (mutex) {
-            return delegate.getProcessingId();
         }
     }
 

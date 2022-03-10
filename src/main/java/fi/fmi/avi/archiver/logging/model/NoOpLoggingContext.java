@@ -33,11 +33,6 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public FileProcessingIdentifier getProcessingId() {
-        return PROCESSING_ID;
-    }
-
-    @Override
     public Optional<FileReference> getFile() {
         return Optional.empty();
     }

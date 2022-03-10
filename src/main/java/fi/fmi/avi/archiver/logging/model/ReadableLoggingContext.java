@@ -4,11 +4,7 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
-import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.logging.AppendingLoggable;
 import fi.fmi.avi.archiver.logging.StructuredLoggable;
@@ -38,15 +34,6 @@ public interface ReadableLoggingContext extends AppendingLoggable, StructuredLog
     default String getStructureName() {
         return "processingContext";
     }
-
-    /**
-     * Returns file processing identifier.
-     *
-     * @return file processing identifier
-     */
-    @JsonProperty(index = 0)
-    @JsonSerialize(using = ToStringSerializer.class)
-    FileProcessingIdentifier getProcessingId();
 
     /**
      * Return {@code FileReference} referring to the file currently under processing, if one is registered, otherwise empty.
