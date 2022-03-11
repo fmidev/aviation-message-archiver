@@ -2,7 +2,6 @@ package fi.fmi.avi.archiver.message.populator;
 
 import javax.annotation.Nullable;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
 
@@ -12,7 +11,8 @@ import fi.fmi.avi.archiver.message.MessageDiscardedException;
  */
 public class MessageDiscarder implements MessagePopulator {
     @Override
-    public void populate(@Nullable final InputAviationMessage input, @Nullable final ArchiveAviationMessage.Builder target) throws MessageDiscardedException {
+    public void populate(@Nullable final MessagePopulatingContext context, @Nullable final ArchiveAviationMessage.Builder target)
+            throws MessageDiscardedException {
         throw new MessageDiscardedException("Discarded");
     }
 }

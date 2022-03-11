@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.testing.NullPointerTester;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory.Builder;
 
@@ -282,7 +282,7 @@ class ReflectionObjectFactoryTest {
         }
 
         @Override
-        public void populate(final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder aviationMessageBuilder) {
+        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
             throw unexpectedInvocation();
         }
 

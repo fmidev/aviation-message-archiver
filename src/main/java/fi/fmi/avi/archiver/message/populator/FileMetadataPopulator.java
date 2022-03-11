@@ -23,14 +23,14 @@ public class FileMetadataPopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final InputAviationMessage input, final ArchiveAviationMessage.Builder builder) {
-        requireNonNull(input, "input");
-        requireNonNull(builder, "builder");
-        final FileMetadata fileMetadata = input.getFileMetadata();
+    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+        requireNonNull(context, "context");
+        requireNonNull(target, "target");
+        final FileMetadata fileMetadata = context.getInputMessage().getFileMetadata();
         final AviationProduct product = products.get(fileMetadata.getFileReference().getProductId());
         Preconditions.checkState(product != null, "Unknown product identifier: %s; unable to resolve route", fileMetadata.getFileReference().getProductId());
 
-        builder.setRoute(product.getRouteId())//
+        target.setRoute(product.getRouteId())//
                 .setFormat(fileMetadata.getFileConfig().getFormatId())//
                 .setFileModified(fileMetadata.getFileModified());
     }

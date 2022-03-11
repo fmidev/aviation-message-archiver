@@ -31,12 +31,14 @@ public class MessagePopulationService {
         requireNonNull(loggingContext, "loggingContext");
 
         final List<PopulationResult> populationResults = new ArrayList<>();
+        final MessagePopulatingContextImpl.Builder contextBuilder = MessagePopulatingContextImpl.builder()//
+                .setLoggingContext(loggingContext);
         for (final InputAviationMessage inputMessage : inputMessages) {
             loggingContext.enterBulletinMessage(inputMessage.getMessagePositionInFile());
             final PopulationResult.Builder builder = PopulationResult.builder()//
                     .setInputMessage(inputMessage);
             try {
-                final ArchiveAviationMessage archiveAviationMessage = populateMessage(inputMessage);
+                final ArchiveAviationMessage archiveAviationMessage = populateMessage(contextBuilder.setInputMessage(inputMessage).build());
                 builder.setArchiveMessage(archiveAviationMessage)//
                         .setStatus(PopulationResult.Status.STORE);
             } catch (final MessageDiscardedException e) {
@@ -54,11 +56,11 @@ public class MessagePopulationService {
         return populationResults;
     }
 
-    private ArchiveAviationMessage populateMessage(final InputAviationMessage inputAviationMessage) throws MessageDiscardedException {
+    private ArchiveAviationMessage populateMessage(final MessagePopulatingContext context) throws MessageDiscardedException {
         final ArchiveAviationMessage.Builder messageBuilder = ArchiveAviationMessage.builder()//
-                .setMessagePositionInFile(inputAviationMessage.getMessagePositionInFile());
+                .setMessagePositionInFile(context.getInputMessage().getMessagePositionInFile());
         for (final MessagePopulator messagePopulator : messagePopulators) {
-            messagePopulator.populate(inputAviationMessage, messageBuilder);
+            messagePopulator.populate(context, messageBuilder);
         }
         return messageBuilder.build();
     }

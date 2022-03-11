@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 import fi.fmi.avi.model.MessageType;
@@ -34,13 +33,13 @@ public class ProductMessageTypesValidator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder builder) {
-        requireNonNull(inputAviationMessage, "inputAviationMessage");
-        requireNonNull(builder, "builder");
-        MessagePopulatorHelper.tryGetInt(builder, ArchiveAviationMessage.Builder::getType).ifPresent(type -> {
-            final String productId = inputAviationMessage.getFileMetadata().getFileReference().getProductId();
+    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+        requireNonNull(context, "context");
+        requireNonNull(target, "target");
+        MessagePopulatorHelper.tryGetInt(target, ArchiveAviationMessage.Builder::getType).ifPresent(type -> {
+            final String productId = context.getInputMessage().getFileMetadata().getFileReference().getProductId();
             if (productMessageTypes.containsKey(productId) && !productMessageTypes.get(productId).contains(type)) {
-                builder.setProcessingResult(ProcessingResult.FORBIDDEN_MESSAGE_TYPE);
+                target.setProcessingResult(ProcessingResult.FORBIDDEN_MESSAGE_TYPE);
             }
         });
     }

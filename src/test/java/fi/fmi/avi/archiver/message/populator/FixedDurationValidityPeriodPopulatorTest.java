@@ -18,6 +18,7 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 public class FixedDurationValidityPeriodPopulatorTest {
 
     private static final InputAviationMessage INPUT = InputAviationMessage.builder().buildPartial();
+    private static final MessagePopulatingContext CONTEXT = TestMessagePopulatingContext.create(INPUT);
     private static final Duration VALIDITY_END_OFFSET = Duration.ofHours(30);
 
     private FixedDurationValidityPeriodPopulator messagePopulator;
@@ -32,7 +33,7 @@ public class FixedDurationValidityPeriodPopulatorTest {
         final Instant messageTime = Instant.parse("2019-05-10T00:00:00Z");
         final ArchiveAviationMessage.Builder target = ArchiveAviationMessage.builder()//
                 .setMessageTime(messageTime);
-        messagePopulator.populate(INPUT, target);
+        messagePopulator.populate(CONTEXT, target);
         assertThat(target.getValidFrom()).contains(messageTime);
         assertThat(target.getValidTo()).contains(Instant.parse("2019-05-11T06:00:00Z"));
     }
@@ -40,7 +41,7 @@ public class FixedDurationValidityPeriodPopulatorTest {
     @Test
     void missing_message_time() {
         final ArchiveAviationMessage.Builder target = ArchiveAviationMessage.builder();
-        messagePopulator.populate(INPUT, target);
+        messagePopulator.populate(CONTEXT, target);
         assertThat(target.getValidFrom()).isNotPresent();
         assertThat(target.getValidTo()).isNotPresent();
     }

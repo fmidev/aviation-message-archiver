@@ -9,16 +9,15 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 
 class FixedProcessingResultPopulatorTest {
-
     @Test
     void populate_sets_fixed_processing_result() {
         final ProcessingResult processingResult = ProcessingResult.UNKNOWN_STATION_ICAO_CODE;
-        final InputAviationMessage input = InputAviationMessage.builder().buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(InputAviationMessage.builder().buildPartial());
         final ArchiveAviationMessage.Builder target = ArchiveAviationMessage.builder();
         assertThat(target.getProcessingResult()).isNotEqualTo(processingResult);
         final FixedProcessingResultPopulator messagePopulator = new FixedProcessingResultPopulator(processingResult);
 
-        messagePopulator.populate(input, target);
+        messagePopulator.populate(context, target);
 
         assertThat(target.getProcessingResult()).isEqualTo(processingResult);
     }

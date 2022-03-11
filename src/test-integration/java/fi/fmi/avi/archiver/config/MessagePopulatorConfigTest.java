@@ -30,6 +30,7 @@ import fi.fmi.avi.archiver.TestConfig;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
@@ -80,26 +81,26 @@ class MessagePopulatorConfigTest {
         private List<Instant> validityPeriod = Collections.emptyList();
 
         @Override
-        public void populate(final InputAviationMessage input, final ArchiveAviationMessage.Builder builder) {
-            requireNonNull(input, "input");
-            requireNonNull(builder, "builder");
+        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+            requireNonNull(context, "context");
+            requireNonNull(target, "target");
             if (ids.containsKey(IdCategory.ROUTE)) {
-                builder.setRoute(ids.get(IdCategory.ROUTE));
+                target.setRoute(ids.get(IdCategory.ROUTE));
             }
             if (ids.containsKey(IdCategory.FORMAT)) {
-                builder.setFormat(ids.get(IdCategory.FORMAT));
+                target.setFormat(ids.get(IdCategory.FORMAT));
             }
             if (ids.containsKey(IdCategory.TYPE)) {
-                builder.setType(ids.get(IdCategory.TYPE));
+                target.setType(ids.get(IdCategory.TYPE));
             }
             if (!messageTime.equals(Instant.EPOCH)) {
-                builder.setMessageTime(messageTime);
+                target.setMessageTime(messageTime);
             }
             if (validityPeriod.size() >= 1 && validityPeriod.get(0) != null) {
-                builder.setValidFrom(validityPeriod.get(0));
+                target.setValidFrom(validityPeriod.get(0));
             }
             if (validityPeriod.size() >= 2 && validityPeriod.get(1) != null) {
-                builder.setValidTo(validityPeriod.get(1));
+                target.setValidTo(validityPeriod.get(1));
             }
         }
 
@@ -140,14 +141,14 @@ class MessagePopulatorConfigTest {
         }
 
         @Override
-        public void populate(final InputAviationMessage input, final ArchiveAviationMessage.Builder builder) {
-            requireNonNull(input, "input");
-            requireNonNull(builder, "builder");
+        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+            requireNonNull(context, "context");
+            requireNonNull(target, "target");
             if (!station.isEmpty()) {
-                builder.setStationIcaoCode(station);
+                target.setStationIcaoCode(station);
             }
             if (!message.isEmpty()) {
-                builder.setMessage(message);
+                target.setMessage(message);
             }
         }
 
@@ -175,10 +176,10 @@ class MessagePopulatorConfigTest {
         }
 
         @Override
-        public void populate(final InputAviationMessage input, final ArchiveAviationMessage.Builder builder) {
-            requireNonNull(input, "input");
-            requireNonNull(builder, "builder");
-            builder.setFileModified(clock.instant().minus(fileModifiedFromNow));
+        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+            requireNonNull(context, "context");
+            requireNonNull(target, "target");
+            target.setFileModified(clock.instant().minus(fileModifiedFromNow));
         }
 
         @Override

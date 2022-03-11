@@ -26,10 +26,10 @@ public class FixedRoutePopulatorTest {
 
     @Test
     void populate_sets_fixed_route_id() {
-        final InputAviationMessage input = InputAviationMessage.builder().buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(InputAviationMessage.builder().buildPartial());
         final ArchiveAviationMessage.Builder target = ArchiveAviationMessage.builder();
 
-        messagePopulator.populate(input, target);
+        messagePopulator.populate(context, target);
 
         assertThat(target.getRoute()).isEqualTo(ROUTE_ID.getId());
     }

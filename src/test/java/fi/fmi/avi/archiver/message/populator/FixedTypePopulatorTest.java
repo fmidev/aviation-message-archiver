@@ -25,10 +25,10 @@ public class FixedTypePopulatorTest {
 
     @Test
     void populate_sets_fixed_type_id() {
-        final InputAviationMessage input = InputAviationMessage.builder().buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(InputAviationMessage.builder().buildPartial());
         final ArchiveAviationMessage.Builder target = ArchiveAviationMessage.builder();
 
-        messagePopulator.populate(input, target);
+        messagePopulator.populate(context, target);
 
         assertThat(target.getType()).isEqualTo(TYPE_ID.getId());
     }
