@@ -22,7 +22,7 @@ public class StationIdPopulator implements MessagePopulator {
         requireNonNull(context, "context");
         requireNonNull(target, "target");
 
-        final Optional<Integer> stationId = databaseAccess.queryStationId(target.getStationIcaoCode());
+        final Optional<Integer> stationId = databaseAccess.queryStationId(target.getStationIcaoCode(), context.getLoggingContext());
         if (stationId.isPresent()) {
             target.setStationId(stationId.get());
         } else {

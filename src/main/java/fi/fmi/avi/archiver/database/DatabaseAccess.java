@@ -1,9 +1,15 @@
 package fi.fmi.avi.archiver.database;
 
-import com.google.common.annotations.VisibleForTesting;
-import fi.fmi.avi.archiver.logging.Loggable;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
+import static java.util.Objects.requireNonNull;
+
+import java.sql.Types;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.Optional;
+
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -12,14 +18,11 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.retry.support.RetryTemplate;
 
-import javax.annotation.Nullable;
-import java.sql.Types;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.Optional;
+import com.google.common.annotations.VisibleForTesting;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
 
 public class DatabaseAccess {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseAccess.class);
@@ -49,7 +52,7 @@ public class DatabaseAccess {
                 .usingGeneratedKeyColumns("rejected_message_id");
         this.insertIwxxmDetails = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate())//
                 .withSchemaName(schema)//
-                .withTableName("avidb_message_iwxxm_details")
+                .withTableName("avidb_message_iwxxm_details")//
                 .usingGeneratedKeyColumns("id");
         this.insertRejectedIwxxmDetails = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate())//
                 .withSchemaName(schema)//
@@ -76,7 +79,7 @@ public class DatabaseAccess {
      *
      * @return the generated id
      */
-    public Number insertAviationMessage(final ArchiveAviationMessage archiveAviationMessage, final Loggable loggingContext) {
+    public Number insertAviationMessage(final ArchiveAviationMessage archiveAviationMessage, final ReadableLoggingContext loggingContext) {
         requireNonNull(archiveAviationMessage, "archiveAviationMessage");
         requireNonNull(loggingContext, "loggingContext");
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -84,7 +87,10 @@ public class DatabaseAccess {
                 .orElseThrow(() -> new IllegalArgumentException(String.format("Message <%s> is missing stationId.", loggingContext))));
         addCommonParameters(parameters, archiveAviationMessage);
         try {
-            final Number id = retryTemplate.execute(context -> insertAviationMessage.executeAndReturnKey(parameters));
+            final Number id = retryTemplate.execute(context -> {
+                RetryContextAttributes.setLoggingContext(context, loggingContext);
+                return insertAviationMessage.executeAndReturnKey(parameters);
+            });
             if (!archiveAviationMessage.getIWXXMDetails().isEmpty()) {
                 insertIwxxmDetails(id, archiveAviationMessage.getIWXXMDetails(), loggingContext);
             }
@@ -106,7 +112,7 @@ public class DatabaseAccess {
      *
      * @return the generated id
      */
-    public Number insertRejectedAviationMessage(final ArchiveAviationMessage archiveAviationMessage, final Loggable loggingContext) {
+    public Number insertRejectedAviationMessage(final ArchiveAviationMessage archiveAviationMessage, final ReadableLoggingContext loggingContext) {
         requireNonNull(archiveAviationMessage, "archiveAviationMessage");
         requireNonNull(loggingContext, "loggingContext");
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -114,7 +120,10 @@ public class DatabaseAccess {
                 .addValue("reject_reason", archiveAviationMessage.getProcessingResult().getCode());
         addCommonParameters(parameters, archiveAviationMessage);
         try {
-            final Number id = retryTemplate.execute(context -> insertRejectedAviationMessage.executeAndReturnKey(parameters));
+            final Number id = retryTemplate.execute(context -> {
+                RetryContextAttributes.setLoggingContext(context, loggingContext);
+                return insertRejectedAviationMessage.executeAndReturnKey(parameters);
+            });
             if (!archiveAviationMessage.getIWXXMDetails().isEmpty()) {
                 insertRejectedIwxxmDetails(id, archiveAviationMessage.getIWXXMDetails(), loggingContext);
             }
@@ -127,13 +136,16 @@ public class DatabaseAccess {
         }
     }
 
-    private int insertIwxxmDetails(final Number messageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails, final Loggable loggingContext) {
+    private int insertIwxxmDetails(final Number messageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails, final ReadableLoggingContext loggingContext) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("message_id", messageId)
                 .addValue("collect_identifier", iwxxmDetails.getCollectIdentifier().orElse(null))
                 .addValue("iwxxm_version", iwxxmDetails.getXMLNamespace().orElse(null));
         try {
-            return retryTemplate.execute(context -> insertIwxxmDetails.execute(parameters));
+            return retryTemplate.execute(context -> {
+                RetryContextAttributes.setLoggingContext(context, loggingContext);
+                return insertIwxxmDetails.execute(parameters);
+            });
         } catch (final RuntimeException e) {
             LOGGER.error("Error while inserting IWXXM details for message id {} <{}>.", messageId, loggingContext, e);
             throw e;
@@ -141,30 +153,37 @@ public class DatabaseAccess {
     }
 
     private int insertRejectedIwxxmDetails(final Number rejectedMessageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails,
-            final Loggable loggingContext) {
+            final ReadableLoggingContext loggingContext) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("rejected_message_id", rejectedMessageId)
                 .addValue("collect_identifier", iwxxmDetails.getCollectIdentifier().orElse(null))
                 .addValue("iwxxm_version", iwxxmDetails.getXMLNamespace().orElse(null));
         try {
-            return retryTemplate.execute(context -> insertRejectedIwxxmDetails.execute(parameters));
+            return retryTemplate.execute(context -> {
+                RetryContextAttributes.setLoggingContext(context, loggingContext);
+                return insertRejectedIwxxmDetails.execute(parameters);
+            });
         } catch (final RuntimeException e) {
             LOGGER.error("Error while inserting IWXXM details failed for rejected message id {} <{}>.", rejectedMessageId, loggingContext, e);
             throw e;
         }
     }
 
-    public Optional<Integer> queryStationId(final String stationIcaoCode) {
+    public Optional<Integer> queryStationId(final String stationIcaoCode, final ReadableLoggingContext loggingContext) {
         requireNonNull(stationIcaoCode, "stationIcaoCode");
+        requireNonNull(loggingContext, "loggingContext");
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("icao_code", stationIcaoCode);
         try {
-            final Integer stationId = retryTemplate.execute(context -> jdbcTemplate.queryForObject(stationIdQuery, parameters, Integer.class));
+            final Integer stationId = retryTemplate.execute(context -> {
+                RetryContextAttributes.setLoggingContext(context, loggingContext);
+                return jdbcTemplate.queryForObject(stationIdQuery, parameters, Integer.class);
+            });
             return Optional.ofNullable(stationId);
         } catch (final EmptyResultDataAccessException ignored) {
             // No station was found
         } catch (final RuntimeException e) {
-            LOGGER.error("Error while querying station id with icao airport code '{}'.", stationIcaoCode, e);
+            LOGGER.error("Error while querying station id with icao airport code '{}' for <{}>.", stationIcaoCode, loggingContext, e);
         }
         return Optional.empty();
     }
@@ -183,5 +202,4 @@ public class DatabaseAccess {
         addTimestampWithTimezone(parameters, "created", clock.instant());
         addTimestampWithTimezone(parameters, "file_modified", archiveAviationMessage.getFileModified().orElse(null));
     }
-
 }

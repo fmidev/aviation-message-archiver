@@ -1,7 +1,8 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.database.DatabaseAccess;
-import fi.fmi.avi.archiver.database.DatabaseService;
+import java.time.Clock;
+import java.time.Duration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,8 +18,10 @@ import org.springframework.retry.listener.RetryListenerSupport;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.retry.support.RetryTemplateBuilder;
 
-import java.time.Clock;
-import java.time.Duration;
+import fi.fmi.avi.archiver.database.DatabaseAccess;
+import fi.fmi.avi.archiver.database.DatabaseService;
+import fi.fmi.avi.archiver.database.RetryContextAttributes;
+import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
 
 @Configuration
 public class DataSourceConfig {
@@ -27,7 +30,7 @@ public class DataSourceConfig {
 
     @Bean
     DatabaseAccess databaseAccess(final NamedParameterJdbcTemplate jdbcTemplate, final Clock clock, final RetryTemplate databaseAccessRetryTemplate,
-                                  @Value("${datasource.schema}") final String schema) {
+            @Value("${datasource.schema}") final String schema) {
         return new DatabaseAccess(jdbcTemplate, clock, databaseAccessRetryTemplate, schema);
     }
 
@@ -50,10 +53,10 @@ public class DataSourceConfig {
      * @return retry template for database access
      */
     @Bean
-    RetryTemplate databaseAccessRetryTemplate(@Value("${datasource.retry.initial-interval:PT0.5S}") final Duration initialInterval,
-                                              @Value("${datasource.retry.multiplier:2}") final int multiplier,
-                                              @Value("${datasource.retry.max-interval:PT1M}") final Duration maxInterval,
-                                              @Value("${datasource.retry.timeout:PT0S}") final Duration timeout) {
+    RetryTemplate databaseAccessRetryTemplate(@Value("${datasource.retry.initial-interval:PT0.5S}") final Duration initialInterval, //
+            @Value("${datasource.retry.multiplier:2}") final int multiplier, //
+            @Value("${datasource.retry.max-interval:PT1M}") final Duration maxInterval, //
+            @Value("${datasource.retry.timeout:PT0S}") final Duration timeout) {
         final ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
         backOffPolicy.setInitialInterval(initialInterval.toMillis());
         backOffPolicy.setMultiplier(multiplier);
@@ -70,23 +73,25 @@ public class DataSourceConfig {
 
         retryTemplateBuilder.withListener(new RetryListenerSupport() {
             @Override
-            public <T, E extends Throwable> void close(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+            public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
                 super.close(context, callback, throwable);
-                if (context.getRetryCount() > 0 && throwable != null
-                        && !NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
-                    LOGGER.error("Database operation retry attempts exhausted");
+                final int retryCount = context.getRetryCount();
+                if (retryCount > 0 && throwable != null && !NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
+                    LOGGER.error("Database operation retry attempts ({}) exhausted while processing <{}>.", retryCount,
+                            RetryContextAttributes.getLoggingContext(context));
                 }
             }
 
             @Override
-            public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+            public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
                 super.onError(context, callback, throwable);
+                final ReadableLoggingContext loggingContext = RetryContextAttributes.getLoggingContext(context);
                 if (!NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
-                    LOGGER.error("Database operation failed. Retry attempt " + context.getRetryCount(), throwable);
+                    LOGGER.error("Database operation failed while processing <{}>. Retry attempt {}.", loggingContext, context.getRetryCount(), throwable);
                 } else if (throwable instanceof EmptyResultDataAccessException) {
-                    LOGGER.debug("Empty result", throwable);
+                    LOGGER.debug("Empty result while processing <{}>: {}", loggingContext, throwable.getMessage());
                 } else {
-                    LOGGER.error("Database operation failed. Not retrying", throwable);
+                    LOGGER.error("Database operation failed while processing <{}>. Not retrying.", loggingContext, throwable);
                 }
             }
         });

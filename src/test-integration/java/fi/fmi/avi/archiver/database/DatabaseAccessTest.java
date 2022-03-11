@@ -166,13 +166,13 @@ class DatabaseAccessTest {
 
     @Test
     void test_query_existing_station() {
-        final Optional<Integer> testId = databaseAccess.queryStationId("EFXX");
+        final Optional<Integer> testId = databaseAccess.queryStationId("EFXX", loggingContext);
         assertThat(testId).isPresent();
     }
 
     @Test
     void test_query_nonexistent_station() {
-        final Optional<Integer> testId = databaseAccess.queryStationId("XXXX");
+        final Optional<Integer> testId = databaseAccess.queryStationId("XXXX", loggingContext);
         assertThat(testId).isEmpty();
     }
 
