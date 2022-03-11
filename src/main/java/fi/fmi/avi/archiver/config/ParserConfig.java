@@ -38,12 +38,12 @@ public class ParserConfig {
         }
 
         public Message<List<InputAviationMessage>> parse(final String content, final MessageHeaders headers) {
-            final FileMetadata fileMetadata = requireNonNull(headers.get(FILE_METADATA, FileMetadata.class), "fileMetadata");
+            final FileMetadata fileMetadata = FILE_METADATA.getNonNull(headers);
             final LoggingContext loggingContext = SpringLoggingContextHelper.getLoggingContext(headers);
             final FileParser.FileParseResult result = fileParser.parse(content, fileMetadata, loggingContext);
             return MessageBuilder.withPayload(result.getInputAviationMessages())
                     .copyHeaders(headers)
-                    .setHeader(IntegrationFlowConfig.PROCESSING_ERRORS, IntegrationFlowConfig.hasProcessingErrors(headers) || result.getParseErrors())
+                    .setHeader(IntegrationFlowConfig.PROCESSING_ERRORS.getName(), IntegrationFlowConfig.hasProcessingErrors(headers) || result.getParseErrors())
                     .build();
         }
     }

@@ -155,7 +155,7 @@ public class MessagePopulatorConfig {
 
             return MessageBuilder.withPayload(Collections.unmodifiableList(populatedMessages))//
                     .copyHeaders(headers)//
-                    .setHeader(IntegrationFlowConfig.PROCESSING_ERRORS, IntegrationFlowConfig.hasProcessingErrors(headers) || failures)//
+                    .setHeader(IntegrationFlowConfig.PROCESSING_ERRORS.getName(), IntegrationFlowConfig.hasProcessingErrors(headers) || failures)//
                     .build();
         }
     }
