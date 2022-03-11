@@ -10,16 +10,11 @@ import java.time.ZoneOffset;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.MutableClock;
 
-import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileReference;
 
 class ProcessingStateTest {
-    private static final FileMetadata FILE_METADATA_1 = FileMetadata.builder()//
-            .setFileReference(FileReference.create("productid", "filename1.txt"))//
-            .buildPartial();
-    private static final FileMetadata FILE_METADATA_2 = FileMetadata.builder()//
-            .setFileReference(FileReference.create("productid", "filename2.txt"))//
-            .buildPartial();
+    private static final FileReference FILE_REFERENCE_1 = FileReference.create("productid", "filename1.txt");
+    private static final FileReference FILE_REFERENCE_2 = FileReference.create("productid", "filename2.txt");
     private static final Clock FIXED_EPOCH_CLOCK = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC);
 
     @Test
@@ -40,7 +35,7 @@ class ProcessingStateTest {
     void start_FileMetadata_increases_fileCountUnderProcessing() {
         final ProcessingState processingState = new ProcessingState(FIXED_EPOCH_CLOCK);
 
-        processingState.start(FILE_METADATA_1);
+        processingState.start(FILE_REFERENCE_1);
 
         assertThat(processingState.getFileCountUnderProcessing()).isEqualTo(1);
     }
@@ -49,7 +44,7 @@ class ProcessingStateTest {
     void finish_on_unprocessed_file_does_nothing() {
         final ProcessingState processingState = new ProcessingState(FIXED_EPOCH_CLOCK);
 
-        processingState.finish(FILE_METADATA_1);
+        processingState.finish(FILE_REFERENCE_1);
         assertThat(processingState.getFileCountUnderProcessing()).isEqualTo(0);
     }
 
@@ -57,10 +52,10 @@ class ProcessingStateTest {
     void finish_on_processed_file_does_nothing() {
         final ProcessingState processingState = new ProcessingState(FIXED_EPOCH_CLOCK);
 
-        processingState.start(FILE_METADATA_1);
-        processingState.finish(FILE_METADATA_1);
+        processingState.start(FILE_REFERENCE_1);
+        processingState.finish(FILE_REFERENCE_1);
         assertThat(processingState.getFileCountUnderProcessing()).as("finished").isEqualTo(0);
-        processingState.finish(FILE_METADATA_1);
+        processingState.finish(FILE_REFERENCE_1);
         assertThat(processingState.getFileCountUnderProcessing()).as("second invocation").isEqualTo(0);
     }
 
@@ -68,10 +63,10 @@ class ProcessingStateTest {
     void finish_FileMetadata_decreases_fileCountUnderProcessing() {
         final ProcessingState processingState = new ProcessingState(FIXED_EPOCH_CLOCK);
 
-        processingState.start(FILE_METADATA_1);
-        processingState.start(FILE_METADATA_2);
+        processingState.start(FILE_REFERENCE_1);
+        processingState.start(FILE_REFERENCE_2);
         assertThat(processingState.getFileCountUnderProcessing()).isEqualTo(2);
-        processingState.finish(FILE_METADATA_1);
+        processingState.finish(FILE_REFERENCE_1);
 
         assertThat(processingState.getFileCountUnderProcessing()).isEqualTo(1);
     }
@@ -80,22 +75,22 @@ class ProcessingStateTest {
     void repeated_start_FileMetadata_requires_repeated_finish_to_decrease_count() {
         final ProcessingState processingState = new ProcessingState(FIXED_EPOCH_CLOCK);
 
-        processingState.start(FILE_METADATA_1);
+        processingState.start(FILE_REFERENCE_1);
         assertThat(processingState.getFileCountUnderProcessing()).isEqualTo(1);
-        processingState.start(FILE_METADATA_2);
+        processingState.start(FILE_REFERENCE_2);
         assertThat(processingState.getFileCountUnderProcessing()).isEqualTo(2);
-        processingState.start(FILE_METADATA_1);
+        processingState.start(FILE_REFERENCE_1);
         assertThat(processingState.getFileCountUnderProcessing()).isEqualTo(2);
-        processingState.start(FILE_METADATA_1);
+        processingState.start(FILE_REFERENCE_1);
         assertThat(processingState.getFileCountUnderProcessing()).isEqualTo(2);
 
-        processingState.finish(FILE_METADATA_1);
+        processingState.finish(FILE_REFERENCE_1);
         assertThat(processingState.getFileCountUnderProcessing()).isEqualTo(2);
-        processingState.finish(FILE_METADATA_2);
+        processingState.finish(FILE_REFERENCE_2);
         assertThat(processingState.getFileCountUnderProcessing()).isEqualTo(1);
-        processingState.finish(FILE_METADATA_1);
+        processingState.finish(FILE_REFERENCE_1);
         assertThat(processingState.getFileCountUnderProcessing()).isEqualTo(1);
-        processingState.finish(FILE_METADATA_1);
+        processingState.finish(FILE_REFERENCE_1);
         assertThat(processingState.getFileCountUnderProcessing()).isEqualTo(0);
     }
 
@@ -105,11 +100,11 @@ class ProcessingStateTest {
         final Duration timeAdvance = Duration.ofSeconds(10);
         final ProcessingState processingState = new ProcessingState(clock);
 
-        processingState.start(FILE_METADATA_1);
+        processingState.start(FILE_REFERENCE_1);
         clock.add(timeAdvance);
-        processingState.start(FILE_METADATA_2);
+        processingState.start(FILE_REFERENCE_2);
         clock.add(timeAdvance);
-        processingState.start(FILE_METADATA_1);
+        processingState.start(FILE_REFERENCE_1);
         clock.add(timeAdvance);
         final Duration result = processingState.getRunningFileProcessingMaxElapsed();
 
@@ -120,19 +115,19 @@ class ProcessingStateTest {
     void isFileUnderProcessing_returns_wheter_file_is_under_processing() {
         final ProcessingState processingState = new ProcessingState(FIXED_EPOCH_CLOCK);
 
-        assertThat(processingState.isFileUnderProcessing(FILE_METADATA_1.getFileReference())).as("1: initial").isFalse();
-        assertThat(processingState.isFileUnderProcessing(FILE_METADATA_2.getFileReference())).as("2: initial").isFalse();
-        processingState.start(FILE_METADATA_1);
-        assertThat(processingState.isFileUnderProcessing(FILE_METADATA_1.getFileReference())).as("1: started 1").isTrue();
-        assertThat(processingState.isFileUnderProcessing(FILE_METADATA_2.getFileReference())).as("2: started 1").isFalse();
-        processingState.start(FILE_METADATA_2);
-        assertThat(processingState.isFileUnderProcessing(FILE_METADATA_1.getFileReference())).as("1: started 2").isTrue();
-        assertThat(processingState.isFileUnderProcessing(FILE_METADATA_2.getFileReference())).as("2: started 2").isTrue();
-        processingState.finish(FILE_METADATA_1);
-        assertThat(processingState.isFileUnderProcessing(FILE_METADATA_1.getFileReference())).as("1: finished 1").isFalse();
-        assertThat(processingState.isFileUnderProcessing(FILE_METADATA_2.getFileReference())).as("2: finished 1").isTrue();
-        processingState.finish(FILE_METADATA_2);
-        assertThat(processingState.isFileUnderProcessing(FILE_METADATA_1.getFileReference())).as("1: finished 2").isFalse();
-        assertThat(processingState.isFileUnderProcessing(FILE_METADATA_2.getFileReference())).as("2: finished 2").isFalse();
+        assertThat(processingState.isFileUnderProcessing(FILE_REFERENCE_1)).as("1: initial").isFalse();
+        assertThat(processingState.isFileUnderProcessing(FILE_REFERENCE_2)).as("2: initial").isFalse();
+        processingState.start(FILE_REFERENCE_1);
+        assertThat(processingState.isFileUnderProcessing(FILE_REFERENCE_1)).as("1: started 1").isTrue();
+        assertThat(processingState.isFileUnderProcessing(FILE_REFERENCE_2)).as("2: started 1").isFalse();
+        processingState.start(FILE_REFERENCE_2);
+        assertThat(processingState.isFileUnderProcessing(FILE_REFERENCE_1)).as("1: started 2").isTrue();
+        assertThat(processingState.isFileUnderProcessing(FILE_REFERENCE_2)).as("2: started 2").isTrue();
+        processingState.finish(FILE_REFERENCE_1);
+        assertThat(processingState.isFileUnderProcessing(FILE_REFERENCE_1)).as("1: finished 1").isFalse();
+        assertThat(processingState.isFileUnderProcessing(FILE_REFERENCE_2)).as("2: finished 1").isTrue();
+        processingState.finish(FILE_REFERENCE_2);
+        assertThat(processingState.isFileUnderProcessing(FILE_REFERENCE_1)).as("1: finished 2").isFalse();
+        assertThat(processingState.isFileUnderProcessing(FILE_REFERENCE_2)).as("2: finished 2").isFalse();
     }
 }

@@ -165,7 +165,7 @@ public class IntegrationFlowConfig {
     IntegrationFlow finishFlow(final ProcessingState processingState, final MessageChannel finishChannel) {
         return IntegrationFlows.from(finishChannel)//
                 .handle(setLoggingEnv(ProcessingPhase.FINISH))//
-                .handle(ServiceActivators.peekHeader(FILE_METADATA, processingState::finish))//
+                .handle(ServiceActivators.peekHeader(FILE_REFERENCE, processingState::finish))//
                 .handle(this::logFinish)//
                 .handle(unsetLoggingEnv())//
                 .nullChannel();
@@ -383,17 +383,17 @@ public class IntegrationFlowConfig {
                                                 message -> FileReference.create(product.getId(), FILENAME.getNonNull(message.getHeaders())))
                                         .headerFunction(PROCESSING_IDENTIFIER.getName(), message -> FileProcessingIdentifier.newInstance())//
                                         .headerFunction(SpringLoggingContextHelper.HEADER.getName(), message -> createLoggingContext()))//
-                                .enrichHeaders(spec -> spec//
-                                        .headerFunction(FILE_METADATA.getName(), message -> createFileMetadata(message, fileConfig)))//
                                 .handle(setLoggingEnv(ProcessingPhase.START))//
                                 .handle((payload, headers) -> {
-                                    final FileMetadata fileMetadata = FILE_METADATA.getNonNull(headers);
-                                    processingState.start(fileMetadata);
+                                    final FileReference file = FILE_REFERENCE.getNonNull(headers);
+                                    processingState.start(file);
                                     final LoggingContext loggingContext = getLoggingContext(headers);
-                                    loggingContext.enterFile(fileMetadata.getFileReference());
+                                    loggingContext.enterFile(file);
                                     LOGGER.info("Start processing <{}>", loggingContext);
                                     return payload;
                                 })//
+                                .enrichHeaders(spec -> spec//
+                                        .headerFunction(FILE_METADATA.getName(), message -> createFileMetadata(message, fileConfig)))//
                                 .handle(unsetLoggingEnv())//
                                 .channel(processingChannel)//
                                 .get()//
