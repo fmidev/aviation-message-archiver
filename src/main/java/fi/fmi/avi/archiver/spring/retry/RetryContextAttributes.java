@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver.database;
+package fi.fmi.avi.archiver.spring.retry;
 
 import static java.util.Objects.requireNonNull;
 

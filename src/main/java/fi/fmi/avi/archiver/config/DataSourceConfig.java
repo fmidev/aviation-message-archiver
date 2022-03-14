@@ -20,8 +20,8 @@ import org.springframework.retry.support.RetryTemplateBuilder;
 
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.database.DatabaseService;
-import fi.fmi.avi.archiver.database.RetryContextAttributes;
 import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
+import fi.fmi.avi.archiver.spring.retry.RetryContextAttributes;
 
 @Configuration
 public class DataSourceConfig {
@@ -71,32 +71,33 @@ public class DataSourceConfig {
         retryTemplateBuilder.customBackoff(backOffPolicy);
         retryTemplateBuilder.notRetryOn(NonTransientDataAccessException.class);
 
-        retryTemplateBuilder.withListener(new RetryListenerSupport() {
-            @Override
-            public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
-                super.close(context, callback, throwable);
-                final int retryCount = context.getRetryCount();
-                if (retryCount > 0 && throwable != null && !NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
-                    LOGGER.error("Database operation retry attempts ({}) exhausted while processing <{}>.", retryCount,
-                            RetryContextAttributes.getLoggingContext(context));
-                }
-            }
-
-            @Override
-            public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
-                super.onError(context, callback, throwable);
-                final ReadableLoggingContext loggingContext = RetryContextAttributes.getLoggingContext(context);
-                if (!NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
-                    LOGGER.error("Database operation failed while processing <{}>. Retry attempt {}.", loggingContext, context.getRetryCount(), throwable);
-                } else if (throwable instanceof EmptyResultDataAccessException) {
-                    LOGGER.debug("Empty result while processing <{}>: {}", loggingContext, throwable.getMessage());
-                } else {
-                    LOGGER.error("Database operation failed while processing <{}>. Not retrying.", loggingContext, throwable);
-                }
-            }
-        });
+        retryTemplateBuilder.withListener(new RetryLogger());
 
         return retryTemplateBuilder.build();
     }
 
+    private static class RetryLogger extends RetryListenerSupport {
+        @Override
+        public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
+            super.close(context, callback, throwable);
+            final int retryCount = context.getRetryCount();
+            if (retryCount > 0 && throwable != null && !NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
+                LOGGER.error("Database operation retry attempts (total {}) exhausted while processing <{}>.", retryCount,
+                        RetryContextAttributes.getLoggingContext(context));
+            }
+        }
+
+        @Override
+        public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
+            super.onError(context, callback, throwable);
+            final ReadableLoggingContext loggingContext = RetryContextAttributes.getLoggingContext(context);
+            if (!NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
+                LOGGER.error("Database operation failed on retry attempt {} while processing <{}>.", context.getRetryCount(), loggingContext, throwable);
+            } else if (throwable instanceof EmptyResultDataAccessException) {
+                LOGGER.debug("Empty result while processing <{}>: {}", loggingContext, throwable.getMessage());
+            } else {
+                LOGGER.error("Database operation failed while processing <{}>. Not retrying.", loggingContext, throwable);
+            }
+        }
+    }
 }

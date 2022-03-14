@@ -4,16 +4,24 @@ import static java.util.Objects.requireNonNull;
 
 import java.time.Duration;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.handler.advice.RequestHandlerRetryAdvice;
+import org.springframework.integration.support.ErrorMessageUtils;
+import org.springframework.messaging.Message;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.listener.RetryListenerSupport;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.retry.support.RetryTemplateBuilder;
 
-public class RetryAdviceFactory extends RequestHandlerRetryAdvice {
+import fi.fmi.avi.archiver.config.SpringLoggingContextHelper;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
+
+public class RetryAdviceFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(RetryAdviceFactory.class);
 
     private final Duration initialInterval;
@@ -28,19 +36,32 @@ public class RetryAdviceFactory extends RequestHandlerRetryAdvice {
         this.timeout = requireNonNull(timeout, "timeout");
     }
 
-    public static RequestHandlerRetryAdvice create(final String description, final Duration initialInterval, final Duration maxInterval, final int multiplier,
-            final Duration timeout) {
+    public static RequestHandlerRetryAdvice create(final String description, final Duration initialInterval, final Duration maxInterval,
+            final int retryMultiplier, final Duration timeout) {
         requireNonNull(description, "description");
         requireNonNull(initialInterval, "initialInterval");
         requireNonNull(maxInterval, "maxInterval");
         requireNonNull(timeout, "timeout");
 
+        final RequestHandlerRetryAdvice retryAdvice = new RequestHandlerRetryAdvice();
+        final ExponentialBackOffPolicy backOffPolicy = createBackOffPolicy(initialInterval, maxInterval, retryMultiplier);
+        final RetryTemplate retryTemplate = createRetryTemplate(description, timeout, retryAdvice, backOffPolicy);
+        retryAdvice.setRetryTemplate(retryTemplate);
+        return retryAdvice;
+    }
+
+    private static ExponentialBackOffPolicy createBackOffPolicy(final Duration initialInterval, final Duration maxInterval, final int retryMultiplier) {
         final ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
         backOffPolicy.setInitialInterval(initialInterval.toMillis());
-        backOffPolicy.setMultiplier(multiplier);
+        backOffPolicy.setMultiplier(retryMultiplier);
         backOffPolicy.setMaxInterval(maxInterval.toMillis());
+        return backOffPolicy;
+    }
 
+    private static RetryTemplate createRetryTemplate(final String description, final Duration timeout, final RequestHandlerRetryAdvice retryAdvice,
+            final ExponentialBackOffPolicy backOffPolicy) {
         final RetryTemplateBuilder retryTemplateBuilder = new RetryTemplateBuilder();
+
         if (timeout.isZero()) {
             retryTemplateBuilder.infiniteRetry();
         } else {
@@ -48,29 +69,50 @@ public class RetryAdviceFactory extends RequestHandlerRetryAdvice {
         }
         retryTemplateBuilder.customBackoff(backOffPolicy);
 
-        retryTemplateBuilder.withListener(new RetryListenerSupport() {
-            @Override
-            public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
-                super.close(context, callback, throwable);
-                if (context.getRetryCount() > 0 && throwable != null) {
-                    LOGGER.error("{} retry attempts exhausted", description);
-                }
-            }
+        // retryAdvice must be the first listener for Message to be available in RetryContext.
+        retryTemplateBuilder.withListener(retryAdvice);
+        retryTemplateBuilder.withListener(new RetryLogger(description));
 
-            @Override
-            public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
-                super.onError(context, callback, throwable);
-                LOGGER.error("{} failed. Retry attempt {}", description, context.getRetryCount(), throwable);
-            }
-        });
-
-        final RequestHandlerRetryAdvice retryAdvice = new RequestHandlerRetryAdvice();
-        retryAdvice.setRetryTemplate(retryTemplateBuilder.build());
-        return retryAdvice;
+        return retryTemplateBuilder.build();
     }
 
     public RequestHandlerRetryAdvice create(final String description) {
         return create(description, initialInterval, maxInterval, retryMultiplier, timeout);
     }
-}
 
+    private static class RetryLogger extends RetryListenerSupport {
+        private final String description;
+
+        public RetryLogger(final String description) {
+            this.description = description;
+        }
+
+        @Override
+        public <T, E extends Throwable> boolean open(final RetryContext context, final RetryCallback<T, E> callback) {
+            final boolean returnValue = super.open(context, callback);
+            @Nullable
+            final Object message = context.getAttribute(ErrorMessageUtils.FAILED_MESSAGE_CONTEXT_KEY);
+            if (message instanceof Message<?>) {
+                final LoggingContext loggingContext = SpringLoggingContextHelper.getLoggingContext((Message<?>) message);
+                RetryContextAttributes.setLoggingContext(context, loggingContext);
+            }
+            return returnValue;
+        }
+
+        @Override
+        public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
+            super.close(context, callback, throwable);
+            if (context.getRetryCount() > 0 && throwable != null) {
+                LOGGER.error("{} retry attempts (total {}) exhausted while processing <{}>.", description, context.getRetryCount(),
+                        RetryContextAttributes.getLoggingContext(context));
+            }
+        }
+
+        @Override
+        public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
+            super.onError(context, callback, throwable);
+            LOGGER.error("{} failed on retry attempt {} while processing <{}>.", description, context.getRetryCount(),
+                    RetryContextAttributes.getLoggingContext(context), throwable);
+        }
+    }
+}
