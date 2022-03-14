@@ -16,6 +16,6 @@ public abstract class AbstractNoOpLoggable extends AbstractLoggable implements A
 
     @Override
     public String toString() {
-        return "[omitted]";
+        return "unavailable";
     }
 }

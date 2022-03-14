@@ -15,7 +15,7 @@ final class AbstractNoOpLoggableTest {
     @Test
     void toString_returns_default_String_when_not_overridden() {
         final AbstractNoOpLoggable loggable = new DefaultStringNoOpLoggable();
-        assertThat(loggable.toString()).isEqualTo("[omitted]");
+        assertThat(loggable.toString()).isEqualTo("unavailable");
         LoggableTests.assertAppendingLoggableContract(loggable);
     }
 
