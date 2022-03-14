@@ -11,6 +11,7 @@ import com.google.common.annotations.VisibleForTesting;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
+import fi.fmi.avi.archiver.logging.NoOpLoggable;
 import fi.fmi.avi.archiver.logging.StructuredLoggable;
 import fi.fmi.avi.archiver.logging.logback.ForwardingAppenderBase;
 import fi.fmi.avi.archiver.logging.logback.ForwardingLoggingEvent;
@@ -88,7 +89,7 @@ public class StructuredLoggableLogstashAppender extends ForwardingAppenderBase<I
                 assert argumentArray != null : "argumentArray should be non-null";
             }
             for (int i = 0; i < delegateArgumentArray.length; i++) {
-                if (delegateArgumentArray[i] instanceof StructuredLoggable) {
+                if (delegateArgumentArray[i] instanceof StructuredLoggable && !(delegateArgumentArray[i] instanceof NoOpLoggable)) {
                     final StructuredLoggable structuredLoggable = copyStructuredLoggables
                             ? ((StructuredLoggable) delegateArgumentArray[i]).readableCopy()
                             : (StructuredLoggable) delegateArgumentArray[i];

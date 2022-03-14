@@ -32,6 +32,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.logging.AbstractLoggable;
+import fi.fmi.avi.archiver.logging.AbstractNoOpLoggable;
 import fi.fmi.avi.archiver.logging.StructuredLoggable;
 import fi.fmi.avi.archiver.logging.logback.ForwardingAppenderBaseTester;
 import fi.fmi.avi.archiver.logging.logback.ForwardingLoggingEvent;
@@ -52,15 +53,24 @@ final class StructuredLoggableLogstashAppenderTest {
                 .toArray(Consumer[]::new);
     }
 
-    @AutoValue
-    static abstract class TestStructuredLoggable extends AbstractLoggable implements StructuredLoggable {
-        static TestStructuredLoggable create(final String name, final String value) {
-            return new AutoValue_StructuredLoggableLogstashAppenderTest_TestStructuredLoggable(name, value, 0);
+    interface ITestStructuredLoggable extends StructuredLoggable {
+        @Override
+        default int estimateLogStringLength() {
+            return toString().length();
         }
 
         @Override
-        public int estimateLogStringLength() {
-            return toString().length();
+        String getStructureName();
+
+        String getValue();
+
+        int getGeneration();
+    }
+
+    @AutoValue
+    static abstract class TestStructuredLoggable extends AbstractLoggable implements ITestStructuredLoggable {
+        static TestStructuredLoggable create(final String name, final String value) {
+            return new AutoValue_StructuredLoggableLogstashAppenderTest_TestStructuredLoggable(name, value, 0);
         }
 
         @Override
@@ -68,12 +78,18 @@ final class StructuredLoggableLogstashAppenderTest {
             return new AutoValue_StructuredLoggableLogstashAppenderTest_TestStructuredLoggable(getStructureName(), getValue(), getGeneration() + 1);
         }
 
+    }
+
+    @AutoValue
+    static abstract class TestStructuredNoOpLoggable extends AbstractNoOpLoggable implements ITestStructuredLoggable {
+        static TestStructuredNoOpLoggable create(final String name, final String value) {
+            return new AutoValue_StructuredLoggableLogstashAppenderTest_TestStructuredNoOpLoggable(name, value, 0);
+        }
+
         @Override
-        public abstract String getStructureName();
-
-        public abstract String getValue();
-
-        public abstract int getGeneration();
+        public StructuredLoggable readableCopy() {
+            return new AutoValue_StructuredLoggableLogstashAppenderTest_TestStructuredNoOpLoggable(getStructureName(), getValue(), getGeneration() + 1);
+        }
     }
 
     @Nested
@@ -222,6 +238,30 @@ final class StructuredLoggableLogstashAppenderTest {
             final Object[] expectedArgs = new Object[] { //
                     "string arg", //
                     StructuredArguments.keyValue("struct1", structured1), //
+                    StructuredArguments.keyValue("struct2", structured2), //
+                    3, //
+            };
+            assertThat(result).isEqualTo(expectedArgs);
+        }
+
+        @Test
+        void getArgumentArray_returns_argumentArray_with_StructuredLoggables_implementing_NoOpLoggable_not_wrapped() {
+            final StructuredLoggable structuredNoOp = TestStructuredNoOpLoggable.create("structNoOp", "structured value no-op");
+            initialArgs = new Object[] { //
+                    "string arg", //
+                    structured1, //
+                    structuredNoOp, //
+                    structured2, //
+                    3, //
+            };
+            when(delegate.getArgumentArray()).thenReturn(initialArgs);
+
+            final Object[] result = loggingEvent.getArgumentArray();
+
+            final Object[] expectedArgs = new Object[] { //
+                    "string arg", //
+                    StructuredArguments.keyValue("struct1", structured1), //
+                    structuredNoOp, //
                     StructuredArguments.keyValue("struct2", structured2), //
                     3, //
             };
