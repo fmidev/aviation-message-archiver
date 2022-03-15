@@ -11,5 +11,7 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
         super.setUp();
 
         ignoreClasses(GeneratedClasses::isKnownGenerated);
+
+        setDefault(GenericStructuredLoggable.class, GenericStructuredLoggable.loggableValue("struct", (Void) null));
     }
 }
