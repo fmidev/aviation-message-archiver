@@ -341,7 +341,7 @@ public class FileParser {
         public abstract boolean getParseErrors();
 
         public static class Builder extends FileParser_FileParseResult_Builder {
-            public Builder() {
+            Builder() {
                 setParseErrors(false);
             }
         }

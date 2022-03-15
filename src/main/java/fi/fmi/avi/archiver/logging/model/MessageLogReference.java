@@ -20,6 +20,9 @@ public abstract class MessageLogReference extends AbstractMemoizingStructuredLog
     private static final int MESSAGE_INDEX_LENGTH_ESTIMATE = 4;
     private static final int EXCERPT_MAX_LENGTH = 42;
 
+    MessageLogReference() {
+    }
+
     public static Builder builder() {
         return new Builder();
     }

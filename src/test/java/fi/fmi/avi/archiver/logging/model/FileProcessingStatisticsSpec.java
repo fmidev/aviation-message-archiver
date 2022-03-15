@@ -19,6 +19,9 @@ public abstract class FileProcessingStatisticsSpec {
             .setString("M{T:0} B{T:0} F{N}")//
             .build();
 
+    FileProcessingStatisticsSpec() {
+    }
+
     public static Builder builder() {
         return new Builder();
     }

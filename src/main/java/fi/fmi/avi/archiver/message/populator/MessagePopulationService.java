@@ -67,6 +67,9 @@ public class MessagePopulationService {
 
     @FreeBuilder
     public static abstract class PopulationResult {
+        PopulationResult() {
+        }
+
         public static Builder builder() {
             return new Builder();
         }

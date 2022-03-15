@@ -4,6 +4,9 @@ import org.inferred.freebuilder.FreeBuilder;
 
 @FreeBuilder
 public abstract class MessagePopulatingContextImpl implements MessagePopulatingContext {
+    MessagePopulatingContextImpl() {
+    }
+
     public static Builder builder() {
         return new Builder();
     }

@@ -8,6 +8,9 @@ import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
 
 @AutoValue
 public abstract class TestMessagePopulatingContext implements MessagePopulatingContext {
+    TestMessagePopulatingContext() {
+    }
+
     public static TestMessagePopulatingContext create(final InputAviationMessage inputAviationMessage) {
         return new AutoValue_TestMessagePopulatingContext(inputAviationMessage);
     }

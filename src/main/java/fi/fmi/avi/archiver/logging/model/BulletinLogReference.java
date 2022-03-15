@@ -17,6 +17,9 @@ public abstract class BulletinLogReference extends AbstractMemoizingStructuredLo
     private static final int BULLETIN_INDEX_LENGTH_ESTIMATE = 3;
     private static final int CHAR_INDEX_LENGTH_ESTIMATE = 7;
 
+    BulletinLogReference() {
+    }
+
     public static Builder builder() {
         return new Builder();
     }

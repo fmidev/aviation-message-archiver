@@ -8,6 +8,9 @@ import com.google.auto.value.AutoValue;
 
 @AutoValue
 public abstract class ImmutableFileProcessingStatistics extends AbstractFileProcessingStatistics {
+    ImmutableFileProcessingStatistics() {
+    }
+
     public static ImmutableFileProcessingStatistics create(final ProcessingResult file, final ResultStatistics bulletin, final ResultStatistics message) {
         return new AutoValue_ImmutableFileProcessingStatistics(requireNonNull(file, "file"),
                 ImmutableResultStatistics.copyOf(requireNonNull(bulletin, "bulletin")), ImmutableResultStatistics.copyOf(requireNonNull(message, "message")));
