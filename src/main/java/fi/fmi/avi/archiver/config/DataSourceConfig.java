@@ -1,5 +1,7 @@
 package fi.fmi.avi.archiver.config;
 
+import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
+
 import java.time.Clock;
 import java.time.Duration;
 
@@ -82,7 +84,7 @@ public class DataSourceConfig {
             super.close(context, callback, throwable);
             final int retryCount = context.getRetryCount();
             if (retryCount > 0 && throwable != null && !NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
-                LOGGER.error("Database operation retry attempts (total {}) exhausted while processing <{}>.", retryCount,
+                LOGGER.error("Database operation retry attempts (total {}) exhausted while processing <{}>.", loggableValue("retryCount", retryCount),
                         RetryContextAttributes.getLoggingContext(context));
             }
         }
@@ -92,7 +94,8 @@ public class DataSourceConfig {
             super.onError(context, callback, throwable);
             final ReadableLoggingContext loggingContext = RetryContextAttributes.getLoggingContext(context);
             if (!NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
-                LOGGER.error("Database operation failed on retry attempt {} while processing <{}>.", context.getRetryCount(), loggingContext, throwable);
+                LOGGER.error("Database operation failed on retry attempt {} while processing <{}>.", loggableValue("retryCount", context.getRetryCount()),
+                        loggingContext, throwable);
             } else if (throwable instanceof EmptyResultDataAccessException) {
                 LOGGER.debug("Empty result while processing <{}>: {}", loggingContext, throwable.getMessage());
             } else {

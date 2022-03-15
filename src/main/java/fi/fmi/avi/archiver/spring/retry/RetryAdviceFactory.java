@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.spring.retry;
 
+import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
 import static java.util.Objects.requireNonNull;
 
 import java.time.Duration;
@@ -103,7 +104,7 @@ public class RetryAdviceFactory {
         public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
             super.close(context, callback, throwable);
             if (context.getRetryCount() > 0 && throwable != null) {
-                LOGGER.error("{} retry attempts (total {}) exhausted while processing <{}>.", description, context.getRetryCount(),
+                LOGGER.error("{} retry attempts (total {}) exhausted while processing <{}>.", description, loggableValue("retryCount", context.getRetryCount()),
                         RetryContextAttributes.getLoggingContext(context));
             }
         }
@@ -111,7 +112,7 @@ public class RetryAdviceFactory {
         @Override
         public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
             super.onError(context, callback, throwable);
-            LOGGER.error("{} failed on retry attempt {} while processing <{}>.", description, context.getRetryCount(),
+            LOGGER.error("{} failed on retry attempt {} while processing <{}>.", description, loggableValue("retryCount", context.getRetryCount()),
                     RetryContextAttributes.getLoggingContext(context), throwable);
         }
     }
