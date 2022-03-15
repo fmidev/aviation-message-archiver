@@ -1,7 +1,8 @@
 package fi.fmi.avi.archiver.message;
 
-public enum ProcessingResult {
+import fi.fmi.avi.archiver.logging.StructuredLoggable;
 
+public enum ProcessingResult implements StructuredLoggable {
     OK(0),
     UNKNOWN_STATION_ICAO_CODE(1),
     MESSAGE_TIME_IN_FUTURE(2),
@@ -12,7 +13,7 @@ public enum ProcessingResult {
 
     private final int code;
 
-    ProcessingResult(int code) {
+    ProcessingResult(final int code) {
         this.code = code;
     }
 
@@ -20,4 +21,18 @@ public enum ProcessingResult {
         return code;
     }
 
+    @Override
+    public int estimateLogStringLength() {
+        return toString().length();
+    }
+
+    @Override
+    public StructuredLoggable readableCopy() {
+        return this;
+    }
+
+    @Override
+    public String getStructureName() {
+        return "rejectReason";
+    }
 }
