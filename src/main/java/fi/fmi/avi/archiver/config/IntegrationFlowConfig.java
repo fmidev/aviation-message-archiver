@@ -3,6 +3,7 @@ package fi.fmi.avi.archiver.config;
 import static fi.fmi.avi.archiver.config.SpringLoggingContextHelper.getLoggingContext;
 import static fi.fmi.avi.archiver.config.SpringLoggingContextHelper.withLoggingContext;
 import static fi.fmi.avi.archiver.config.SpringLoggingContextHelper.withPayloadAndLoggingContext;
+import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggable;
 import static java.util.Objects.requireNonNull;
 
 import java.io.File;
@@ -64,6 +65,7 @@ import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.logging.GenericStructuredLoggable;
 import fi.fmi.avi.archiver.logging.model.BulletinLogReference;
 import fi.fmi.avi.archiver.logging.model.FileProcessingStatistics;
 import fi.fmi.avi.archiver.logging.model.FileProcessingStatisticsImpl;
@@ -82,13 +84,16 @@ import fi.fmi.avi.archiver.spring.retry.RetryAdviceFactory;
 public class IntegrationFlowConfig {
     public static final MessageHeaderReference<FileReference> FILE_REFERENCE = MessageHeaderReference.simpleNameOf(FileReference.class);
     public static final MessageHeaderReference<FileMetadata> FILE_METADATA = MessageHeaderReference.simpleNameOf(FileMetadata.class);
-    public static final MessageHeaderReference<Boolean> PROCESSING_ERRORS = MessageHeaderReference.of("processingErrors", Boolean.class);
+    public static final MessageHeaderReference<Boolean> PROCESSING_ERRORS = MessageHeaderReference.of("ProcessingErrors", Boolean.class);
     public static final MessageHeaderReference<FileProcessingIdentifier> PROCESSING_IDENTIFIER = MessageHeaderReference.simpleNameOf(
             FileProcessingIdentifier.class);
     public static final MessageHeaderReference<String> FILENAME = MessageHeaderReference.of(FileHeaders.FILENAME, String.class);
     public static final MessageHeaderReference<File> ORIGINAL_FILE = MessageHeaderReference.of(FileHeaders.ORIGINAL_FILE, File.class);
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IntegrationFlowConfig.class);
+    private static final String PROCESSING_ERRORS_LOGGABLE = "processingErrors";
+    private static final GenericStructuredLoggable<Boolean> PROCESSING_ERRORS_TRUE = loggable(PROCESSING_ERRORS_LOGGABLE, true, "with errors");
+    private static final GenericStructuredLoggable<Boolean> PROCESSING_ERRORS_FALSE = loggable(PROCESSING_ERRORS_LOGGABLE, false, "successfully");
 
     private static final List<String> LOGGING_ENV_MDC_KEYS = ImmutableList.of(//
             FileProcessingIdentifier.newInstance().getStructureName(), //
@@ -174,8 +179,8 @@ public class IntegrationFlowConfig {
     private Object logFinish(final Object payload, final MessageHeaders headers) {
         final LoggingContext loggingContext = getLoggingContext(headers);
         loggingContext.leaveBulletin();
-        LOGGER.info("Finish processing <{}> {}. Statistics: {}", loggingContext, hasProcessingErrors(headers) ? "with errors" : "successfully",
-                loggingContext.getStatistics());
+        LOGGER.info("Finish processing <{}> {}. Statistics: {}", loggingContext,
+                hasProcessingErrors(headers) ? PROCESSING_ERRORS_TRUE : PROCESSING_ERRORS_FALSE, loggingContext.getStatistics());
         return payload;
     }
 
