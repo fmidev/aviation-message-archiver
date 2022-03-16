@@ -1,9 +1,12 @@
 package fi.fmi.avi.archiver.config;
 
 import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
+import static fi.fmi.avi.archiver.spring.retry.RetryContextAttributes.getLoggingContext;
 
 import java.time.Clock;
 import java.time.Duration;
+
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,14 +25,9 @@ import org.springframework.retry.support.RetryTemplateBuilder;
 
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.database.DatabaseService;
-import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
-import fi.fmi.avi.archiver.spring.retry.RetryContextAttributes;
 
 @Configuration
 public class DataSourceConfig {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceConfig.class);
-
     @Bean
     DatabaseAccess databaseAccess(final NamedParameterJdbcTemplate jdbcTemplate, final Clock clock, final RetryTemplate databaseAccessRetryTemplate,
             @Value("${datasource.schema}") final String schema) {
@@ -78,28 +76,38 @@ public class DataSourceConfig {
         return retryTemplateBuilder.build();
     }
 
-    private static class RetryLogger extends RetryListenerSupport {
+    private static final class RetryLogger extends RetryListenerSupport {
+        // When making changes to this class, check if equivalent changes are also needed in
+        // fi.fmi.avi.archiver.spring.retry.RetryAdviceFactory.RetryLogger
+
+        private static final Logger LOGGER = LoggerFactory.getLogger(RetryLogger.class);
+        private static final String RETRY_COUNT_NAME = "retryCount";
+        private static final String DESCRIPTION = "Database operation";
+
         @Override
-        public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
+        public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, @Nullable final Throwable throwable) {
             super.close(context, callback, throwable);
             final int retryCount = context.getRetryCount();
-            if (retryCount > 0 && throwable != null && !NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
-                LOGGER.error("Database operation retry attempts (total {}) exhausted while processing <{}>.", loggableValue("retryCount", retryCount),
-                        RetryContextAttributes.getLoggingContext(context));
+            if (retryCount > 0) {
+                if (throwable == null) {
+                    LOGGER.info("{} attempt {} succeeded on <{}>.", DESCRIPTION, loggableValue(RETRY_COUNT_NAME, retryCount + 1), getLoggingContext(context));
+                } else if (!NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
+                    LOGGER.error("{} attempts (total {}) exhausted on <{}>.", DESCRIPTION, loggableValue(RETRY_COUNT_NAME, retryCount),
+                            getLoggingContext(context));
+                }
             }
         }
 
         @Override
         public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
             super.onError(context, callback, throwable);
-            final ReadableLoggingContext loggingContext = RetryContextAttributes.getLoggingContext(context);
             if (!NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
-                LOGGER.error("Database operation failed on retry attempt {} while processing <{}>.", loggableValue("retryCount", context.getRetryCount()),
-                        loggingContext, throwable);
+                LOGGER.error("{} failed on attempt {} on <{}>. Retrying.", DESCRIPTION, loggableValue(RETRY_COUNT_NAME, context.getRetryCount()),
+                        getLoggingContext(context), throwable);
             } else if (throwable instanceof EmptyResultDataAccessException) {
-                LOGGER.debug("Empty result while processing <{}>: {}", loggingContext, throwable.getMessage());
+                LOGGER.debug("{} returned empty result on <{}>: {};  Not retrying.", DESCRIPTION, getLoggingContext(context), throwable.getMessage());
             } else {
-                LOGGER.error("Database operation failed while processing <{}>. Not retrying.", loggingContext, throwable);
+                LOGGER.error("{} failed on <{}>. Not retrying.", DESCRIPTION, getLoggingContext(context), throwable);
             }
         }
     }
