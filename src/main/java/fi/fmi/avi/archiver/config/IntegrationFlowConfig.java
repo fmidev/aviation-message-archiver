@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
@@ -103,17 +104,25 @@ public class IntegrationFlowConfig {
         return PROCESSING_ERRORS.getOptional(headers).orElse(false);
     }
 
-    private static GenericHandler<?> setLoggingEnv(final ProcessingPhase processingPhase) {
+    private static GenericHandler<?> loggingEnvSetter(final ProcessingPhase processingPhase) {
         return (payload, headers) -> {
-            PROCESSING_IDENTIFIER.getOptional(headers)//
-                    .ifPresent(SLF4JLoggables::putMDC);
-            SLF4JLoggables.putMDC(processingPhase);
+            setLoggingEnv(headers, processingPhase);
             return payload;
         };
     }
 
-    private static GenericHandler<Object> unsetLoggingEnv() {
-        return ServiceActivators.execute(() -> LOGGING_ENV_MDC_KEYS.forEach(MDC::remove));
+    private static GenericHandler<?> loggingEnvCleaner() {
+        return ServiceActivators.execute(IntegrationFlowConfig::unsetLoggingEnv);
+    }
+
+    private static void setLoggingEnv(final MessageHeaders headers, final ProcessingPhase processingPhase) {
+        PROCESSING_IDENTIFIER.getOptional(headers)//
+                .ifPresent(SLF4JLoggables::putMDC);
+        SLF4JLoggables.putMDC(processingPhase);
+    }
+
+    private static void unsetLoggingEnv() {
+        LOGGING_ENV_MDC_KEYS.forEach(MDC::remove);
     }
 
     @Bean
@@ -123,24 +132,24 @@ public class IntegrationFlowConfig {
             final MessageChannel processingChannel, final MessageChannel parserChannel, final MessageChannel populatorChannel,
             final MessageChannel databaseChannel, final MessageChannel archiveChannel, final MessageChannel successChannel, final MessageChannel failChannel) {
         return IntegrationFlows.from(processingChannel)
-                .handle(setLoggingEnv(ProcessingPhase.READ))
+                .handle(loggingEnvSetter(ProcessingPhase.READ))
                 .transform(fileToStringTransformer, spec -> spec.advice(fileReadingRetryAdvice))
-                .handle(unsetLoggingEnv())
+                .handle(loggingEnvCleaner())
                 .channel(parserChannel)
-                .handle(setLoggingEnv(ProcessingPhase.PARSE))
+                .handle(loggingEnvSetter(ProcessingPhase.PARSE))
                 .<String> filter(content -> content != null && !content.isEmpty(), discards -> discards.discardChannel(failChannel))
                 .handle(fileParserIntegrationService::parse)
                 .handle(withLoggingContext(this::loggingActionsAfterParse))
                 .<List<InputAviationMessage>> filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))
-                .handle(unsetLoggingEnv())
+                .handle(loggingEnvCleaner())
                 .channel(populatorChannel)
-                .handle(setLoggingEnv(ProcessingPhase.POPULATE))
+                .handle(loggingEnvSetter(ProcessingPhase.POPULATE))
                 .handle(messagePopulationIntegrationService::populateMessages)
-                .handle(unsetLoggingEnv())
+                .handle(loggingEnvCleaner())
                 .channel(databaseChannel)
-                .handle(setLoggingEnv(ProcessingPhase.STORE))
+                .handle(loggingEnvSetter(ProcessingPhase.STORE))
                 .handle(withPayloadAndLoggingContext(databaseService::insertMessages))
-                .handle(unsetLoggingEnv())
+                .handle(loggingEnvCleaner())
                 .channel(archiveChannel)
                 .route(Message.class, message -> hasProcessingErrors(message.getHeaders()), spec -> spec//
                         .channelMapping(false, successChannel)//
@@ -169,10 +178,10 @@ public class IntegrationFlowConfig {
     @Bean
     IntegrationFlow finishFlow(final ProcessingState processingState, final MessageChannel finishChannel) {
         return IntegrationFlows.from(finishChannel)//
-                .handle(setLoggingEnv(ProcessingPhase.FINISH))//
+                .handle(loggingEnvSetter(ProcessingPhase.FINISH))//
                 .handle(ServiceActivators.peekHeader(FILE_REFERENCE, processingState::finish))//
                 .handle(this::logFinish)//
-                .handle(unsetLoggingEnv())//
+                .handle(loggingEnvCleaner())//
                 .nullChannel();
     }
 
@@ -189,9 +198,11 @@ public class IntegrationFlowConfig {
             @SuppressWarnings("rawtypes") final GenericTransformer<Message, File> headerToFileTransformer,
             @SuppressWarnings("rawtypes") final GenericTransformer<Message, Message> errorMessageToOriginalTransformer) {
         return IntegrationFlows.from(errorMessageChannel)//
+                .handle(loggingEnvSetter(ProcessingPhase.FAIL))//
                 .transform(Message.class, errorMessageToOriginalTransformer)//
                 .transform(Message.class, headerToFileTransformer)//
                 .enrichHeaders(spec -> spec.header(PROCESSING_ERRORS.getName(), true, true))//
+                .handle(loggingEnvCleaner())//
                 .channel(failChannel)//
                 .get();
     }
@@ -200,8 +211,10 @@ public class IntegrationFlowConfig {
     IntegrationFlow errorLoggingFlow(final MessageChannel errorLoggingChannel, final MessageChannel finishChannel,
             @SuppressWarnings("rawtypes") final GenericTransformer<Message, Message> errorMessageToOriginalTransformer) {
         return IntegrationFlows.from(errorLoggingChannel)//
+                .handle(loggingEnvSetter(ProcessingPhase.FAIL))//
                 .transform(Message.class, errorMessageToOriginalTransformer)//
                 .enrichHeaders(spec -> spec.header(PROCESSING_ERRORS.getName(), true, true))//
+                .handle(loggingEnvCleaner())//
                 .channel(finishChannel)//
                 .get();
     }
@@ -289,7 +302,11 @@ public class IntegrationFlowConfig {
                         throwable);
                 failedMessage = null;
             }
+            if (failedMessage != null) {
+                setLoggingEnv(failedMessage.getHeaders(), ProcessingPhase.FAIL);
+            }
             final LoggingContext loggingContext = getLoggingContext(failedMessage);
+            @Nullable
             final Throwable errorToLog = throwable instanceof MessagingException ? throwable.getCause() : throwable;
             LOGGER.error("Error while processing <{}>: {}", loggingContext, errorToLog == null ? "" : errorToLog.getMessage(), errorToLog);
             loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
@@ -388,7 +405,7 @@ public class IntegrationFlowConfig {
                                                 message -> FileReference.create(product.getId(), FILENAME.getNonNull(message.getHeaders())))
                                         .headerFunction(PROCESSING_IDENTIFIER.getName(), message -> FileProcessingIdentifier.newInstance())//
                                         .headerFunction(SpringLoggingContextHelper.HEADER.getName(), message -> createLoggingContext()))//
-                                .handle(setLoggingEnv(ProcessingPhase.START))//
+                                .handle(loggingEnvSetter(ProcessingPhase.START))//
                                 .handle((payload, headers) -> {
                                     final FileReference file = FILE_REFERENCE.getNonNull(headers);
                                     processingState.start(file);
@@ -399,7 +416,7 @@ public class IntegrationFlowConfig {
                                 })//
                                 .enrichHeaders(spec -> spec//
                                         .headerFunction(FILE_METADATA.getName(), message -> createFileMetadata(message, fileConfig)))//
-                                .handle(unsetLoggingEnv())//
+                                .handle(loggingEnvCleaner())//
                                 .channel(processingChannel)//
                                 .get()//
                         ));
@@ -408,22 +425,22 @@ public class IntegrationFlowConfig {
                 final GenericSelector<Message> productFilter = m -> Objects.equals(m.getHeaders().get(PRODUCT_KEY), product);
 
                 registerIntegrationFlow(IntegrationFlows.from(successChannel)//
-                        .handle(setLoggingEnv(ProcessingPhase.SUCCESS))//
+                        .handle(loggingEnvSetter(ProcessingPhase.SUCCESS))//
                         .filter(Message.class, productFilter)//
                         .transform(Message.class, headerToFileTransformer)//
                         .handle(createArchiveHandler(product.getArchiveDir()))//
                         .handle(withLoggingContext(loggingContext -> LOGGER.debug("Moved <{}> to '{}'.", loggingContext, product.getArchiveDir())))//
-                        .handle(unsetLoggingEnv())//
+                        .handle(loggingEnvCleaner())//
                         .channel(finishChannel)//
                         .get());
 
                 registerIntegrationFlow(IntegrationFlows.from(failChannel)//
-                        .handle(setLoggingEnv(ProcessingPhase.FAIL))//
+                        .handle(loggingEnvSetter(ProcessingPhase.FAIL))//
                         .filter(Message.class, productFilter)//
                         .transform(Message.class, headerToFileTransformer)//
                         .handle(createFailHandler(product.getFailDir()))//
                         .handle(withLoggingContext(loggingContext -> LOGGER.debug("Moved <{}> to '{}'.", loggingContext, product.getFailDir())))//
-                        .handle(unsetLoggingEnv())//
+                        .handle(loggingEnvCleaner())//
                         .channel(finishChannel)//
                         .get());
             });
