@@ -111,7 +111,7 @@ public class DataSourceConfig {
                             throwable);
                 }
             } else {
-                LOGGER.error("Database operation '{}' failed on attempt {} with <{}>. Retrying.", DATABASE_OPERATION.get(context),
+                LOGGER.warn("Database operation '{}' failed on attempt {} with <{}>. Retrying.", DATABASE_OPERATION.get(context),
                         loggableValue(RETRY_COUNT_LOGNAME, context.getRetryCount()), LOGGING_CONTEXT.get(context), throwable);
             }
         }

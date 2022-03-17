@@ -123,7 +123,7 @@ public class RetryAdviceFactory {
         @Override
         public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
             super.onError(context, callback, throwable);
-            LOGGER.error("{} failed on attempt {} with <{}>. Retrying.", description, loggableValue(RETRY_COUNT_LOGNAME, context.getRetryCount()),
+            LOGGER.warn("{} failed on attempt {} with <{}>. Retrying.", description, loggableValue(RETRY_COUNT_LOGNAME, context.getRetryCount()),
                     LOGGING_CONTEXT.get(context), throwable);
         }
     }
