@@ -1,7 +1,9 @@
 package fi.fmi.avi.archiver.config;
 
 import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
-import static fi.fmi.avi.archiver.spring.retry.RetryContextAttributes.getLoggingContext;
+import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.DATABASE_OPERATION;
+import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.LOGGING_CONTEXT;
+import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.RETRY_COUNT_LOGNAME;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -81,8 +83,6 @@ public class DataSourceConfig {
         // fi.fmi.avi.archiver.spring.retry.RetryAdviceFactory.RetryLogger
 
         private static final Logger LOGGER = LoggerFactory.getLogger(RetryLogger.class);
-        private static final String RETRY_COUNT_NAME = "retryCount";
-        private static final String DESCRIPTION = "Database operation";
 
         @Override
         public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, @Nullable final Throwable throwable) {
@@ -90,10 +90,11 @@ public class DataSourceConfig {
             final int retryCount = context.getRetryCount();
             if (retryCount > 0) {
                 if (throwable == null) {
-                    LOGGER.info("{} attempt {} succeeded on <{}>.", DESCRIPTION, loggableValue(RETRY_COUNT_NAME, retryCount + 1), getLoggingContext(context));
+                    LOGGER.info("Database operation '{}' attempt {} succeeded with <{}>.", DATABASE_OPERATION.get(context),
+                            loggableValue(RETRY_COUNT_LOGNAME, retryCount + 1), LOGGING_CONTEXT.get(context));
                 } else if (!NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
-                    LOGGER.error("{} attempts (total {}) exhausted on <{}>.", DESCRIPTION, loggableValue(RETRY_COUNT_NAME, retryCount),
-                            getLoggingContext(context));
+                    LOGGER.error("Database operation '{}' attempts (total {}) exhausted with <{}>.", DATABASE_OPERATION.get(context),
+                            loggableValue(RETRY_COUNT_LOGNAME, retryCount), LOGGING_CONTEXT.get(context));
                 }
             }
         }
@@ -101,13 +102,17 @@ public class DataSourceConfig {
         @Override
         public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
             super.onError(context, callback, throwable);
-            if (!NonTransientDataAccessException.class.isAssignableFrom(throwable.getClass())) {
-                LOGGER.error("{} failed on attempt {} on <{}>. Retrying.", DESCRIPTION, loggableValue(RETRY_COUNT_NAME, context.getRetryCount()),
-                        getLoggingContext(context), throwable);
-            } else if (throwable instanceof EmptyResultDataAccessException) {
-                LOGGER.debug("{} returned empty result on <{}>: {};  Not retrying.", DESCRIPTION, getLoggingContext(context), throwable.getMessage());
+            if (throwable instanceof NonTransientDataAccessException) {
+                if (throwable instanceof EmptyResultDataAccessException) {
+                    LOGGER.debug("Database operation '{}' returned empty result with <{}>: {};  Not retrying.", DATABASE_OPERATION.get(context),
+                            LOGGING_CONTEXT.get(context), throwable.getMessage());
+                } else {
+                    LOGGER.error("Database operation '{}' failed with <{}>. Not retrying.", DATABASE_OPERATION.get(context), LOGGING_CONTEXT.get(context),
+                            throwable);
+                }
             } else {
-                LOGGER.error("{} failed on <{}>. Not retrying.", DESCRIPTION, getLoggingContext(context), throwable);
+                LOGGER.error("Database operation '{}' failed on attempt {} with <{}>. Retrying.", DATABASE_OPERATION.get(context),
+                        loggableValue(RETRY_COUNT_LOGNAME, context.getRetryCount()), LOGGING_CONTEXT.get(context), throwable);
             }
         }
     }

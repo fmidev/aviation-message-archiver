@@ -12,10 +12,10 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -23,7 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
-import fi.fmi.avi.archiver.spring.retry.RetryContextAttributes;
+import fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts;
 
 public class DatabaseAccess {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseAccess.class);
@@ -87,20 +87,17 @@ public class DatabaseAccess {
         parameters.addValue("station_id", archiveAviationMessage.getStationId()
                 .orElseThrow(() -> new IllegalArgumentException(String.format("Message <%s> is missing stationId.", loggingContext))));
         addCommonParameters(parameters, archiveAviationMessage);
-        try {
-            final Number id = retryTemplate.execute(context -> {
-                RetryContextAttributes.setLoggingContext(context, loggingContext);
-                return insertAviationMessage.executeAndReturnKey(parameters);
-            });
-            if (!archiveAviationMessage.getIWXXMDetails().isEmpty()) {
-                insertIwxxmDetails(id, archiveAviationMessage.getIWXXMDetails(), loggingContext);
-            }
-            LOGGER.debug("Inserted message <{}>.", loggingContext);
-            return id;
-        } catch (final RuntimeException e) {
-            LOGGER.error("Error while inserting message <{}>.", loggingContext, e);
-            throw e;
+        final Number id = retryTemplate.execute(context -> {
+            initRetryContext(context, "insert message", loggingContext);
+            return insertAviationMessage.executeAndReturnKey(parameters);
+        });
+        LOGGER.debug("Inserted message <{}> id:{}.", loggingContext, id);
+        if (archiveAviationMessage.getIWXXMDetails().isEmpty()) {
+            LOGGER.debug("Message id:{} contains no IWXXM details.", id);
+        } else {
+            insertIwxxmDetails(id, archiveAviationMessage.getIWXXMDetails(), loggingContext);
         }
+        return id;
     }
 
     /**
@@ -120,54 +117,44 @@ public class DatabaseAccess {
         parameters.addValue("icao_code", archiveAviationMessage.getStationIcaoCode())
                 .addValue("reject_reason", archiveAviationMessage.getProcessingResult().getCode());
         addCommonParameters(parameters, archiveAviationMessage);
-        try {
-            final Number id = retryTemplate.execute(context -> {
-                RetryContextAttributes.setLoggingContext(context, loggingContext);
-                return insertRejectedAviationMessage.executeAndReturnKey(parameters);
-            });
-            if (!archiveAviationMessage.getIWXXMDetails().isEmpty()) {
-                insertRejectedIwxxmDetails(id, archiveAviationMessage.getIWXXMDetails(), loggingContext);
-            }
-            LOGGER.debug("Inserted rejected message <{}>; reject reason: {}({})", loggingContext, archiveAviationMessage.getProcessingResult().getCode(),
-                    archiveAviationMessage.getProcessingResult());
-            return id;
-        } catch (final RuntimeException e) {
-            LOGGER.error("Error while inserting rejected message <{}>.", loggingContext, e);
-            throw e;
+        final Number id = retryTemplate.execute(context -> {
+            initRetryContext(context, "insert rejected message", loggingContext);
+            return insertRejectedAviationMessage.executeAndReturnKey(parameters);
+        });
+        LOGGER.debug("Inserted rejected message <{}> id:{}; reject reason: {}({})", loggingContext, id, archiveAviationMessage.getProcessingResult().getCode(),
+                archiveAviationMessage.getProcessingResult());
+        if (archiveAviationMessage.getIWXXMDetails().isEmpty()) {
+            LOGGER.debug("Rejected message id:{} contains no IWXXM details.", id);
+        } else {
+            insertRejectedIwxxmDetails(id, archiveAviationMessage.getIWXXMDetails(), loggingContext);
         }
+        return id;
     }
 
-    private int insertIwxxmDetails(final Number messageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails, final ReadableLoggingContext loggingContext) {
+    private void insertIwxxmDetails(final Number messageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails,
+            final ReadableLoggingContext loggingContext) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("message_id", messageId)
                 .addValue("collect_identifier", iwxxmDetails.getCollectIdentifier().orElse(null))
                 .addValue("iwxxm_version", iwxxmDetails.getXMLNamespace().orElse(null));
-        try {
-            return retryTemplate.execute(context -> {
-                RetryContextAttributes.setLoggingContext(context, loggingContext);
-                return insertIwxxmDetails.execute(parameters);
-            });
-        } catch (final RuntimeException e) {
-            LOGGER.error("Error while inserting IWXXM details for message id {} <{}>.", messageId, loggingContext, e);
-            throw e;
-        }
+        retryTemplate.execute(context -> {
+            initRetryContext(context, "insert IWXXM details id:" + messageId, loggingContext);
+            return insertIwxxmDetails.execute(parameters);
+        });
+        LOGGER.debug("Inserted IWXXM details of message <{}> id:{}.", loggingContext, messageId);
     }
 
-    private int insertRejectedIwxxmDetails(final Number rejectedMessageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails,
+    private void insertRejectedIwxxmDetails(final Number rejectedMessageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails,
             final ReadableLoggingContext loggingContext) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("rejected_message_id", rejectedMessageId)
                 .addValue("collect_identifier", iwxxmDetails.getCollectIdentifier().orElse(null))
                 .addValue("iwxxm_version", iwxxmDetails.getXMLNamespace().orElse(null));
-        try {
-            return retryTemplate.execute(context -> {
-                RetryContextAttributes.setLoggingContext(context, loggingContext);
-                return insertRejectedIwxxmDetails.execute(parameters);
-            });
-        } catch (final RuntimeException e) {
-            LOGGER.error("Error while inserting IWXXM details failed for rejected message id {} <{}>.", rejectedMessageId, loggingContext, e);
-            throw e;
-        }
+        retryTemplate.execute(context -> {
+            initRetryContext(context, "insert rejected IWXXM details id:" + rejectedMessageId, loggingContext);
+            return insertRejectedIwxxmDetails.execute(parameters);
+        });
+        LOGGER.debug("Inserted IWXXM details of rejected message <{}> id:{}.", loggingContext, rejectedMessageId);
     }
 
     public Optional<Integer> queryStationId(final String stationIcaoCode, final ReadableLoggingContext loggingContext) {
@@ -177,16 +164,18 @@ public class DatabaseAccess {
         parameters.addValue("icao_code", stationIcaoCode);
         try {
             final Integer stationId = retryTemplate.execute(context -> {
-                RetryContextAttributes.setLoggingContext(context, loggingContext);
+                initRetryContext(context, "query station id: " + stationIcaoCode, loggingContext);
                 return jdbcTemplate.queryForObject(stationIdQuery, parameters, Integer.class);
             });
             return Optional.ofNullable(stationId);
-        } catch (final EmptyResultDataAccessException ignored) {
-            // No station was found
         } catch (final RuntimeException e) {
-            LOGGER.error("Error while querying station id with icao airport code '{}' for <{}>.", stationIcaoCode, loggingContext, e);
+            return Optional.empty();
         }
-        return Optional.empty();
+    }
+
+    private void initRetryContext(final RetryContext context, final String databaseOperation, final ReadableLoggingContext loggingContext) {
+        ArchiverRetryContexts.DATABASE_OPERATION.set(context, databaseOperation);
+        ArchiverRetryContexts.LOGGING_CONTEXT.set(context, loggingContext);
     }
 
     private void addCommonParameters(final MapSqlParameterSource parameters, final ArchiveAviationMessage archiveAviationMessage) {

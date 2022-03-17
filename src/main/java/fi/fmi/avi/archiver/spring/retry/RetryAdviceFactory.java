@@ -1,6 +1,8 @@
 package fi.fmi.avi.archiver.spring.retry;
 
 import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
+import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.LOGGING_CONTEXT;
+import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.RETRY_COUNT_LOGNAME;
 import static java.util.Objects.requireNonNull;
 
 import java.time.Duration;
@@ -84,7 +86,6 @@ public class RetryAdviceFactory {
         // fi.fmi.avi.archiver.config.DataSourceConfig.RetryLogger
 
         private static final Logger LOGGER = LoggerFactory.getLogger(RetryLogger.class);
-        private static final String RETRY_COUNT_NAME = "retryCount";
 
         private final String description;
 
@@ -99,7 +100,7 @@ public class RetryAdviceFactory {
             final Object message = context.getAttribute(ErrorMessageUtils.FAILED_MESSAGE_CONTEXT_KEY);
             if (message instanceof Message<?>) {
                 final LoggingContext loggingContext = SpringLoggingContextHelper.getLoggingContext((Message<?>) message);
-                RetryContextAttributes.setLoggingContext(context, loggingContext);
+                LOGGING_CONTEXT.set(context, loggingContext);
             }
             return returnValue;
         }
@@ -110,11 +111,11 @@ public class RetryAdviceFactory {
             final int retryCount = context.getRetryCount();
             if (retryCount > 0) {
                 if (throwable == null) {
-                    LOGGER.info("{} attempt {} succeeded on <{}>.", description, loggableValue(RETRY_COUNT_NAME, retryCount + 1),
-                            RetryContextAttributes.getLoggingContext(context));
+                    LOGGER.info("{} attempt {} succeeded with <{}>.", description, loggableValue(RETRY_COUNT_LOGNAME, retryCount + 1),
+                            LOGGING_CONTEXT.get(context));
                 } else {
-                    LOGGER.error("{} attempts (total {}) exhausted on <{}>.", description, loggableValue(RETRY_COUNT_NAME, retryCount),
-                            RetryContextAttributes.getLoggingContext(context));
+                    LOGGER.error("{} attempts (total {}) exhausted with <{}>.", description, loggableValue(RETRY_COUNT_LOGNAME, retryCount),
+                            LOGGING_CONTEXT.get(context));
                 }
             }
         }
@@ -122,8 +123,8 @@ public class RetryAdviceFactory {
         @Override
         public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
             super.onError(context, callback, throwable);
-            LOGGER.error("{} failed on attempt {} on <{}>. Retrying.", description, loggableValue(RETRY_COUNT_NAME, context.getRetryCount()),
-                    RetryContextAttributes.getLoggingContext(context), throwable);
+            LOGGER.error("{} failed on attempt {} with <{}>. Retrying.", description, loggableValue(RETRY_COUNT_LOGNAME, context.getRetryCount()),
+                    LOGGING_CONTEXT.get(context), throwable);
         }
     }
 }
