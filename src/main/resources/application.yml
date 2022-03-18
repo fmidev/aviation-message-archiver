@@ -148,7 +148,7 @@ health-indicator:
 ##############################################
 # START SNIPPET: products
 polling:
-  delay: PT0.500S
+  delay: PT1.000S
 
 production-line-initialization:
   products:
