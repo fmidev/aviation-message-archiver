@@ -12,12 +12,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -77,6 +79,7 @@ import fi.fmi.avi.archiver.logging.slf4j.SLF4JLoggables;
 import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
 import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
 import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
+import fi.fmi.avi.archiver.spring.integration.file.filters.AnyAcceptFileListFilter;
 import fi.fmi.avi.archiver.spring.integration.file.filters.ProcessingFileListFilter;
 import fi.fmi.avi.archiver.spring.messaging.MessageHeaderReference;
 import fi.fmi.avi.archiver.spring.retry.RetryAdviceFactory;
@@ -381,7 +384,7 @@ public class IntegrationFlowConfig {
         @PostConstruct
         void initializeProductFlows() {
             aviationProducts.values().forEach(product -> {
-                final FileReadingMessageSource sourceReader = createMessageSource(product.getInputDir(), product.getId());
+                final FileReadingMessageSource sourceReader = createMessageSource(product);
                 inputReadersLifecycle.add(sourceReader);
 
                 // Separate input channel needed in order to use multiple different
@@ -465,16 +468,19 @@ public class IntegrationFlowConfig {
             integrationFlows.forEach(this::registerIntegrationFlow);
         }
 
-        private FileReadingMessageSource createMessageSource(final Path inputDir, final String productId) {
-            final FileReadingMessageSource sourceDirectory = new FileReadingMessageSource();
-            sourceDirectory.setDirectory(inputDir.toFile());
-            sourceDirectory.setFilter(createSourceFileListFilter(productId));
-            return sourceDirectory;
+        private FileReadingMessageSource createMessageSource(final AviationProduct product) {
+            final FileReadingMessageSource source = new FileReadingMessageSource();
+            source.setDirectory(product.getInputDir().toFile());
+            source.setFilter(createSourceFileListFilter(product));
+            return source;
         }
 
-        private ChainFileListFilter<File> createSourceFileListFilter(final String productId) {
-            return new ChainFileListFilter<>(ImmutableList.of(//
-                    new ProcessingFileListFilter(processingState, productId), //
+        private ChainFileListFilter<File> createSourceFileListFilter(final AviationProduct product) {
+            return new ChainFileListFilter<>(Arrays.asList(//
+                    new ProcessingFileListFilter(processingState, product.getId()), //
+                    new AnyAcceptFileListFilter<>(product.getFileConfigs().stream()//
+                            .map(fileConfig -> new RegexPatternFileListFilter(fileConfig.getPattern()))//
+                            .collect(Collectors.toList())), //
                     new AcceptUnchangedFileListFilter()));
         }
 

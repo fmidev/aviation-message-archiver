@@ -36,7 +36,8 @@ class GenericStructuredLoggableTest {
     private AutoCloseable mocks;
     private Object value;
 
-    private static GenericStructuredLoggable<Object> lazyLoggable(final String name, final Supplier<Object> valueSupplier, final Supplier<String> stringSupplier) {
+    private static GenericStructuredLoggable<Object> lazyLoggable(final String name, final Supplier<Object> valueSupplier,
+            final Supplier<String> stringSupplier) {
         return GenericStructuredLoggable.loggable(name, valueSupplier, stringSupplier);
     }
 
