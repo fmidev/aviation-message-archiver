@@ -4,8 +4,8 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.List;
 
-import fi.fmi.avi.archiver.logging.FileProcessingStatistics;
-import fi.fmi.avi.archiver.logging.LoggingContext;
+import fi.fmi.avi.archiver.logging.model.FileProcessingStatistics;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 public class DatabaseService {

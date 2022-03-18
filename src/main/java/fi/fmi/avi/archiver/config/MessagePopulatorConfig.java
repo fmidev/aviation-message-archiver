@@ -23,7 +23,7 @@ import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.config.model.PopulatorInstanceSpec;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.logging.LoggingContext;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.MessagePopulationService;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
@@ -155,7 +155,7 @@ public class MessagePopulatorConfig {
 
             return MessageBuilder.withPayload(Collections.unmodifiableList(populatedMessages))//
                     .copyHeaders(headers)//
-                    .setHeader(IntegrationFlowConfig.PROCESSING_ERRORS, IntegrationFlowConfig.hasProcessingErrors(headers) || failures)//
+                    .setHeader(IntegrationFlowConfig.PROCESSING_ERRORS.getName(), IntegrationFlowConfig.hasProcessingErrors(headers) || failures)//
                     .build();
         }
     }

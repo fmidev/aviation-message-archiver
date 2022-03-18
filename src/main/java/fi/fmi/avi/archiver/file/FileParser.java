@@ -27,10 +27,10 @@ import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import fi.fmi.avi.archiver.logging.BulletinLogReference;
-import fi.fmi.avi.archiver.logging.FileProcessingStatistics;
-import fi.fmi.avi.archiver.logging.LoggingContext;
-import fi.fmi.avi.archiver.logging.MessageLogReference;
+import fi.fmi.avi.archiver.logging.model.BulletinLogReference;
+import fi.fmi.avi.archiver.logging.model.FileProcessingStatistics;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
+import fi.fmi.avi.archiver.logging.model.MessageLogReference;
 import fi.fmi.avi.archiver.message.MessagePositionInFile;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.converter.ConversionHints;
@@ -120,8 +120,8 @@ public class FileParser {
                 for (int bulletinIndex = 0, size = parseResults.size(); bulletinIndex < size; bulletinIndex++) {
                     final GTSExchangeFileTemplate.ParseResult result = parseResults.get(bulletinIndex);
                     loggingContext.enterBulletin(BulletinLogReference.builder()//
-                            .setBulletinIndex(bulletinIndex)//
-                            .setBulletinHeading(result.getResult().map(GTSExchangeFileTemplate::getHeading))//
+                            .setIndex(bulletinIndex)//
+                            .setHeading(result.getResult().map(GTSExchangeFileTemplate::getHeading))//
                             .setCharIndex(result.getStartIndex())//
                             .build());
                     if (result.getError().isPresent()) {
@@ -147,8 +147,8 @@ public class FileParser {
                 }
                 final GTSExchangeFileTemplate template = GTSExchangeFileTemplate.parseHeadingAndTextLenient(content);
                 loggingContext.enterBulletin(BulletinLogReference.builder()//
-                        .setBulletinIndex(0)//
-                        .setBulletinHeading(template.getHeading())//
+                        .setIndex(0)//
+                        .setHeading(template.getHeading())//
                         .setCharIndex(0)//
                         .build());
                 resultBuilder.mergeFrom(parseContent(content, template, fileFormat, inputMessageTemplate, 0, loggingContext));
@@ -187,7 +187,7 @@ public class FileParser {
                 return parseBulletin(inputBuilder, template.getText().trim(), fileFormat, bulletinIndex, loggingContext);
             }
         } else {
-            loggingContext.modifyBulletinLogReference(reference -> reference.toBuilder().clearBulletinHeading().build());
+            loggingContext.modifyBulletin(reference -> reference.toBuilder().clearHeading().build());
             LOGGER.debug("{} bulletin <{}> does not contain GTS heading.", fileFormat, loggingContext);
         }
         return parseBulletin(inputBuilder, fileContent.trim(), fileFormat, bulletinIndex, loggingContext);
@@ -250,8 +250,8 @@ public class FileParser {
         for (int messageIndex = 0, size = parsedMessages.size(); messageIndex < size; messageIndex++) {
             final GenericAviationWeatherMessage message = parsedMessages.get(messageIndex);
             loggingContext.enterMessage(MessageLogReference.builder()//
-                    .setMessageIndex(messageIndex)//
-                    .setMessageContent(message.getOriginalMessage())//
+                    .setIndex(messageIndex)//
+                    .setContent(message.getOriginalMessage())//
                     .build());
             resultBuilder.addInputAviationMessages(InputAviationMessage.builder()//
                     .mergeFrom(inputBuilder)//
@@ -280,7 +280,7 @@ public class FileParser {
             if (collectIdentifier == null) {
                 LOGGER.warn("IWXXM collect document <{}> is missing bulletinIdentifier.", loggingContext);
             } else if (!inputBuilder.getGtsBulletinHeadingBuilder().getBulletinHeadingString().isPresent()) {
-                loggingContext.modifyBulletinLogReference(reference -> reference.toBuilder().setBulletinHeading(collectIdentifier).build());
+                loggingContext.modifyBulletin(reference -> reference.toBuilder().setHeading(collectIdentifier).build());
             }
 
             inputBuilder.setCollectIdentifier(InputBulletinHeading.builder()//
@@ -341,7 +341,7 @@ public class FileParser {
         public abstract boolean getParseErrors();
 
         public static class Builder extends FileParser_FileParseResult_Builder {
-            public Builder() {
+            Builder() {
                 setParseErrors(false);
             }
         }

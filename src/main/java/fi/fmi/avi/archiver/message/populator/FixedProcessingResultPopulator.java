@@ -2,7 +2,6 @@ package fi.fmi.avi.archiver.message.populator;
 
 import static java.util.Objects.requireNonNull;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 
@@ -14,8 +13,8 @@ public class FixedProcessingResultPopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
-        requireNonNull(input, "input");
+    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+        requireNonNull(context, "context");
         requireNonNull(target, "target");
         target.setProcessingResult(processingResult);
     }

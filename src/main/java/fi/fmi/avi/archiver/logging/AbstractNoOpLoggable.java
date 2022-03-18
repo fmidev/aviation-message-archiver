@@ -2,7 +2,7 @@ package fi.fmi.avi.archiver.logging;
 
 import static java.util.Objects.requireNonNull;
 
-public abstract class AbstractNoOpLoggable extends AbstractLoggable implements AppendingLoggable {
+public abstract class AbstractNoOpLoggable extends AbstractLoggable implements NoOpLoggable, AppendingLoggable {
     @Override
     public final void appendTo(final StringBuilder builder) {
         requireNonNull(builder, "builder");
@@ -16,6 +16,6 @@ public abstract class AbstractNoOpLoggable extends AbstractLoggable implements A
 
     @Override
     public String toString() {
-        return "[omitted]";
+        return "unavailable";
     }
 }

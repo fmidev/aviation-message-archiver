@@ -39,7 +39,6 @@ import fi.fmi.avi.archiver.config.IntegrationFlowConfig;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
@@ -122,9 +121,9 @@ public class DiscardingPopulatorTest {
 
     public static class DiscardingPopulator implements MessagePopulator {
         @Override
-        public void populate(final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder aviationMessageBuilder)
-                throws MessageDiscardedException {
-            final String airportIcaoCode = inputAviationMessage.getMessage()
+        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) throws MessageDiscardedException {
+            final String airportIcaoCode = context.getInputMessage()
+                    .getMessage()
                     .getLocationIndicators()
                     .get(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME);
             if (airportIcaoCode.equals("EFYY")) {

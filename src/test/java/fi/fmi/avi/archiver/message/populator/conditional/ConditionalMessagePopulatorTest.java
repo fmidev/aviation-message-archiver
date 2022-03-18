@@ -17,7 +17,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
+import fi.fmi.avi.archiver.message.populator.TestMessagePopulatingContext;
 
 @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 class ConditionalMessagePopulatorTest {
@@ -27,14 +29,14 @@ class ConditionalMessagePopulatorTest {
     private MessagePopulator delegate;
     private AutoCloseable mocks;
 
-    private InputAviationMessage input;
+    private MessagePopulatingContext context;
     private ArchiveAviationMessage.Builder target;
     private ConditionalMessagePopulator populator;
 
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
-        input = InputAviationMessage.builder().buildPartial();
+        context = TestMessagePopulatingContext.create(InputAviationMessage.builder().buildPartial());
         target = ArchiveAviationMessage.builder();
         populator = new ConditionalMessagePopulator(condition, delegate);
     }
@@ -48,18 +50,18 @@ class ConditionalMessagePopulatorTest {
     void populate_delegates_when_condition_is_true() throws MessageDiscardedException {
         when(condition.test(any(), any())).thenReturn(true);
 
-        populator.populate(input, target);
+        populator.populate(context, target);
 
-        verify(delegate).populate(input, target);
+        verify(delegate).populate(context, target);
     }
 
     @Test
     void populate_does_nothing_when_condition_is_false() throws MessageDiscardedException {
         when(condition.test(any(), any())).thenReturn(false);
 
-        populator.populate(input, target);
+        populator.populate(context, target);
 
-        verify(delegate, never()).populate(input, target);
+        verify(delegate, never()).populate(context, target);
     }
 
     @Test
@@ -72,7 +74,7 @@ class ConditionalMessagePopulatorTest {
         doThrow(initialException).when(delegate).populate(any(), any());
 
         assertThatExceptionOfType(MessageDiscardedException.class)//
-                .isThrownBy(() -> populator.populate(input, target))//
+                .isThrownBy(() -> populator.populate(context, target))//
                 .withMessageContaining(initialMessage)//
                 .withMessageContaining(conditionDescription)//
                 .withCause(initialException);

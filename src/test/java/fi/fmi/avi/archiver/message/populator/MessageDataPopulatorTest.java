@@ -43,7 +43,6 @@ import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
 import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
 
-@SuppressWarnings("UnnecessaryLocalVariable")
 class MessageDataPopulatorTest {
     private static final InputAviationMessage INPUT_MESSAGE_TEMPLATE = InputAviationMessage.builder()//
             .setFileMetadata(FileMetadata.builder()//
@@ -89,14 +88,14 @@ class MessageDataPopulatorTest {
 
     @Test
     void populates_only_mandatory_values_when_other_message_information_is_not_available() {
-        final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE;
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(INPUT_MESSAGE_TEMPLATE);
         final ArchiveAviationMessage expected = ArchiveAviationMessage.builder()//
                 .setMessage(INPUT_MESSAGE_TEMPLATE.getMessage().getOriginalMessage())//
                 .setFormat(MessagePopulatorTests.FormatId.valueOf(INPUT_MESSAGE_TEMPLATE.getMessage().getMessageFormat()).getId())//
                 .buildPartial();
 
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
-        populator.populate(inputMessage, builder);
+        populator.populate(context, builder);
         assertThat(builder.buildPartial()).isEqualTo(expected);
     }
 
@@ -108,9 +107,10 @@ class MessageDataPopulatorTest {
                         .setMessageFormat(expectedFormat.getFormat())//
                         .build())//
                 .buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
-        populator.populate(inputMessage, builder);
+        populator.populate(context, builder);
         assertThat(builder.getFormat()).isEqualTo(expectedFormat.getId());
     }
 
@@ -122,9 +122,10 @@ class MessageDataPopulatorTest {
                         .setMessageType(expectedType.getType())//
                         .build())//
                 .buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
-        populator.populate(inputMessage, builder);
+        populator.populate(context, builder);
         assertThat(builder.getType()).isEqualTo(expectedType.getId());
     }
 
@@ -143,9 +144,10 @@ class MessageDataPopulatorTest {
                                 .build())//
                         .build())//
                 .buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
-        populator.populate(inputMessage, builder);
+        populator.populate(context, builder);
         assertThat(builder.getMessageTime()).isEqualTo(expectedTime);
     }
 
@@ -161,11 +163,12 @@ class MessageDataPopulatorTest {
                         .putAllLocationIndicators(locationIndicators)//
                         .build())//
                 .buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
 
         final String initialStationIcaoCode = "NULL";
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
                 .setStationIcaoCode(initialStationIcaoCode);
-        populator.populate(inputMessage, builder);
+        populator.populate(context, builder);
         assertThat(builder.getStationIcaoCode()).isEqualTo(Optional.ofNullable(expectedStationIcaoCode).orElse(initialStationIcaoCode));
     }
 
@@ -182,12 +185,13 @@ class MessageDataPopulatorTest {
                         .putAllLocationIndicators(locationIndicators)//
                         .build())//
                 .buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
 
         final String initialStationIcaoCode = "NULL";
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
                 .setType(messageType.getId())//
                 .setStationIcaoCode(initialStationIcaoCode);
-        populator.populate(inputMessage, builder);
+        populator.populate(context, builder);
         assertThat(builder.getStationIcaoCode()).isEqualTo(Optional.ofNullable(expectedStationIcaoCode).orElse(initialStationIcaoCode));
     }
 
@@ -211,13 +215,14 @@ class MessageDataPopulatorTest {
                                 .build())//
                         .build())//
                 .buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
 
         final Instant initialValidFrom = Instant.EPOCH;
         final Instant initialValidTo = initialValidFrom.plus(1, ChronoUnit.DAYS);
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
                 .setValidFrom(initialValidFrom)//
                 .setValidTo(initialValidTo);
-        populator.populate(inputMessage, builder);
+        populator.populate(context, builder);
         assertSoftly(softly -> {
             softly.assertThat(builder.getValidFrom()).as("validFrom").hasValue(Optional.ofNullable(expectedValidFrom).orElse(initialValidFrom));
             softly.assertThat(builder.getValidTo()).as("validTo").hasValue(Optional.ofNullable(expectedValidTo).orElse(initialValidTo));
@@ -245,6 +250,7 @@ class MessageDataPopulatorTest {
                                 .build())//
                         .build())//
                 .buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
 
         final Instant initialValidFrom = Instant.EPOCH;
         final Instant initialValidTo = initialValidFrom.plus(1, ChronoUnit.DAYS);
@@ -258,7 +264,7 @@ class MessageDataPopulatorTest {
         if (initialMessageTime != null) {
             builder.setMessageTime(initialMessageTime.toInstant());
         }
-        populator.populate(inputMessage, builder);
+        populator.populate(context, builder);
         assertSoftly(softly -> {
             softly.assertThat(builder.getValidFrom()).as("validFrom").hasValue(Optional.ofNullable(expectedValidFrom).orElse(initialValidFrom));
             softly.assertThat(builder.getValidTo()).as("validTo").hasValue(Optional.ofNullable(expectedValidTo).orElse(initialValidTo));
@@ -273,9 +279,10 @@ class MessageDataPopulatorTest {
                         .setXMLNamespace(expectedNamespace)//
                         .build())//
                 .buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
-        populator.populate(inputMessage, builder);
+        populator.populate(context, builder);
         assertThat(builder.getIWXXMDetailsBuilder().getXMLNamespace()).isEqualTo(Optional.of(expectedNamespace));
     }
 
@@ -287,9 +294,10 @@ class MessageDataPopulatorTest {
                         .setOriginalMessage(expectedMessage)//
                         .build())//
                 .buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
-        populator.populate(inputMessage, builder);
+        populator.populate(context, builder);
         assertThat(builder.getMessage()).isEqualTo(expectedMessage);
     }
 

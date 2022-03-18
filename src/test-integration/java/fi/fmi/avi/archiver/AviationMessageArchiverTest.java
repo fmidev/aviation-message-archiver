@@ -983,8 +983,7 @@ class AviationMessageArchiverTest {
         }
 
         public static class Builder extends AviationMessageArchiverTest_AviationMessageArchiverTestCase_Builder {
-
-            public Builder() {
+            Builder() {
                 setExpectFail(false);
                 setUnhandled(false);
             }

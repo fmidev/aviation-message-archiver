@@ -1,14 +1,13 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import fi.fmi.avi.archiver.database.DatabaseAccess;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ProcessingResult;
+import static java.util.Objects.requireNonNull;
 
 import java.util.Optional;
 import java.util.OptionalInt;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.database.DatabaseAccess;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ProcessingResult;
 
 public class StationIdPopulator implements MessagePopulator {
 
@@ -19,16 +18,16 @@ public class StationIdPopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(InputAviationMessage inputAviationMessage, ArchiveAviationMessage.Builder aviationMessageBuilder) {
-        requireNonNull(inputAviationMessage, "inputAviationMessage");
-        requireNonNull(aviationMessageBuilder, "aviationMessageBuilder");
+    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+        requireNonNull(context, "context");
+        requireNonNull(target, "target");
 
-        final Optional<Integer> stationId = databaseAccess.queryStationId(aviationMessageBuilder.getStationIcaoCode());
+        final Optional<Integer> stationId = databaseAccess.queryStationId(target.getStationIcaoCode(), context.getLoggingContext());
         if (stationId.isPresent()) {
-            aviationMessageBuilder.setStationId(stationId.get());
+            target.setStationId(stationId.get());
         } else {
-            aviationMessageBuilder.setStationId(OptionalInt.empty());
-            aviationMessageBuilder.setProcessingResult(ProcessingResult.UNKNOWN_STATION_ICAO_CODE);
+            target.setStationId(OptionalInt.empty());
+            target.setProcessingResult(ProcessingResult.UNKNOWN_STATION_ICAO_CODE);
         }
     }
 
