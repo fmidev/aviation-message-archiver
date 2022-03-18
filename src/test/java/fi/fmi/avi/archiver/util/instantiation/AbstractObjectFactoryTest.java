@@ -17,8 +17,8 @@ import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 
 public class AbstractObjectFactoryTest {
@@ -171,7 +171,7 @@ public class AbstractObjectFactoryTest {
         }
 
         @Override
-        public void populate(final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder aviationMessageBuilder) {
+        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
             throw unexpectedInvocation();
         }
 

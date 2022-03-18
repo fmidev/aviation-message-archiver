@@ -39,6 +39,7 @@ import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.FormatId;
@@ -127,7 +128,7 @@ class ConditionalMessagePopulatorConfigTest {
                 .mutateFileMetadata(metadataBuilder -> metadataBuilder//
                         .setFileConfig(fileConfig)//
                         .setFileReference(FileReference.builder()//
-                                .setProductIdentifier(productId)//
+                                .setProductId(productId)//
                                 .setFilename(FILENAMES.get(formatId))//
                                 .build()))//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
@@ -258,7 +259,7 @@ class ConditionalMessagePopulatorConfigTest {
         }
 
         @Override
-        public void populate(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
             target.mapMessage(message -> message + "; " + content);
         }
     }
@@ -266,7 +267,7 @@ class ConditionalMessagePopulatorConfigTest {
     public static class TestProductIdentifierPropertyReader extends AbstractConditionPropertyReader<String> {
         @Override
         public String readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
-            return input.getFileMetadata().getFileReference().getProductIdentifier();
+            return input.getFileMetadata().getFileReference().getProductId();
         }
     }
 

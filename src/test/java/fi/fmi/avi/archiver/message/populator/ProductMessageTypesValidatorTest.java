@@ -1,17 +1,8 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.testing.NullPointerTester;
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ProcessingResult;
-import fi.fmi.avi.model.MessageType;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
 import java.util.Collections;
 import java.util.Map;
@@ -19,7 +10,21 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.testing.NullPointerTester;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ProcessingResult;
+import fi.fmi.avi.model.MessageType;
 
 public class ProductMessageTypesValidatorTest {
 
@@ -58,59 +63,86 @@ public class ProductMessageTypesValidatorTest {
     @Test
     void valid_speci() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.SPECI.getId());
-        productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial(), builder);
+        final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
+
+        productMessageTypesValidator.populate(context, builder);
+
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
     void valid_metar() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.METAR.getId());
-        productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial(), builder);
+        final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
+
+        productMessageTypesValidator.populate(context, builder);
+
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
     void another_product_identifier_with_taf() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.TAF.getId());
-        productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(OTHER_METADATA).buildPartial(), builder);
+        final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(OTHER_METADATA).buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
+
+        productMessageTypesValidator.populate(context, builder);
+
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
     void invalid_taf() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.TAF.getId());
-        productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial(), builder);
+        final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
+
+        productMessageTypesValidator.populate(context, builder);
+
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.FORBIDDEN_MESSAGE_TYPE);
     }
 
     @Test
     void valid_taf() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.TAF.getId());
-        productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(TAF_METADATA).buildPartial(), builder);
+        final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(TAF_METADATA).buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
+
+        productMessageTypesValidator.populate(context, builder);
+
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.OK);
     }
 
     @Test
     void invalid_type() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(-1);
-        productMessageTypesValidator.populate(InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial(), builder);
+        final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
+
+        productMessageTypesValidator.populate(context, builder);
+
         assertThat(builder.getProcessingResult()).isEqualTo(ProcessingResult.FORBIDDEN_MESSAGE_TYPE);
     }
 
     @Test
     void misconfigured_message_type() {
-        assertThatIllegalArgumentException().isThrownBy(() ->
-                new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, PRODUCTS, ImmutableMap.of(TAF_PRODUCT, Collections.singleton(new MessageType("test")))));
+        assertThatIllegalArgumentException().isThrownBy(() -> //
+                new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, PRODUCTS,
+                        ImmutableMap.of(TAF_PRODUCT, Collections.singleton(new MessageType("test")))));
 
     }
 
     @Test
     void misconfigured_product() {
-        assertThatIllegalArgumentException().isThrownBy(() ->
-                new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, PRODUCTS, ImmutableMap.of(OTHER_PRODUCT, Collections.singleton(MessageType.METAR))));
+        assertThatIllegalArgumentException().isThrownBy(() -> //
+                new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, PRODUCTS,
+                        ImmutableMap.of(OTHER_PRODUCT, Collections.singleton(MessageType.METAR))));
     }
 
     // Test nulls apart from constructor
+    @SuppressWarnings("UnstableApiUsage")
     @Test
     public void testNulls() {
         final Class<?> classUnderTest = ProductMessageTypesValidator.class;
@@ -124,6 +156,8 @@ public class ProductMessageTypesValidatorTest {
     }
 
     // Test constructor nulls
+    @SuppressWarnings("ConstantConditions")
+    @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
     @Test
     void testConstructorNulls() {
         assertThatNullPointerException().isThrownBy(() -> new ProductMessageTypesValidator(null, PRODUCTS, PRODUCT_MESSAGE_TYPES));

@@ -1,18 +1,19 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.regex.Pattern;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 public class StationIcaoCodeReplacerTest {
+    private final MessagePopulatingContext context = TestMessagePopulatingContext.create(InputAviationMessage.builder().buildPartial());
 
     private StationIcaoCodeReplacer stationIcaoCodeReplacer;
-    private final InputAviationMessage inputAviationMessage = InputAviationMessage.builder().buildPartial();
 
     @BeforeEach
     public void setUp() {
@@ -21,26 +22,23 @@ public class StationIcaoCodeReplacerTest {
 
     @Test
     void replace() {
-        final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
-                .setStationIcaoCode("YUDO");
-        stationIcaoCodeReplacer.populate(inputAviationMessage, aviationMessage);
+        final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder().setStationIcaoCode("YUDO");
+        stationIcaoCodeReplacer.populate(context, aviationMessage);
         assertThat(aviationMessage.getStationIcaoCode()).isEqualTo("XXXX");
     }
 
     @Test
     void no_match() {
-        final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
-                .setStationIcaoCode("YADO");
-        stationIcaoCodeReplacer.populate(inputAviationMessage, aviationMessage);
+        final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder().setStationIcaoCode("YADO");
+        stationIcaoCodeReplacer.populate(context, aviationMessage);
         assertThat(aviationMessage.getStationIcaoCode()).isEqualTo("YADO");
     }
 
     @Test
     void backreference_capture_group() {
         stationIcaoCodeReplacer = new StationIcaoCodeReplacer(Pattern.compile("^YU(..)$"), "XX$1");
-        final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder()
-                .setStationIcaoCode("XXDO");
-        stationIcaoCodeReplacer.populate(inputAviationMessage, aviationMessage);
+        final ArchiveAviationMessage.Builder aviationMessage = ArchiveAviationMessage.builder().setStationIcaoCode("XXDO");
+        stationIcaoCodeReplacer.populate(context, aviationMessage);
         assertThat(aviationMessage.getStationIcaoCode()).isEqualTo("XXDO");
     }
 

@@ -18,6 +18,7 @@ import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.util.GeneratedClasses;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
 
@@ -27,6 +28,9 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
     @Override
     public void setUp() throws Exception {
         super.setUp();
+
+        ignoreClasses(GeneratedClasses::isKnownGenerated);
+
         setDefault(ArchiveAviationMessage.Builder.class, ArchiveAviationMessage.builder());
         setDefault(ArchiveAviationMessage.class, ArchiveAviationMessage.builder().buildPartial());
         setDefault(Clock.class, Clock.systemUTC());

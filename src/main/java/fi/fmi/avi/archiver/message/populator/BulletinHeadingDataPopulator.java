@@ -62,38 +62,39 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final InputAviationMessage input, final ArchiveAviationMessage.Builder builder) {
-        requireNonNull(input, "input");
-        requireNonNull(builder, "builder");
+    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+        requireNonNull(context, "context");
+        requireNonNull(target, "target");
+        final InputAviationMessage input = context.getInputMessage();
         getFirstNonNullFromBulletinHeading(input, inputHeading -> inputHeading.getBulletinHeading()//
                 .map(heading -> DataTypeDesignatorT1.AVIATION_INFORMATION_IN_XML.equals(heading.getDataTypeDesignatorT1ForTAC())
                         ? GenericAviationWeatherMessage.Format.IWXXM
                         : GenericAviationWeatherMessage.Format.TAC))//
                 .map(formatIds::get)//
-                .ifPresent(builder::setFormat);
+                .ifPresent(target::setFormat);
         getFirstNonNullFromBulletinHeading(input, inputHeading -> inputHeading.getBulletinHeading()//
                 .flatMap(BulletinHeading::getExpectedContainedMessageType)//
                 .map(typeIds::get))//
-                .ifPresent(builder::setType);
+                .ifPresent(target::setType);
         getFirstNonNullFromBulletinHeading(input, inputHeading -> inputHeading.getBulletinHeading()//
                 .flatMap(heading -> helper.resolveCompleteTime(heading.getIssueTime(), input.getFileMetadata()))//
                 .map(ZonedDateTime::toInstant))//
-                .ifPresent(builder::setMessageTime);
+                .ifPresent(target::setMessageTime);
         getFirstNonNullFromBulletinHeading(input, inputHeading -> inputHeading.getBulletinHeading()//
                 .map(BulletinHeading::getLocationIndicator))//
-                .ifPresent(builder::setStationIcaoCode);
+                .ifPresent(target::setStationIcaoCode);
         input.getGtsBulletinHeading()//
                 .getBulletinHeadingString()//
-                .ifPresent(builder::setHeading);
+                .ifPresent(target::setHeading);
         getFirstNonNullFromBulletinHeading(input, inputHeading -> inputHeading.getBulletinHeading()//
                 .flatMap(heading -> heading.getType() == BulletinHeading.Type.NORMAL //
                         ? Optional.empty() //
                         : heading.getAugmentationNumber()//
                                 .map(augmentationNumber -> heading.getType().getPrefix() + String.valueOf(Character.toChars('A' + augmentationNumber - 1)))))//
-                .ifPresent(builder::setVersion);
+                .ifPresent(target::setVersion);
         input.getCollectIdentifier()//
                 .getBulletinHeadingString()//
-                .ifPresent(collectIdentifier -> builder.getIWXXMDetailsBuilder().setCollectIdentifier(collectIdentifier));
+                .ifPresent(collectIdentifier -> target.getIWXXMDetailsBuilder().setCollectIdentifier(collectIdentifier));
     }
 
     private <T> Optional<T> getFirstNonNullFromBulletinHeading(final InputAviationMessage input, final Function<InputBulletinHeading, Optional<T>> fn) {

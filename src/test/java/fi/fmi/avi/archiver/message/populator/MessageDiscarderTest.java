@@ -11,9 +11,9 @@ public class MessageDiscarderTest {
     @Test
     void populate_discards_message() {
         final MessageDiscarder messageDiscarder = new MessageDiscarder();
-        final InputAviationMessage input = InputAviationMessage.builder().buildPartial();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(InputAviationMessage.builder().buildPartial());
         final ArchiveAviationMessage.Builder target = ArchiveAviationMessage.builder();
         Assertions.assertThatExceptionOfType(MessageDiscardedException.class)//
-                .isThrownBy(() -> messageDiscarder.populate(input, target));
+                .isThrownBy(() -> messageDiscarder.populate(context, target));
     }
 }

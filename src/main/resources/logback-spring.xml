@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <include resource="fi/fmi/avi/archiver/logging/logback/defaults.xml" />
+  <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+  <springProfile name="logstash">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <timeZone>UTC</timeZone>
+      </encoder>
+    </appender>
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+      <appender-ref ref="CONSOLE" />
+    </appender>
+    <appender name="LOGGABLE" class="fi.fmi.avi.archiver.logging.logback.logstash.StructuredLoggableLogstashAppender">
+      <appender-ref ref="ASYNC" />
+    </appender>
+    <root level="warn">
+      <appender-ref ref="LOGGABLE" />
+    </root>
+  </springProfile>
+  <springProfile name="!logstash">
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+      <appender-ref ref="CONSOLE" />
+    </appender>
+    <root level="warn">
+      <appender-ref ref="ASYNC" />
+    </root>
+  </springProfile>
+  <logger name="fi.fmi.avi.archiver" level="info" />
+</configuration>

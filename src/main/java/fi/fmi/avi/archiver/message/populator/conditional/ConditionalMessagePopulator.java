@@ -2,9 +2,9 @@ package fi.fmi.avi.archiver.message.populator.conditional;
 
 import static java.util.Objects.requireNonNull;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 
 /**
@@ -20,12 +20,12 @@ public class ConditionalMessagePopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final InputAviationMessage input, final ArchiveAviationMessage.Builder builder) throws MessageDiscardedException {
-        requireNonNull(input, "input");
-        requireNonNull(builder, "builder");
-        if (condition.test(input, builder)) {
+    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) throws MessageDiscardedException {
+        requireNonNull(context, "context");
+        requireNonNull(target, "target");
+        if (condition.test(context.getInputMessage(), target)) {
             try {
-                delegate.populate(input, builder);
+                delegate.populate(context, target);
             } catch (final MessageDiscardedException e) {
                 throw new MessageDiscardedException("Discarded message satisfying <" + condition + ">: " + e.getMessage(), e);
             }

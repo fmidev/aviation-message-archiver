@@ -1,19 +1,16 @@
 package fi.fmi.avi.archiver;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.file.FileReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileReference;
+import static java.util.Objects.requireNonNull;
 
 public class ProcessingState {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessingState.class);
@@ -25,22 +22,21 @@ public class ProcessingState {
         this.clock = requireNonNull(clock, "clock");
     }
 
-    public void start(final FileMetadata file) {
+    public void start(final FileReference file) {
         requireNonNull(file, "file");
-        final Status newStatus = filesUnderProcessing.compute(file.getFileReference(),
+        final Status newStatus = filesUnderProcessing.compute(file,
                 (fileReference, status) -> status == null ? new Status(clock.millis()) : status.increaseProcessingCount());
         if (newStatus.getProcessingCount() > 1) {
-            LOGGER.warn("Starting processing of file '{}', now being processed concurrently for {} times.", file.getFileReference(),
-                    newStatus.getProcessingCount());
+            LOGGER.warn("Starting processing of file '{}', now being processed concurrently {} times.", file, newStatus.getProcessingCount());
         }
     }
 
-    public void finish(final FileMetadata file) {
+    public void finish(final FileReference file) {
         requireNonNull(file, "file");
-        if (filesUnderProcessing.containsKey(file.getFileReference())) {
-            filesUnderProcessing.computeIfPresent(file.getFileReference(), (fileReference, status) -> status.decreaseProcessingCount());
+        if (filesUnderProcessing.containsKey(file)) {
+            filesUnderProcessing.computeIfPresent(file, (fileReference, status) -> status.decreaseProcessingCount());
         } else {
-            LOGGER.warn("Attempted to finish processing of file '{}', but it is not under processing.", file.getFileReference());
+            LOGGER.warn("Attempted to finish processing of file '{}', but it is not under processing.", file);
         }
     }
 

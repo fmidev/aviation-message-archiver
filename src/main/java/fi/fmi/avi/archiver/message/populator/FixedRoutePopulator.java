@@ -5,9 +5,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
-import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 /**
@@ -26,7 +23,8 @@ public class FixedRoutePopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(@Nullable final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+        requireNonNull(context, "context");
         requireNonNull(target, "target");
         target.setRoute(route);
     }

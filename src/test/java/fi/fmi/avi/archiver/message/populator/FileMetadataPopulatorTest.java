@@ -74,12 +74,13 @@ class FileMetadataPopulatorTest {
     })
     void populates_route(final String productId, final MessagePopulatorTests.RouteId expected) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductIdentifier(productId))//
+                .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductId(productId))//
                         .setFileConfig(PRODUCTS.get(productId).getFileConfigs().get(0)))//
                 .build();
+        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
-        populator.populate(inputMessage, builder);
+        populator.populate(context, builder);
         assertThat(MessagePopulatorTests.RouteId.valueOf(builder.getRoute())).isEqualTo(expected);
     }
 
@@ -90,22 +91,23 @@ class FileMetadataPopulatorTest {
     })
     void populates_format(final String productId, final MessagePopulatorTests.FormatId expected) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
-                .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductIdentifier(productId))//
+                .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductId(productId))//
                         .setFileConfig(PRODUCTS.get(productId).getFileConfigs().get(0)))//
                 .build();
+        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
-        populator.populate(inputMessage, builder);
+        populator.populate(context, builder);
         assertThat(MessagePopulatorTests.FormatId.valueOf(builder.getFormat())).isEqualTo(expected);
     }
 
     @Test
     void populates_fileModified() {
-        final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE;
+        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(INPUT_MESSAGE_TEMPLATE);
         final Instant expected = FILE_MODIFIED;
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
-        populator.populate(inputMessage, builder);
+        populator.populate(context, builder);
         assertThat(builder.getFileModified()).isEqualTo(Optional.of(expected));
     }
 }

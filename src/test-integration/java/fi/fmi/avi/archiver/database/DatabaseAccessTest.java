@@ -29,8 +29,8 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import fi.fmi.avi.archiver.AviationMessageArchiver;
 import fi.fmi.avi.archiver.TestConfig;
 import fi.fmi.avi.archiver.config.ConversionConfig;
-import fi.fmi.avi.archiver.logging.LoggingContext;
-import fi.fmi.avi.archiver.logging.NoOpLoggingContext;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
+import fi.fmi.avi.archiver.logging.model.NoOpLoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
 import fi.fmi.avi.archiver.message.ProcessingResult;
@@ -166,13 +166,13 @@ class DatabaseAccessTest {
 
     @Test
     void test_query_existing_station() {
-        final Optional<Integer> testId = databaseAccess.queryStationId("EFXX");
+        final Optional<Integer> testId = databaseAccess.queryStationId("EFXX", loggingContext);
         assertThat(testId).isPresent();
     }
 
     @Test
     void test_query_nonexistent_station() {
-        final Optional<Integer> testId = databaseAccess.queryStationId("XXXX");
+        final Optional<Integer> testId = databaseAccess.queryStationId("XXXX", loggingContext);
         assertThat(testId).isEmpty();
     }
 

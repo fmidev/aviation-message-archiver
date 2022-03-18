@@ -1,13 +1,7 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import fi.fmi.avi.archiver.config.model.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.tryGet;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -15,8 +9,15 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.tryGet;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
+import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 class FileNameDataPopulatorTest {
     private static final InputAviationMessage INPUT_TEMPLATE = InputAviationMessage.builder()//
@@ -44,8 +45,9 @@ class FileNameDataPopulatorTest {
         final InputAviationMessage input = INPUT_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setFilename(fileName)))//
                 .build();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
 
-        populator.populate(input, targetBuilder);
+        populator.populate(context, targetBuilder);
 
         assertThat(tryGet(targetBuilder, builder -> builder.getMessageTime()))//
                 .isEqualTo(Optional.ofNullable(expectedMessageTime).map(Instant::parse));
@@ -61,9 +63,10 @@ class FileNameDataPopulatorTest {
                         .mutateFileReference(ref -> ref.setFilename("msg-05-1608.txt"))//
                         .clearFileModified())//
                 .build();
+        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
         final ArchiveAviationMessage.Builder targetBuilder = ArchiveAviationMessage.builder();
 
-        populator.populate(input, targetBuilder);
+        populator.populate(context, targetBuilder);
 
         assertThat(tryGet(targetBuilder, builder -> builder.getMessageTime()))//
                 .hasValue(Instant.parse("2011-03-05T06:08:00Z"));

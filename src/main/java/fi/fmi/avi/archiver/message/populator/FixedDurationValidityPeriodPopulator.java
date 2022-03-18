@@ -5,9 +5,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.time.Duration;
 
-import javax.annotation.Nullable;
-
-import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 public class FixedDurationValidityPeriodPopulator implements MessagePopulator {
@@ -19,7 +16,8 @@ public class FixedDurationValidityPeriodPopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(@Nullable final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+        requireNonNull(context, "context");
         requireNonNull(target, "target");
         MessagePopulatorHelper.tryGet(target, ArchiveAviationMessage.Builder::getMessageTime)//
                 .ifPresent(messageTime -> {
