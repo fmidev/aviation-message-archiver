@@ -8,21 +8,25 @@ spring.config.activate.on-profile: local
 logging:
   level:
     fi.fmi.avi.archiver: DEBUG
+    org.springframework.integration.handler.LoggingHandler: DEBUG
 ---
 spring.config.activate.on-profile: development
 logging:
   level:
     fi.fmi.avi.archiver: DEBUG
+    org.springframework.integration.handler.LoggingHandler: DEBUG
 ---
 spring.config.activate.on-profile: testing
 logging:
   level:
     fi.fmi.avi.archiver: INFO
+    org.springframework.integration.handler.LoggingHandler: INFO
 ---
 spring.config.activate.on-profile: production
 logging:
   level:
     fi.fmi.avi.archiver: INFO
+    org.springframework.integration.handler.LoggingHandler: INFO
 ---
 # END SNIPPET: logging
 
@@ -234,5 +238,3 @@ message-static-values:
     TROPICAL_CYCLONE_ADVISORY: 7
     SPACE_WEATHER_ADVISORY: 8
 # END SNIPPET: Message static values
-
-

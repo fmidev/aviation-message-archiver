@@ -29,16 +29,24 @@ public class ProcessingState {
         requireNonNull(file, "file");
         final Status newStatus = filesUnderProcessing.compute(file.getFileReference(),
                 (fileReference, status) -> status == null ? new Status(clock.millis()) : status.increaseProcessingCount());
-        if (newStatus.getProcessingCount() > 1) {
-            LOGGER.warn("Starting processing of file '{}', now being processed concurrently for {} times.", file.getFileReference(),
-                    newStatus.getProcessingCount());
+        final int processingCount = newStatus.getProcessingCount();
+        if (processingCount == 1) {
+            LOGGER.debug("Started processing of file '{}'.", file);
+        } else if (processingCount > 1) {
+            LOGGER.warn("Started processing of file '{}', now being processed concurrently for {} times.", file.getFileReference(), processingCount);
+        } else {
+            LOGGER.error("Started processing of file '{}', but it is registered being processed for {} times.", file.getFileReference(), processingCount);
         }
     }
 
     public void finish(final FileMetadata file) {
         requireNonNull(file, "file");
         if (filesUnderProcessing.containsKey(file.getFileReference())) {
-            filesUnderProcessing.computeIfPresent(file.getFileReference(), (fileReference, status) -> status.decreaseProcessingCount());
+            @Nullable
+            final Status newStatus = filesUnderProcessing.computeIfPresent(file.getFileReference(),
+                    (fileReference, status) -> status.decreaseProcessingCount());
+            final int processingCount = newStatus == null ? 0 : newStatus.getProcessingCount();
+            LOGGER.debug("Finished processing of file '{}'. Remaining concurrent processes: {}", file, processingCount);
         } else {
             LOGGER.warn("Attempted to finish processing of file '{}', but it is not under processing.", file.getFileReference());
         }
