@@ -1,19 +1,17 @@
 package fi.fmi.avi.archiver;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileReference;
+import static java.util.Objects.requireNonNull;
 
 public class ProcessingState {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessingState.class);
@@ -33,9 +31,9 @@ public class ProcessingState {
         if (processingCount == 1) {
             LOGGER.debug("Started processing of file '{}'.", file);
         } else if (processingCount > 1) {
-            LOGGER.warn("Started processing of file '{}', now being processed concurrently for {} times.", file.getFileReference(), processingCount);
+            LOGGER.warn("Started processing of file '{}', now being processed concurrently {} times.", file.getFileReference(), processingCount);
         } else {
-            LOGGER.error("Started processing of file '{}', but it is registered being processed for {} times.", file.getFileReference(), processingCount);
+            LOGGER.error("Started processing of file '{}', but it is registered being processed {} times.", file.getFileReference(), processingCount);
         }
     }
 
