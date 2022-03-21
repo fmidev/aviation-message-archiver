@@ -48,6 +48,7 @@ spring:
   sql:
     init:
       platform: h2
+      schema-locations: classpath:fi/fmi/avi/avidb/schema/h2/schema-h2.sql
 ---
 spring:
   datasource:
