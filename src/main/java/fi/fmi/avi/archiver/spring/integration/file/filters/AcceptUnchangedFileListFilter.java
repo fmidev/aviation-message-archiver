@@ -3,6 +3,7 @@ package fi.fmi.avi.archiver.spring.integration.file.filters;
 import static java.util.Objects.requireNonNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -10,31 +11,28 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.springframework.integration.file.filters.AbstractFileListFilter;
 import org.springframework.integration.file.filters.ResettableFileListFilter;
 import org.springframework.integration.file.filters.ReversibleFileListFilter;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * {@link org.springframework.integration.file.filters.FileListFilter} that stores the file's last modification time and
  * filesize and accepts the file on a subsequent run if the file's last modification time and filesize have not changed.
  */
-public class AcceptUnchangedFileListFilter extends AbstractFileListFilter<File> implements ReversibleFileListFilter<File>,
-        ResettableFileListFilter<File> {
+public class AcceptUnchangedFileListFilter extends AbstractFileListFilter<File> implements ReversibleFileListFilter<File>, ResettableFileListFilter<File> {
 
-    private final Map<File, FileData> seenMap = new HashMap<>();
+    private final Map<File, FileProperties> seenMap = new HashMap<>();
     private final Object monitor = new Object();
 
     @Override
     public boolean accept(final File file) {
         requireNonNull(file, "file");
         synchronized (monitor) {
-            final FileData newData = new FileData(file);
+            final FileProperties newData = FileProperties.create(file);
             if (seenMap.containsKey(file)) {
                 if (newData.equals(seenMap.get(file))) {
                     seenMap.remove(file);
@@ -72,33 +70,26 @@ public class AcceptUnchangedFileListFilter extends AbstractFileListFilter<File> 
     }
 
     @VisibleForTesting
-    static class FileData {
-        private FileTime lastModified = FileTime.from(Instant.EPOCH);
-        private long size = 0;
+    @AutoValue
+    static abstract class FileProperties {
+        FileProperties() {
+        }
 
-        @SuppressFBWarnings("DE_MIGHT_IGNORE")
-        FileData(final File file) {
+        static FileProperties create(final File file) {
+            requireNonNull(file, "file");
             try {
                 final Path path = file.toPath();
-                this.lastModified = Files.getLastModifiedTime(path);
-                this.size = Files.size(path);
-            } catch (final Exception ignored) {
-                // Use default values
+                final FileTime lastModified = Files.getLastModifiedTime(path);
+                final long size = Files.size(path);
+                return new AutoValue_AcceptUnchangedFileListFilter_FileProperties(lastModified, size);
+            } catch (final IOException | RuntimeException ignored) {
+                return new AutoValue_AcceptUnchangedFileListFilter_FileProperties(FileTime.from(Instant.EPOCH), 0);
             }
         }
 
-        @Override
-        public boolean equals(final Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            final FileData fileData = (FileData) o;
-            return size == fileData.size && lastModified.equals(fileData.lastModified);
-        }
+        public abstract FileTime getLastModified();
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(lastModified, size);
-        }
+        public abstract long getSize();
     }
 
 }
