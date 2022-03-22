@@ -19,6 +19,8 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 
+import com.google.common.collect.ImmutableList;
+
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.config.model.PopulatorInstanceSpec;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
@@ -37,20 +39,38 @@ import fi.fmi.avi.archiver.message.populator.conditional.GeneralPropertyPredicat
 import fi.fmi.avi.archiver.message.populator.conditional.PropertyActivationCondition;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 
-@ConstructorBinding
+@SuppressWarnings("SpringJavaConstructorAutowiringInspection")
 @ConfigurationProperties(prefix = "message-populators")
 public class MessagePopulatorConfig {
 
-    private final List<PopulatorInstanceSpec> executionChain;
+    private final ImmutableList<PopulatorInstanceSpec> executionChain;
+
+    @ConstructorBinding
+    MessagePopulatorConfig(final PopulatorInstanceSpec.Builder[] executionChain) {
+        this(buildAll(requireNonNull(executionChain, "executionChain")));
+    }
 
     MessagePopulatorConfig(final List<PopulatorInstanceSpec> executionChain) {
-        this.executionChain = requireNonNull(executionChain, "executionChain");
+        requireNonNull(executionChain, "executionChain");
         checkState(!executionChain.isEmpty(), "Invalid message populators configuration: executionChain is empty");
+        this.executionChain = ImmutableList.copyOf(executionChain);
+    }
+
+    private static List<PopulatorInstanceSpec> buildAll(final PopulatorInstanceSpec.Builder[] builders) {
+        final ImmutableList.Builder<PopulatorInstanceSpec> specs = ImmutableList.builder();
+        for (int i = 0; i < builders.length; i++) {
+            try {
+                specs.add(builders[i].build());
+            } catch (final RuntimeException e) {
+                throw new IllegalStateException("Invalid MessagePopulator specification at index <" + i + ">: " + e.getMessage(), e);
+            }
+        }
+        return specs.build();
     }
 
     @Bean
     List<PopulatorInstanceSpec> executionChain() {
-        return Collections.unmodifiableList(executionChain);
+        return executionChain;
     }
 
     @Bean(name = "messagePopulators")
@@ -59,12 +79,11 @@ public class MessagePopulatorConfig {
             final ConditionPropertyReaderFactory conditionPropertyReaderFactory) {
         final Map<String, MessagePopulatorFactory<?>> factoriesByName = messagePopulatorFactories.stream()//
                 .collect(Collectors.toMap(MessagePopulatorFactory::getName, Function.identity()));
-        final ArrayList<MessagePopulator> populators = executionChain.stream()//
+        final ImmutableList.Builder<MessagePopulator> populatorsBuilder = executionChain.stream()//
                 .map(spec -> createMessagePopulator(spec, factoriesByName, messagePopulatorConfigValueConverter, conditionPropertyReaderFactory))//
-                .collect(Collectors.toCollection(ArrayList::new));
-        populators.add(new StationIdPopulator(databaseAccess));
-        populators.trimToSize();
-        return Collections.unmodifiableList(populators);
+                .collect(ImmutableList::builder, ImmutableList.Builder::add, (builder1, builder2) -> builder1.addAll(builder2.build()));
+        populatorsBuilder.add(new StationIdPopulator(databaseAccess));
+        return populatorsBuilder.build();
     }
 
     private MessagePopulator createMessagePopulator(final PopulatorInstanceSpec spec, final Map<String, MessagePopulatorFactory<?>> populatorFactoriesByName,

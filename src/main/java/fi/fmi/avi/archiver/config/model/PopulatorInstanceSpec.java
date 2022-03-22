@@ -8,40 +8,40 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.inferred.freebuilder.FreeBuilder;
+
 import fi.fmi.avi.archiver.message.populator.conditional.GeneralPropertyPredicate;
 
-@SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
-@SuppressFBWarnings("EI_EXPOSE_REP")
-public class PopulatorInstanceSpec {
-
-    private final String name;
-    private final Map<String, GeneralPropertyPredicate.Builder<?>> activateOn;
-    private final Map<String, Object> config;
-
-    public PopulatorInstanceSpec(final String name, @Nullable final Map<String, GeneralPropertyPredicate.Builder<?>> activateOn,
-            @Nullable final Map<String, Object> config) {
-        this.name = requireNonNull(name, "name");
-        this.activateOn = activateOn == null ? Collections.emptyMap() : activateOn;
-        this.config = config == null ? Collections.emptyMap() : config;
-        checkArgument(!name.isEmpty(), "populator name cannot be empty");
+@FreeBuilder
+public abstract class PopulatorInstanceSpec {
+    PopulatorInstanceSpec() {
     }
 
-    public String getName() {
-        return name;
-    }
+    public abstract String getName();
 
-    public Map<String, GeneralPropertyPredicate.Builder<?>> getActivateOn() {
-        return activateOn;
-    }
+    public abstract Map<String, GeneralPropertyPredicate.Builder<?>> getActivateOn();
 
-    public Map<String, Object> getConfig() {
-        return config;
-    }
+    public abstract Map<String, Object> getConfig();
 
-    @Override
-    public String toString() {
-        return "PopulatorInstanceSpec{" + "name='" + name + '\'' + ", activateOn=" + activateOn + ", config=" + config + '}';
-    }
+    public static class Builder extends PopulatorInstanceSpec_Builder {
+        Builder() {
+        }
 
+        @Override
+        public Builder setName(final String name) {
+            requireNonNull(name);
+            checkArgument(!name.isEmpty(), "populator name cannot be empty");
+            return super.setName(name);
+        }
+
+        public Builder setActivateOn(@Nullable final Map<? extends String, ? extends GeneralPropertyPredicate.Builder<?>> map) {
+            return clearActivateOn()//
+                    .putAllActivateOn(map == null ? Collections.emptyMap() : map);
+        }
+
+        public Builder setConfig(@Nullable final Map<? extends String, ?> map) {
+            return clearConfig()//
+                    .putAllConfig(map == null ? Collections.emptyMap() : map);
+        }
+    }
 }

@@ -12,6 +12,8 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.auto.value.AutoValue;
+
 import fi.fmi.avi.archiver.file.FileReference;
 
 public class ProcessingState {
@@ -27,7 +29,7 @@ public class ProcessingState {
     public void start(final FileReference file) {
         requireNonNull(file, "file");
         final Status newStatus = filesUnderProcessing.compute(file,
-                (fileReference, status) -> status == null ? new Status(clock.millis()) : status.increaseProcessingCount());
+                (fileReference, status) -> status == null ? Status.newInstance(clock.millis()) : status.increaseProcessingCount());
         final int processingCount = newStatus.getProcessingCount();
         if (processingCount == 1) {
             LOGGER.debug("Started processing of file '{}'.", file);
@@ -68,34 +70,27 @@ public class ProcessingState {
         return filesUnderProcessing.containsKey(fileReference);
     }
 
-    private static final class Status {
-        private final long start;
-        private final int processingCount;
-
-        Status(final long start) {
-            this(start, 1);
+    @AutoValue
+    static abstract class Status {
+        Status() {
         }
 
-        private Status(final long start, final int processingCount) {
-            this.start = start;
-            this.processingCount = processingCount;
+        static Status newInstance(final long start) {
+            return new AutoValue_ProcessingState_Status(start, 1);
         }
 
-        public long getStart() {
-            return start;
-        }
+        public abstract long getStart();
 
-        public int getProcessingCount() {
-            return processingCount;
-        }
+        public abstract int getProcessingCount();
 
         public Status increaseProcessingCount() {
-            return new Status(start, processingCount + 1);
+            return new AutoValue_ProcessingState_Status(getStart(), getProcessingCount() + 1);
         }
 
         @Nullable
         public Status decreaseProcessingCount() {
-            return processingCount <= 1 ? null : new Status(start, processingCount - 1);
+            final int processingCount = getProcessingCount();
+            return processingCount <= 1 ? null : new AutoValue_ProcessingState_Status(getStart(), processingCount - 1);
         }
     }
 }
