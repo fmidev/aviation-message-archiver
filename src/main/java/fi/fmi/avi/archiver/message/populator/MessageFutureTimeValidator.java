@@ -13,6 +13,7 @@ import fi.fmi.avi.archiver.message.ProcessingResult;
  * Validates that the message time is not too far in the future.
  * <p>
  * The calculated validity period end is exclusive.
+ * </p>
  */
 public class MessageFutureTimeValidator implements MessagePopulator {
 

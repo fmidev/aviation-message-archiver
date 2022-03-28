@@ -13,8 +13,9 @@ import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.message.MessagePositionInFile;
 
 /**
- * A class implementing this interface stores the state of file processing in terms of bulletins within a file and messages within a bulletin, and produces a
- * loggable output of the current state.
+ * Loggable context information on processing a file of aviation messages with methods to update current state and statistics.
+ * It maintains information on file, bulletin within the file and message within the bulletin being under processing, and produces loggable output of this
+ * information. It also holds a reference to file processing statistics.
  *
  * <p>
  * All bulletin and message indices start from {@code 0}.
@@ -41,7 +42,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * Resets current {@link #leaveBulletin() bulletin} and {@link #leaveMessage() message} state.
      *
      * <p>
-     * If the provided {@code file} is {@code null}, behavior is equivalent to {@link #leaveFile()}, latter being the preferred method.
+     * If the provided {@code file} is {@code null}, behavior is equivalent to {@link #leaveFile()}, latter being the preferred method for better readability.
      * See method description for details.
      * </p>
      *
@@ -57,7 +58,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * {@link FileProcessingStatistics#clear() clears statistics}.
      *
      * <p>
-     * Equivalent to, and preferred over {@link #enterFile(FileReference) enterFile(null)}.
+     * Equivalent to, and preferred over {@link #enterFile(FileReference) enterFile(null)} for better readability.
      * </p>
      *
      * <p>
@@ -75,8 +76,8 @@ public interface LoggingContext extends ReadableLoggingContext {
      * Resets current {@link #leaveMessage() message} state.
      *
      * <p>
-     * If the provided {@code bulletin} is {@code null}, behavior is equivalent to {@link #leaveBulletin()}, latter being the preferred method.
-     * See method description for details.
+     * If the provided {@code bulletin} is {@code null}, behavior is equivalent to {@link #leaveBulletin()}, latter being the preferred method for better
+     * readability. See method description for details.
      * </p>
      *
      * @param bulletin
@@ -92,8 +93,8 @@ public interface LoggingContext extends ReadableLoggingContext {
      * the bulletin index will be registered at each previously unregistered index up to the provided {@code index}.
      *
      * <p>
-     * If the provided {@code index} is {@code -1}, behavior is equivalent to {@link #leaveBulletin()}, latter being the preferred method.
-     * See method description for details.
+     * If the provided {@code index} is {@code -1}, behavior is equivalent to {@link #leaveBulletin()}, latter being the preferred method for better
+     * readability. See method description for details.
      * </p>
      *
      * @param index
@@ -106,7 +107,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * Resets current bulletin and {@link #leaveMessage() message} state.
      *
      * <p>
-     * Equivalent to, and preferred over {@link #enterBulletin(BulletinLogReference) enterBulletin(null)}.
+     * Equivalent to, and preferred over {@link #enterBulletin(BulletinLogReference) enterBulletin(null)} for better readability.
      * </p>
      *
      * <p>
@@ -122,7 +123,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * The element index within the returned list matches the bulletin index within the file, and the list contains no {@code null} elements.
      *
      * <p>
-     * The returned list should be unmodifiable, and may be immutable or mutating view of current state.
+     * The returned list should be unmodifiable, and may be an immutable copy or a live view of current state.
      * </p>
      *
      * @return all registered {@code BulletinLogReference}s
@@ -169,8 +170,8 @@ public interface LoggingContext extends ReadableLoggingContext {
      * under processing.
      *
      * <p>
-     * If the provided {@code message} is {@code null}, behavior is equivalent to {@link #leaveMessage()}, latter being the preferred method.
-     * See method description for details.
+     * If the provided {@code message} is {@code null}, behavior is equivalent to {@link #leaveMessage()}, latter being the preferred method for better
+     * readability. See method description for details.
      * </p>
      *
      * @param message
@@ -187,7 +188,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * under processing.
      *
      * <p>
-     * If the provided {@code index} is {@code -1}, behavior is equivalent to {@link #leaveMessage()}, latter being the preferred method.
+     * If the provided {@code index} is {@code -1}, behavior is equivalent to {@link #leaveMessage()}, latter being the preferred method for better readability.
      * See method description for details.
      * </p>
      *
@@ -200,7 +201,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * Register a bulletin and a message referred by provided {@code MessagePositionInFile} as currently being processed.
      *
      * <p>
-     * Note, that this method does not allow {@code null} value as a parameter. It would be ambiguous whether it would indicate {@link #leaveMessage()} or
+     * Note, that this method does not allow {@code null} value as a parameter, as it would be ambiguous whether it would indicate {@link #leaveMessage()} or
      * {@link #leaveBulletin()}.
      * </p>
      *
@@ -224,7 +225,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * Register the processing of the currently registered message as finished.
      *
      * <p>
-     * Equivalent to, and preferred over {@link #enterMessage(MessageLogReference) enterMessage(null)}.
+     * Equivalent to, and preferred over {@link #enterMessage(MessageLogReference) enterMessage(null)} for better readability.
      * </p>
      *
      * <p>
@@ -241,7 +242,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * If no bulletin is registered as under processing, an empty list is returned.
      *
      * <p>
-     * The returned list should be unmodifiable, and may be an immutable or a mutating view of current state.
+     * The returned list should be unmodifiable, and may be an immutable copy or a live view of current state.
      * </p>
      *
      * @return all {@code MessageLogReference}s registered for bulletin being currently under processing, or an empty list
@@ -296,10 +297,11 @@ public interface LoggingContext extends ReadableLoggingContext {
 
     /**
      * Record the processing result of the current state in {@link #getStatistics() file processing statistics}.
-     * When both a bulletin and a message are registered in the current state, the provided {@code processingResult} is recorded for
-     * the {@link FileProcessingStatistics#recordMessageResult(int, int, FileProcessingStatistics.ProcessingResult) message}. If only a bulletin is registered in the current
-     * state, the provided {@code processingResult} is recorded for the {@link FileProcessingStatistics#recordBulletinResult(int, FileProcessingStatistics.ProcessingResult) bulletin}.
-     * Otherwise the provided {@code processingResult} is recorded for the {@link FileProcessingStatistics#recordFileResult(FileProcessingStatistics.ProcessingResult) file}.
+     * When both bulletin and message are registered in the current state, the provided {@code processingResult} is recorded for the
+     * {@link FileProcessingStatistics#recordMessageResult(int, int, FileProcessingStatistics.ProcessingResult) message}. If only a bulletin is registered
+     * in the current state, the provided {@code processingResult} is recorded for the
+     * {@link FileProcessingStatistics#recordBulletinResult(int, FileProcessingStatistics.ProcessingResult) bulletin}. Otherwise the provided
+     * {@code processingResult} is recorded for the {@link FileProcessingStatistics#recordFileResult(FileProcessingStatistics.ProcessingResult) file}.
      *
      * <p>
      * The default implementation tests the current state of a bulletin and a message invoking {@link #getBulletinIndex()} and {@link #getMessageIndex()}.

@@ -4,11 +4,13 @@ import static java.util.Objects.requireNonNull;
 
 import javax.annotation.Nullable;
 
+import net.logstash.logback.argument.StructuredArgument;
 import net.logstash.logback.argument.StructuredArguments;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import fi.fmi.avi.archiver.logging.NoOpLoggable;
@@ -16,6 +18,13 @@ import fi.fmi.avi.archiver.logging.StructuredLoggable;
 import fi.fmi.avi.archiver.logging.logback.ForwardingAppenderBase;
 import fi.fmi.avi.archiver.logging.logback.ForwardingLoggingEvent;
 
+/**
+ * An {@link Appender} that wraps received logging events, transforming any {@link StructuredLoggable} in event
+ * {@link ILoggingEvent#getArgumentArray() arguments} into {@link StructuredArgument} of
+ * <a href="https://github.com/logfellow/logstash-logback-encoder">Logstash Logback Encoder</a>, and forwards the wrapped event to attached appenders.
+ * Wrapped logging events support <em>deferred processing</em> by requesting a {@link StructuredLoggable#readableCopy() copy} of {@code StructuredLoggable}
+ * objects on {@link ILoggingEvent#prepareForDeferredProcessing() prepare}.
+ */
 public class StructuredLoggableLogstashAppender extends ForwardingAppenderBase<ILoggingEvent> {
     private final AppenderAttachableImpl<ILoggingEvent> appenders;
 
@@ -90,8 +99,8 @@ public class StructuredLoggableLogstashAppender extends ForwardingAppenderBase<I
             }
             for (int i = 0; i < delegateArgumentArray.length; i++) {
                 if (delegateArgumentArray[i] instanceof StructuredLoggable && !(delegateArgumentArray[i] instanceof NoOpLoggable)) {
-                    final StructuredLoggable structuredLoggable = copyStructuredLoggables
-                            ? ((StructuredLoggable) delegateArgumentArray[i]).readableCopy()
+                    final StructuredLoggable structuredLoggable = copyStructuredLoggables //
+                            ? ((StructuredLoggable) delegateArgumentArray[i]).readableCopy() //
                             : (StructuredLoggable) delegateArgumentArray[i];
                     argumentArray[i] = StructuredArguments.keyValue(structuredLoggable.getStructureName(), structuredLoggable);
                 }

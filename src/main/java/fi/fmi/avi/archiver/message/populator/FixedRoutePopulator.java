@@ -6,10 +6,11 @@ import static java.util.Objects.requireNonNull;
 import java.util.Map;
 
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
 
 /**
- * Set a fixed route on message.
- * Use within {@link fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator ConditionalMessagePopulator} to select affected messages.
+ * Set a fixed {@link ArchiveAviationMessage#getRoute() route} on message.
+ * This populator is typically composed as {@link ConditionalMessagePopulator} to limit affected messages.
  */
 public class FixedRoutePopulator implements MessagePopulator {
 

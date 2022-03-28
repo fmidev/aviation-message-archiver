@@ -4,10 +4,11 @@ import javax.annotation.Nullable;
 
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
+import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
 
 /**
  * Discard all messages.
- * Use within {@link fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator ConditionalMessagePopulator} to select messages to discard.
+ * This populator is typically composed as {@link ConditionalMessagePopulator} to limit affected messages.
  */
 public class MessageDiscarder implements MessagePopulator {
     @Override

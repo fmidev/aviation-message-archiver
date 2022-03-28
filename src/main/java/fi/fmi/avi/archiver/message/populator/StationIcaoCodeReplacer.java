@@ -6,9 +6,12 @@ import static java.util.Objects.requireNonNull;
 import java.util.regex.Pattern;
 
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
 
 /**
  * Replace station ICAO code using a regex pattern.
+ * All pattern matches are replaced.
+ * This populator is typically composed as {@link ConditionalMessagePopulator} to limit affected messages.
  */
 public class StationIcaoCodeReplacer implements MessagePopulator {
 

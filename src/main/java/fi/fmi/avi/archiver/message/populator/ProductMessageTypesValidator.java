@@ -13,10 +13,24 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 import fi.fmi.avi.model.MessageType;
 
+/**
+ * Validate that resolved {@link ArchiveAviationMessage#getType() message type} is one of allowed types per product.
+ * If type is not allowed, {@link ProcessingResult#FORBIDDEN_MESSAGE_TYPE} processing result is set.
+ */
 public class ProductMessageTypesValidator implements MessagePopulator {
 
     private final Map<String, Set<Integer>> productMessageTypes;
 
+    /**
+     * Construct a new instance.
+     *
+     * @param typeIds
+     *         mapping from message type to database id
+     * @param aviationProducts
+     *         configured aviation products indexed by {@link AviationProduct#getId() product id}
+     * @param productMessageTypes
+     *         mapping from product id to message types allowed for the product
+     */
     public ProductMessageTypesValidator(final Map<MessageType, Integer> typeIds, final Map<String, AviationProduct> aviationProducts,
             final Map<String, Set<MessageType>> productMessageTypes) {
         requireNonNull(typeIds, "typeIds");

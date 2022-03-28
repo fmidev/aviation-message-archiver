@@ -9,6 +9,14 @@ import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 
+/**
+ * Resolves database id for resolved {@link ArchiveAviationMessage#getStationIcaoCode() station ICAO code} and populates the corresponding
+ * {@link ArchiveAviationMessage#getStationId() numeric id}.
+ *
+ * <p>
+ * This populator is always implicitly added in the end of populator execution chain, and should be omitted from execution chain configuration.
+ * </p>
+ */
 public class StationIdPopulator implements MessagePopulator {
 
     private final DatabaseAccess databaseAccess;

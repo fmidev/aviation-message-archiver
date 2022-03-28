@@ -4,6 +4,11 @@ import static java.util.Objects.requireNonNull;
 
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
+/**
+ * Apply a {@link String#trim() trim} operation on {@link ArchiveAviationMessage#getMessage() message content}.
+ * This populator uses {@link ArchiveAviationMessage.Builder} as input, and therefore must be executed after message content is populated. In case message
+ * content is missing, this populator does nothing.
+ */
 public class MessageContentTrimmer implements MessagePopulator {
 
     @Override

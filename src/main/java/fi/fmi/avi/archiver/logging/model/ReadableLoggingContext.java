@@ -9,10 +9,28 @@ import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.logging.AppendingLoggable;
 import fi.fmi.avi.archiver.logging.StructuredLoggable;
 
+/**
+ * Loggable context information on processing a file of aviation messages.
+ * It provides information on file, bulletin within the file and message within the bulletin being under processing, and produces loggable output of this
+ * information.
+ *
+ * <p>
+ * All bulletin and message indices start from {@code 0}.
+ * </p>
+ */
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public interface ReadableLoggingContext extends AppendingLoggable, StructuredLoggable {
     /**
+     * Default structure name, in terms of {@link StructuredLoggable#getStructureName()}.
+     */
+    String DEFAULT_STRUCTURE_NAME = "processingContext";
+
+    /**
      * {@inheritDoc}
+     *
+     * <p>
+     * The default implementation returns an immutable {@code ReadableLoggingContext}.
+     * </p>
      *
      * @return {@inheritDoc}
      */
@@ -25,14 +43,14 @@ public interface ReadableLoggingContext extends AppendingLoggable, StructuredLog
      * Returns default name for this structured object. When no other name for a structured loggable object is provided by context, this name can be used.
      *
      * <p>
-     * The default implementation returns always {@code "loggingContext"}.
+     * The default implementation returns always {@value #DEFAULT_STRUCTURE_NAME}.
      * </p>
      *
      * @return {@inheritDoc}
      */
     @Override
     default String getStructureName() {
-        return "processingContext";
+        return DEFAULT_STRUCTURE_NAME;
     }
 
     /**
@@ -50,8 +68,8 @@ public interface ReadableLoggingContext extends AppendingLoggable, StructuredLog
     Optional<BulletinLogReference> getBulletin();
 
     /**
-     * Return the index of the currently processed bulletin within a file starting from index {@code 0}. Returns {@code -1} if no bulletin is currently
-     * being processed.
+     * Return the index of the currently processed bulletin within a file starting from index {@code 0}.
+     * Returns {@code -1} if no bulletin is currently under processing.
      *
      * <p>
      * The default implementation returns the bulletin index of {@code BulletinLogReference} returned by {@link #getBulletin()}.
@@ -74,8 +92,8 @@ public interface ReadableLoggingContext extends AppendingLoggable, StructuredLog
     Optional<MessageLogReference> getMessage();
 
     /**
-     * Return the index of the currently processed message within a bulletin starting from index {@code 0}. Returns {@code -1} if no message is currently being
-     * processed.
+     * Return the index of the currently processed message within a bulletin starting from index {@code 0}.
+     * Returns {@code -1} if no message is currently under processing.
      *
      * <p>
      * The default implementation returns the message index of {@code MessageLogReference} returned by {@link #getMessage()}.
