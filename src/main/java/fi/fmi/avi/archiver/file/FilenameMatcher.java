@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
@@ -171,9 +172,13 @@ public class FilenameMatcher {
             temporalFieldValues.put(ChronoField.YEAR, fullYear.getAsInt());
         } else {
             getString(TWO_DIGIT_YEAR).ifPresent(twoDigitYear -> {
+                final LocalDate baseDate = ZonedDateTime.now(clock)//
+                        .withZoneSameInstant(timestampZone)//
+                        .minusYears(BASE_YEAR_OFFSET)//
+                        .toLocalDate();
                 final TemporalAccessor parsedYear = new DateTimeFormatterBuilder()
                         // The next year is the furthest year we allow
-                        .appendValueReduced(ChronoField.YEAR, 2, 2, LocalDate.now(clock).minusYears(BASE_YEAR_OFFSET))//
+                        .appendValueReduced(ChronoField.YEAR, 2, 2, baseDate)//
                         .toFormatter()//
                         .parse(twoDigitYear);
                 temporalFieldValues.put(ChronoField.YEAR, parsedYear.get(ChronoField.YEAR));
