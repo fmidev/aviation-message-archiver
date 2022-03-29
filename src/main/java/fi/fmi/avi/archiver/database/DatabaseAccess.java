@@ -25,6 +25,9 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
 import fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts;
 
+/**
+ * Database access operations.
+ */
 public class DatabaseAccess {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseAccess.class);
 
@@ -84,7 +87,7 @@ public class DatabaseAccess {
         requireNonNull(archiveAviationMessage, "archiveAviationMessage");
         requireNonNull(loggingContext, "loggingContext");
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
-        parameters.addValue("station_id", archiveAviationMessage.getStationId()
+        parameters.addValue("station_id", archiveAviationMessage.getStationId()//
                 .orElseThrow(() -> new IllegalArgumentException(String.format("Message <%s> is missing stationId.", loggingContext))));
         addCommonParameters(parameters, archiveAviationMessage);
         final Number id = retryTemplate.execute(context -> {
@@ -114,8 +117,7 @@ public class DatabaseAccess {
         requireNonNull(archiveAviationMessage, "archiveAviationMessage");
         requireNonNull(loggingContext, "loggingContext");
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
-        parameters.addValue("icao_code", archiveAviationMessage.getStationIcaoCode())
-                .addValue("reject_reason", archiveAviationMessage.getProcessingResult().getCode());
+        parameters.addValue("icao_code", archiveAviationMessage.getStationIcaoCode()).addValue("reject_reason", archiveAviationMessage.getProcessingResult().getCode());
         addCommonParameters(parameters, archiveAviationMessage);
         final Number id = retryTemplate.execute(context -> {
             initRetryContext(context, "insert rejected message", loggingContext);
@@ -131,12 +133,9 @@ public class DatabaseAccess {
         return id;
     }
 
-    private void insertIwxxmDetails(final Number messageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails,
-            final ReadableLoggingContext loggingContext) {
+    private void insertIwxxmDetails(final Number messageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails, final ReadableLoggingContext loggingContext) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
-        parameters.addValue("message_id", messageId)
-                .addValue("collect_identifier", iwxxmDetails.getCollectIdentifier().orElse(null))
-                .addValue("iwxxm_version", iwxxmDetails.getXMLNamespace().orElse(null));
+        parameters.addValue("message_id", messageId).addValue("collect_identifier", iwxxmDetails.getCollectIdentifier().orElse(null)).addValue("iwxxm_version", iwxxmDetails.getXMLNamespace().orElse(null));
         retryTemplate.execute(context -> {
             initRetryContext(context, "insert IWXXM details id:" + messageId, loggingContext);
             return insertIwxxmDetails.execute(parameters);
@@ -144,8 +143,7 @@ public class DatabaseAccess {
         LOGGER.debug("Inserted IWXXM details of message <{}> id:{}.", loggingContext, messageId);
     }
 
-    private void insertRejectedIwxxmDetails(final Number rejectedMessageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails,
-            final ReadableLoggingContext loggingContext) {
+    private void insertRejectedIwxxmDetails(final Number rejectedMessageId, final ArchiveAviationMessageIWXXMDetails iwxxmDetails, final ReadableLoggingContext loggingContext) {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("rejected_message_id", rejectedMessageId)
                 .addValue("collect_identifier", iwxxmDetails.getCollectIdentifier().orElse(null))
@@ -157,6 +155,16 @@ public class DatabaseAccess {
         LOGGER.debug("Inserted IWXXM details of rejected message <{}> id:{}.", loggingContext, rejectedMessageId);
     }
 
+    /**
+     * Return the station id matching provided {@code stationIcaoCode}, if exists.
+     *
+     * @param stationIcaoCode
+     *         ICAO code to look for
+     * @param loggingContext
+     *         logging context
+     *
+     * @return station id or empty if database does not contain provided {@code stationIcaoCode} or in case of an error
+     */
     public Optional<Integer> queryStationId(final String stationIcaoCode, final ReadableLoggingContext loggingContext) {
         requireNonNull(stationIcaoCode, "stationIcaoCode");
         requireNonNull(loggingContext, "loggingContext");

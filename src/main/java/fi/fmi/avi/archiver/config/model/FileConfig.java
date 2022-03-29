@@ -3,12 +3,17 @@ package fi.fmi.avi.archiver.config.model;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.regex.Pattern;
 
 import org.inferred.freebuilder.FreeBuilder;
 
+import fi.fmi.avi.archiver.file.FilenameMatcher;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
+/**
+ * Aviation product input file configuration model.
+ */
 @FreeBuilder
 public abstract class FileConfig {
     FileConfig() {
@@ -18,12 +23,35 @@ public abstract class FileConfig {
         return new Builder();
     }
 
+    /**
+     * Return regular expression pattern of file names that are considered as input files.
+     * Pattern may specify timestamp fields that {@link FilenameMatcher} can parse.
+     *
+     * @return input file pattern
+     */
     public abstract Pattern getPattern();
 
+    /**
+     * Return time zone of a possible timestamp in input file name.
+     * {@link ZoneOffset#UTC} should be used as default value, in case file name contains no timestamp.
+     *
+     * @return time zone of a possible timestamp in input file name
+     */
     public abstract ZoneId getNameTimeZone();
 
+    /**
+     * Return format of messages in input file.
+     * Different message formats cannot be mixed within a file.
+     *
+     * @return format of messages in input file
+     */
     public abstract GenericAviationWeatherMessage.Format getFormat();
 
+    /**
+     * Return the numeric database identifier of message format.
+     *
+     * @return format identifier
+     */
     public abstract int getFormatId();
 
     public abstract Builder toBuilder();

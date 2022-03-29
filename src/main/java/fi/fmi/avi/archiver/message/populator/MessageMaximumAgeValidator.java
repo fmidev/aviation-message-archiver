@@ -13,6 +13,7 @@ import fi.fmi.avi.archiver.message.ProcessingResult;
  * Validates that the message time is not too far in the past.
  * <p>
  * The calculated validity period start is inclusive.
+ * </p>
  */
 public class MessageMaximumAgeValidator implements MessagePopulator {
 

@@ -4,6 +4,9 @@ import org.inferred.freebuilder.FreeBuilder;
 
 import fi.fmi.avi.archiver.logging.StructuredLoggable;
 
+/**
+ * Reference to a file in terms of product identifier and file name.
+ */
 @FreeBuilder
 public abstract class FileReference implements StructuredLoggable {
     private static final String STRUCTURE_NAME = StructuredLoggable.defaultStructureName(FileReference.class);

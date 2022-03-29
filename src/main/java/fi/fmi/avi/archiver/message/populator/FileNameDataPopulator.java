@@ -11,7 +11,7 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
  * Populate {@link ArchiveAviationMessage.Builder} properties from values parsed from file name.
  *
  * <p>
- * Currently supports only populating {@link ArchiveAviationMessage#getMessageTime()} from timestamp.
+ * Currently populates only {@link ArchiveAviationMessage#getMessageTime() message time} from timestamp.
  * </p>
  */
 public class FileNameDataPopulator implements MessagePopulator {
