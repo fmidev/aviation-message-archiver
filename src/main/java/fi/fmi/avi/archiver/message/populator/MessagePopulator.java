@@ -1,11 +1,11 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import java.util.function.Function;
-
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
+
+import java.util.function.Function;
 
 /**
  * {@code MessagePopulator} is a component responsible for populating one or more properties of target {@code ArchiveAviationMessage} builder.
@@ -26,11 +26,11 @@ import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopul
  * <ul>
  *     <li>
  *         <strong>eligible for archival</strong> by setting {@link ArchiveAviationMessage.Builder#setProcessingResult(ProcessingResult) processing result}
- *         to {@link ProcessingResult#OK OK}. If no latter populator changes this, the message will be stored in the messages database table.
+ *         to {@link ProcessingResult#OK OK}. If a later populator does not change the processing result, the message will be stored in the messages database table.
  *     </li>
  *     <li>
  *         <strong>rejected</strong> by setting {@link ArchiveAviationMessage.Builder#setProcessingResult(ProcessingResult) processing result} to a
- *         non-{@code OK} value. If no latter populator changes this, the message will be stored in the rejected messages database table.
+ *         non-{@code OK} value. If a later populator does not change the processing result, the message will be stored in the rejected messages database table.
  *     </li>
  *     <li>
  *         <strong>discarded</strong> by throwing {@link MessageDiscardedException}. No further populators will be invoked on the message. The discard will be
