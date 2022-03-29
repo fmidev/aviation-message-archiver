@@ -1,16 +1,17 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.conditional.ActivationConditionInternals.Composition;
+import static fi.fmi.avi.archiver.message.populator.conditional.ActivationConditionInternals.compound;
 
 import java.util.Collection;
 import java.util.Optional;
 
-import static fi.fmi.avi.archiver.message.populator.conditional.ActivationConditionInternals.compound;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.populator.MessagePopulator;
+import fi.fmi.avi.archiver.message.populator.conditional.ActivationConditionInternals.Composition;
 
 /**
- * Condition when a {@link fi.fmi.avi.archiver.message.populator.MessagePopulator MessagePopulator} is to be activated.
+ * Condition when a {@link MessagePopulator} is to be activated.
  *
  * @see ConditionalMessagePopulator
  */

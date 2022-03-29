@@ -5,6 +5,7 @@ import java.util.function.Function;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
 import fi.fmi.avi.archiver.message.ProcessingResult;
+import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
 
 /**
  * {@code MessagePopulator} is a component responsible for populating one or more properties of target {@code ArchiveAviationMessage} builder.
@@ -83,8 +84,7 @@ import fi.fmi.avi.archiver.message.ProcessingResult;
  *     </li>
  *     <li>
  *         The populator should typically execute unconditionally for reusability. When conditional execution is needed, it is recommended to compose a
- *         conditional instance with {@link fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator ConditionalMessagePopulator}. The
- *         application configuration supports declarative composition.
+ *         conditional instance with {@link ConditionalMessagePopulator}. The application configuration supports declarative composition.
  *     </li>
  * </ul>
  */
