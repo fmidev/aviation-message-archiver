@@ -1,11 +1,11 @@
 package fi.fmi.avi.archiver.file;
 
-import fi.fmi.avi.archiver.util.TimeUtil;
-import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
+import static java.util.Objects.requireNonNull;
 
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
@@ -15,7 +15,8 @@ import java.util.OptionalInt;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.util.TimeUtil;
+import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 
 public class FilenameMatcher {
 
@@ -75,10 +76,14 @@ public class FilenameMatcher {
             temporalFieldValues.put(ChronoField.YEAR, fullYear.getAsInt());
         } else {
             getString(TWO_DIGIT_YEAR).ifPresent(twoDigitYear -> {
+                final LocalDate baseDate = ZonedDateTime.now(clock)//
+                        .withZoneSameInstant(timestampZone)//
+                        .minusYears(BASE_YEAR_OFFSET)//
+                        .toLocalDate();
                 final TemporalAccessor parsedYear = new DateTimeFormatterBuilder()
                         // The next year is the furthest year we allow
-                        .appendValueReduced(ChronoField.YEAR, 2, 2, LocalDate.now(clock)
-                                .minusYears(BASE_YEAR_OFFSET)).toFormatter()
+                        .appendValueReduced(ChronoField.YEAR, 2, 2, baseDate)//
+                        .toFormatter()//
                         .parse(twoDigitYear);
                 temporalFieldValues.put(ChronoField.YEAR, parsedYear.get(ChronoField.YEAR));
             });
