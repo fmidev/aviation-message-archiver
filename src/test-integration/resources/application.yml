@@ -47,9 +47,9 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: "20s"
 processing-flow:
-  gracefulShutdown:
+  graceful-shutdown:
     timeout: PT5S
-    pollingInterval: PT0.1S
+    polling-interval: PT0.1S
 ---
 # END SNIPPET: shutdown
 
@@ -60,10 +60,10 @@ processing-flow:
 ##############################################
 # START SNIPPET: actuators
 health-indicator:
-  directoryPermission:
-    tempFilePrefix: .temp
-    tempFileSuffix: .healthindicator
-  blockingExecutor:
+  directory-permission:
+    temp-file-prefix: .temp
+    temp-file-suffix: .healthindicator
+  blocking-executor:
     timeout: PT30S
 ---
 # END SNIPPET: actuators
@@ -86,10 +86,10 @@ production-line-initialization:
       fail-dir: ${testclass.workdir.path}/failed
       files:
         - pattern: ^.*\.txt$
-          nameTimeZone: Z
+          name-time-zone: Z
           format: TAC
         - pattern: ^.*\.txt2$
-          nameTimeZone: Z
+          name-time-zone: Z
           format: TAC
     - id: test_taf_2
       route: TEST
@@ -98,7 +98,7 @@ production-line-initialization:
       fail-dir: ${testclass.workdir.path}/failed2
       files:
         - pattern: ^.*\.another$
-          nameTimeZone: Z
+          name-time-zone: Z
           format: TAC
     - id: test_iwxxm
       route: TEST
@@ -107,7 +107,7 @@ production-line-initialization:
       fail-dir: ${testclass.workdir.path}/failed_iwxxm
       files:
         - pattern: ^.*\.xml$
-          nameTimeZone: Z
+          name-time-zone: Z
           format: IWXXM
     - id: test_taf_bulletin
       route: TEST
@@ -116,7 +116,7 @@ production-line-initialization:
       fail-dir: ${testclass.workdir.path}/failed_taf_bulletin
       files:
         - pattern: ^.*\.bul$
-          nameTimeZone: Z
+          name-time-zone: Z
           format: TAC
 # END SNIPPET: products
 
@@ -130,26 +130,26 @@ production-line-initialization:
 spring.config.activate.on-profile: (!testMissingMessagePopulatorExecutionChain)
 
 message-populators:
-  executionChain:
+  execution-chain:
     - name: MessageDiscarder
-      activateOn:
-        gtsOrCollectDataDesignator:
+      activate-on:
+        gts-or-collect-data-designator:
           matches: '^....99$'
     - name: FileMetadataPopulator
     - name: FileNameDataPopulator
     - name: BulletinHeadingDataPopulator
       config:
-        bulletinHeadingSources:
+        bulletin-heading-sources:
           - GTS_BULLETIN_HEADING
           - COLLECT_IDENTIFIER
     - name: MessageDataPopulator
     - name: MessageContentTrimmer
     - name: FixedDurationValidityPeriodPopulator
-      activateOn:
+      activate-on:
         type:
           is: SPACE_WEATHER_ADVISORY
       config:
-        validityEndOffset: PT24H
+        validity-end-offset: PT24H
 # END SNIPPET: messagepopulators
 ---
 
@@ -178,21 +178,21 @@ file-handler:
 spring.config.activate.on-profile: (!testMissingStaticRouteIds & !testEmptyStaticRouteIds)
 
 message-static-values:
-  routeIds:
+  route-ids:
     TEST: 1
     TEST2: 2
 ---
 spring.config.activate.on-profile: (!testMissingStaticFormatIds & !testEmptyStaticFormatIds)
 
 message-static-values:
-  formatIds:
+  format-ids:
     TAC: 1
     IWXXM: 2
 ---
 spring.config.activate.on-profile: (!testMissingStaticTypeIds & !testEmptyStaticTypeIds)
 
 message-static-values:
-  typeIds:
+  type-ids:
     METAR: 1
     SPECI: 2
     TAF: 3

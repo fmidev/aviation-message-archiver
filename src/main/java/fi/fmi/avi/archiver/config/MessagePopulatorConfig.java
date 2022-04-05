@@ -37,9 +37,10 @@ import fi.fmi.avi.archiver.message.populator.conditional.ConditionPropertyReader
 import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
 import fi.fmi.avi.archiver.message.populator.conditional.GeneralPropertyPredicate;
 import fi.fmi.avi.archiver.message.populator.conditional.PropertyActivationCondition;
+import fi.fmi.avi.archiver.message.populator.conditional.RenamingConditionPropertyReaderFactory;
+import fi.fmi.avi.archiver.util.StringCaseFormat;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 
-@SuppressWarnings("SpringJavaConstructorAutowiringInspection")
 @ConfigurationProperties(prefix = "message-populators")
 public class MessagePopulatorConfig {
 
@@ -118,7 +119,7 @@ public class MessagePopulatorConfig {
     ConditionPropertyReaderFactory conditionPropertyReaderFactory(final List<ConditionPropertyReader<?>> propertyReaders) {
         final ConditionPropertyReaderRegistry registry = new ConditionPropertyReaderRegistry();
         propertyReaders.forEach(registry::register);
-        return registry;
+        return new RenamingConditionPropertyReaderFactory(registry, StringCaseFormat::dashToCamel);
     }
 
     @Bean

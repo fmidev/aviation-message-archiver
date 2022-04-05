@@ -7,7 +7,7 @@ production-line-initialization:
       fail-dir: ${testclass.workdir.path}/testTAC/failed
       files:
         - pattern: '^.*\.txt$'
-          nameTimeZone: Z
+          name-time-zone: Z
           format: TAC
     - id: testIWXXM
       route: TEST
@@ -16,7 +16,7 @@ production-line-initialization:
       fail-dir: ${testclass.workdir.path}/testIWXXM/failed
       files:
         - pattern: '^.*\.xml$'
-          nameTimeZone: Z
+          name-time-zone: Z
           format: IWXXM
     - id: test2TAC
       route: TEST2
@@ -25,7 +25,7 @@ production-line-initialization:
       fail-dir: ${testclass.workdir.path}/test2TAC/failed
       files:
         - pattern: '^.*\.txt$'
-          nameTimeZone: Z
+          name-time-zone: Z
           format: TAC
     - id: test2IWXXM
       route: TEST2
@@ -34,57 +34,57 @@ production-line-initialization:
       fail-dir: ${testclass.workdir.path}/test2IWXXM/failed
       files:
         - pattern: '^.*\.xml$'
-          nameTimeZone: Z
+          name-time-zone: Z
           format: IWXXM
 
 message-populators:
-  executionChain:
+  execution-chain:
     - name: FileMetadataPopulator
     - name: BulletinHeadingDataPopulator
     - name: MessageDataPopulator
     - name: MessageAppendingPopulator
-      activateOn:
-        testProductIdentifier:
-          isAnyOf:
+      activate-on:
+        test-product-identifier:
+          is-any-of:
             - testTAC
             - test2TAC
       config:
         content: 'is testTAC or test2TAC'
     - name: MessageAppendingPopulator
-      activateOn:
-        testProductIdentifier:
+      activate-on:
+        test-product-identifier:
           is: testIWXXM
-        testTargetMessageType:
-          isAnyOf:
+        test-target-message-type:
+          is-any-of:
             - METAR
           # Multiple conditions for a property
           # This is logically redundant, but valid:
-          isNot: SPECI
+          is-not: SPECI
           # This is logically redundant, but valid:
-          doesNotMatch: 'crap'
+          does-not-match: 'crap'
       config:
         content: 'is testIWXXM and METAR'
     - name: MessageAppendingPopulator
-      activateOn:
+      activate-on:
         # Multiple conditions on different properties
-        testProductIdentifier:
+        test-product-identifier:
           matches: '^test\d*IWXXM$'
-        testTargetMessageType:
-          isNoneOf:
+        test-target-message-type:
+          is-none-of:
             - METAR
             - SPECI
           presence: PRESENT
       config:
         content: 'is IWXXM and not METAR/SPECI'
     - name: MessageAppendingPopulator
-      activateOn:
-        testInputValidFrom:
+      activate-on:
+        test-input-valid-from:
           presence: EMPTY
       config:
         content: 'no validFrom'
     - name: MessageAppendingPopulator
-      activateOn:
-        testInputValidTo:
+      activate-on:
+        test-input-valid-to:
           presence: OPTIONAL
       config:
         content: 'possible validTo'

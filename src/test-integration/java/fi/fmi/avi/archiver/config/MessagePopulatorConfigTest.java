@@ -1,16 +1,16 @@
 package fi.fmi.avi.archiver.config;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.AviationMessageArchiver;
-import fi.fmi.avi.archiver.TestConfig;
-import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
-import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
-import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
-import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
@@ -24,22 +24,27 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.AviationMessageArchiver;
+import fi.fmi.avi.archiver.TestConfig;
+import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
+import fi.fmi.avi.archiver.message.populator.MessagePopulator;
+import fi.fmi.avi.archiver.util.StringCaseFormat;
+import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
+import fi.fmi.avi.archiver.util.instantiation.ObjectFactory;
+import fi.fmi.avi.archiver.util.instantiation.PropertyRenamingObjectFactory;
+import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
+import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
 
 @SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.config.MessagePopulatorConfigTest" })
 @ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
         initializers = { ConfigDataApplicationContextInitializer.class })
-@Sql(scripts = { "classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = { "classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql",
+        "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @ActiveProfiles("MessagePopulatorTest")
 class MessagePopulatorConfigTest {
@@ -190,21 +195,25 @@ class MessagePopulatorConfigTest {
     @Configuration
     @Profile("MessagePopulatorTest")
     static class MessagePopulatorTestConfig {
+        private <T extends MessagePopulator> MessagePopulatorFactory<T> messagePopulatorFactory(final ObjectFactory<T> factory) {
+            return new MessagePopulatorFactory<>(new PropertyRenamingObjectFactory<>(factory, StringCaseFormat::dashToCamel));
+        }
+
         @Bean
         public MessagePopulatorFactory<FixedValueTestPopulator1> fixedValueTestPopulator1(final ConfigValueConverter messagePopulatorConfigValueConverter) {
-            return new MessagePopulatorFactory<>(ReflectionObjectFactory.builder(FixedValueTestPopulator1.class, messagePopulatorConfigValueConverter).build());
+            return messagePopulatorFactory(ReflectionObjectFactory.builder(FixedValueTestPopulator1.class, messagePopulatorConfigValueConverter).build());
         }
 
         @Bean
         public MessagePopulatorFactory<FixedValueTestPopulator2> fixedValueTestPopulator2(final ConfigValueConverter messagePopulatorConfigValueConverter) {
-            return new MessagePopulatorFactory<>(ReflectionObjectFactory.builder(FixedValueTestPopulator2.class, messagePopulatorConfigValueConverter)//
+            return messagePopulatorFactory(ReflectionObjectFactory.builder(FixedValueTestPopulator2.class, messagePopulatorConfigValueConverter)//
                     .addConfigArg("station", String.class)//
                     .build());
         }
 
         @Bean
         public MessagePopulatorFactory<FixedValueTestPopulator3> fixedValueTestPopulator3(final ConfigValueConverter messagePopulatorConfigValueConverter) {
-            return new MessagePopulatorFactory<>(ReflectionObjectFactory.builder(FixedValueTestPopulator3.class, messagePopulatorConfigValueConverter)//
+            return messagePopulatorFactory(ReflectionObjectFactory.builder(FixedValueTestPopulator3.class, messagePopulatorConfigValueConverter)//
                     .addDependencyArg(Clock.fixed(Instant.parse("2001-02-03T04:05:06.789Z"), ZoneOffset.UTC))//
                     .addConfigArg("fileModifiedFromNow", Duration.class)//
                     .build());

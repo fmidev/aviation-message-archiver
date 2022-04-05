@@ -1,19 +1,19 @@
 message-populators:
-  executionChain:
+  execution-chain:
     - name: FixedValueTestPopulator1
       config:
         ids:
           ROUTE: 1
           FORMAT: 2
           TYPE: 3
-        validityPeriod: [ ]
+        validity-period: [ ]
     - name: FixedValueTestPopulator1
       config:
         ids: { }
-        validityPeriod: 2001-02-04T05:06:07.021Z
+        validity-period: 2001-02-04T05:06:07.021Z
     - name: FixedValueTestPopulator1
       config:
-        validityPeriod: 2001-02-04T05:06:07.029Z, 2001-02-05T06:07:08.039Z
+        validity-period: 2001-02-04T05:06:07.029Z, 2001-02-05T06:07:08.039Z
     - name: FixedValueTestPopulator2
       config:
         station: EFQQ
@@ -24,12 +24,12 @@ message-populators:
     - name: FixedValueTestPopulator1
     - name: FixedValueTestPopulator3
       config:
-        fileModifiedFromNow: PT10H11M12.5S
+        file-modified-from-now: PT10H11M12.5S
     - name: FixedValueTestPopulator1
       config:
         ids:
           TYPE: 4
-        messageTime: 2001-02-03T04:05:06.019Z
-        validityPeriod:
+        message-time: 2001-02-03T04:05:06.019Z
+        validity-period:
           - null
           - 2001-02-05T06:07:08.041Z

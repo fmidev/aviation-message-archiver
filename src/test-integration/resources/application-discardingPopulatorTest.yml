@@ -1,5 +1,5 @@
 message-populators:
-  executionChain:
+  execution-chain:
     - name: FileMetadataPopulator
     - name: BulletinHeadingDataPopulator
     - name: MessageDataPopulator

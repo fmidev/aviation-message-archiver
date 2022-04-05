@@ -98,9 +98,9 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 20s
 processing-flow:
-  gracefulShutdown:
+  graceful-shutdown:
     timeout: PT20S
-    pollingInterval: PT0.1S
+    polling-interval: PT0.1S
 ---
 # END SNIPPET: shutdown
 
@@ -134,10 +134,10 @@ management:
       show-details: always
 
 health-indicator:
-  directoryPermission:
-    tempFilePrefix: .temp
-    tempFileSuffix: .healthindicator
-  blockingExecutor:
+  directory-permission:
+    temp-file-prefix: .temp
+    temp-file-suffix: .healthindicator
+  blocking-executor:
     timeout: PT30S
 ---
 # END SNIPPET: actuators
@@ -160,10 +160,10 @@ production-line-initialization:
       fail-dir: ${user.home}/.avi-message-archiver/failed
       files:
         - pattern: ^.*\.txt$
-          nameTimeZone: Z
+          name-time-zone: Z
           format: TAC
         - pattern: ^.*\.txt2$
-          nameTimeZone: Z
+          name-time-zone: Z
           format: TAC
     - id: anotherFile
       route: DEFAULT
@@ -172,7 +172,7 @@ production-line-initialization:
       fail-dir: ${user.home}/.avi-message-archiver/failed2
       files:
         - pattern: ^.*another$
-          nameTimeZone: Z
+          name-time-zone: Z
           format: TAC
 
 # END SNIPPET: products
@@ -184,21 +184,21 @@ production-line-initialization:
 ##############################################
 # START SNIPPET: messagepopulators
 message-populators:
-  executionChain:
+  execution-chain:
     - name: FileMetadataPopulator
     - name: FileNameDataPopulator
     - name: BulletinHeadingDataPopulator
       config:
-        bulletinHeadingSources:
+        bulletin-heading-sources:
           - GTS_BULLETIN_HEADING
           - COLLECT_IDENTIFIER
     - name: MessageDataPopulator
     - name: FixedDurationValidityPeriodPopulator
-      activateOn:
+      activate-on:
         type:
           is: SPACE_WEATHER_ADVISORY
       config:
-        validityEndOffset: PT24H
+        validity-end-offset: PT24H
 # END SNIPPET: messagepopulators
 ---
 
@@ -224,12 +224,12 @@ file-handler:
 ##############################################
 # START SNIPPET: Message static values
 message-static-values:
-  routeIds:
+  route-ids:
     DEFAULT: 1
-  formatIds:
+  format-ids:
     TAC: 1
     IWXXM: 2
-  typeIds:
+  type-ids:
     METAR: 1
     SPECI: 2
     TAF: 3
