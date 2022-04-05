@@ -1,9 +1,12 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.AviationMessageArchiver;
-import fi.fmi.avi.archiver.TestConfig;
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
@@ -11,18 +14,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import fi.fmi.avi.archiver.AviationMessageArchiver;
+import fi.fmi.avi.archiver.TestConfig;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.config.AviationProductConfigTest"})
-@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},//
+@SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.config.ProductionLineConfigTest" })
+@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = {ConfigDataApplicationContextInitializer.class})
-class AviationProductConfigTest {
+        initializers = { ConfigDataApplicationContextInitializer.class })
+class ProductionLineConfigTest {
 
     @Autowired
     private Map<String, Integer> messageRouteIds;

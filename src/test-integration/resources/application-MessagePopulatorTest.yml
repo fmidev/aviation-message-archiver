@@ -1,5 +1,5 @@
-message-populators:
-  execution-chain:
+production-line:
+  message-populators:
     - name: FixedValueTestPopulator1
       config:
         ids:

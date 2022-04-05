@@ -1,4 +1,4 @@
-production-line-initialization:
+production-line:
   products:
     - id: testTAC
       route: TEST
@@ -36,9 +36,7 @@ production-line-initialization:
         - pattern: '^.*\.xml$'
           name-time-zone: Z
           format: IWXXM
-
-message-populators:
-  execution-chain:
+  message-populators:
     - name: FileMetadataPopulator
     - name: BulletinHeadingDataPopulator
     - name: MessageDataPopulator

@@ -22,7 +22,7 @@ testclass:
 datasource:
   schema: public
 ---
-# END SNIPPET: datasource
+# END SNIPPET: Datasource properties
 
 ##############################################
 #
@@ -45,7 +45,7 @@ server:
   shutdown: graceful
 spring:
   lifecycle:
-    timeout-per-shutdown-phase: "20s"
+    timeout-per-shutdown-phase: 20s
 processing-flow:
   graceful-shutdown:
     timeout: PT5S
@@ -70,14 +70,14 @@ health-indicator:
 
 ##############################################
 #
-#  Product specific properties
+#  Production line configuration
 #
 ##############################################
-# START SNIPPET: products
+# START SNIPPET: production-line
 polling:
   delay: PT0.050S
 
-production-line-initialization:
+production-line:
   products:
     - id: test_taf
       route: TEST
@@ -118,19 +118,11 @@ production-line-initialization:
         - pattern: ^.*\.bul$
           name-time-zone: Z
           format: TAC
-# END SNIPPET: products
-
-##############################################
-#
-#  Message populator chain configuration
-#
-##############################################
-# START SNIPPET: messagepopulators
 ---
 spring.config.activate.on-profile: (!testMissingMessagePopulatorExecutionChain)
 
-message-populators:
-  execution-chain:
+production-line:
+  message-populators:
     - name: MessageDiscarder
       activate-on:
         gts-or-collect-data-designator:
@@ -150,7 +142,34 @@ message-populators:
           is: SPACE_WEATHER_ADVISORY
       config:
         validity-end-offset: PT24H
-# END SNIPPET: messagepopulators
+---
+spring.config.activate.on-profile: (!testMissingStaticRouteIds & !testEmptyStaticRouteIds)
+
+production-line:
+  route-ids:
+    TEST: 1
+    TEST2: 2
+---
+spring.config.activate.on-profile: (!testMissingStaticFormatIds & !testEmptyStaticFormatIds)
+
+production-line:
+  format-ids:
+    TAC: 1
+    IWXXM: 2
+---
+spring.config.activate.on-profile: (!testMissingStaticTypeIds & !testEmptyStaticTypeIds)
+
+production-line:
+  type-ids:
+    METAR: 1
+    SPECI: 2
+    TAF: 3
+    SIGMET: 4
+    AIRMET: 5
+    VOLCANIC_ASH_ADVISORY: 6
+    TROPICAL_CYCLONE_ADVISORY: 7
+    SPACE_WEATHER_ADVISORY: 8
+# END SNIPPET: production-line
 ---
 
 ##############################################
@@ -167,38 +186,3 @@ file-handler:
     multiplier: 2
     timeout: PT0S
 # END SNIPPET: File handling
-
-##############################################
-#
-#  Message static values
-#
-##############################################
-# START SNIPPET: Message static values
----
-spring.config.activate.on-profile: (!testMissingStaticRouteIds & !testEmptyStaticRouteIds)
-
-message-static-values:
-  route-ids:
-    TEST: 1
-    TEST2: 2
----
-spring.config.activate.on-profile: (!testMissingStaticFormatIds & !testEmptyStaticFormatIds)
-
-message-static-values:
-  format-ids:
-    TAC: 1
-    IWXXM: 2
----
-spring.config.activate.on-profile: (!testMissingStaticTypeIds & !testEmptyStaticTypeIds)
-
-message-static-values:
-  type-ids:
-    METAR: 1
-    SPECI: 2
-    TAF: 3
-    SIGMET: 4
-    AIRMET: 5
-    VOLCANIC_ASH_ADVISORY: 6
-    TROPICAL_CYCLONE_ADVISORY: 7
-    SPACE_WEATHER_ADVISORY: 8
-# END SNIPPET: Message static values
