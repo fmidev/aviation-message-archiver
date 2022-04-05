@@ -177,7 +177,7 @@ public class InvalidConfigDetectionTest {
         assertThatExceptionIsThrownByProfile("testEmptyProductId")//
                 .isInstanceOf(IllegalStateException.class)//
                 .withMessageContaining("Invalid product configuration at index <0>:")//
-                .withMessageMatching(containsWord("[Nn]ot set"))//
+                .withMessageMatching(containsWord("is empty"))//
                 .withMessageMatching(containsWord("id"))//
         ;
     }

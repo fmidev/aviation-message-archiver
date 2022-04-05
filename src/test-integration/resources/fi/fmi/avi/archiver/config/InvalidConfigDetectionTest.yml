@@ -141,7 +141,7 @@ spring.config.activate.on-profile: testEmptyProductId
 
 production-line-initialization:
   products:
-    - productId: ''
+    - id: ''
       route: TEST
       input-dir: ${testclass.workdir.path}/input
       archive-dir: ${testclass.workdir.path}/dst
