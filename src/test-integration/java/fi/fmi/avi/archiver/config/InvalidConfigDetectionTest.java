@@ -177,7 +177,7 @@ public class InvalidConfigDetectionTest {
         assertThatExceptionIsThrownByProfile("testEmptyProductId")//
                 .isInstanceOf(IllegalStateException.class)//
                 .withMessageContaining("Invalid product configuration at index <0>:")//
-                .withMessageMatching(containsWord("[Nn]ot set"))//
+                .withMessageMatching(containsWord("is empty"))//
                 .withMessageMatching(containsWord("id"))//
         ;
     }
@@ -396,7 +396,7 @@ public class InvalidConfigDetectionTest {
     void testMissingMessagePopulatorExecutionChain() {
         assertThatExceptionIsThrownByProfile("testMissingMessagePopulatorExecutionChain")//
                 .isInstanceOf(NullPointerException.class)//
-                .withMessageMatching(containsWord("executionChain"))//
+                .withMessageMatching(containsWord("messagePopulators"))//
         ;
     }
 
@@ -404,9 +404,9 @@ public class InvalidConfigDetectionTest {
     void testEmptyMessagePopulatorExecutionChain() {
         assertThatExceptionIsThrownByProfile("testEmptyMessagePopulatorExecutionChain")//
                 .isInstanceOf(IllegalStateException.class)//
-                .withMessageContaining("Invalid message populators configuration: executionChain is empty")//
+                .withMessageContaining("Invalid message populators configuration: messagePopulators is empty")//
                 .withMessageMatching(containsWord("is empty"))//
-                .withMessageMatching(containsWord("executionChain"))//
+                .withMessageMatching(containsWord("messagePopulators"))//
         ;
     }
 
@@ -437,7 +437,7 @@ public class InvalidConfigDetectionTest {
     @Test
     void testEmptyStaticRouteIds() {
         assertThatExceptionIsThrownByProfile("testEmptyStaticRouteIds")//
-                .isInstanceOf(IllegalArgumentException.class)//
+                .isInstanceOf(IllegalStateException.class)//
                 .withMessageContaining("Invalid configuration:")//
                 .withMessageMatching(containsWord("is empty"))//
                 .withMessageMatching(containsWord("routeIds"))//
@@ -447,7 +447,7 @@ public class InvalidConfigDetectionTest {
     @Test
     void testEmptyStaticFormatIds() {
         assertThatExceptionIsThrownByProfile("testEmptyStaticFormatIds")//
-                .isInstanceOf(IllegalArgumentException.class)//
+                .isInstanceOf(IllegalStateException.class)//
                 .withMessageContaining("Invalid configuration:")//
                 .withMessageMatching(containsWord("is empty"))//
                 .withMessageMatching(containsWord("formatIds"))//
@@ -457,7 +457,7 @@ public class InvalidConfigDetectionTest {
     @Test
     void testEmptyStaticTypeIds() {
         assertThatExceptionIsThrownByProfile("testEmptyStaticTypeIds")//
-                .isInstanceOf(IllegalArgumentException.class)//
+                .isInstanceOf(IllegalStateException.class)//
                 .withMessageContaining("Invalid configuration:")//
                 .withMessageMatching(containsWord("is empty"))//
                 .withMessageMatching(containsWord("typeIds"))//

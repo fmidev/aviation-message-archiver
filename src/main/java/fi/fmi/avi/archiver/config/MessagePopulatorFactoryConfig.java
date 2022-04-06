@@ -30,7 +30,9 @@ import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
 import fi.fmi.avi.archiver.message.populator.ProductMessageTypesValidator;
 import fi.fmi.avi.archiver.message.populator.StationIcaoCodeReplacer;
+import fi.fmi.avi.archiver.util.StringCaseFormat;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
+import fi.fmi.avi.archiver.util.instantiation.PropertyRenamingObjectFactory;
 import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
 import fi.fmi.avi.archiver.util.instantiation.SpringConversionServiceConfigValueConverter;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
@@ -62,7 +64,7 @@ public class MessagePopulatorFactoryConfig {
     }
 
     private <T extends MessagePopulator> MessagePopulatorFactory<T> build(final ReflectionObjectFactory.Builder<T> builder) {
-        return new MessagePopulatorFactory<>(builder.build());
+        return new MessagePopulatorFactory<>(new PropertyRenamingObjectFactory<>(builder.build(), StringCaseFormat::dashToCamel));
     }
 
     @Bean

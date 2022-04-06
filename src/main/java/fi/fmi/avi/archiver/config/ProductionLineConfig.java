@@ -13,28 +13,53 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.context.annotation.Bean;
 
+import com.google.common.collect.BiMap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.config.model.PopulatorInstanceSpec;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import fi.fmi.avi.model.MessageType;
 
-@ConstructorBinding
-@ConfigurationProperties(prefix = "production-line-initialization")
-public class AviationProductConfig {
+@ConfigurationProperties(prefix = "production-line")
+public class ProductionLineConfig {
+    private final List<AviationProduct.Builder> aviationProductBuilders;
+    private final List<PopulatorInstanceSpec.Builder> messagePopulatorSpecBuilders;
+    private final Map<String, Integer> routeIds;
+    private final Map<GenericAviationWeatherMessage.Format, Integer> formatIds;
+    private final Map<MessageType, Integer> typeIds;
 
-    private final List<AviationProduct.Builder> productBuilders;
-
-    AviationProductConfig(final List<AviationProduct.Builder> products) {
-        this.productBuilders = requireNonNull(products, "products");
+    @ConstructorBinding
+    ProductionLineConfig(final List<AviationProduct.Builder> products, final List<PopulatorInstanceSpec.Builder> messagePopulators,
+            final Map<String, Integer> routeIds, final Map<GenericAviationWeatherMessage.Format, Integer> formatIds, final Map<MessageType, Integer> typeIds) {
+        this.aviationProductBuilders = requireNonNull(products, "products");
+        this.messagePopulatorSpecBuilders = requireNonNull(messagePopulators, "messagePopulators");
+        this.routeIds = requireNonNull(routeIds, "routeIds");
+        this.formatIds = requireNonNull(formatIds, "formatIds");
+        this.typeIds = requireNonNull(typeIds, "typeIds");
     }
 
-    private static Map<String, AviationProduct> buildProducts(final List<AviationProduct.Builder> productBuilders, final Map<String, Integer> messageRouteIds,
-            final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
-        validateProducts(productBuilders);
+    private static <E> void iterate(final String description, final List<E> elements, final Consumer<? super E> elementConsumer) {
+        int i = 0;
+        for (final E element : elements) {
+            try {
+                elementConsumer.accept(element);
+            } catch (final RuntimeException e) {
+                throw new IllegalStateException("Invalid " + description + " at index <" + i + ">: " + e.getMessage(), e);
+            }
+            i++;
+        }
+    }
+
+    private static Map<String, AviationProduct> buildAviationProducts(final List<AviationProduct.Builder> productBuilders,
+            final Map<String, Integer> messageRouteIds, final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
+        validateAviationProducts(productBuilders);
         final ImmutableMap.Builder<String, AviationProduct> builder = ImmutableMap.builder();
         iterateProducts(productBuilders, productBuilder -> {
             mapRouteToId(productBuilder, messageRouteIds);
@@ -45,7 +70,7 @@ public class AviationProductConfig {
         return builder.build();
     }
 
-    private static void validateProducts(final List<AviationProduct.Builder> productBuilders) {
+    private static void validateAviationProducts(final List<AviationProduct.Builder> productBuilders) {
         checkState(!productBuilders.isEmpty(), "Invalid configuration: products is empty");
         validateInputDirs(productBuilders);
         validateInputDirPatterns(productBuilders);
@@ -75,8 +100,7 @@ public class AviationProductConfig {
             final Set<String> archiveDirProducts = productArchiveDirs.get(commonPath);
             final Set<String> failDirProducts = productFailDirs.get(commonPath);
             checkState(archiveDirProducts.equals(failDirProducts),
-                    "Invalid configuration: archive directory of product(s) <%s> is equal to fail directory of <%s>: <%s>; "
-                            + "this is allowed only when both archive and fail directories are the same", archiveDirProducts,
+                    "Invalid configuration: archive directory of product(s) <%s> is equal to fail directory of <%s>: <%s>; " + "this is allowed only when both archive and fail directories are the same", archiveDirProducts,
                     Sets.difference(failDirProducts, archiveDirProducts), commonPath);
         });
     }
@@ -91,18 +115,8 @@ public class AviationProductConfig {
         }));
     }
 
-    private static <E> void iterateProducts(final List<E> productBuilders, final Consumer<? super E> productConsumer) {
-        requireNonNull(productBuilders, "productBuilders");
-        requireNonNull(productConsumer, "productConsumer");
-
-        final int size = productBuilders.size();
-        for (int i = 0; i < size; i++) {
-            try {
-                productConsumer.accept(productBuilders.get(i));
-            } catch (final RuntimeException e) {
-                throw new IllegalStateException("Invalid product configuration at index <" + i + ">: " + e.getMessage(), e);
-            }
-        }
+    private static void iterateProducts(final List<AviationProduct.Builder> productBuilders, final Consumer<? super AviationProduct.Builder> productConsumer) {
+        iterate("product configuration", productBuilders, productConsumer);
     }
 
     private static void mapRouteToId(final AviationProduct.Builder product, final Map<String, Integer> messageRouteIds) {
@@ -119,10 +133,39 @@ public class AviationProductConfig {
         }
     }
 
+    private static List<PopulatorInstanceSpec> buildMessagePopulatorSpecs(final List<PopulatorInstanceSpec.Builder> builders) {
+        checkState(!builders.isEmpty(), "Invalid message populators configuration: messagePopulators is empty");
+        final ImmutableList.Builder<PopulatorInstanceSpec> specs = ImmutableList.builder();
+        iterate("MessagePopulator specification", builders, builder -> specs.add(builder.build()));
+        return specs.build();
+    }
+
     @Bean
     Map<String, AviationProduct> aviationProducts(final Map<String, Integer> messageRouteIds,
             final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
-        return buildProducts(productBuilders, messageRouteIds, messageFormatIds);
+        return buildAviationProducts(aviationProductBuilders, messageRouteIds, messageFormatIds);
     }
 
+    @Bean
+    List<PopulatorInstanceSpec> messagePopulatorSpecs() {
+        return buildMessagePopulatorSpecs(messagePopulatorSpecBuilders);
+    }
+
+    @Bean
+    BiMap<String, Integer> messageRouteIds() {
+        checkState(!routeIds.isEmpty(), "Invalid configuration: routeIds is empty");
+        return ImmutableBiMap.copyOf(routeIds);
+    }
+
+    @Bean
+    BiMap<GenericAviationWeatherMessage.Format, Integer> messageFormatIds() {
+        checkState(!formatIds.isEmpty(), "Invalid configuration: formatIds is empty");
+        return ImmutableBiMap.copyOf(formatIds);
+    }
+
+    @Bean
+    BiMap<MessageType, Integer> messageTypeIds() {
+        checkState(!typeIds.isEmpty(), "Invalid configuration: typeIds is empty");
+        return ImmutableBiMap.copyOf(typeIds);
+    }
 }

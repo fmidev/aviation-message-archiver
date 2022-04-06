@@ -98,9 +98,9 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 20s
 processing-flow:
-  gracefulShutdown:
+  graceful-shutdown:
     timeout: PT20S
-    pollingInterval: PT0.1S
+    polling-interval: PT0.1S
 ---
 # END SNIPPET: shutdown
 
@@ -134,72 +134,77 @@ management:
       show-details: always
 
 health-indicator:
-  directoryPermission:
-    tempFilePrefix: .temp
-    tempFileSuffix: .healthindicator
-  blockingExecutor:
+  directory-permission:
+    temp-file-prefix: .temp
+    temp-file-suffix: .healthindicator
+  blocking-executor:
     timeout: PT30S
 ---
 # END SNIPPET: actuators
 
 ##############################################
 #
-#  Product specific properties
+#  Production line configuration
 #
 ##############################################
-# START SNIPPET: products
+# START SNIPPET: production-line
 polling:
   delay: PT1.000S
 
-production-line-initialization:
+production-line:
+  directory:
+    root: ${user.home}/aviation-message-archiver
+    input-name: input
+    archived-name: archived
+    failed-name: failed
+  pattern-template:
+    yyyyMMdd: '(?<yyyy>\d{4})(?<MM>\d{2})(?<dd>\d{2})'
+    hhmmss: '(?<hh>\d{2})(?<mm>\d{2})(?<ss>\d{2})'
+    yyyyMMddhhmmss: '${production-line.pattern-template.yyyyMMdd}${production-line.pattern-template.hhmmss}'
+    WMO_A_C: 'A_[A-Z0-9]{16,19}_C_[A-Z]{4}_${production-line.pattern-template.yyyyMMddhhmmss}'
   products:
-    - id: textFile
+    - id: default
       route: DEFAULT
-      input-dir: ${user.home}/.avi-message-archiver/src
-      archive-dir: ${user.home}/.avi-message-archiver/dst
-      fail-dir: ${user.home}/.avi-message-archiver/failed
+      input-dir: ${production-line.directory.root}/${production-line.directory.input-name}
+      archive-dir: ${production-line.directory.root}/${production-line.directory.archived-name}
+      fail-dir: ${production-line.directory.root}/${production-line.directory.failed-name}
       files:
         - pattern: ^.*\.txt$
-          nameTimeZone: Z
+          name-time-zone: Z
           format: TAC
-        - pattern: ^.*\.txt2$
-          nameTimeZone: Z
-          format: TAC
-    - id: anotherFile
-      route: DEFAULT
-      input-dir: ${user.home}/.avi-message-archiver/src2
-      archive-dir: ${user.home}/.avi-message-archiver/dst2
-      fail-dir: ${user.home}/.avi-message-archiver/failed2
-      files:
-        - pattern: ^.*another$
-          nameTimeZone: Z
-          format: TAC
-
-# END SNIPPET: products
-
-##############################################
-#
-#  Message populator chain configuration
-#
-##############################################
-# START SNIPPET: messagepopulators
-message-populators:
-  executionChain:
+        - pattern: ^.*\.xml$
+          name-time-zone: Z
+          format: IWXXM
+  message-populators:
     - name: FileMetadataPopulator
     - name: FileNameDataPopulator
     - name: BulletinHeadingDataPopulator
       config:
-        bulletinHeadingSources:
+        bulletin-heading-sources:
           - GTS_BULLETIN_HEADING
           - COLLECT_IDENTIFIER
     - name: MessageDataPopulator
     - name: FixedDurationValidityPeriodPopulator
-      activateOn:
+      activate-on:
         type:
           is: SPACE_WEATHER_ADVISORY
       config:
-        validityEndOffset: PT24H
-# END SNIPPET: messagepopulators
+        validity-end-offset: PT24H
+  route-ids:
+    DEFAULT: 1
+  format-ids:
+    TAC: 1
+    IWXXM: 2
+  type-ids:
+    METAR: 1
+    SPECI: 2
+    TAF: 3
+    SIGMET: 4
+    AIRMET: 5
+    VOLCANIC_ASH_ADVISORY: 6
+    TROPICAL_CYCLONE_ADVISORY: 7
+    SPACE_WEATHER_ADVISORY: 8
+# END SNIPPET: production-line
 ---
 
 ##############################################
@@ -216,26 +221,3 @@ file-handler:
     multiplier: 2
     timeout: PT0S
 # END SNIPPET: File handling
-
-##############################################
-#
-#  Message static values
-#
-##############################################
-# START SNIPPET: Message static values
-message-static-values:
-  routeIds:
-    DEFAULT: 1
-  formatIds:
-    TAC: 1
-    IWXXM: 2
-  typeIds:
-    METAR: 1
-    SPECI: 2
-    TAF: 3
-    SIGMET: 4
-    AIRMET: 5
-    VOLCANIC_ASH_ADVISORY: 6
-    TROPICAL_CYCLONE_ADVISORY: 7
-    SPACE_WEATHER_ADVISORY: 8
-# END SNIPPET: Message static values
