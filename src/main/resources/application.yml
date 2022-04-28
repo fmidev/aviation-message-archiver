@@ -36,6 +36,14 @@ logging:
 #
 ##############################################
 # START SNIPPET: Datasource properties
+example:
+  spring:
+    sql:
+      init:
+        data-locations:
+          h2: classpath:/h2-data/example/*.sql
+          postgresql: classpath:fi/fmi/avi/avidb/schema/postgresql/privileges-postgresql.sql,classpath:/postgresql-data/example/*.sql
+---
 spring.config.activate.on-profile: h2
 
 spring:
@@ -49,6 +57,50 @@ spring:
     init:
       platform: h2
       schema-locations: classpath:fi/fmi/avi/avidb/schema/h2/schema-h2.sql
+---
+spring.config.activate.on-profile: h2 & example
+spring:
+  sql:
+    init:
+      data-locations: ${example.spring.sql.init.data-locations.h2}
+---
+spring.config.activate.on-profile: postgresql
+
+spring:
+  datasource:
+    # url: jdbc:postgresql://avidb:5432/avidb
+    # username:
+    # password:
+    driver-class-name: org.postgresql.Driver
+---
+spring.config.activate.on-profile: local & postgresql & !openshift
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/avidb
+    username: avidb_agent
+    password: secret
+    driver-class-name: org.postgresql.Driver
+---
+spring.config.activate.on-profile: (local | development) & postgresql
+
+spring:
+  sql:
+    init:
+      platform: postgresql
+      schema-locations: classpath:fi/fmi/avi/avidb/schema/postgresql/schema-postgresql.sql
+      data-locations: classpath:fi/fmi/avi/avidb/schema/postgresql/privileges-postgresql.sql
+      mode: always
+      # Treat the files as single SQL statements
+      separator: ^^^ END OF SCRIPT ^^^
+      continue-on-error: true
+---
+spring.config.activate.on-profile: (local | development) & postgresql & example
+
+spring:
+  sql:
+    init:
+      data-locations: ${example.spring.sql.init.data-locations.postgresql}
 ---
 spring:
   datasource:
@@ -151,6 +203,9 @@ health-indicator:
 polling:
   delay: PT1.000S
 
+---
+spring.config.activate.on-profile: example
+
 production-line:
   directory:
     root: ${user.home}/aviation-message-archiver
@@ -163,16 +218,28 @@ production-line:
     yyyyMMddhhmmss: '${production-line.pattern-template.yyyyMMdd}${production-line.pattern-template.hhmmss}'
     WMO_A_C: 'A_[A-Z0-9]{16,19}_C_[A-Z]{4}_${production-line.pattern-template.yyyyMMddhhmmss}'
   products:
-    - id: default
+    - id: example1
       route: DEFAULT
-      input-dir: ${production-line.directory.root}/${production-line.directory.input-name}
-      archive-dir: ${production-line.directory.root}/${production-line.directory.archived-name}
-      fail-dir: ${production-line.directory.root}/${production-line.directory.failed-name}
+      input-dir: ${production-line.directory.root}/example1/${production-line.directory.input-name}
+      archive-dir: ${production-line.directory.root}/example1/${production-line.directory.archived-name}
+      fail-dir: ${production-line.directory.root}/example1/${production-line.directory.failed-name}
       files:
-        - pattern: ^.*\.txt$
+        - pattern: '^.*\.txt$'
           name-time-zone: Z
           format: TAC
-        - pattern: ^.*\.xml$
+        - pattern: '^.*\.xml$'
+          name-time-zone: Z
+          format: IWXXM
+    - id: example2
+      route: DEFAULT
+      input-dir: ${production-line.directory.root}/example2/${production-line.directory.input-name}
+      archive-dir: ${production-line.directory.root}/example2/${production-line.directory.archived-name}
+      fail-dir: ${production-line.directory.root}/example2/${production-line.directory.failed-name}
+      files:
+        - pattern: '^${production-line.pattern-template.WMO_A_C}\.txt$'
+          name-time-zone: Z
+          format: TAC
+        - pattern: '^${production-line.pattern-template.WMO_A_C}\.xml$'
           name-time-zone: Z
           format: IWXXM
   message-populators:
@@ -190,6 +257,10 @@ production-line:
           is: SPACE_WEATHER_ADVISORY
       config:
         validity-end-offset: PT24H
+    - name: MessageContentTrimmer
+    - name: MessageFutureTimeValidator
+      config:
+        accept-in-future: PT12H
   route-ids:
     DEFAULT: 1
   format-ids:
@@ -217,7 +288,7 @@ file-handler:
   charset: UTF-8
   retry:
     initial-interval: PT0.5S
-    max-interval: PT10S
     multiplier: 2
+    max-interval: PT10S
     timeout: PT0S
 # END SNIPPET: File handling
