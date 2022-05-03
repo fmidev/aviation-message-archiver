@@ -27,6 +27,10 @@ public abstract class FileConfig {
      * Return regular expression pattern of file names that are considered as input files.
      * Pattern may specify timestamp fields that {@link FilenameMatcher} can parse.
      *
+     * <p>
+     * Pattern must be non-empty and unique within input dir path throughout all {@link AviationProduct products}.
+     * </p>
+     *
      * @return input file pattern
      */
     public abstract Pattern getPattern();
@@ -49,6 +53,7 @@ public abstract class FileConfig {
 
     /**
      * Return the numeric database identifier of message format.
+     * This property is not set in the configuration file, but resolved automatically from {@link #getFormat() format name} at startup.
      *
      * @return format identifier
      */
