@@ -1,6 +1,41 @@
 ##############################################
 #
+#  Aviation Message Archiver
+#  =========================
+#
+#  Application configuration
+#
+#  Spring runtime profiles used in this configuration:
+#  - Production line profiles:
+#    - <default>: Omitted; create your own.
+#    - example: production line provided as an example
+#  - Runtime environment profiles:
+#    - local: local developer-specific development environment
+#    - development: common development environment
+#    - testing: testing / staging environment - as close as possible to the production environment
+#    - production: production environment
+#  - Runtime platform profiles:
+#    - <default>: host operating system
+#    - openshift: OpenShift/Kubernetes
+#  - Database profiles:
+#    - h2: use H2 database on development and tests
+#    - postgresql: Use PostgreSQL/PostGIS database for persistent storage
+#  - Logging profiles:
+#    - <default>: Use default console logging
+#    - logstash: Use structured JSON logging
+#
+#  See Spring Boot reference documentation for details on runtime profiles.
+#  https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.profiles
+#
+##############################################
+##############################################
+#
 #  Logging properties
+#
+#  See Spring Boot reference documentation for details.
+#  https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.logging
+#
+#  Base logging configuration is in src/main/resources/logback-spring.xml
 #
 ##############################################
 # START SNIPPET: logging
@@ -34,6 +69,12 @@ logging:
 #
 #  Datasource properties
 #
+# For details on spring.* properties, see Spring Boot documentation on
+# - Data: https://docs.spring.io/spring-boot/docs/current/reference/html/data.html
+# - Data properties: https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data
+# - Data Migration Properties:
+#     https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data-migration
+#
 ##############################################
 # START SNIPPET: Datasource properties
 example:
@@ -46,6 +87,7 @@ example:
 ---
 spring.config.activate.on-profile: h2
 
+# H2 database connection configuration for development use
 spring:
   datasource:
     url: jdbc:h2:mem:archiver;DB_CLOSE_ON_EXIT=FALSE
@@ -104,11 +146,16 @@ spring:
 ---
 spring:
   datasource:
+    # com.zaxxer.hikari.HikariDataSource properties
     hikari:
+      # Maximum time in seconds to wait while connecting to a database.
       login-timeout: 40
+      # Maximum time in milliseconds to wait for a connection from the pool.
       connection-timeout: 20000
+      # Maximum time in milliseconds that the pool will wait for an alive connection.
       validation-timeout: 5000
-      # Allow the application to start even if initial datasource connection fails
+      # Pool initialization failure timeout in milliseconds.
+      # Use zero to allow the application to start even if initial datasource connection fails.
       initialization-fail-timeout: 0
   jdbc:
     template:
@@ -117,10 +164,15 @@ spring:
     default-timeout: PT15S
 
 datasource:
+  # Database schema to use
   schema: public
+  # Retry configuration on database actions
   retry:
+    # Duration to wait after initial failure.
     initial-interval: PT0.5S
+    # Duration between retries is extended by this multiplier on subsequent retries.
     multiplier: 2
+    # Maximum duration between retry attempts.
     max-interval: PT1M
     # Set to zero to retry infinitely. Set a positive duration for time limited retries.
     timeout: PT0S
@@ -131,9 +183,16 @@ datasource:
 #
 #  Executor config
 #
+#  Each phase in file processing (e.g. file read, parse etc.) is controlled by phase-specific single-thread executors.
+#  Following settings control behavior of these executors.
+#  See fi.fmi.avi.archiver.logging.model.ProcessingPhase for list of phases.
+#
 ##############################################
 # START SNIPPET: executor
 executor:
+  # The size of each phase executor's task queue.
+  # The queue is blocking, thus all incoming tasks are blocked while queue is full. The purpose of the size limit is to prevent incoming tasks accumulating in
+  # memory, in case a phase is blocked due to temporary failure, e.g. database being down.
   queue-size: 20
 ---
 # END SNIPPET: executor
@@ -145,13 +204,21 @@ executor:
 ##############################################
 # START SNIPPET: shutdown
 server:
+  # Shutdown internal web server gracefully
+  # https://docs.spring.io/spring-boot/docs/current/reference/html/web.html#web.graceful-shutdown
   shutdown: graceful
 spring:
   lifecycle:
+    # Graceful shutdown timeout
+    # https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase
     timeout-per-shutdown-phase: 20s
 processing-flow:
+  # When this application receives a shutdown signal, it stops new file reception and waits for ongoing file processing to finish before shutting down.
+  # Following properties control this behavior.
   graceful-shutdown:
+    # Time to wait for all file processing to finish upon shutdown
     timeout: PT20S
+    # Check every pollingInterval whether all ongoing tasks have finished.
     polling-interval: PT0.1S
 ---
 # END SNIPPET: shutdown
@@ -160,10 +227,15 @@ processing-flow:
 #
 #  Actuator config
 #
+# See Spring Boot reference documentation for details on actuators.
+# https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.endpoints
+#
 ##############################################
 # START SNIPPET: actuators
 info:
   app:
+    # Property values surrounded by '@' characters (e.g. '@property.name@') are references to Maven POM properties, and will be replaced upon build with
+    # actual build-time property values.
     name: '@project.name@'
     description: '@project.description@'
     groupId: '@project.groupId@'
@@ -185,10 +257,16 @@ management:
     health:
       show-details: always
 
+# Custom health indicator configuration
 health-indicator:
+  # fi.fmi.avi.archiver.spring.healthcontributor.DirectoryPermissionHealthContributor
+  # Creates a temporary empty file in input, archive and fail directories of each product
   directory-permission:
+    # Temporary file prefix
     temp-file-prefix: .temp
+    # Temporary file suffix
     temp-file-suffix: .healthindicator
+  # fi.fmi.avi.archiver.spring.healthcontributor.BlockingExecutorHealthContributor
   blocking-executor:
     timeout: PT30S
 ---
@@ -200,32 +278,63 @@ health-indicator:
 #
 ##############################################
 # START SNIPPET: production-line
+
+# Input file polling configuration (for org.springframework.integration.file.FileReadingMessageSource)
 polling:
+  # Fixed delay between polls
   delay: PT1.000S
 
 ---
 spring.config.activate.on-profile: example
 
 production-line:
+  # Directory-related helper properties only used as reference within this configuration file.
   directory:
+    # Base directory of all product directories.
     root: ${user.home}/aviation-message-archiver
+    # Name of input directory.
     input-name: input
+    # Name of archive directory.
     archived-name: archived
+    # Name of fail directory.
     failed-name: failed
+  # File pattern-related helper properties only used as reference within this configuration file.
   pattern-template:
+    # Pattern matching <4-digit year><month><day>.
     yyyyMMdd: '(?<yyyy>\d{4})(?<MM>\d{2})(?<dd>\d{2})'
+    # Pattern matching <hour><minute><second>.
     hhmmss: '(?<hh>\d{2})(?<mm>\d{2})(?<ss>\d{2})'
+    # Pattern matching <4-digit year><month><day><hour><minute><second>.
     yyyyMMddhhmmss: '${production-line.pattern-template.yyyyMMdd}${production-line.pattern-template.hhmmss}'
+    # Pattern matching WMO Doc. 386 general file naming conventions with pflag 'A' and oflag 'C'.
     WMO_A_C: 'A_[A-Z0-9]{16,19}_C_[A-Z]{4}_${production-line.pattern-template.yyyyMMddhhmmss}'
+  # List of aviation message product specifications.
+  # At least one product must be specified.
+  # See fi.fmi.avi.archiver.config.model.AviationProduct for detailed documentation on properties.
   products:
-    - id: example1
+    - # Identifier of this product. It must be non-empty and unique within all products.
+      id: example1
+      # Name of the route, through which the messages of this product definition arrive from.
+      # It must be one of specified in map property message-static-values.route-ids.
       route: DEFAULT
+      # Input directory of incoming message files. It must not be equal to archive or fail directory of any product.
       input-dir: ${production-line.directory.root}/example1/${production-line.directory.input-name}
+      # Directory for successfully archived / processed files. It must not be equal to input directory of any product.
+      # It may be equal to fail directory of this and other products, but only if all of involved products specify equal archive and fail directories.
       archive-dir: ${production-line.directory.root}/example1/${production-line.directory.archived-name}
+      # Directory for files that were not processed successfully. It must not be equal to input directory of any product.
+      # It may be equal to archive directory of this and other products, but only if all of involved products specify equal archive and fail directories.
       fail-dir: ${production-line.directory.root}/example1/${production-line.directory.failed-name}
+      # List of configurations on input files. At least one file configuration must be specified.
+      # See fi.fmi.avi.archiver.config.model.FileConfig for detailed documentation on properties.
       files:
-        - pattern: '^.*\.txt$'
+        - # Regular expression pattern of file names that are considered as input files.
+          # It must be non-empty and unique within input dir path throughout all products.
+          pattern: '^.*\.txt$'
+          # Time zone of a possible timestamp in input file name.
+          # 'Z' should be used as default value, in case file name contains no timestamp.
           name-time-zone: Z
+          # Format of messages in input file.
           format: TAC
         - pattern: '^.*\.xml$'
           name-time-zone: Z
@@ -242,30 +351,57 @@ production-line:
         - pattern: '^${production-line.pattern-template.WMO_A_C}\.xml$'
           name-time-zone: Z
           format: IWXXM
+  # List of message populator instance specifications, that determine how parsed data is archived, in execution order.
+  # Message populator instance specification consists of
+  # - name: name of message populator to execute (mandatory)
+  # - config: map of populator-specific configuration options. Some of them may be mandatory. May be omitted, when no configuration options are given.
+  # - activate-on: optional activation conditions. The specified populator is executed only when all of provided activation conditions are satisfied.
+  #   Omit to execute unconditionally.
+  # For more info on message populator configuration in general, see README.md in the project root directory.
   message-populators:
-    - name: FileMetadataPopulator
-    - name: FileNameDataPopulator
-    - name: BulletinHeadingDataPopulator
+    - # Populate properties available in input file metadata
+      name: FileMetadataPopulator
+    - # Populate properties parsed from file name.
+      name: FileNameDataPopulator
+    - # Populate properties parsed from input bulletin heading.
+      name: BulletinHeadingDataPopulator
       config:
+        # Prefer parsed data in GTS bulletin heading over collectIdentifier
         bulletin-heading-sources:
           - GTS_BULLETIN_HEADING
           - COLLECT_IDENTIFIER
-    - name: MessageDataPopulator
-    - name: FixedDurationValidityPeriodPopulator
+    - # Populate properties parsed from message content.
+      name: MessageDataPopulator
+    - # Set validity period to a fixed duration period starting from message time.
+      name: FixedDurationValidityPeriodPopulator
       activate-on:
+        # Apply only to Space Weather Advisory messages
         type:
           is: SPACE_WEATHER_ADVISORY
       config:
+        # Set validity period length to 24 hours
         validity-end-offset: PT24H
-    - name: MessageContentTrimmer
-    - name: MessageFutureTimeValidator
+    - # Trim whitespaces around message content.
+      name: MessageContentTrimmer
+    - # Reject message if message time is too far in the future.
+      name: MessageFutureTimeValidator
       config:
+        # Accept messages at less than 12 hours in the future
         accept-in-future: PT12H
+  # Map route name to numeric identifier.
+  # Name is preferably same as 'avidb_message_routes.name' value in the database.
+  # Numeric identifier must be equal to 'avidb_message_routes.route_id' in the database.
   route-ids:
     DEFAULT: 1
+  # Map message format name to numeric identifier.
+  # Name is the value of fi.fmi.avi.model.GenericAviationWeatherMessage.Format.name().
+  # Numeric identifier must be equal to 'avidb_message_format.format_id' in the database.
   format-ids:
     TAC: 1
     IWXXM: 2
+  # Map message type name to numeric identifier.
+  # Name is the value of fi.fmi.avi.model.MessageType.name().
+  # Numeric identifier must be equal to 'avidb_message_types.type_id' in the database.
   type-ids:
     METAR: 1
     SPECI: 2
@@ -285,10 +421,16 @@ production-line:
 ##############################################
 # START SNIPPET: File handling
 file-handler:
+  # Charset of input files.
   charset: UTF-8
+  # Retry configuration on file actions
   retry:
+    # Duration to wait after initial failure.
     initial-interval: PT0.5S
+    # Duration between retries is extended by this multiplier on subsequent retries.
     multiplier: 2
+    # Maximum duration between retry attempts.
     max-interval: PT10S
+    # Set to zero to retry infinitely. Set a positive duration for time limited retries.
     timeout: PT0S
 # END SNIPPET: File handling
