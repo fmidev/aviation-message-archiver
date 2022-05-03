@@ -11,7 +11,8 @@ import fi.fmi.avi.archiver.message.ProcessingResult;
 
 /**
  * Resolves database id for resolved {@link ArchiveAviationMessage#getStationIcaoCode() station ICAO code} and populates the corresponding
- * {@link ArchiveAviationMessage#getStationId() numeric id}.
+ * {@link ArchiveAviationMessage#getStationId() numeric id}. If station ICAO code is not found in the database stations table, the message is rejected with code
+ * {@link ProcessingResult#UNKNOWN_STATION_ICAO_CODE}.
  *
  * <p>
  * This populator is always implicitly added in the end of populator execution chain, and should be omitted from execution chain configuration.
