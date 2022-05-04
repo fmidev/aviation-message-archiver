@@ -64,7 +64,7 @@
     <fmi-avi-messageconverter.version>6.0.0</fmi-avi-messageconverter.version>
     <fmi-avi-messageconverter-tac.version>5.0.0</fmi-avi-messageconverter-tac.version>
     <fmi-avi-messageconverter-iwxxm.version>4.0.0</fmi-avi-messageconverter-iwxxm.version>
-    <avidb-schema.version>0.1.0-SNAPSHOT</avidb-schema.version>
+    <avidb-schema.version>1.0.0</avidb-schema.version>
 
     <spring-boot.repackage.classifier>bundle</spring-boot.repackage.classifier>
 
