@@ -364,7 +364,7 @@ like [MessageDataPopulator](#messagedatapopulator), play an essential role in th
 provided [application.yml] has an example configuration of these. Others,
 like [FixedProcessingResultPopulator](#fixedprocessingresultpopulator)
 or [StationIcaoCodeReplacer](#stationicaocodereplacer), are provided for customized message handling, along with
-possibility for [conditional activation](#activation-condition). One message
+possibility for [conditional activation](#conditional-message-popular-activation). One message
 populator, [StationIdPopulator](#stationidpopulator), cannot be configured, but is implicitly active.
 
 Available populators are listed below (in alphabetic order by name). These are declared for use in

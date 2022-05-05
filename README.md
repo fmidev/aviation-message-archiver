@@ -138,11 +138,11 @@ using H2 (in-memory) or PostGIS database engine.
 3. Prepare an SQL script to populate the `avidb_stations` table. This is optional for testing the application, but all
    messages will be rejected without a matching location indicator in the `icao` column of `avidb_stations` table.
     * **H2:**
-      See [schema-h2.sql](https://github.com/fmidev/avidb-schema/blob/avidb-schema-0.1.0-SNAPSHOT/h2/schema-h2.sql)
+      See [schema-h2.sql](https://github.com/fmidev/avidb-schema/blob/avidb-schema-1.0.0/h2/schema-h2.sql)
       for the schema, and [h2-data/example/avidb_stations.sql](src/main/resources/h2-data/example/avidb_stations.sql)
       for an insertion template.
     * **PostGIS:**
-      See [schema-postgresql.sql](https://github.com/fmidev/avidb-schema/blob/avidb-schema-0.1.0-SNAPSHOT/postgresql/schema-postgresql.sql)
+      See [schema-postgresql.sql](https://github.com/fmidev/avidb-schema/blob/avidb-schema-1.0.0/postgresql/schema-postgresql.sql)
       for the schema,
       and [postgresql-data/example/avidb_stations.sql](src/main/resources/postgresql-data/example/avidb_stations.sql)
       for an insertion template.
@@ -364,7 +364,7 @@ like [MessageDataPopulator](#messagedatapopulator), play an essential role in th
 provided [application.yml] has an example configuration of these. Others,
 like [FixedProcessingResultPopulator](#fixedprocessingresultpopulator)
 or [StationIcaoCodeReplacer](#stationicaocodereplacer), are provided for customized message handling, along with
-possibility for [conditional activation](#activation-condition). One message
+possibility for [conditional activation](#conditional-message-popular-activation). One message
 populator, [StationIdPopulator](#stationidpopulator), cannot be configured, but is implicitly active.
 
 Available populators are listed below (in alphabetic order by name). These are declared for use in
