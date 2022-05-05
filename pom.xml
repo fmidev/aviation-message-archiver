@@ -251,10 +251,10 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.5.3</version>
+        <version>3.0.0-M5</version>
         <configuration>
           <!--
-            Generate documentation and include it in SCM.
+            Generate documentation and include it in SCM. Requires plugin version >=3.
             https://stackoverflow.com/a/68687685
           -->
           <preparationGoals>resources:copy-resources@readme scm:add -Dincludes=README.md</preparationGoals>
