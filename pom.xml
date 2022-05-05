@@ -68,6 +68,8 @@
 
     <spring-boot.repackage.classifier>bundle</spring-boot.repackage.classifier>
 
+    <doclint>all,-missing</doclint>
+
     <doc.msg.generated>Generated - DO NOT EDIT! Instead, edit sources under src/doc directory.</doc.msg.generated>
   </properties>
 

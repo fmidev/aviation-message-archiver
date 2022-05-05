@@ -298,10 +298,10 @@ public interface LoggingContext extends ReadableLoggingContext {
     /**
      * Record the processing result of the current state in {@link #getStatistics() file processing statistics}.
      * When both bulletin and message are registered in the current state, the provided {@code processingResult} is recorded for the
-     * {@link FileProcessingStatistics#recordMessageResult(int, int, FileProcessingStatistics.ProcessingResult) message}. If only a bulletin is registered
-     * in the current state, the provided {@code processingResult} is recorded for the
-     * {@link FileProcessingStatistics#recordBulletinResult(int, FileProcessingStatistics.ProcessingResult) bulletin}. Otherwise the provided
-     * {@code processingResult} is recorded for the {@link FileProcessingStatistics#recordFileResult(FileProcessingStatistics.ProcessingResult) file}.
+     * {@link FileProcessingStatistics#recordMessageResult(int, int, ReadableFileProcessingStatistics.ProcessingResult) message}. If only a bulletin is
+     * registered in the current state, the provided {@code processingResult} is recorded for the
+     * {@link FileProcessingStatistics#recordBulletinResult(int, ReadableFileProcessingStatistics.ProcessingResult) bulletin}. Otherwise the provided
+     * {@code processingResult} is recorded for the {@link FileProcessingStatistics#recordFileResult(ReadableFileProcessingStatistics.ProcessingResult) file}.
      *
      * <p>
      * The default implementation tests the current state of a bulletin and a message invoking {@link #getBulletinIndex()} and {@link #getMessageIndex()}.

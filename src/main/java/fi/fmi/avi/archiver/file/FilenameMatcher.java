@@ -125,9 +125,10 @@ public class FilenameMatcher {
 
     /**
      * Return partial and/or complete time instant parsed from timestamp fields in the file name, if available.
-     * Timestamp fields must match following named capturing groups in the pattern:
+     * Timestamp fields and named capturing groups must match as listed in the table below.
      *
      * <table>
+     *     <caption>Supported time stamp fields and corresponding pattern capturing group names.</caption>
      *     <thead>
      *         <tr><th>Timestamp field</th><th>Capturing group name</th></tr>
      *     </thead>

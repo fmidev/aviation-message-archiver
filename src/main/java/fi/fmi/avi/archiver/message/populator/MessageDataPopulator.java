@@ -159,18 +159,21 @@ public class MessageDataPopulator implements MessagePopulator {
      * The default mappings are
      * </p>
      * <ul>
-     *     <li>METAR, SPECI and TAF:</li>
-     *     <ol>
-     *         <li>{@link LocationIndicatorType#AERODROME}</li>
-     *     </ol>
-     *     <li>AIRMET and SIGMET:</li>
-     *     <ol>
-     *         <li>{@link LocationIndicatorType#ISSUING_AIR_TRAFFIC_SERVICES_REGION}</li>
-     *     </ol>
-     *     <li>Space weather advisory, Tropical cyclone advisory and Volcanic ash advisory:</li>
-     *     <ol>
-     *         <li>An empty list (omitting location indicator completely)</li>
-     *     </ol>
+     *     <li>METAR, SPECI and TAF:
+     *         <ol>
+     *             <li>{@link LocationIndicatorType#AERODROME}</li>
+     *         </ol>
+     *     </li>
+     *     <li>AIRMET and SIGMET:
+     *         <ol>
+     *             <li>{@link LocationIndicatorType#ISSUING_AIR_TRAFFIC_SERVICES_REGION}</li>
+     *         </ol>
+     *     </li>
+     *     <li>Space weather advisory, Tropical cyclone advisory and Volcanic ash advisory:
+     *         <ol>
+     *             <li>An empty list (omitting location indicator completely)</li>
+     *         </ol>
+     *     </li>
      * </ul>
      *
      * @param messageTypeLocationIndicatorTypes
