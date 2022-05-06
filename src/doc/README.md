@@ -321,8 +321,8 @@ are responsible for populating the archive data object with message data parsed 
 populator focuses on a single responsibility, and together all configured populators construct the complete message
 entity to be archived. Message populators also decide whether message is considered
 
-* **eligible for archival**, thus will stored in the messages database table after all populators are executed,
-* **rejected**, thus will be stored in the rejected messages database table after all populators are executed,
+* **eligible for archival**, thus will be stored in the message database table after all populators are executed,
+* **rejected**, thus will be stored in the rejected message database table after all populators are executed,
 * **discarded**, thus will be ignored immediately and logged at info level,
 * **failed** thus will be ignored immediately and logged at error level.
 
@@ -575,7 +575,7 @@ Reject message, if message type is not one of valid types configured for product
 
 ##### StationIcaoCodeReplacer
 
-Replace all occurrences of regular expression pattern in station ICAO code with provided replacement.
+Replace all occurrences of regular expression pattern in the station ICAO code with the provided replacement.
 
 * **name:**
   [StationIcaoCodeReplacer](src/main/java/fi/fmi/avi/archiver/message/populator/StationIcaoCodeReplacer.java)
@@ -741,7 +741,7 @@ class.
 ### Identifier mappings
 
 Internally this application uses static values to represent message type and format. These internal values differ from
-the identifier of equivalent database entity, and are not bound to the name in the database. Therefore internal values
+the identifier of equivalent database entity, and are not bound to the name in the database. Therefore, internal values
 need to be mapped to database values in the application configuration. In addition to message type and format, message
 route is a similar property, but it has no internal semantics. However, it is mapped in the configuration for
 consistency with other similar properties.
