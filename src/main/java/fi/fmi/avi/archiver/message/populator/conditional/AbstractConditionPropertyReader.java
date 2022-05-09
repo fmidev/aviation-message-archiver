@@ -102,7 +102,7 @@ public abstract class AbstractConditionPropertyReader<T> implements ConditionPro
      * @param value
      *         value to validate
      *
-     * @return @inheritDoc
+     * @return {@inheritDoc}
      */
     @Override
     public boolean validate(final T value) {

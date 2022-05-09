@@ -1,13 +1,19 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+
 import com.google.common.annotations.VisibleForTesting;
+
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.populator.BulletinHeadingSource;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
-
-import java.util.*;
-import java.util.function.Function;
 
 /**
  * An abstract implementation of {@code ConditionPropertyReader} for properties of bulletin heading, that applies convention over code principle.
@@ -62,7 +68,7 @@ public abstract class AbstractBulletinHeadingConditionPropertyReader<T> extends 
      * the resulting name would be {@code gtsOrCollectMyCustom}.
      * </p>
      *
-     * @return @inheritDoc
+     * @return {@inheritDoc}
      */
     @Override
     public String getPropertyName() {

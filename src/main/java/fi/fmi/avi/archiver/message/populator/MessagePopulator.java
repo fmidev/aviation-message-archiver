@@ -1,15 +1,15 @@
 package fi.fmi.avi.archiver.message.populator;
 
+import java.util.function.Function;
+
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
 
-import java.util.function.Function;
-
 /**
  * {@code MessagePopulator} is a component responsible for populating one or more properties of target {@code ArchiveAviationMessage} builder.
- * Each message populator focuses on a single responsibility and together all configured populators construct the complete message entity to be archived.
+ * Each message populator focuses on a single responsibility, and together all configured populators construct the complete message entity to be archived.
  * {@code MessagePopulator} is the main extension point for customizing the message properties and content to be archived.
  *
  * <p>
