@@ -109,7 +109,7 @@ Supported message types and formats are listed in the table below. Generally, th
 
 ## Getting started
 
-Next steps guide you to test the application with example [configuration](#application-configuration)
+The next steps guide you to test the application with example [configuration](#application-configuration)
 using H2 (in-memory) or PostGIS database engine.
 
 1. After cloning the code repository, build the application with [Maven](https://maven.apache.org/).
@@ -121,7 +121,7 @@ using H2 (in-memory) or PostGIS database engine.
 2. Set up the database engine.
     * **H2:** is automatically set up at application startup, no actions needed.
     * **PostGIS:** Database is easily set up with Docker or Podman. Use credentials specified by `spring.datasource.*`
-      properties in [application.yml] configuration for profile `local & postgresql & !openshift`.
+      properties in the [application.yml] configuration for profile `local & postgresql & !openshift`.
       ```shell
       docker run \
         -p 127.0.0.1:5432:5432 \
@@ -148,7 +148,7 @@ using H2 (in-memory) or PostGIS database engine.
       for an insertion template.
 
 4. Start the application. Replace
-    * `<path/to/avidb-stations.sql>` with path to file created in previous step, or omit
+    * `<path/to/avidb-stations.sql>` with a path to the file created in previous step, or omit
       the `spring.sql.init.data-locations` property.
     * `<db-engine>` with `h2` or `postgresql`.
 
@@ -166,11 +166,11 @@ using H2 (in-memory) or PostGIS database engine.
     * health: <http://localhost:8080/actuator/health>
 
 6. Copy some message files in the input directories specified by the `production-line.products[n].input-dir` properties
-   in [application.yml] configuration file.
+   in the [application.yml] configuration file.
 
 7. After an input file is processed, the application moves it to one of target directories specified by
    the `production-line.products[n].archive-dir` and `production-line.products[n].fail-dir` properties
-   in [application.yml] configuration file. The processing identifier is appended to the file name.
+   in the [application.yml] configuration file. The processing identifier is appended to the file name.
 
 8. Connect to the database.
     * **H2:** You can access the H2 database console at <http://localhost:8080/h2-console/login.jsp> with default
@@ -193,16 +193,16 @@ section describes implemented mechanisms supporting this goal.
 
 ### Processing identifier and phase
 
-**Processing identifier** is a unique string within a single Java virtual machine, that identifies single processing of
+**Processing identifier** is a unique string within a single Java virtual machine that identifies a single processing of
 a single input file. It connects all separate log entries of the file processing. Processing identifier `0` or `null`
-denotes, that processing identifier is not available or applicable on the log entry.
+denotes that a processing identifier is not available or applicable on the log entry.
 See [FileProcessingIdentifier](src/main/java/fi/fmi/avi/archiver/file/FileProcessingIdentifier.java) class for details.
 
-**Processing phase** describes the phase in the processing chain. Processing phase `nul` or `null` denotes, that
-processing phase information is not available or applicable on the log entry.
+**Processing phase** describes the phase in the processing chain. Processing phase `nul` or `null` denotes that
+the processing phase information is not available or applicable on the log entry.
 See [ProcessingPhase](src/main/java/fi/fmi/avi/archiver/logging/model/ProcessingPhase.java) enum for list of phases.
 
-When using unstructured logging, processing identifier and phase are logged before logging level in format:
+When using unstructured logging, the processing identifier and phase are logged before logging level in format:
 
 ```
 [<processing-id>:<phase>] <level> ...
@@ -210,8 +210,8 @@ When using unstructured logging, processing identifier and phase are logged befo
 
 ### Processing context
 
-Most log entries contain processing context information, referring to file being processed, bulletin of file and message
-within bulletin. Format of processing context in log message is:
+Most log entries contain processing context information, referring to file being processed, bulletin of the file and message
+within the bulletin. The format of the processing context in a log message is:
 
 ```
 <fileReference:bulletinReference:messageReference>
@@ -240,7 +240,7 @@ more information.
 
 ### Processing statistics
 
-When file processing is finished, application logs statistics of the processing in following format:
+When file processing is finished, the application logs statistics of the processing in the following format:
 
 ```
 M{X:n,...,T:n} B{X:1,...,T:n} F{X}
@@ -248,26 +248,26 @@ M{X:n,...,T:n} B{X:1,...,T:n} F{X}
 
 where
 
-* `M{}` contains statistics counted as messages within file.
-* `B{}` contains statistics counted as bulletins within file.
-* `F{}` contains the overall result of file processing.
-* `X:n` contains count of items having specified processing result. Any processing results with zero (`0`) count are
+* `M{}` contains statistics counted as messages within the file.
+* `B{}` contains statistics counted as bulletins within the file.
+* `F{}` contains the overall result of the file processing.
+* `X:n` contains the count of items having the specified processing result. Any processing results with zero (`0`) count are
   omitted.
-    * `X` is the abbreviated one-letter name of processing result.
+    * `X` is the abbreviated one-letter name of the processing result.
       See [ReadableFileProcessingStatistics.ProcessingResult](src/main/java/fi/fmi/avi/archiver/logging/model/ReadableFileProcessingStatistics.java)
       enum for possible values.
-    * `n` is the count of items resulting with preceding processing result.
-* `T:n` contains total count `n` of processed items.
+    * `n` is the count of items resulting with the preceding processing result.
+* `T:n` contains the total count `n` of processed items.
 
-Aggregated results denote the worst processing result of a message within aggregation context. E.g. a bulletin is
-considered rejected, when it contains at least one rejected message, but no failed messages.
+Aggregated results denote the worst processing result of a message within the aggregation context. E.g. a bulletin is
+considered rejected when it contains at least one rejected message, but no failed messages.
 
 See [ReadableFileProcessingStatistics](src/main/java/fi/fmi/avi/archiver/logging/model/ReadableFileProcessingStatistics.java)
 interface for more information.
 
 ### Structured logging
 
-Structured JSON logging can be enabled activating the `logstash` runtime profile in the startup command. E.g.
+Structured JSON logging can be enabled by activating the `logstash` runtime profile in the startup command. E.g.
 
 ```shell
 java -Dspring.profiles.active=<other profiles...>,logstash ...
@@ -280,20 +280,20 @@ file is a base configuration, acting as an example. You can use it as a base for
 file. In your custom configuration file you need to add and/or override only changed or forced properties in your own
 configuration file, because the provided base configuration file is loaded as well.
 See [External Application Properties](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.external-config.files)
-in Spring Boot reference documentation for instructions on how your apply your custom configuration file.
+in Spring Boot reference documentation for instructions on how to apply your custom configuration file.
 
 Runtime behavior is controlled
 using [Spring profiles](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.profiles)
-which are activated by application launch command. Profiles declared in the provided configuration are described in
+which are activated by the application launch command. Profiles declared in the provided configuration are described in
 the [application.yml] file.
 
-Most relevant part of the configuration file is the production line configuration under `production-line` property. Its
+The most relevant part of the configuration file is the production line configuration under `production-line` property. Its
 contents are described below.
 
 ### Products
 
 Aviation product model describes basic information like input and output directories and accepted file name patterns.
-This application can be configured for one or more products. Template of products configuration is:
+This application can be configured for one or more products. Template of products configuration:
 
 ```yaml
 production-line:
@@ -319,7 +319,7 @@ can be found in the [AviationProduct](src/main/java/fi/fmi/avi/archiver/config/m
 [Message populators](src/main/java/fi/fmi/avi/archiver/message/populator/MessagePopulator.java) are small classes that
 are responsible for populating the archive data object with message data parsed from the input file. Each message
 populator focuses on a single responsibility, and together all configured populators construct the complete message
-entity to be archived. Message populators also decide whether message is considered
+entity to be archived. Message populators also decide whether a message is considered
 
 * **eligible for archival**, thus will be stored in the message database table after all populators are executed,
 * **rejected**, thus will be stored in the rejected message database table after all populators are executed,
@@ -330,7 +330,7 @@ Message populator configuration specifies which populators are executed and in w
 later in the execution chain may then override values set by previously executed populators. The configuration applies
 to all [products](#products). Any populator may be configured to execute conditionally.
 
-Template of message populators configuration is:
+Template of message populators configuration:
 
 ```yaml
 production-line:
@@ -355,7 +355,7 @@ production-line:
 Message populator name is generally by convention the same as the class simple name. For example, name
 of `fi.fmi.avi.archiver.message.populator.MessageDataPopulator` class is `MessageDataPopulator` in the configuration.
 
-A base configuration is provided in [application.yml] file for an example.
+A base configuration is provided in the [application.yml] file as an example.
 
 #### Bundled message populators
 
@@ -364,7 +364,7 @@ like [MessageDataPopulator](#messagedatapopulator), play an essential role in th
 provided [application.yml] has an example configuration of these. Others,
 like [FixedProcessingResultPopulator](#fixedprocessingresultpopulator)
 or [StationIcaoCodeReplacer](#stationicaocodereplacer), are provided for customized message handling, along with
-possibility for [conditional activation](#conditional-message-popular-activation). One message
+the possibility for [conditional activation](#conditional-message-popular-activation). One message
 populator, [StationIdPopulator](#stationidpopulator), cannot be configured, but is implicitly active.
 
 Available populators are listed below (in alphabetic order by name). These are declared for use in
@@ -475,9 +475,9 @@ Populate properties parsed from message content.
 * **name:**
   [MessageDataPopulator](src/main/java/fi/fmi/avi/archiver/message/populator/MessageDataPopulator.java)
 * **config:**
-    * `message-type-location-indicator-types` (optional) - Message type-specific list of location indicator types in
-      preferred order, that station ICAO code is read from.  
-      Available message types are specified in map property `production-line.type-ids`. Available location indicator
+    * `message-type-location-indicator-types` (optional) - Message type-specific list of location indicator types in 
+      order of preference for reading the station ICAO code.
+      Available message types are specified in the map property `production-line.type-ids`. Available location indicator
       types are specified
       in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-${fmi-avi-messageconverter.version}/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
       enum.  
@@ -498,8 +498,8 @@ Populate properties parsed from message content.
         - TROPICAL_CYCLONE_ADVISORY: [ ]
         - VOLCANIC_ASH_ADVISORY: [ ]
       ```
-    * `default-location-indicator-types` (optional) - Default list of location indicator types in preferred order, that
-      station ICAO code is read from in case message type-specific list is not configured.  
+    * `default-location-indicator-types` (optional) - Default list of location indicator types in order of preference 
+      for reading the station ICAO code. Only used when the message type-specific list is not configured.  
       Available location indicator types are specified
       in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-${fmi-avi-messageconverter.version}/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
       enum.  
@@ -527,7 +527,7 @@ Reject message if message time is too far in the future.
 * **config:**
     * `accept-in-future` (mandatory) - Maximum duration as ISO 8601
       duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)) from current
-      time to accept message time.  
+      time to accepted message time.  
       Example:
       ```yaml
       accept-in-future: PT12H
@@ -542,7 +542,7 @@ Reject message if message time is too far in the past.
 * **config:**
     * `confname` (mandatory) - Maximum duration as ISO 8601
       duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)) until current
-      time to accept message time.  
+      time to accepted message time.  
       Example:
       ```yaml
       maximum-age: PT36H
@@ -550,7 +550,7 @@ Reject message if message time is too far in the past.
 
 ##### ProductMessageTypesValidator
 
-Reject message, if message type is not one of valid types configured for product.
+Reject message if message type is not one of the valid types configured for the product.
 
 * **name:**
   [ProductMessageTypesValidator](src/main/java/fi/fmi/avi/archiver/message/populator/ProductMessageTypesValidator.java)
@@ -617,7 +617,7 @@ operand_](#activation-operator-and-operand) pairs. When multiple activation expr
 are specified, they are combined with AND operator, thus all of them must be satisfied to activate the message
 populator.
 
-Template for activation condition configuration is:
+Template for activation condition configuration:
 
 ```yaml
 activate-on:
@@ -633,10 +633,10 @@ class.
 
 ##### Activation property
 
-Activation property is the name of aviation message data property, that is applied as the first operand
+Activation property is the name of the aviation message data property that is applied as the first operand
 of [activation operator](#activation-operator-and-operand).
 
-Following activation properties are declared
+The following activation properties are declared
 in [MessagePopulatorConditionPropertyReaderConfig](src/main/java/fi/fmi/avi/archiver/config/MessagePopulatorConditionPropertyReaderConfig.java):
 
 * `format`: populated message format name. See `format-ids` in [Identifier mappings](#identifier-mappings).
@@ -746,7 +746,7 @@ need to be mapped to database values in the application configuration. In additi
 route is a similar property, but it has no internal semantics. However, it is mapped in the configuration for
 consistency with other similar properties.
 
-Following mappings must exist under `production-line` application configuration property:
+The following mappings must exist under `production-line` application configuration property:
 
 * `route-ids`: Map route name, preferably same as database column `avidb_message_routes.name`, to database
   column `avidb_message_routes.route_id`.
@@ -761,7 +761,7 @@ See the provided [application.yml] for an example.
 
 ### Spring Boot configuration properties
 
-Many of properties in [application.yml] configuration file control behavior of Spring Boot features. Look at
+Many of the properties in [application.yml] configuration file control the behavior of Spring Boot features. Look at
 the [Spring Boot Reference Documentation](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/)
 for more information on these. Some of related sections are:
 
