@@ -270,6 +270,7 @@
           <execution>
             <goals>
               <goal>repackage</goal>
+              <goal>build-info</goal>
             </goals>
             <configuration>
               <classifier>${spring-boot.repackage.classifier}</classifier>

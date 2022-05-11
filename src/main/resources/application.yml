@@ -5,6 +5,9 @@
 #
 #  Application configuration
 #
+#  Property values surrounded by '@' characters (e.g. '@pom.property@') are references to Maven POM properties,
+#  and will be replaced upon build with actual build-time property values.
+#
 #  Spring runtime profiles used in this configuration:
 #  - Production line profiles:
 #    - <default>: Omitted; create your own.
@@ -28,6 +31,12 @@
 #  https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.profiles
 #
 ##############################################
+spring:
+  application:
+    name: '@project.artifactId@'
+  main:
+    banner-mode: off
+---
 ##############################################
 #
 #  Logging properties
@@ -232,17 +241,6 @@ processing-flow:
 #
 ##############################################
 # START SNIPPET: actuators
-info:
-  app:
-    # Property values surrounded by '@' characters (e.g. '@property.name@') are references to Maven POM properties, and will be replaced upon build with
-    # actual build-time property values.
-    name: '@project.name@'
-    description: '@project.description@'
-    groupId: '@project.groupId@'
-    artifactId: '@project.artifactId@'
-    version: '@project.version@'
-    profiles: '${spring.profiles.active}'
-
 management:
   endpoint:
     health:
@@ -257,10 +255,18 @@ management:
       path: ${production-line.directory.root}
       threshold: 10MB
   info:
-    build.enabled: true
-    env.enabled: true
-    git.enabled: true
-    java.enabled: true
+    build:
+      enabled: true
+    env:
+      enabled: true
+    java:
+      enabled: true
+
+# Custom info actuator environment properties
+info:
+  spring:
+    name: '${spring.application.name}'
+    profiles: '${spring.profiles.active}'
 
 # Custom health indicator configuration
 health-indicator:
