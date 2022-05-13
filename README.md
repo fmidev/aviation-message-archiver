@@ -148,14 +148,14 @@ using H2 (in-memory) or PostGIS database engine.
       for an insertion template.
 
 4. Start the application. Replace
-    * `<path/to/avidb-stations.sql>` with a path to the file created in previous step, or omit
+    * `$AVIDB_STATIONS_SQL` with a path to the file created in previous step, or omit
       the `spring.sql.init.data-locations` property.
-    * `<db-engine>` with `h2` or `postgresql`.
+    * `$DB_ENGINE` with `h2` or `postgresql`.
 
    ```shell
    java \
-     -Dspring.profiles.active=local,example,<db-engine> \
-     -Dspring.sql.init.data-locations='${example.spring.sql.init.data-locations.<db-engine>}',file://<path/to/avidb-stations.sql> \
+     -Dspring.profiles.active="local,example,$DB_ENGINE" \
+     -Dspring.sql.init.data-locations="\${example.spring.sql.init.data-locations.$DB_ENGINE},file://$AVIDB_STATIONS_SQL" \
      -jar target/aviation-message-archiver-0.1.0-SNAPSHOT-bundle.jar
    ```
 
@@ -169,21 +169,26 @@ using H2 (in-memory) or PostGIS database engine.
    in the [application.yml] configuration file.
 
 7. After an input file is processed, the application moves it to one of target directories specified by
-   the `production-line.products[n].archive-dir` and `production-line.products[n].fail-dir` properties
-   in the [application.yml] configuration file. The processing identifier is appended to the file name.
+   the `production-line.products[n].archive-dir` and `production-line.products[n].fail-dir` properties in
+   the [application.yml] configuration file. The processing identifier is appended to the file name.
 
 8. Connect to the database.
     * **H2:** You can access the H2 database console at <http://localhost:8080/h2-console/login.jsp> with default
       connection settings and credentials.
-    * **PostGIS:** Use any client with connection information provided in the database setup step.
+    * **PostGIS:** Use `psql` or any appropriate client with connection information provided in the database setup step.
 
-   Look at `avidb_messages` and `avidb_rejected_messages` in the database for any archived messages. E.g.
+   Look at the archived and rejected message tables in the database for any messages. E.g.
 
   ```sql
 SELECT *
-FROM avidb_messages;
+FROM avidb_messages AS messages
+         LEFT JOIN avidb_message_iwxxm_details AS iwxxm ON iwxxm.message_id = messages.message_id
+ORDER BY message_time DESC;
 SELECT *
-FROM avidb_rejected_messages;
+FROM avidb_rejected_messages AS r_messages
+         LEFT JOIN avidb_rejected_message_iwxxm_details as r_iwxxm
+                   ON r_iwxxm.rejected_message_id = r_messages.rejected_message_id
+ORDER BY message_time DESC;
   ```
 
 ## Logging
@@ -198,8 +203,8 @@ a single input file. It connects all separate log entries of the file processing
 denotes that a processing identifier is not available or applicable on the log entry.
 See [FileProcessingIdentifier](src/main/java/fi/fmi/avi/archiver/file/FileProcessingIdentifier.java) class for details.
 
-**Processing phase** describes the phase in the processing chain. Processing phase `nul` or `null` denotes that
-the processing phase information is not available or applicable on the log entry.
+**Processing phase** describes the phase in the processing chain. Processing phase `nul` or `null` denotes that the
+processing phase information is not available or applicable on the log entry.
 See [ProcessingPhase](src/main/java/fi/fmi/avi/archiver/logging/model/ProcessingPhase.java) enum for list of phases.
 
 When using unstructured logging, the processing identifier and phase are logged before logging level in format:
@@ -210,8 +215,8 @@ When using unstructured logging, the processing identifier and phase are logged 
 
 ### Processing context
 
-Most log entries contain processing context information, referring to file being processed, bulletin of the file and message
-within the bulletin. The format of the processing context in a log message is:
+Most log entries contain processing context information, referring to file being processed, bulletin of the file and
+message within the bulletin. The format of the processing context in a log message is:
 
 ```
 <fileReference:bulletinReference:messageReference>
@@ -251,8 +256,8 @@ where
 * `M{}` contains statistics counted as messages within the file.
 * `B{}` contains statistics counted as bulletins within the file.
 * `F{}` contains the overall result of the file processing.
-* `X:n` contains the count of items having the specified processing result. Any processing results with zero (`0`) count are
-  omitted.
+* `X:n` contains the count of items having the specified processing result. Any processing results with zero (`0`) count
+  are omitted.
     * `X` is the abbreviated one-letter name of the processing result.
       See [ReadableFileProcessingStatistics.ProcessingResult](src/main/java/fi/fmi/avi/archiver/logging/model/ReadableFileProcessingStatistics.java)
       enum for possible values.
@@ -287,8 +292,8 @@ using [Spring profiles](https://docs.spring.io/spring-boot/docs/2.6.3/reference/
 which are activated by the application launch command. Profiles declared in the provided configuration are described in
 the [application.yml] file.
 
-The most relevant part of the configuration file is the production line configuration under `production-line` property. Its
-contents are described below.
+The most relevant part of the configuration file is the production line configuration under `production-line` property.
+Its contents are described below.
 
 ### Products
 
@@ -324,7 +329,7 @@ entity to be archived. Message populators also decide whether a message is consi
 * **eligible for archival**, thus will be stored in the message database table after all populators are executed,
 * **rejected**, thus will be stored in the rejected message database table after all populators are executed,
 * **discarded**, thus will be ignored immediately and logged at info level,
-* **failed** thus will be ignored immediately and logged at error level.
+* **failed**, thus will be ignored immediately and logged at error level.
 
 Message populator configuration specifies which populators are executed and in which order. A message populator executed
 later in the execution chain may then override values set by previously executed populators. The configuration applies
@@ -337,8 +342,8 @@ production-line:
   message-populators:
     - # Name of message populator to execute (mandatory)
       name: <populator name>
-      # Optional activation conditions. The specified populator is executed only when all of provided activation
-      # conditions are satisfied. Omit to execute unconditionally.
+      # Optional activation conditions. The specified populator is executed only when all of
+      # provided activation conditions are satisfied. Omit to execute unconditionally.
       activate-on:
         <activation property>:
           <activation operator>: <activation operand>
@@ -363,8 +368,8 @@ This application comes with handful of bundled message populators. Some of them,
 like [MessageDataPopulator](#messagedatapopulator), play an essential role in the archival process. The
 provided [application.yml] has an example configuration of these. Others,
 like [FixedProcessingResultPopulator](#fixedprocessingresultpopulator)
-or [StationIcaoCodeReplacer](#stationicaocodereplacer), are provided for customized message handling, along with
-the possibility for [conditional activation](#conditional-message-popular-activation). One message
+or [StationIcaoCodeReplacer](#stationicaocodereplacer), are provided for customized message handling, along with the
+possibility for [conditional activation](#conditional-message-popular-activation). One message
 populator, [StationIdPopulator](#stationidpopulator), cannot be configured, but is implicitly active.
 
 Available populators are listed below (in alphabetic order by name). These are declared for use in
@@ -429,7 +434,7 @@ Set processing result to specified value.
       in [ProcessingResult](src/main/java/fi/fmi/avi/archiver/message/ProcessingResult.java) enum.  
       Example:
       ```yaml
-      result: OK
+      result: FORBIDDEN_MESSAGE_STATION_ICAO_CODE
       ```
 
 ##### FixedRoutePopulator
@@ -440,7 +445,8 @@ Set route to specified value.
   [FixedRoutePopulator](src/main/java/fi/fmi/avi/archiver/message/populator/FixedRoutePopulator.java)
 * **config:**
     * `route` (mandatory) - Route name.  
-      Available values are specified in map property `production-line.route-ids`.  
+      Available values are specified in the `production-line.route-ids` [identifier mapping](#identifier-mappings)
+      property.  
       Example:
       ```yaml
       route: DEFAULT
@@ -454,7 +460,8 @@ Set message type to specified value.
   [FixedTypePopulator](src/main/java/fi/fmi/avi/archiver/message/populator/FixedTypePopulator.java)
 * **config:**
     * `type` (mandatory) - Message type name.  
-      Available values are specified in map property `production-line.route-ids`.  
+      Available values are specified in the `production-line.type-ids` [identifier mapping](#identifier-mappings)
+      property.  
       Example:
       ```yaml
       type: METAR
@@ -475,8 +482,8 @@ Populate properties parsed from message content.
 * **name:**
   [MessageDataPopulator](src/main/java/fi/fmi/avi/archiver/message/populator/MessageDataPopulator.java)
 * **config:**
-    * `message-type-location-indicator-types` (optional) - Message type-specific list of location indicator types in 
-      order of preference for reading the station ICAO code.
+    * `message-type-location-indicator-types` (optional) - Message type-specific list of location indicator types in
+      order of preference for reading the station ICAO code.  
       Available message types are specified in the map property `production-line.type-ids`. Available location indicator
       types are specified
       in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-6.0.0/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
@@ -498,9 +505,9 @@ Populate properties parsed from message content.
         - TROPICAL_CYCLONE_ADVISORY: [ ]
         - VOLCANIC_ASH_ADVISORY: [ ]
       ```
-    * `default-location-indicator-types` (optional) - Default list of location indicator types in order of preference 
-      for reading the station ICAO code. Only used when the message type-specific list is not configured.  
-      Available location indicator types are specified
+    * `default-location-indicator-types` (optional) - Default list of location indicator types in order of preference
+      for reading the station ICAO code.  
+      Only used when the message type-specific list is not configured. Available location indicator types are specified
       in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-6.0.0/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
       enum.  
       Example:
