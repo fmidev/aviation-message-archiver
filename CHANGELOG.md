@@ -9,7 +9,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- ...
+- Add support for files conforming to GTS socket protocol.
 
 ### Changed
 
@@ -31,7 +31,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - ...
 
-## [v1.0.0] - 2022-05-??
+## [v1.0.0] - 2022-05-16
 
 Initial release.
 
