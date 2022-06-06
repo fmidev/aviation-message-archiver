@@ -9,7 +9,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Add support for files conforming to GTS socket protocol.
+- ...
 
 ### Changed
 
@@ -31,10 +31,18 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - ...
 
+## [v1.0.1] - 2022-06-06
+
+### Added
+
+- Add support for files conforming to GTS socket protocol.
+
 ## [v1.0.0] - 2022-05-16
 
 Initial release.
 
-[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.0.0...HEAD
+[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.0.1...HEAD
+
+[v1.0.1]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.0.1
 
 [v1.0.0]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.0.0
