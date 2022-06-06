@@ -85,11 +85,11 @@ Supported message types and formats are listed in the table below. Generally, th
 
 * TAC format message types that are supported
   by [fmi-avi-messageconverter-tac](https://github.com/fmidev/fmi-avi-messageconverter-tac)
-  library [`TAC_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-tac/blob/fmi-avi-messageconverter-tac-5.0.0/src/main/java/fi/fmi/avi/converter/tac/conf/TACConverter.java)
+  library [`TAC_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-tac/blob/fmi-avi-messageconverter-tac-5.1.0/src/main/java/fi/fmi/avi/converter/tac/conf/TACConverter.java)
   conversion and
 * IWXXM format message types that are supported
   by [fmi-avi-messageconverter-iwxxm](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm)
-  library [`IWXXM_STRING_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm/blob/fmi-avi-messageconverter-iwxxm-4.0.0/src/main/java/fi/fmi/avi/converter/iwxxm/conf/IWXXMConverter.java)
+  library [`IWXXM_STRING_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm/blob/fmi-avi-messageconverter-iwxxm-4.1.0/src/main/java/fi/fmi/avi/converter/iwxxm/conf/IWXXMConverter.java)
   conversion.
 
 | Message type              | TAC | IWXXM 2.1 | IWXXM 3.0 |
@@ -156,7 +156,7 @@ using H2 (in-memory) or PostGIS database engine.
    java \
      -Dspring.profiles.active="local,example,$DB_ENGINE" \
      -Dspring.sql.init.data-locations="\${example.spring.sql.init.data-locations.$DB_ENGINE},file://$AVIDB_STATIONS_SQL" \
-     -jar target/aviation-message-archiver-1.0.1-SNAPSHOT-bundle.jar
+     -jar target/aviation-message-archiver-1.0.1-bundle.jar
    ```
 
 5. Check
@@ -486,7 +486,7 @@ Populate properties parsed from message content.
       order of preference for reading the station ICAO code.  
       Available message types are specified in the map property `production-line.type-ids`. Available location indicator
       types are specified
-      in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-6.0.0/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
+      in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-6.1.0/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
       enum.  
       Example:
       ```yaml
@@ -508,7 +508,7 @@ Populate properties parsed from message content.
     * `default-location-indicator-types` (optional) - Default list of location indicator types in order of preference
       for reading the station ICAO code.  
       Only used when the message type-specific list is not configured. Available location indicator types are specified
-      in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-6.0.0/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
+      in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-6.1.0/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
       enum.  
       Example:
       ```yaml
@@ -758,10 +758,10 @@ The following mappings must exist under `production-line` application configurat
 * `route-ids`: Map route name, preferably same as database column `avidb_message_routes.name`, to database
   column `avidb_message_routes.route_id`.
 * `format-ids`:
-  Map [`GenericAviationWeatherMessage.Format.name()`](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-6.0.0/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
+  Map [`GenericAviationWeatherMessage.Format.name()`](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-6.1.0/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
   to database column `avidb_message_format.format_id`.
 * `type-ids`:
-  Map [`MessageType.name()`](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-6.0.0/src/main/java/fi/fmi/avi/model/MessageType.java)
+  Map [`MessageType.name()`](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-6.1.0/src/main/java/fi/fmi/avi/model/MessageType.java)
   to database column `avidb_message_types.type_id`.
 
 See the provided [application.yml] for an example.
