@@ -13,7 +13,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- ...
+- Use fmi-avi-messageconverter-bom to manage library versions
 
 ### Deprecated
 

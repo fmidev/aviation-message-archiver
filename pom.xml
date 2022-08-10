@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>fi.fmi</groupId>
@@ -61,10 +62,9 @@
     <spring-boot.version>2.6.3</spring-boot.version>
     <auto-value.version>1.9</auto-value.version>
     <guava.version>31.0.1-jre</guava.version>
-    <fmi-avi-messageconverter.version>6.1.0</fmi-avi-messageconverter.version>
-    <fmi-avi-messageconverter-tac.version>5.1.0</fmi-avi-messageconverter-tac.version>
-    <fmi-avi-messageconverter-iwxxm.version>4.1.0</fmi-avi-messageconverter-iwxxm.version>
     <avidb-schema.version>1.0.0</avidb-schema.version>
+
+    <avidb-schema.branch-rawname>avidb-schema-${avidb-schema.version}</avidb-schema.branch-rawname>
 
     <spring-boot.repackage.classifier>bundle</spring-boot.repackage.classifier>
 
@@ -79,6 +79,13 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
         <version>${spring-boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>fi.fmi.avi.converter</groupId>
+        <artifactId>fmi-avi-messageconverter-bom</artifactId>
+        <version>1.1.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -141,17 +148,14 @@
     <dependency>
       <groupId>fi.fmi.avi.converter</groupId>
       <artifactId>fmi-avi-messageconverter</artifactId>
-      <version>${fmi-avi-messageconverter.version}</version>
     </dependency>
     <dependency>
       <groupId>fi.fmi.avi.converter</groupId>
       <artifactId>fmi-avi-messageconverter-tac</artifactId>
-      <version>${fmi-avi-messageconverter-tac.version}</version>
     </dependency>
     <dependency>
       <groupId>fi.fmi.avi.converter</groupId>
       <artifactId>fmi-avi-messageconverter-iwxxm</artifactId>
-      <version>${fmi-avi-messageconverter-iwxxm.version}</version>
     </dependency>
     <dependency>
       <groupId>fi.fmi.avi.avidb</groupId>
@@ -250,6 +254,100 @@
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <execution>
+            <id>dependency-properties</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>properties</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <execution>
+            <id>build-helper-regex-artifact-branch-rawnames</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>regex-properties</goal>
+            </goals>
+            <configuration>
+              <regexPropertySettings>
+                <regexPropertySetting>
+                  <name>fmi-avi-messageconverter.branch-rawname</name>
+                  <value>${fi.fmi.avi.converter:fmi-avi-messageconverter:jar}</value>
+                  <regex>^.*/(fmi-avi-messageconverter-[0-9\.]+(-SNAPSHOT)?)\.jar.*$</regex>
+                  <replacement>$1</replacement>
+                  <failIfNoMatch>true</failIfNoMatch>
+                </regexPropertySetting>
+                <regexPropertySetting>
+                  <name>fmi-avi-messageconverter-iwxxm.branch-rawname</name>
+                  <value>${fi.fmi.avi.converter:fmi-avi-messageconverter-iwxxm:jar}</value>
+                  <regex>^.*/(fmi-avi-messageconverter-iwxxm-[0-9\.]+(-SNAPSHOT)?)\.jar.*$</regex>
+                  <replacement>$1</replacement>
+                  <failIfNoMatch>true</failIfNoMatch>
+                </regexPropertySetting>
+                <regexPropertySetting>
+                  <name>fmi-avi-messageconverter-tac.branch-rawname</name>
+                  <value>${fi.fmi.avi.converter:fmi-avi-messageconverter-tac:jar}</value>
+                  <regex>^.*/(fmi-avi-messageconverter-tac-[0-9\.]+(-SNAPSHOT)?)\.jar.*$</regex>
+                  <replacement>$1</replacement>
+                  <failIfNoMatch>true</failIfNoMatch>
+                </regexPropertySetting>
+              </regexPropertySettings>
+            </configuration>
+          </execution>
+          <execution>
+            <id>build-helper-regex-artifact-branch-names</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>regex-properties</goal>
+            </goals>
+            <configuration>
+              <regexPropertySettings>
+                <regexPropertySetting>
+                  <name>fmi-avi-messageconverter.branch-name</name>
+                  <value>${fmi-avi-messageconverter.branch-rawname}</value>
+                  <regex>^.*-SNAPSHOT$</regex>
+                  <replacement>main</replacement>
+                  <failIfNoMatch>false</failIfNoMatch>
+                </regexPropertySetting>
+                <regexPropertySetting>
+                  <name>fmi-avi-messageconverter-iwxxm.branch-name</name>
+                  <value>${fmi-avi-messageconverter-iwxxm.branch-rawname}</value>
+                  <regex>^.*-SNAPSHOT$</regex>
+                  <replacement>main</replacement>
+                  <failIfNoMatch>false</failIfNoMatch>
+                </regexPropertySetting>
+                <regexPropertySetting>
+                  <name>fmi-avi-messageconverter-tac.branch-name</name>
+                  <value>${fmi-avi-messageconverter-tac.branch-rawname}</value>
+                  <regex>^.*-SNAPSHOT$</regex>
+                  <replacement>main</replacement>
+                  <failIfNoMatch>false</failIfNoMatch>
+                </regexPropertySetting>
+                <regexPropertySetting>
+                  <name>avidb-schema.branch-name</name>
+                  <value>${avidb-schema.branch-rawname}</value>
+                  <regex>^.*-SNAPSHOT$</regex>
+                  <replacement>main</replacement>
+                  <failIfNoMatch>false</failIfNoMatch>
+                </regexPropertySetting>
+              </regexPropertySettings>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
         <version>3.0.0-M5</version>
         <configuration>
@@ -257,8 +355,8 @@
             Generate documentation and include it in SCM. Requires plugin version >=3.
             https://stackoverflow.com/a/68687685
           -->
-          <preparationGoals>resources:copy-resources@readme scm:add -Dincludes=README.md</preparationGoals>
-          <completionGoals>resources:copy-resources@readme scm:add -Dincludes=README.md</completionGoals>
+          <preparationGoals>validate resources:copy-resources@readme scm:add -Dincludes=README.md</preparationGoals>
+          <completionGoals>validate resources:copy-resources@readme scm:add -Dincludes=README.md</completionGoals>
         </configuration>
       </plugin>
 
@@ -278,10 +376,6 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

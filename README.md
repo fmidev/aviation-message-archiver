@@ -1,7 +1,7 @@
 <!-- Generated - DO NOT EDIT! Instead, edit sources under src/doc directory. -->
 <!--
   After editing the source file or changing pom.xml, run at project root:
-  mvn resources:copy-resources@readme
+  mvn validate resources:copy-resources@readme
 -->
 
 # Aviation Message Archiver
