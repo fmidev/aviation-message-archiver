@@ -29,7 +29,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
-- ...
+- Bump postgresql from 42.3.4 to 42.4.1 [#117]
+- Dependency upgrades
 
 ## [v1.0.1] - 2022-06-06
 
@@ -46,3 +47,5 @@ Initial release.
 [v1.0.1]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.0.1
 
 [v1.0.0]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.0.0
+
+[#117]: https://github.com/fmidev/aviation-message-archiver/pull/117

@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>fi.fmi</groupId>
@@ -58,9 +59,9 @@
   </scm>
 
   <properties>
-    <spring-boot.version>2.6.3</spring-boot.version>
+    <spring-boot.version>2.7.2</spring-boot.version>
     <auto-value.version>1.9</auto-value.version>
-    <guava.version>31.0.1-jre</guava.version>
+    <guava.version>31.1-jre</guava.version>
     <fmi-avi-messageconverter.version>6.1.0</fmi-avi-messageconverter.version>
     <fmi-avi-messageconverter-tac.version>5.1.0</fmi-avi-messageconverter-tac.version>
     <fmi-avi-messageconverter-iwxxm.version>4.1.0</fmi-avi-messageconverter-iwxxm.version>
@@ -110,7 +111,7 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <version>2.1.210</version>
+      <version>2.1.214</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.integration</groupId>
@@ -162,7 +163,7 @@
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
-      <version>7.0.1</version>
+      <version>7.2</version>
       <optional>true</optional>
     </dependency>
 
@@ -186,7 +187,7 @@
     <dependency>
       <groupId>org.threeten</groupId>
       <artifactId>threeten-extra</artifactId>
-      <version>1.7.0</version>
+      <version>1.7.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -251,7 +252,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>3.0.0-M5</version>
+        <version>3.0.0-M6</version>
         <configuration>
           <!--
             Generate documentation and include it in SCM. Requires plugin version >=3.
