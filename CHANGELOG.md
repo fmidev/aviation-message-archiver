@@ -13,7 +13,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- ...
+- Use fmi-avi-messageconverter-bom to manage library versions [#119]
 
 ### Deprecated
 
@@ -53,3 +53,5 @@ Initial release.
 [#117]: https://github.com/fmidev/aviation-message-archiver/pull/117
 
 [#118]: https://github.com/fmidev/aviation-message-archiver/pull/118
+
+[#119]: https://github.com/fmidev/aviation-message-archiver/pull/119
