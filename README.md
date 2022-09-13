@@ -160,7 +160,7 @@ using H2 (in-memory) or PostGIS database engine.
    ```
 
 5. Check
-   some [actuator endpoints](https://docs.spring.io/spring-boot/docs/2.6.3/reference/html/actuator.html#actuator.endpoints)
+   some [actuator endpoints](https://docs.spring.io/spring-boot/docs/2.7.2/reference/html/actuator.html#actuator.endpoints)
    to see that the application is running and healthy.
     * info: <http://localhost:8080/actuator/info>
     * health: <http://localhost:8080/actuator/health>
@@ -284,11 +284,11 @@ Application configuration properties are collected in a YAML file called [applic
 file is a base configuration, acting as an example. You can use it as a base for your own application configuration
 file. In your custom configuration file you need to add and/or override only changed or forced properties in your own
 configuration file, because the provided base configuration file is loaded as well.
-See [External Application Properties](https://docs.spring.io/spring-boot/docs/2.6.3/reference/html/features.html#features.external-config.files)
+See [External Application Properties](https://docs.spring.io/spring-boot/docs/2.7.2/reference/html/features.html#features.external-config.files)
 in Spring Boot reference documentation for instructions on how to apply your custom configuration file.
 
 Runtime behavior is controlled
-using [Spring profiles](https://docs.spring.io/spring-boot/docs/2.6.3/reference/html/features.html#features.profiles)
+using [Spring profiles](https://docs.spring.io/spring-boot/docs/2.7.2/reference/html/features.html#features.profiles)
 which are activated by the application launch command. Profiles declared in the provided configuration are described in
 the [application.yml] file.
 
@@ -769,17 +769,17 @@ See the provided [application.yml] for an example.
 ### Spring Boot configuration properties
 
 Many of the properties in [application.yml] configuration file control the behavior of Spring Boot features. Look at
-the [Spring Boot Reference Documentation](https://docs.spring.io/spring-boot/docs/2.6.3/reference/html/)
+the [Spring Boot Reference Documentation](https://docs.spring.io/spring-boot/docs/2.7.2/reference/html/)
 for more information on these. Some of related sections are:
 
-* [Profiles](https://docs.spring.io/spring-boot/docs/2.6.3/reference/html/features.html#features.profiles)
-* [Logging](https://docs.spring.io/spring-boot/docs/2.6.3/reference/html/features.html#features.logging)
-* [Data](https://docs.spring.io/spring-boot/docs/2.6.3/reference/html/data.html)
-    * [Data Properties](https://docs.spring.io/spring-boot/docs/2.6.3/reference/html/application-properties.html#appendix.application-properties.data)
-    * [Data Migration Properties](https://docs.spring.io/spring-boot/docs/2.6.3/reference/html/application-properties.html#appendix.application-properties.data-migration)
-* [Graceful Shutdown](https://docs.spring.io/spring-boot/docs/2.6.3/reference/html/web.html#web.graceful-shutdown)
-    * [Timeout property](https://docs.spring.io/spring-boot/docs/2.6.3/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase)
-* [Actuator Endpoints](https://docs.spring.io/spring-boot/docs/2.6.3/reference/html/actuator.html#actuator.endpoints)
+* [Profiles](https://docs.spring.io/spring-boot/docs/2.7.2/reference/html/features.html#features.profiles)
+* [Logging](https://docs.spring.io/spring-boot/docs/2.7.2/reference/html/features.html#features.logging)
+* [Data](https://docs.spring.io/spring-boot/docs/2.7.2/reference/html/data.html)
+    * [Data Properties](https://docs.spring.io/spring-boot/docs/2.7.2/reference/html/application-properties.html#appendix.application-properties.data)
+    * [Data Migration Properties](https://docs.spring.io/spring-boot/docs/2.7.2/reference/html/application-properties.html#appendix.application-properties.data-migration)
+* [Graceful Shutdown](https://docs.spring.io/spring-boot/docs/2.7.2/reference/html/web.html#web.graceful-shutdown)
+    * [Timeout property](https://docs.spring.io/spring-boot/docs/2.7.2/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase)
+* [Actuator Endpoints](https://docs.spring.io/spring-boot/docs/2.7.2/reference/html/actuator.html#actuator.endpoints)
 
 ## License
 
