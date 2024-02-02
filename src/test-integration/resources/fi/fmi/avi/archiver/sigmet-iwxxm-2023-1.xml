@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iwxxm:SIGMET xmlns:iwxxm="http://icao.int/iwxxm/2023-1"
+              xmlns:gml="http://www.opengis.net/gml/3.2"
+              xmlns:aixm="http://www.aixm.aero/schema/5.1.1"
+              xmlns:xlink="http://www.w3.org/1999/xlink"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              gml:id="uuid.07dc850f-b026-48df-add1-2dec9a1d46a9"
+              isCancelReport="false"
+              permissibleUsage="OPERATIONAL"
+              reportStatus="NORMAL"
+              xsi:schemaLocation="http://icao.int/iwxxm/2023-1 http://schemas.wmo.int/iwxxm/2023-1/iwxxm.xsd">
+   <iwxxm:issueTime>
+      <gml:TimeInstant gml:id="uuid.10ae5a43-5d7a-4e76-bff7-1e07cc2ab1a9">
+         <gml:timePosition>2024-02-01T09:09:29Z</gml:timePosition>
+      </gml:TimeInstant>
+   </iwxxm:issueTime>
+   <iwxxm:issuingAirTrafficServicesUnit>
+      <aixm:Unit gml:id="uuid.aeee9991-7a80-4dc2-8030-a95d8bd566f6">
+         <aixm:timeSlice>
+            <aixm:UnitTimeSlice gml:id="uuid.a4b644f9-8c7b-475e-ba8b-e4a75e2036a5">
+               <gml:validTime/>
+               <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+               <aixm:name>SHANWICK OCEANIC AREA CONTROL CENTRE</aixm:name>
+               <aixm:type>ATCC</aixm:type>
+               <aixm:designator>YUDD</aixm:designator>
+            </aixm:UnitTimeSlice>
+         </aixm:timeSlice>
+      </aixm:Unit>
+   </iwxxm:issuingAirTrafficServicesUnit>
+   <iwxxm:originatingMeteorologicalWatchOffice>
+      <aixm:Unit gml:id="uuid.8665116f-d805-4ffc-9b6b-69b84a231463">
+         <aixm:timeSlice>
+            <aixm:UnitTimeSlice gml:id="uuid.8a3c119f-945f-4bc7-88b7-e10ff89efe58">
+               <gml:validTime/>
+               <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+               <aixm:name>UK METEOROLOGICAL OFFICE - EXETER</aixm:name>
+               <aixm:type>MWO</aixm:type>
+               <aixm:designator>YUSO</aixm:designator>
+            </aixm:UnitTimeSlice>
+         </aixm:timeSlice>
+      </aixm:Unit>
+   </iwxxm:originatingMeteorologicalWatchOffice>
+   <iwxxm:issuingAirTrafficServicesRegion>
+      <aixm:Airspace gml:id="uuid.18c78d98-f992-4d56-a352-90de3f9b355f">
+         <aixm:timeSlice>
+            <aixm:AirspaceTimeSlice gml:id="uuid.8c5d8bc9-6d83-4490-a781-b88c8d5c501a">
+               <gml:validTime/>
+               <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+               <aixm:type>OTHER:FIR_UIR</aixm:type>
+               <aixm:designator>YUDD</aixm:designator>
+               <aixm:name>SHANLON FIR/UIR</aixm:name>
+            </aixm:AirspaceTimeSlice>
+         </aixm:timeSlice>
+      </aixm:Airspace>
+   </iwxxm:issuingAirTrafficServicesRegion>
+   <iwxxm:sequenceNumber>T01</iwxxm:sequenceNumber>
+   <iwxxm:validPeriod>
+      <gml:TimePeriod gml:id="uuid.d77f9d2c-c8fb-43d9-8cf0-6724f6511384">
+         <gml:beginPosition>2024-02-01T09:14:02Z</gml:beginPosition>
+         <gml:endPosition>2024-02-01T11:14:02Z</gml:endPosition>
+      </gml:TimePeriod>
+   </iwxxm:validPeriod>
+   <iwxxm:phenomenon xlink:href="http://codes.wmo.int/49-2/SigWxPhenomena/EMBD_TS"/>
+   <iwxxm:analysisCollection>
+      <iwxxm:analysisAndForecastPositionAnalysis gml:id="uuid.e9d043c1-cb5b-4e5e-ac60-9f79c6778349">
+         <iwxxm:analysis>
+            <iwxxm:SIGMETEvolvingConditionCollection gml:id="uuid.b9d2969a-224b-4603-910b-39696ecb569e"
+                                                     timeIndicator="OBSERVATION">
+               <iwxxm:phenomenonTime nilReason="http://codes.wmo.int/common/nil/missing"/>
+               <iwxxm:member>
+                  <iwxxm:SIGMETEvolvingCondition xmlns:om="http://www.opengis.net/om/2.0"
+                                                 gml:id="uuid.eb15af4e-f598-4575-a25f-513e8d98fbee"
+                                                 intensityChange="NO_CHANGE">
+                     <iwxxm:geometry>
+                        <aixm:AirspaceVolume gml:id="uuid.f1e53914-0011-4880-b174-d22490b9875e">
+                           <aixm:upperLimit uom="FL">200</aixm:upperLimit>
+                           <aixm:upperLimitReference>STD</aixm:upperLimitReference>
+                           <aixm:lowerLimit uom="FL">100</aixm:lowerLimit>
+                           <aixm:lowerLimitReference>STD</aixm:lowerLimitReference>
+                           <aixm:horizontalProjection>
+                              <aixm:Surface gml:id="uuid.b3a3bf3a-1172-4dca-8921-d0c69b0048fd">
+                                 <gml:patches>
+                                    <gml:PolygonPatch>
+                                       <gml:exterior>
+                                          <gml:LinearRing>
+                                             <gml:posList>62.97604159322479 23.073322826530717 60.84765105666352
+                                                23.073322826530717 60.84765105666352 28.270344789475793
+                                                62.97604159322479 28.270344789475793 62.97604159322479
+                                                23.073322826530717
+                                             </gml:posList>
+                                          </gml:LinearRing>
+                                       </gml:exterior>
+                                    </gml:PolygonPatch>
+                                 </gml:patches>
+                              </aixm:Surface>
+                           </aixm:horizontalProjection>
+                        </aixm:AirspaceVolume>
+                     </iwxxm:geometry>
+                     <iwxxm:directionOfMotion nilReason="http://codes.wmo.int/common/nil/inapplicable"
+                                              uom="deg"
+                                              xsi:nil="true"/>
+                     <iwxxm:speedOfMotion uom="[kn_i]">0.0</iwxxm:speedOfMotion>
+                  </iwxxm:SIGMETEvolvingCondition>
+               </iwxxm:member>
+            </iwxxm:SIGMETEvolvingConditionCollection>
+         </iwxxm:analysis>
+      </iwxxm:analysisAndForecastPositionAnalysis>
+   </iwxxm:analysisCollection>
+</iwxxm:SIGMET>

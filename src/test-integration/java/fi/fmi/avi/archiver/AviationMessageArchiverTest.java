@@ -778,6 +778,48 @@ class AviationMessageArchiverTest {
                                 .build())
                         .build(), //
                 AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM 2023-1 SIGMET")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("sigmet-iwxxm-2023-1.xml")//
+                        .setFileModified(Instant.parse("2024-02-02T11:00:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2024-02-01T09:09:29Z"))
+                                .setStationId(3)
+                                .setStationIcaoCode("YUDD")
+                                .setFormat(2)
+                                .setType(4)
+                                .setRoute(1)
+                                .setMessage(readResourceToString("sigmet-iwxxm-2023-1.xml"))
+                                .setValidFrom(Instant.parse("2024-02-01T09:14:02Z"))
+                                .setValidTo(Instant.parse("2024-02-01T11:14:02Z"))
+                                .setFileModified(Instant.parse("2024-02-02T11:00:00Z"))
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
+                                        .setXMLNamespace("http://icao.int/iwxxm/2023-1")//
+                                        .build())
+                                .build())
+                        .build(), //
+                AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM 2023-1 VA SIGMET")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("sigmet-va-iwxxm-2023-1.xml")//
+                        .setFileModified(Instant.parse("2024-02-02T11:00:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2024-02-02T13:17:21Z"))
+                                .setStationId(3)
+                                .setStationIcaoCode("YUDD")
+                                .setFormat(2)
+                                .setType(4)
+                                .setRoute(1)
+                                .setMessage(readResourceToString("sigmet-va-iwxxm-2023-1.xml"))
+                                .setValidFrom(Instant.parse("2024-02-02T13:21:54Z"))
+                                .setValidTo(Instant.parse("2024-02-02T15:21:54Z"))
+                                .setFileModified(Instant.parse("2024-02-02T11:00:00Z"))
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
+                                        .setXMLNamespace("http://icao.int/iwxxm/2023-1")//
+                                        .build())
+                                .build())
+                        .build(), //
+                AviationMessageArchiverTestCase.builder()//
                         .setName("Discarded TAF")
                         .setProductName("test_taf_bulletin")
                         .setInputFileName("taf-tac-bulletin-discarded.bul")
