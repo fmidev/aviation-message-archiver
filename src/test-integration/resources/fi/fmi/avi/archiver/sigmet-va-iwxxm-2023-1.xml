@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iwxxm:VolcanicAshSIGMET xmlns:iwxxm="http://icao.int/iwxxm/2023-1"
+                         xmlns:gml="http://www.opengis.net/gml/3.2"
+                         xmlns:aixm="http://www.aixm.aero/schema/5.1.1"
+                         xmlns:metce="http://def.wmo.int/metce/2013"
+                         xmlns:xlink="http://www.w3.org/1999/xlink"
+                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                         gml:id="uuid.37a8e9df-99d8-41bc-afb4-2ba4373c18dd"
+                         isCancelReport="false"
+                         permissibleUsage="NON-OPERATIONAL"
+                         permissibleUsageReason="TEST"
+                         reportStatus="NORMAL"
+                         xsi:schemaLocation="http://icao.int/iwxxm/2023-1 http://schemas.wmo.int/iwxxm/2023-1/iwxxm.xsd">
+   <iwxxm:issueTime>
+      <gml:TimeInstant gml:id="uuid.fe98818c-b70a-4d73-9f11-44cd843402fa">
+         <gml:timePosition>2024-02-02T13:17:21Z</gml:timePosition>
+      </gml:TimeInstant>
+   </iwxxm:issueTime>
+   <iwxxm:issuingAirTrafficServicesUnit>
+      <aixm:Unit gml:id="uuid.3a64562c-b4d6-4da5-b56b-4342064eb81a">
+         <aixm:timeSlice>
+            <aixm:UnitTimeSlice gml:id="uuid.ab096f58-f894-479a-9fc0-f0a1fa97a4df">
+               <gml:validTime/>
+               <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+               <aixm:name>SHANWICK OCEANIC AREA CONTROL CENTRE</aixm:name>
+               <aixm:type>ATCC</aixm:type>
+               <aixm:designator>YUDD</aixm:designator>
+            </aixm:UnitTimeSlice>
+         </aixm:timeSlice>
+      </aixm:Unit>
+   </iwxxm:issuingAirTrafficServicesUnit>
+   <iwxxm:originatingMeteorologicalWatchOffice>
+      <aixm:Unit gml:id="uuid.847c8989-e18a-4857-8851-a612c8dd1293">
+         <aixm:timeSlice>
+            <aixm:UnitTimeSlice gml:id="uuid.d5af2bf8-6478-4a6e-8fab-5ce52599fd6c">
+               <gml:validTime/>
+               <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+               <aixm:name>UK METEOROLOGICAL OFFICE - EXETER</aixm:name>
+               <aixm:type>MWO</aixm:type>
+               <aixm:designator>YUSO</aixm:designator>
+            </aixm:UnitTimeSlice>
+         </aixm:timeSlice>
+      </aixm:Unit>
+   </iwxxm:originatingMeteorologicalWatchOffice>
+   <iwxxm:issuingAirTrafficServicesRegion>
+      <aixm:Airspace gml:id="uuid.36bdd1af-3fc1-45b1-9b30-c5438490ecfc">
+         <aixm:timeSlice>
+            <aixm:AirspaceTimeSlice gml:id="uuid.47d1cb6a-4e69-4c69-868c-b3d7d3fc2377">
+               <gml:validTime/>
+               <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+               <aixm:type>OTHER:FIR_UIR</aixm:type>
+               <aixm:designator>YUDD</aixm:designator>
+               <aixm:name>SHANLON FIR/UIR</aixm:name>
+            </aixm:AirspaceTimeSlice>
+         </aixm:timeSlice>
+      </aixm:Airspace>
+   </iwxxm:issuingAirTrafficServicesRegion>
+   <iwxxm:sequenceNumber>Y01</iwxxm:sequenceNumber>
+   <iwxxm:validPeriod>
+      <gml:TimePeriod gml:id="uuid.8bde4a57-b362-4cb7-8711-eb9154c94139">
+         <gml:beginPosition>2024-02-02T13:21:54Z</gml:beginPosition>
+         <gml:endPosition>2024-02-02T15:21:54Z</gml:endPosition>
+      </gml:TimePeriod>
+   </iwxxm:validPeriod>
+   <iwxxm:phenomenon xlink:href="http://codes.wmo.int/49-2/SigWxPhenomena/VA"/>
+   <iwxxm:analysisCollection>
+      <iwxxm:analysisAndForecastPositionAnalysis gml:id="uuid.ba2e3e4e-45a4-476b-a081-32cc52f1b615">
+         <iwxxm:analysis>
+            <iwxxm:SIGMETEvolvingConditionCollection gml:id="uuid.1dc13b39-f932-48ba-8c2b-e69b1b1be3e2"
+                                                     timeIndicator="OBSERVATION">
+               <iwxxm:phenomenonTime nilReason="http://codes.wmo.int/common/nil/missing"/>
+               <iwxxm:member>
+                  <iwxxm:SIGMETEvolvingCondition xmlns:om="http://www.opengis.net/om/2.0"
+                                                 gml:id="uuid.c41f502d-3548-403b-948c-d8ac33a31a32"
+                                                 intensityChange="NO_CHANGE">
+                     <iwxxm:geometry>
+                        <aixm:AirspaceVolume gml:id="uuid.16936cbf-8ec7-41de-8a1d-7d4f6f20c216">
+                           <aixm:upperLimit uom="FL">200</aixm:upperLimit>
+                           <aixm:upperLimitReference>STD</aixm:upperLimitReference>
+                           <aixm:lowerLimit uom="FL">200</aixm:lowerLimit>
+                           <aixm:lowerLimitReference>STD</aixm:lowerLimitReference>
+                           <aixm:horizontalProjection>
+                              <aixm:Surface gml:id="uuid.e0866939-ea39-4ea4-bb2a-1fcc493e5262">
+                                 <gml:patches>
+                                    <gml:PolygonPatch>
+                                       <gml:exterior>
+                                          <gml:LinearRing>
+                                             <gml:posList>62.95801057767272 24.818887455306157 60.94413269836765
+                                                24.818887455306157 60.94413269836765 29.381158644151075
+                                                62.95801057767272 29.381158644151075 62.95801057767272
+                                                24.818887455306157
+                                             </gml:posList>
+                                          </gml:LinearRing>
+                                       </gml:exterior>
+                                    </gml:PolygonPatch>
+                                 </gml:patches>
+                              </aixm:Surface>
+                           </aixm:horizontalProjection>
+                        </aixm:AirspaceVolume>
+                     </iwxxm:geometry>
+                     <iwxxm:directionOfMotion nilReason="http://codes.wmo.int/common/nil/inapplicable"
+                                              uom="deg"
+                                              xsi:nil="true"/>
+                     <iwxxm:speedOfMotion uom="[kn_i]">0.0</iwxxm:speedOfMotion>
+                  </iwxxm:SIGMETEvolvingCondition>
+               </iwxxm:member>
+            </iwxxm:SIGMETEvolvingConditionCollection>
+         </iwxxm:analysis>
+      </iwxxm:analysisAndForecastPositionAnalysis>
+   </iwxxm:analysisCollection>
+   <iwxxm:eruptingVolcano>
+      <metce:Volcano gml:id="uuid.600528b0-fe8d-4749-b51a-7e2536ae0fb1">
+         <metce:name>Unknown</metce:name>
+         <metce:position>
+            <gml:Point gml:id="uuid.e71dffe5-6dea-416e-95fe-95f589ca0459">
+               <gml:pos axisLabels="Lat Lon"
+                        srsDimension="2"
+                        srsName="http://www.opengis.net/def/crs/EPSG/0/4326"
+                        uomLabels="deg deg">2.0 3.0
+               </gml:pos>
+            </gml:Point>
+         </metce:position>
+      </metce:Volcano>
+   </iwxxm:eruptingVolcano>
+</iwxxm:VolcanicAshSIGMET>
