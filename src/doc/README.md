@@ -92,16 +92,16 @@ Supported message types and formats are listed in the table below. Generally, th
   library [`IWXXM_STRING_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm/blob/${fmi-avi-messageconverter-iwxxm.branch-name}/src/main/java/fi/fmi/avi/converter/iwxxm/conf/IWXXMConverter.java)
   conversion.
 
-| Message type              | TAC | IWXXM 2.1 | IWXXM 3.0 |
-|---------------------------|:---:|:---------:|:---------:|
-| METAR                     | 1\) |    \+     |    \+     |
-| SPECI                     | 1\) |    \+     |    \+     |
-| TAF                       | 1\) |    \+     |    \+     |
-| SIGMET                    | \-  |    \+     |    \+     |
-| AIRMET                    | \-  |    \+     |    \+     |
-| Volcanic Ash Advisory     | 1\) |    n/a    |    \+     |
-| Tropical Cyclone Advisory | \-  |    n/a    |    \+     |
-| Space Weather Advisory    | 1\) |    n/a    |    \+     |
+| Message type              | TAC |IWXXM 2.1  | IWXXM 3.0 | IWXXM 2023-1 |
+|---------------------------|:---:|:---------:|:---------:|:------------:|
+| METAR                     | 1\) |    \+     |    \+     |      1)      |
+| SPECI                     | 1\) |    \+     |    \+     |      1)      |
+| TAF                       | 1\) |    \+     |    \+     |      \-      |
+| SIGMET                    | \-  |    \+     |    \+     |      \+      |
+| AIRMET                    | \-  |    \+     |    \+     |      \+      |
+| Volcanic Ash Advisory     | 1\) |    n/a    |    \+     |      \-      |
+| Tropical Cyclone Advisory | \-  |    n/a    |    \+     |      \-      |
+| Space Weather Advisory    | 1\) |    n/a    |    \+     |      \-      |
 
 \+ Complete support  
 \- Unsupported  

@@ -13,6 +13,30 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- ...
+
+### Deprecated
+
+- ...
+
+### Removed
+
+- ...
+
+### Fixed
+
+- ...
+
+### Security
+
+## [v1.1.0] - 2024-02-07
+
+### Added
+
+- Ability to archive IWXXM 2023-1 SIGMETs and AIRMETs. [#123]
+
+### Changed
+
 - Use fmi-avi-messageconverter-bom to manage library versions [#119]
 
 ### Deprecated
@@ -42,7 +66,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Initial release.
 
-[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.0.1...HEAD
+[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.1.1...HEAD
+
+[v1.1.0]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.1.0
 
 [v1.0.1]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.0.1
 
@@ -55,3 +81,5 @@ Initial release.
 [#118]: https://github.com/fmidev/aviation-message-archiver/pull/118
 
 [#119]: https://github.com/fmidev/aviation-message-archiver/pull/119
+
+[#123]: https://github.com/fmidev/aviation-message-archiver/pull/123
