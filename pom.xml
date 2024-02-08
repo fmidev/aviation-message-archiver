@@ -283,21 +283,21 @@
                 <regexPropertySetting>
                   <name>fmi-avi-messageconverter.branch-rawname</name>
                   <value>${fi.fmi.avi.converter:fmi-avi-messageconverter:jar}</value>
-                  <regex>^.*/(fmi-avi-messageconverter-[0-9\.]+(-beta[0-9]+)?(-SNAPSHOT)?)\.jar.*$</regex>
+                  <regex>^.*(fmi-avi-messageconverter-[0-9\.]+(-beta[0-9]+)?(-SNAPSHOT)?)\.jar.*$</regex>
                   <replacement>$1</replacement>
                   <failIfNoMatch>true</failIfNoMatch>
                 </regexPropertySetting>
                 <regexPropertySetting>
                   <name>fmi-avi-messageconverter-iwxxm.branch-rawname</name>
                   <value>${fi.fmi.avi.converter:fmi-avi-messageconverter-iwxxm:jar}</value>
-                  <regex>^.*/(fmi-avi-messageconverter-iwxxm-[0-9\.]+(-beta[0-9]+)?(-SNAPSHOT)?)\.jar.*$</regex>
+                  <regex>^.*(fmi-avi-messageconverter-iwxxm-[0-9\.]+(-beta[0-9]+)?(-SNAPSHOT)?)\.jar.*$</regex>
                   <replacement>$1</replacement>
                   <failIfNoMatch>true</failIfNoMatch>
                 </regexPropertySetting>
                 <regexPropertySetting>
                   <name>fmi-avi-messageconverter-tac.branch-rawname</name>
                   <value>${fi.fmi.avi.converter:fmi-avi-messageconverter-tac:jar}</value>
-                  <regex>^.*/(fmi-avi-messageconverter-tac-[0-9\.]+(-beta[0-9]+)?(-SNAPSHOT)?)\.jar.*$</regex>
+                  <regex>^.*(fmi-avi-messageconverter-tac-[0-9\.]+(-beta[0-9]+)?(-SNAPSHOT)?)\.jar.*$</regex>
                   <replacement>$1</replacement>
                   <failIfNoMatch>true</failIfNoMatch>
                 </regexPropertySetting>
