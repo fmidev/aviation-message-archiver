@@ -39,18 +39,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Use fmi-avi-messageconverter-bom to manage library versions [#119]
 
-### Deprecated
-
-- ...
-
-### Removed
-
-- ...
-
-### Fixed
-
-- ...
-
 ### Security
 
 - Bump postgresql from 42.3.4 to 42.4.1 [#117]
