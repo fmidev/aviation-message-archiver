@@ -29,6 +29,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Security
 
+- ...
+
 ## [v1.1.0] - 2024-02-07
 
 ### Added
