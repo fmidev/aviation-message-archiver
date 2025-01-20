@@ -92,7 +92,7 @@ Supported message types and formats are listed in the table below. Generally, th
   library [`IWXXM_STRING_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm/blob/${fmi-avi-messageconverter-iwxxm.branch-name}/src/main/java/fi/fmi/avi/converter/iwxxm/conf/IWXXMConverter.java)
   conversion.
 
-| Message type              | TAC |IWXXM 2.1  | IWXXM 3.0 | IWXXM 2023-1 |
+| Message type              | TAC | IWXXM 2.1 | IWXXM 3.0 | IWXXM 2023-1 |
 |---------------------------|:---:|:---------:|:---------:|:------------:|
 | METAR                     | 1\) |    \+     |    \+     |      1)      |
 | SPECI                     | 1\) |    \+     |    \+     |      1)      |
@@ -294,6 +294,8 @@ the [application.yml] file.
 
 The most relevant part of the configuration file is the production line configuration under `production-line` property.
 Its contents are described below.
+
+**Note:** Invalid configuration does not necessarily raise an error on startup, but may be silently ignored.
 
 ### Products
 
@@ -698,7 +700,7 @@ Activation operator may be one of:
   ```yaml
   activate-on:
     type:
-      is-one-of:
+      is-any-of:
         - METAR
         - SPECI
   ```
