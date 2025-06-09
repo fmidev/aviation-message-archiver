@@ -56,6 +56,10 @@ public interface ReadableFileProcessingStatistics extends AppendingLoggable, Str
          */
         ARCHIVED("A"),
         /**
+         * Item was published successfully.
+         */
+        PUBLISHED("P"),
+        /**
          * Item was discarded during process.
          */
         DISCARDED("D"),

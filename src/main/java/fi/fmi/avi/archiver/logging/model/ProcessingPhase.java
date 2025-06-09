@@ -10,6 +10,7 @@ public enum ProcessingPhase implements StructuredLoggable {
     STORE, //
     SUCCESS, //
     FAIL, //
+    PUBLISH, //
     FINISH, //
     ;
 
