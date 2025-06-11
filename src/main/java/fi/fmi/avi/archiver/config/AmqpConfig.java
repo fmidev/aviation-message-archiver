@@ -5,14 +5,23 @@ import com.rabbitmq.client.amqp.Environment;
 import com.rabbitmq.client.amqp.Publisher;
 import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
 import fi.fmi.avi.archiver.amqp.AmqpService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cglib.proxy.InvocationHandler;
+import org.springframework.cglib.proxy.Proxy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.lang.reflect.Method;
 
 import static java.util.Objects.requireNonNull;
 
 @Configuration
 public class AmqpConfig {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AmqpConfig.class);
+
     private final String uri;
     private final String username;
     private final String password;
@@ -39,24 +48,112 @@ public class AmqpConfig {
 
     @Bean
     public Connection amqpConnection(final Environment environment) {
-        return environment.connectionBuilder()
-                .username(username)
-                .password(password)
-                .uri(uri)
-                .build();
+        return createLazyConnection(environment);
     }
 
     @Bean
     public Publisher amqpPublisher(final Connection connection) {
-        return connection.publisherBuilder()
-                .exchange(exchangeName)
-                .key(routingKey)
-                .build();
+        return createLazyPublisher(connection);
     }
 
     @Bean
     public AmqpService amqpService(final Publisher amqpPublisher) {
         return new AmqpService(amqpPublisher);
+    }
+
+    private Connection createLazyConnection(final Environment environment) {
+        return (Connection) Proxy.newProxyInstance(
+                Connection.class.getClassLoader(),
+                new Class[]{Connection.class},
+                new LazyConnectionHandler(environment)
+        );
+    }
+
+    private Publisher createLazyPublisher(final Connection connection) {
+        return (Publisher) Proxy.newProxyInstance(
+                Publisher.class.getClassLoader(),
+                new Class[]{Publisher.class},
+                new LazyPublisherHandler(connection)
+        );
+    }
+
+    private class LazyConnectionHandler implements InvocationHandler {
+        private final Environment environment;
+        private final Object lock = new Object();
+        private volatile Connection actualConnection;
+
+        public LazyConnectionHandler(Environment environment) {
+            this.environment = environment;
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (actualConnection == null) {
+                synchronized (lock) {
+                    if (actualConnection == null) {
+                        try {
+                            actualConnection = environment
+                                    .connectionBuilder()
+                                    .username(username)
+                                    .password(password)
+                                    .uri(uri)
+                                    .listeners(context -> {
+                                        switch (context.currentState()) {
+                                            case OPEN -> LOGGER.info("RabbitMQ connection established");
+                                            case RECOVERING -> LOGGER.info("RabbitMQ connection recovering...");
+                                            case CLOSED -> {
+                                                if (context.failureCause() != null) {
+                                                    LOGGER.error("Connection lost: {}", context.failureCause().getMessage());
+                                                }
+                                            }
+                                        }
+                                    })
+                                    .build();
+                        } catch (final Exception e) {
+                            throw new RuntimeException("Failed to establish RabbitMQ connection", e);
+                        }
+                    }
+                }
+            }
+            return method.invoke(actualConnection, args);
+        }
+    }
+
+    private class LazyPublisherHandler implements InvocationHandler {
+        private final Connection connection;
+        private final Object lock = new Object();
+        private volatile Publisher actualPublisher;
+
+        public LazyPublisherHandler(Connection connection) {
+            this.connection = connection;
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (actualPublisher == null) {
+                synchronized (lock) {
+                    if (actualPublisher == null) {
+                        try {
+                            actualPublisher = connection.publisherBuilder()
+                                    .exchange(exchangeName)
+                                    .key(routingKey)
+                                    .build();
+                        } catch (Exception e) {
+                            LOGGER.error("Failed to create publisher: {}", e.getMessage());
+                            throw new RuntimeException("AMQP publisher unavailable", e);
+                        }
+                    }
+                }
+            }
+
+            try {
+                return method.invoke(actualPublisher, args);
+            } catch (final Exception e) {
+                LOGGER.error("Failed to publish message: {}", e.getMessage());
+                actualPublisher = null;
+                throw e;
+            }
+        }
     }
 
 }
