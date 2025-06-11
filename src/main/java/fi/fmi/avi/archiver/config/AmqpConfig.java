@@ -82,12 +82,12 @@ public class AmqpConfig {
         private final Object lock = new Object();
         private volatile Connection actualConnection;
 
-        public LazyConnectionHandler(Environment environment) {
+        public LazyConnectionHandler(final Environment environment) {
             this.environment = environment;
         }
 
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
             if (actualConnection == null) {
                 synchronized (lock) {
                     if (actualConnection == null) {
@@ -124,12 +124,12 @@ public class AmqpConfig {
         private final Object lock = new Object();
         private volatile Publisher actualPublisher;
 
-        public LazyPublisherHandler(Connection connection) {
+        public LazyPublisherHandler(final Connection connection) {
             this.connection = connection;
         }
 
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
             if (actualPublisher == null) {
                 synchronized (lock) {
                     if (actualPublisher == null) {
@@ -138,7 +138,7 @@ public class AmqpConfig {
                                     .exchange(exchangeName)
                                     .key(routingKey)
                                     .build();
-                        } catch (Exception e) {
+                        } catch (final Exception e) {
                             LOGGER.error("Failed to create publisher: {}", e.getMessage());
                             throw new RuntimeException("AMQP publisher unavailable", e);
                         }
