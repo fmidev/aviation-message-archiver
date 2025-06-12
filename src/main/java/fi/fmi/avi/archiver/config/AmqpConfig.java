@@ -56,20 +56,6 @@ public class AmqpConfig {
 
     @Bean
     public Connection amqpConnection(final Environment environment) {
-        return createLazyConnection(environment);
-    }
-
-    @Bean
-    public Publisher amqpPublisher(final Connection connection) {
-        return createLazyPublisher(connection);
-    }
-
-    @Bean
-    public AmqpService amqpService(final Publisher amqpPublisher) {
-        return new AmqpService(amqpPublisher);
-    }
-
-    private Connection createLazyConnection(final Environment environment) {
         return createLazyForwardingProxy(Connection.class, () -> {
             try {
                 return environment
@@ -95,7 +81,8 @@ public class AmqpConfig {
         });
     }
 
-    private Publisher createLazyPublisher(final Connection connection) {
+    @Bean
+    public Publisher amqpPublisher(final Connection connection) {
         return createLazyForwardingProxy(Publisher.class, () -> {
             try {
                 return connection.publisherBuilder()
@@ -108,4 +95,10 @@ public class AmqpConfig {
             }
         });
     }
+
+    @Bean
+    public AmqpService amqpService(final Publisher amqpPublisher) {
+        return new AmqpService(amqpPublisher);
+    }
+
 }
