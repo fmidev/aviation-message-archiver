@@ -23,6 +23,8 @@ public abstract class ArchiveAviationMessage {
 
     public abstract ProcessingResult getProcessingResult();
 
+    public abstract ArchivalStatus getArchivalStatus();
+
     public abstract int getRoute();
 
     public abstract int getFormat();
@@ -53,6 +55,7 @@ public abstract class ArchiveAviationMessage {
 
     public static class Builder extends ArchiveAviationMessage_Builder {
         Builder() {
+            setArchivalStatus(ArchivalStatus.PENDING);
             setProcessingResult(ProcessingResult.OK);
             setMessagePositionInFile(MessagePositionInFile.getInitial());
         }
