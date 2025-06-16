@@ -18,5 +18,12 @@ jobs:
           java-version: '21'
           distribution: 'liberica'
           cache: maven
+      - name: Set up Maven settings
+        uses: s4u/maven-settings-action@v2.8.0
+        with:
+          repositories: '[
+            {"id": "fmi-os-mvn-repo", "url": "https://raw.githubusercontent.com/fmidev/fmi-os-mvn-repo/master"},
+            {"id": "fmi-os-mvn-snapshot-repo", "url": "https://raw.githubusercontent.com/fmidev/fmi-os-mvn-snapshot-repo/master", "snapshots": true, "releases": false}
+          ]'
       - name: Build and run tests with Maven
         run: mvn -B clean test
