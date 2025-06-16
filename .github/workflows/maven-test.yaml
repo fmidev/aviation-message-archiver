@@ -19,34 +19,30 @@ jobs:
           distribution: 'liberica'
           cache: maven
       - name: Set up Maven settings
-        uses: s4u/maven-settings-action@v2.8.0
+        uses: s4u/maven-settings-action@v3.1.0
         with:
           repositories: |
             [
               {
                 "id": "fmi-os-mvn-repo",
+                "name": "FMI OS Maven Repository",
                 "url": "https://raw.githubusercontent.com/fmidev/fmi-os-mvn-repo/master",
                 "snapshots": {
-                  "enabled": false,
-                  "updatePolicy": "never"
+                  "enabled": false
                 },
                 "releases": {
-                  "enabled": true,
-                  "updatePolicy": "daily",
-                  "checksumPolicy": "ignore"
+                  "enabled": true
                 }
               },
               {
                 "id": "fmi-os-mvn-snapshot-repo",
+                "name": "FMI OS Maven Snapshot Repository",
                 "url": "https://raw.githubusercontent.com/fmidev/fmi-os-mvn-snapshot-repo/master",
                 "snapshots": {
-                  "enabled": true,
-                  "updatePolicy": "interval:60"
+                  "enabled": true
                 },
                 "releases": {
-                  "enabled": false,
-                  "updatePolicy": "never",
-                  "checksumPolicy": "ignore"
+                  "enabled": false
                 }
               }
             ]
