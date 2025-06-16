@@ -61,10 +61,6 @@ public abstract class ArchiveAviationMessage {
             setMessagePositionInFile(MessagePositionInFile.getInitial());
         }
 
-        private static Instant truncateToMicros(final Instant instant) {
-            return instant != null ? instant.truncatedTo(ChronoUnit.MICROS) : null;
-        }
-
         @Override
         public ArchiveAviationMessage build() {
             // Truncate Instant fields to microsecond precision to ensure consistency with database
