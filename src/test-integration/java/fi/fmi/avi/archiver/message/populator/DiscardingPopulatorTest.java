@@ -51,7 +51,7 @@ import static org.mockito.Mockito.verify;
         DiscardingPopulatorTest.DiscardingPopulatorConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
         initializers = { ConfigDataApplicationContextInitializer.class })
-@ActiveProfiles("discardingPopulatorTest")
+@ActiveProfiles({"integration-test", "discardingPopulatorTest"})
 public class DiscardingPopulatorTest {
 
     private static final int WAIT_MILLIS = 100;

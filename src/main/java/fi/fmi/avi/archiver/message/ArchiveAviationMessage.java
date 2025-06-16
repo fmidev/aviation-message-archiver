@@ -1,10 +1,11 @@
 package fi.fmi.avi.archiver.message;
 
+import org.inferred.freebuilder.FreeBuilder;
+
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.OptionalInt;
-
-import org.inferred.freebuilder.FreeBuilder;
 
 /**
  * Model representing an aviation message in the database.
@@ -58,6 +59,20 @@ public abstract class ArchiveAviationMessage {
             setArchivalStatus(ArchivalStatus.PENDING);
             setProcessingResult(ProcessingResult.OK);
             setMessagePositionInFile(MessagePositionInFile.getInitial());
+        }
+
+        private static Instant truncateToMicros(final Instant instant) {
+            return instant != null ? instant.truncatedTo(ChronoUnit.MICROS) : null;
+        }
+
+        @Override
+        public ArchiveAviationMessage build() {
+            // Truncate Instant fields to microsecond precision to ensure consistency with database
+            setMessageTime(getMessageTime().truncatedTo(ChronoUnit.MICROS));
+            getValidFrom().ifPresent(instant -> setValidFrom(instant.truncatedTo(ChronoUnit.MICROS)));
+            getValidTo().ifPresent(instant -> setValidTo(instant.truncatedTo(ChronoUnit.MICROS)));
+            getFileModified().ifPresent(instant -> setFileModified(instant.truncatedTo(ChronoUnit.MICROS)));
+            return super.build();
         }
     }
 }

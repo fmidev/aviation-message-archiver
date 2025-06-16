@@ -70,6 +70,21 @@ health-indicator:
 
 ##############################################
 #
+#  RabbitMQ AMQP 1.0 configuration
+#
+##############################################
+# START SNIPPET: RabbitMQ AMQP 1.0 configuration
+amqp:
+  uri: amqp://localhost:5672/%2f
+  username: user
+  password: passs2
+  exchange: aviation-message-archiver
+  routing-key: aviation-message-archiver
+---
+# END SNIPPET: RabbitMQ AMQP 1.0
+
+##############################################
+#
 #  Production line configuration
 #
 ##############################################

@@ -1,6 +1,16 @@
 package fi.fmi.avi.archiver;
 
-import static java.util.Objects.requireNonNull;
+import com.google.common.base.Preconditions;
+import fi.fmi.avi.archiver.amqp.AmqpService;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.convert.ApplicationConversionService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.util.FileSystemUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,19 +19,18 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.convert.ApplicationConversionService;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.util.FileSystemUtils;
-
-import com.google.common.base.Preconditions;
+import static java.util.Objects.requireNonNull;
 
 @Configuration
+@ActiveProfiles("integration-test")
 public class TestConfig {
     private static final String TEST_CLASS_NAME_MESSAGE = "Set in your test class: @SpringBootTest(\"testclass.name=test.class.FQN\" })";
+
+    // TODO SDM-2644 Temporary mock
+    @Bean
+    AmqpService amqpService() {
+        return Mockito.mock(AmqpService.class);
+    }
 
     @Bean
     Clock clock() {

@@ -56,7 +56,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         initializers = { ConfigDataApplicationContextInitializer.class })
 @Sql(scripts = { "classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ActiveProfiles("ConditionalMessagePopulatorTest")
+@ActiveProfiles({"integration-test", "ConditionalMessagePopulatorTest"})
 class ConditionalMessagePopulatorConfigTest {
     private static final InputBulletinHeading INPUT_BULLETIN_HEADING = InputBulletinHeading.builder()//
             .setBulletinHeadingString("FNXX01 YUDO 120345")//

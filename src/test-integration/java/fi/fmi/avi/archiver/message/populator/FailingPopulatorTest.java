@@ -48,7 +48,7 @@ import static org.mockito.Mockito.verify;
 @ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
         initializers = { ConfigDataApplicationContextInitializer.class })
-@ActiveProfiles("failingPopulatorTest")
+@ActiveProfiles({"integration-test", "failingPopulatorTest"})
 class FailingPopulatorTest {
 
     private static final int WAIT_MILLIS = 100;
