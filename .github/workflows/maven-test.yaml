@@ -1,0 +1,16 @@
+name: Run tests with Maven
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  test:
+    runs-on: [ devinfra ]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build and run tests with Maven
+        run: mvn -B clean test
