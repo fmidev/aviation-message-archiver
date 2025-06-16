@@ -30,7 +30,7 @@ public class AmqpConfig {
     private final String exchangeName;
     private final String routingKey;
 
-    public AmqpConfig(
+    AmqpConfig(
             @Value("${amqp.uri}") final String uri,
             @Value("${amqp.username}") final String username,
             @Value("${amqp.password}") final String password,
@@ -69,12 +69,12 @@ public class AmqpConfig {
     }
 
     @Bean
-    public Environment amqpEnvironment() {
+    Environment amqpEnvironment() {
         return new AmqpEnvironmentBuilder().build();
     }
 
     @Bean
-    public Connection amqpConnection(final Environment environment,
+    Connection amqpConnection(final Environment environment,
                                      final AmqpConnectionHealthContributor amqpConnectionHealthContributor) {
         return createLazyForwardingProxy(Connection.class, () -> {
             try {
@@ -92,7 +92,7 @@ public class AmqpConfig {
     }
 
     @Bean
-    public Publisher amqpPublisher(final Connection connection) {
+    Publisher amqpPublisher(final Connection connection) {
         return createLazyForwardingProxy(Publisher.class, () -> {
             try {
                 return connection.publisherBuilder()
@@ -107,7 +107,7 @@ public class AmqpConfig {
     }
 
     @Bean
-    public AmqpService amqpService(final Publisher amqpPublisher) {
+    AmqpService amqpService(final Publisher amqpPublisher) {
         return new AmqpService(amqpPublisher);
     }
 
