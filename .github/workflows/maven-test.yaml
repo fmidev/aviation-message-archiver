@@ -6,11 +6,17 @@ on:
 
 jobs:
   test:
-    runs-on: [ devinfra ]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'liberica'
+          cache: maven
       - name: Build and run tests with Maven
         run: mvn -B clean test
