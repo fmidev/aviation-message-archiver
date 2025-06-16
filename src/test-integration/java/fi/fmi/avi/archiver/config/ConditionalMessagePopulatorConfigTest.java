@@ -307,7 +307,7 @@ class ConditionalMessagePopulatorConfigTest {
     }
 
     @Configuration
-    @Profile("ConditionalMessagePopulatorTest")
+    @Profile({"integration-test", "ConditionalMessagePopulatorTest"})
     static class MessagePopulatorTestConfig {
         @Bean
         MessagePopulatorFactory<MessageAppendingPopulator> messageAppendingPopulator(final ConfigValueConverter messagePopulatorConfigValueConverter) {

@@ -192,7 +192,7 @@ class MessagePopulatorConfigTest {
     }
 
     @Configuration
-    @Profile("MessagePopulatorTest")
+    @Profile({"integration-test", "MessagePopulatorTest"})
     static class MessagePopulatorTestConfig {
         private <T extends MessagePopulator> MessagePopulatorFactory<T> messagePopulatorFactory(final ObjectFactory<T> factory) {
             return new MessagePopulatorFactory<>(new PropertyRenamingObjectFactory<>(factory, StringCaseFormat::dashToCamel));

@@ -44,13 +44,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.populator.DiscardingPopulatorTest" })
-@Sql(scripts = { "classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.populator.DiscardingPopulatorTest"})
+@Sql(scripts = {"classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class,
-        DiscardingPopulatorTest.DiscardingPopulatorConfig.class },//
+@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class,
+        DiscardingPopulatorTest.DiscardingPopulatorConfig.class},//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = { ConfigDataApplicationContextInitializer.class })
+        initializers = {ConfigDataApplicationContextInitializer.class})
 @ActiveProfiles({"integration-test", "discardingPopulatorTest"})
 public class DiscardingPopulatorTest {
 
@@ -84,8 +84,7 @@ public class DiscardingPopulatorTest {
         waitUntilFileExists(product.getFailDir().resolve(FILENAME));
 
         verify(successChannel).send(messageCaptor.capture());
-        @SuppressWarnings("unchecked")
-        final List<ArchiveAviationMessage> successes = (List<ArchiveAviationMessage>) messageCaptor.getValue().getPayload();
+        @SuppressWarnings("unchecked") final List<ArchiveAviationMessage> successes = (List<ArchiveAviationMessage>) messageCaptor.getValue().getPayload();
         assertThat(successes).hasSize(1);
         assertThat(successes.get(0).getStationIcaoCode()).isEqualTo("EFXX");
 
@@ -132,7 +131,7 @@ public class DiscardingPopulatorTest {
     }
 
     @Configuration
-    @Profile("discardingPopulatorTest")
+    @Profile({"integration-test", "discardingPopulatorTest"})
     static class DiscardingPopulatorConfig {
         @Bean
         public MessagePopulatorFactory<DiscardingPopulator> discardingPopulatorFactory(final ConfigValueConverter messagePopulatorConfigValueConverter) {

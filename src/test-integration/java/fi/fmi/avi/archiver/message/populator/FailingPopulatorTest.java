@@ -124,7 +124,7 @@ class FailingPopulatorTest {
     }
 
     @Configuration
-    @Profile("failingPopulatorTest")
+    @Profile({"integration-test", "failingPopulatorTest"})
     static class FailingPopulatorConfig {
         @Bean
         public MessagePopulatorFactory<FailingPopulator> failingPopulatorFactory(final ConfigValueConverter messagePopulatorConfigValueConverter) {
