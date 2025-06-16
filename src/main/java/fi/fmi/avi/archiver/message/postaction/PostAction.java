@@ -5,6 +5,6 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 public interface PostAction {
 
-    void execute(ReadableLoggingContext loggingContext, ArchiveAviationMessage archiveMessage);
+    void run(ReadableLoggingContext context, ArchiveAviationMessage message);
 
 }
