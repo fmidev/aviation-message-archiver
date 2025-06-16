@@ -4,8 +4,10 @@ import com.google.common.base.Suppliers;
 import com.rabbitmq.client.amqp.Connection;
 import com.rabbitmq.client.amqp.Environment;
 import com.rabbitmq.client.amqp.Publisher;
+import com.rabbitmq.client.amqp.Resource;
 import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
 import fi.fmi.avi.archiver.amqp.AmqpService;
+import fi.fmi.avi.archiver.spring.healthcontributor.AmqpConnectionHealthContributor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +30,7 @@ public class AmqpConfig {
     private final String exchangeName;
     private final String routingKey;
 
-    public AmqpConfig(
+    AmqpConfig(
             @Value("${amqp.uri}") final String uri,
             @Value("${amqp.username}") final String username,
             @Value("${amqp.password}") final String password,
@@ -42,20 +44,38 @@ public class AmqpConfig {
     }
 
     private static <T> T createLazyForwardingProxy(final Class<T> type, final Supplier<T> factory) {
-        final com.google.common.base.Supplier<T> delegate = Suppliers.memoize(factory::get);
+        final Supplier<T> delegate = Suppliers.memoize(factory::get);
         return type.cast(Proxy.newProxyInstance(
                 type.getClassLoader(),
                 new Class[]{type},
                 (proxy, method, args) -> method.invoke(delegate.get(), args)));
     }
 
+    private static void log(final Resource.Context context) {
+        switch (context.currentState()) {
+            case OPENING -> LOGGER.info("RabbitMQ connecting...");
+            case OPEN -> LOGGER.info("RabbitMQ connection established");
+            case RECOVERING -> LOGGER.info("RabbitMQ connection recovering...");
+            case CLOSING -> LOGGER.info("RabbitMQ connection closing...");
+            case CLOSED -> {
+                if (context.failureCause() != null) {
+                    LOGGER.error("RabbitMQ connection lost", context.failureCause());
+                } else {
+                    LOGGER.info("RabbitMQ connection closed");
+                }
+            }
+            default -> LOGGER.error("RabbitMQ connection in unknown state");
+        }
+    }
+
     @Bean
-    public Environment amqpEnvironment() {
+    Environment amqpEnvironment() {
         return new AmqpEnvironmentBuilder().build();
     }
 
     @Bean
-    public Connection amqpConnection(final Environment environment) {
+    Connection amqpConnection(final Environment environment,
+                                     final AmqpConnectionHealthContributor amqpConnectionHealthContributor) {
         return createLazyForwardingProxy(Connection.class, () -> {
             try {
                 return environment
@@ -63,17 +83,7 @@ public class AmqpConfig {
                         .username(username)
                         .password(password)
                         .uri(uri)
-                        .listeners(context -> {
-                            switch (context.currentState()) {
-                                case OPEN -> LOGGER.info("RabbitMQ connection established");
-                                case RECOVERING -> LOGGER.info("RabbitMQ connection recovering...");
-                                case CLOSED -> {
-                                    if (context.failureCause() != null) {
-                                        LOGGER.error("Connection lost: {}", context.failureCause().getMessage());
-                                    }
-                                }
-                            }
-                        })
+                        .listeners(AmqpConfig::log, amqpConnectionHealthContributor)
                         .build();
             } catch (final Exception e) {
                 throw new RuntimeException("Failed to establish RabbitMQ connection", e);
@@ -82,7 +92,7 @@ public class AmqpConfig {
     }
 
     @Bean
-    public Publisher amqpPublisher(final Connection connection) {
+    Publisher amqpPublisher(final Connection connection) {
         return createLazyForwardingProxy(Publisher.class, () -> {
             try {
                 return connection.publisherBuilder()
@@ -97,7 +107,7 @@ public class AmqpConfig {
     }
 
     @Bean
-    public AmqpService amqpService(final Publisher amqpPublisher) {
+    AmqpService amqpService(final Publisher amqpPublisher) {
         return new AmqpService(amqpPublisher);
     }
 

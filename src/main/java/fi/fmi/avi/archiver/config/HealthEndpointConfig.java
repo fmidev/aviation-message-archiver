@@ -1,8 +1,10 @@
 package fi.fmi.avi.archiver.config;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
 
+import fi.fmi.avi.archiver.spring.healthcontributor.AmqpConnectionHealthContributor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +15,11 @@ import fi.fmi.avi.archiver.spring.healthcontributor.DirectoryPermissionHealthCon
 
 @Configuration
 public class HealthEndpointConfig {
+
+    @Bean
+    AmqpConnectionHealthContributor amqpConnectionHealthContributor(final Clock clock) {
+        return new AmqpConnectionHealthContributor(clock);
+    }
 
     @Bean
     DirectoryPermissionHealthContributor directoryPermissionHealthContributor(final Map<String, AviationProduct> aviationProducts,
