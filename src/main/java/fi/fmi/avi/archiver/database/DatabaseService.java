@@ -25,7 +25,7 @@ public class DatabaseService {
         RuntimeException databaseInsertionException = null;
         final ImmutableList.Builder<ArchiveAviationMessage> updatedMessages = ImmutableList.builder();
         for (final ArchiveAviationMessage message : messages) {
-            ArchivalStatus archivalStatus = ArchivalStatus.PENDING;
+            ArchivalStatus archivalStatus = message.getArchivalStatus();
             try {
                 loggingContext.enterBulletinMessage(message.getMessagePositionInFile());
                 if (message.getProcessingResult() == fi.fmi.avi.archiver.message.ProcessingResult.OK) {
