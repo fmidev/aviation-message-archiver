@@ -14,7 +14,7 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        setDefault(Clock.class, Clock.fixed(Instant.parse("2025-05-01T00:00:00Z"), ZoneId.of("UTC")));
+        setDefault(Clock.class, Clock.fixed(Instant.EPOCH, ZoneOffset.UTC));
         setDefault(MonitorableCallerBlocksPolicy.class, mock(MonitorableCallerBlocksPolicy.class));
     }
 
