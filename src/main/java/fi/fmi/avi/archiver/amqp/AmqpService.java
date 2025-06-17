@@ -2,7 +2,6 @@ package fi.fmi.avi.archiver.amqp;
 
 import com.rabbitmq.client.amqp.Message;
 import com.rabbitmq.client.amqp.Publisher;
-import fi.fmi.avi.archiver.logging.model.FileProcessingStatistics;
 import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import org.slf4j.Logger;
@@ -14,7 +13,7 @@ import static java.util.Objects.requireNonNull;
 
 public class AmqpService {
 
-private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(AmqpService.class);
+    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(AmqpService.class);
 
     private final Publisher amqpPublisher;
 
@@ -36,7 +35,6 @@ private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(AmqpServi
                 amqpPublisher.publish(amqpMessage, context -> {
                     if (context.status() == Publisher.Status.ACCEPTED) {
                         LOGGER.debug("Published message <{}>.", loggingContext);
-                        loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.PUBLISHED);
                     } else {
                         // Log the publishing failure in context?
                     }

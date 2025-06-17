@@ -573,7 +573,7 @@ class FileProcessingStatisticsImplTest {
 
     @Test
     void estimateLogStringLength_returns_decent_estimate_on_minimal_content() {
-        final int fixedEstimate = 110;
+        final int fixedEstimate = 96;
 
         assertDecentLengthEstimate(statistics, length -> fixedEstimate);
     }
