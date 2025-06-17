@@ -5,7 +5,7 @@ import fi.fmi.avi.archiver.spring.integration.util.MonitorableCallerBlocksPolicy
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 import static org.mockito.Mockito.mock;
 
