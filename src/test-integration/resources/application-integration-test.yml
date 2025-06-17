@@ -15,6 +15,19 @@ testclass:
 
 ##############################################
 #
+#  Shutdown config
+#
+##############################################
+# START SNIPPET: shutdown
+processing-flow:
+  graceful-shutdown:
+    # Time to wait for all file processing to finish upon shutdown
+    timeout: PT5S
+---
+# END SNIPPET: shutdown
+
+##############################################
+#
 #  Production line configuration
 #
 ##############################################
