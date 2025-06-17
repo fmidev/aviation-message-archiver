@@ -7,6 +7,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.OptionalInt;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Model representing an aviation message in the database.
  */
@@ -74,22 +76,22 @@ public abstract class ArchiveAviationMessage {
 
         @Override
         public Builder setMessageTime(final Instant messageTime) {
-            return super.setMessageTime(truncateToMicros(messageTime));
+            return super.setMessageTime(truncateToMicros(requireNonNull(messageTime, "messageTime")));
         }
 
         @Override
         public Builder setValidFrom(final Instant validFrom) {
-            return super.setValidFrom(truncateToMicros(validFrom));
+            return super.setValidFrom(truncateToMicros(requireNonNull(validFrom, "validFrom")));
         }
 
         @Override
         public Builder setValidTo(final Instant validTo) {
-            return super.setValidTo(truncateToMicros(validTo));
+            return super.setValidTo(truncateToMicros(requireNonNull(validTo, "validTo")));
         }
 
         @Override
         public Builder setFileModified(final Instant fileModified) {
-            return super.setFileModified(truncateToMicros(fileModified));
+            return super.setFileModified(truncateToMicros(requireNonNull(fileModified, "fileModified")));
         }
     }
 }
