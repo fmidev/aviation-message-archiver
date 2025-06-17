@@ -61,14 +61,35 @@ public abstract class ArchiveAviationMessage {
             setMessagePositionInFile(MessagePositionInFile.getInitial());
         }
 
+        /**
+         * Truncates the given instant to microseconds to ensure consistency with database that stores
+         * timestamps at microsecond precision.
+         *
+         * @param instant the instant to truncate
+         * @return the truncated instant
+         */
+        private Instant truncateToMicros(final Instant instant) {
+            return instant.truncatedTo(ChronoUnit.MICROS);
+        }
+
         @Override
-        public ArchiveAviationMessage build() {
-            // Truncate Instant fields to microsecond precision to ensure consistency with database
-            setMessageTime(getMessageTime().truncatedTo(ChronoUnit.MICROS));
-            getValidFrom().ifPresent(instant -> setValidFrom(instant.truncatedTo(ChronoUnit.MICROS)));
-            getValidTo().ifPresent(instant -> setValidTo(instant.truncatedTo(ChronoUnit.MICROS)));
-            getFileModified().ifPresent(instant -> setFileModified(instant.truncatedTo(ChronoUnit.MICROS)));
-            return super.build();
+        public Builder setMessageTime(final Instant messageTime) {
+            return super.setMessageTime(truncateToMicros(messageTime));
+        }
+
+        @Override
+        public Builder setValidFrom(final Instant validFrom) {
+            return super.setValidFrom(truncateToMicros(validFrom));
+        }
+
+        @Override
+        public Builder setValidTo(final Instant validTo) {
+            return super.setValidTo(truncateToMicros(validTo));
+        }
+
+        @Override
+        public Builder setFileModified(final Instant fileModified) {
+            return super.setFileModified(truncateToMicros(fileModified));
         }
     }
 }
