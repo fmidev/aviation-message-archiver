@@ -15,58 +15,16 @@ testclass:
 
 ##############################################
 #
-#  Datasource properties
-#
-##############################################
-# START SNIPPET: Datasource properties
-datasource:
-  schema: public
----
-# END SNIPPET: Datasource properties
-
-##############################################
-#
-#  Executor config
-#
-##############################################
-# START SNIPPET: executor
-executor:
-  queue-size: 20
----
-# END SNIPPET: executor
-
-##############################################
-#
 #  Shutdown config
 #
 ##############################################
 # START SNIPPET: shutdown
-server:
-  shutdown: graceful
-spring:
-  lifecycle:
-    timeout-per-shutdown-phase: 20s
 processing-flow:
   graceful-shutdown:
+    # Time to wait for all file processing to finish upon shutdown
     timeout: PT5S
-    polling-interval: PT0.1S
 ---
 # END SNIPPET: shutdown
-
-##############################################
-#
-#  Actuator config
-#
-##############################################
-# START SNIPPET: actuators
-health-indicator:
-  directory-permission:
-    temp-file-prefix: .temp
-    temp-file-suffix: .healthindicator
-  blocking-executor:
-    timeout: PT30S
----
-# END SNIPPET: actuators
 
 ##############################################
 #
@@ -171,18 +129,3 @@ production-line:
     SPACE_WEATHER_ADVISORY: 8
 # END SNIPPET: production-line
 ---
-
-##############################################
-#
-#  File handling
-#
-##############################################
-# START SNIPPET: File handling
-file-handler:
-  charset: UTF-8
-  retry:
-    initial-interval: PT0.5S
-    multiplier: 2
-    max-interval: PT10S
-    timeout: PT0S
-# END SNIPPET: File handling

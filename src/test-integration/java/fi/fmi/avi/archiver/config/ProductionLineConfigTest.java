@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
@@ -23,6 +24,7 @@ import fi.fmi.avi.model.GenericAviationWeatherMessage;
 @ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
         initializers = { ConfigDataApplicationContextInitializer.class })
+@ActiveProfiles("integration-test")
 class ProductionLineConfigTest {
 
     @Autowired

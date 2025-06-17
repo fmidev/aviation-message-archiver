@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
@@ -57,6 +58,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class },//
         loader = AnnotationConfigContextLoader.class,//
         initializers = { ConfigDataApplicationContextInitializer.class })
+@ActiveProfiles("integration-test")
 class AviationMessageArchiverTest {
 
     private static final String TEMP_FILE_SUFFIX = ".tmp";
