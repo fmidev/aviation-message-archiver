@@ -28,7 +28,7 @@ public class InvalidConfigDetectionTest {
                 .sources(AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class)//
                 .properties(//
                         "testclass.name=fi.fmi.avi.archiver.config.InvalidConfigDetectionTest", //
-                        "spring.config.location=classpath:application-integration-test.yml," + TEST_CONFIG_LOCATION //
+                        "spring.config.location=classpath:application.yml,classpath:application-integration-test.yml," + TEST_CONFIG_LOCATION //
                 )//
                 .profiles("integration-test", "local", "h2", testProfile)//
                 .build();
