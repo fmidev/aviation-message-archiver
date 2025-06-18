@@ -1,14 +1,13 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static java.util.Objects.requireNonNull;
+import com.google.common.collect.BiMap;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.BiMap;
-
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
+import static java.util.Objects.requireNonNull;
 
 public class RoutePropertyReader extends AbstractConditionPropertyReader<String> {
     private final BiMap<String, Integer> messageRouteIds;
@@ -19,10 +18,10 @@ public class RoutePropertyReader extends AbstractConditionPropertyReader<String>
 
     @Nullable
     @Override
-    public String readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+    public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
         requireNonNull(input, "input");
         requireNonNull(target, "target");
-        final int routeId = MessagePopulatorHelper.tryGetInt(target, builder -> builder.getRoute()).orElse(Integer.MIN_VALUE);
+        final int routeId = MessagePopulatorHelper.tryGetInt(target, ArchiveAviationMessageOrBuilder::getRoute).orElse(Integer.MIN_VALUE);
         return messageRouteIds.inverse().get(routeId);
     }
 

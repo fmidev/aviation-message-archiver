@@ -1,11 +1,11 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 
 import java.util.function.Predicate;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import static java.util.Objects.requireNonNull;
 
 public class PropertyActivationCondition<T> implements ActivationCondition {
     private final ConditionPropertyReader<T> conditionPropertyReader;
@@ -17,10 +17,10 @@ public class PropertyActivationCondition<T> implements ActivationCondition {
     }
 
     @Override
-    public boolean test(final InputAviationMessage inputAviationMessage, final ArchiveAviationMessage.Builder aviationMessageBuilder) {
+    public boolean test(final InputAviationMessage inputAviationMessage, final ArchiveAviationMessageOrBuilder aviationMessageOrBuilder) {
         requireNonNull(inputAviationMessage, "inputAviationMessage");
-        requireNonNull(aviationMessageBuilder, "aviationMessageBuilder");
-        return propertyPredicate.test(conditionPropertyReader.readValue(inputAviationMessage, aviationMessageBuilder));
+        requireNonNull(aviationMessageOrBuilder, "aviationMessageOrBuilder");
+        return propertyPredicate.test(conditionPropertyReader.readValue(inputAviationMessage, aviationMessageOrBuilder));
     }
 
     @Override

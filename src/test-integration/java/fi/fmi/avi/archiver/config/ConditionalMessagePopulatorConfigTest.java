@@ -12,6 +12,7 @@ import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
@@ -50,11 +51,11 @@ import java.util.*;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.config.MessagePopulatorConfigTest" })
-@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class },//
+@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.config.MessagePopulatorConfigTest"})
+@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = { ConfigDataApplicationContextInitializer.class })
-@Sql(scripts = { "classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+        initializers = {ConfigDataApplicationContextInitializer.class})
+@Sql(scripts = {"classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @ActiveProfiles({"integration-test", "ConditionalMessagePopulatorTest"})
 class ConditionalMessagePopulatorConfigTest {
@@ -111,7 +112,7 @@ class ConditionalMessagePopulatorConfigTest {
     }
 
     private FileConfig fileConfig(final String productId) {
-        return aviationProducts.get(productId).getFileConfigs().get(0);
+        return aviationProducts.get(productId).getFileConfigs().getFirst();
     }
 
     private InputAviationMessage.Builder setProductId(final String productId, final InputAviationMessage.Builder builder) {
@@ -259,7 +260,7 @@ class ConditionalMessagePopulatorConfigTest {
 
     public static class TestProductIdentifierPropertyReader extends AbstractConditionPropertyReader<String> {
         @Override
-        public String readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+        public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
             return input.getFileMetadata().getFileReference().getProductId();
         }
     }
@@ -273,8 +274,8 @@ class ConditionalMessagePopulatorConfigTest {
 
         @Nullable
         @Override
-        public MessageType readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
-            final OptionalInt messageTypeId = MessagePopulatorHelper.tryGetInt(target, builder -> builder.getType());
+        public MessageType readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
+            final OptionalInt messageTypeId = MessagePopulatorHelper.tryGetInt(target, ArchiveAviationMessageOrBuilder::getType);
             return messageTypeId.isPresent() ? messageTypeIds.inverse().get(messageTypeId.getAsInt()) : null;
         }
 
@@ -287,7 +288,7 @@ class ConditionalMessagePopulatorConfigTest {
     public static class TestInputValidFromReader extends AbstractConditionPropertyReader<ZonedDateTime> {
         @Nullable
         @Override
-        public ZonedDateTime readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+        public ZonedDateTime readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
             return input.getMessage().getValidityTime()//
                     .flatMap(PartialOrCompleteTimePeriod::getStartTime)//
                     .flatMap(PartialOrCompleteTimeInstant::getCompleteTime)//
@@ -298,7 +299,7 @@ class ConditionalMessagePopulatorConfigTest {
     public static class TestInputValidToReader extends AbstractConditionPropertyReader<ZonedDateTime> {
         @Nullable
         @Override
-        public ZonedDateTime readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+        public ZonedDateTime readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
             return input.getMessage().getValidityTime()//
                     .flatMap(PartialOrCompleteTimePeriod::getEndTime)//
                     .flatMap(PartialOrCompleteTimeInstant::getCompleteTime)//

@@ -1,14 +1,14 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import static java.util.Objects.requireNonNull;
 
 final class ActivationConditionInternals {
     private ActivationConditionInternals() {
@@ -58,9 +58,9 @@ final class ActivationConditionInternals {
         }
 
         @Override
-        public boolean test(final InputAviationMessage input, final ArchiveAviationMessage.Builder builder) {
+        public boolean test(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder messageOrBuilder) {
             for (final ActivationCondition activationCondition : activationConditions) {
-                if (activationCondition.test(input, builder) == composition.isOneSufficientToSatisfy()) {
+                if (activationCondition.test(input, messageOrBuilder) == composition.isOneSufficientToSatisfy()) {
                     return composition.isOneSufficientToSatisfy();
                 }
             }

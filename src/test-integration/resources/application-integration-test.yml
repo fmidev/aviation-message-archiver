@@ -101,6 +101,14 @@ production-line:
       config:
         validity-end-offset: PT24H
 ---
+spring.config.activate.on-profile: (!testMissingPostActionExecutionChain)
+
+production-line:
+  post-actions:
+    - name: ResultLogger
+      config:
+        message: Strange things happen.
+---
 spring.config.activate.on-profile: (!testMissingStaticRouteIds & !testEmptyStaticRouteIds)
 
 production-line:

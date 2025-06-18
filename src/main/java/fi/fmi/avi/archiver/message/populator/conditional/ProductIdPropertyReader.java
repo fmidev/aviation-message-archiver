@@ -1,15 +1,14 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import static java.util.Objects.requireNonNull;
 
 public class ProductIdPropertyReader extends AbstractConditionPropertyReader<String> {
     private final Set<String> productIds;
@@ -20,7 +19,7 @@ public class ProductIdPropertyReader extends AbstractConditionPropertyReader<Str
 
     @Nullable
     @Override
-    public String readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+    public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
         requireNonNull(input, "input");
         requireNonNull(target, "target");
         return input.getFileMetadata().getFileReference().getProductId();

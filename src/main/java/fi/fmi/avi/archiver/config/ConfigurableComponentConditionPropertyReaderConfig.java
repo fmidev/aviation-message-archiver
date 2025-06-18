@@ -1,33 +1,23 @@
 package fi.fmi.avi.archiver.config;
 
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-
+import com.google.common.collect.BiMap;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.message.populator.BulletinHeadingSource;
+import fi.fmi.avi.archiver.message.populator.conditional.*;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import fi.fmi.avi.model.MessageType;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.google.common.collect.BiMap;
-
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.message.populator.BulletinHeadingSource;
-import fi.fmi.avi.archiver.message.populator.conditional.ConditionPropertyReader;
-import fi.fmi.avi.archiver.message.populator.conditional.DataDesignatorPropertyReader;
-import fi.fmi.avi.archiver.message.populator.conditional.FormatPropertyReader;
-import fi.fmi.avi.archiver.message.populator.conditional.OriginatorPropertyReader;
-import fi.fmi.avi.archiver.message.populator.conditional.ProductIdPropertyReader;
-import fi.fmi.avi.archiver.message.populator.conditional.RoutePropertyReader;
-import fi.fmi.avi.archiver.message.populator.conditional.StationPropertyReader;
-import fi.fmi.avi.archiver.message.populator.conditional.TypePropertyReader;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import fi.fmi.avi.model.MessageType;
+import javax.annotation.PostConstruct;
+import java.util.Map;
 
 @Configuration
-public class MessagePopulatorConditionPropertyReaderConfig {
+public class ConfigurableComponentConditionPropertyReaderConfig {
     private final ConfigurableApplicationContext applicationContext;
 
-    public MessagePopulatorConditionPropertyReaderConfig(final ConfigurableApplicationContext applicationContext) {
+    public ConfigurableComponentConditionPropertyReaderConfig(final ConfigurableApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 

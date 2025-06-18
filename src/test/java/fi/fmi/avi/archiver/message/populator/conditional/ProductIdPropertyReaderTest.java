@@ -1,7 +1,21 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.FormatId;
+import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
+import javax.annotation.Nullable;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Map;
@@ -9,23 +23,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
-
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.config.model.FileConfig;
-import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.FormatId;
-import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ProductIdPropertyReaderTest {
     private static final Map<FormatId, String> TEST_PRODUCT_FILENAMES = Maps.immutableEnumMap(ImmutableMap.of(//
@@ -71,7 +69,7 @@ class ProductIdPropertyReaderTest {
         final class TestReader extends AbstractConditionPropertyReader<String> {
             @Nullable
             @Override
-            public String readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+            public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
                 return null;
             }
         }
@@ -129,7 +127,7 @@ class ProductIdPropertyReaderTest {
         }
 
         InputAviationMessage.Builder setProductId(final InputAviationMessage.Builder builder) {
-            final FileConfig fileConfig = getProduct().getFileConfigs().get(0);
+            final FileConfig fileConfig = getProduct().getFileConfigs().getFirst();
             final FormatId formatId = FormatId.valueOf(fileConfig.getFormat());
             return builder//
                     .mutateFileMetadata(metadataBuilder -> metadataBuilder//

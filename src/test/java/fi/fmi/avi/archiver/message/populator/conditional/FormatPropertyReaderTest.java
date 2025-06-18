@@ -1,20 +1,19 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import javax.annotation.Nullable;
-
+import com.google.common.collect.ImmutableBiMap;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatorTests;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.FormatId;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import com.google.common.collect.ImmutableBiMap;
+import javax.annotation.Nullable;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorTests;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.FormatId;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class FormatPropertyReaderTest {
     @Test
@@ -64,7 +63,7 @@ class FormatPropertyReaderTest {
         final class TestReader extends AbstractConditionPropertyReader<GenericAviationWeatherMessage.Format> {
             @Nullable
             @Override
-            public GenericAviationWeatherMessage.Format readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+            public GenericAviationWeatherMessage.Format readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
                 return null;
             }
         }

@@ -1,36 +1,28 @@
 package fi.fmi.avi.archiver.config.model;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.message.populator.conditional.GeneralPropertyPredicate;
+import org.inferred.freebuilder.FreeBuilder;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
-import org.inferred.freebuilder.FreeBuilder;
-
-import fi.fmi.avi.archiver.message.populator.conditional.GeneralPropertyPredicate;
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
 
 @FreeBuilder
-public abstract class PopulatorInstanceSpec {
-    PopulatorInstanceSpec() {
+public abstract class PostActionInstanceSpec implements ConfigurableComponentInstanceSpec {
+    PostActionInstanceSpec() {
     }
 
-    public abstract String getName();
-
-    public abstract Map<String, GeneralPropertyPredicate.Builder<?>> getActivateOn();
-
-    public abstract Map<String, Object> getConfig();
-
-    public static class Builder extends PopulatorInstanceSpec_Builder {
+    public static class Builder extends PostActionInstanceSpec_Builder {
         Builder() {
         }
 
         @Override
         public Builder setName(final String name) {
             requireNonNull(name);
-            checkArgument(!name.isEmpty(), "populator name cannot be empty");
+            checkArgument(!name.isEmpty(), "post-action name cannot be empty");
             return super.setName(name);
         }
 

@@ -1,21 +1,19 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
-
-import java.lang.reflect.Method;
-
-import javax.annotation.Nullable;
-
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 import org.junit.jupiter.api.Test;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import javax.annotation.Nullable;
+import java.lang.reflect.Method;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 class AbstractConditionPropertyReaderTest {
     @Test
     void getValueGetterForType_returns_readValue_method() throws NoSuchMethodException {
-        final Method expected = TestConditionPropertyReader.class.getMethod("readValue", InputAviationMessage.class, ArchiveAviationMessage.Builder.class);
+        final Method expected = TestConditionPropertyReader.class.getMethod("readValue", InputAviationMessage.class, ArchiveAviationMessageOrBuilder.class);
 
         final Method result = new TestConditionPropertyReader().getValueGetterForType();
 
@@ -27,7 +25,7 @@ class AbstractConditionPropertyReaderTest {
         final class ObjectReader extends AbstractConditionPropertyReader<Object> {
             @Nullable
             @Override
-            public Object readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+            public Object readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
                 return null;
             }
         }
@@ -85,7 +83,7 @@ class AbstractConditionPropertyReaderTest {
     private static class TestConditionPropertyReader extends AbstractConditionPropertyReader<String> {
         @Nullable
         @Override
-        public String readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+        public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
             return "";
         }
     }

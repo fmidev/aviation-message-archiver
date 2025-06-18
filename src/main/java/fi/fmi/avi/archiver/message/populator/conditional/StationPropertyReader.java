@@ -1,24 +1,23 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.regex.Pattern;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
 
 import javax.annotation.Nullable;
+import java.util.regex.Pattern;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
+import static java.util.Objects.requireNonNull;
 
 public class StationPropertyReader extends AbstractConditionPropertyReader<String> {
     private static final Pattern ICAO_CODE_PATTERN = Pattern.compile("^[A-Z]{4}$");
 
     @Nullable
     @Override
-    public String readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+    public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
         requireNonNull(input, "input");
         requireNonNull(target, "target");
-        return MessagePopulatorHelper.tryGet(target, builder -> builder.getStationIcaoCode())//
+        return MessagePopulatorHelper.tryGet(target, ArchiveAviationMessageOrBuilder::getStationIcaoCode)//
                 .orElse(null);
     }
 

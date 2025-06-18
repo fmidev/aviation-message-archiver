@@ -1,14 +1,14 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import static java.util.Objects.requireNonNull;
 
 /**
  * An abstract implementation of {@code ConditionPropertyReader}, that applies convention over code principle.
@@ -17,8 +17,7 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
  * Condition property readers returning properties of bulletin heading are recommended to extend {@link AbstractBulletinHeadingConditionPropertyReader} instead.
  * </p>
  *
- * @param <T>
- *         property type
+ * @param <T> property type
  */
 public abstract class AbstractConditionPropertyReader<T> implements ConditionPropertyReader<T> {
     private static final List<String> SUFFIXES = initSuffixes();
@@ -42,19 +41,17 @@ public abstract class AbstractConditionPropertyReader<T> implements ConditionPro
      * {@inheritDoc}
      *
      * <p>
-     * This implementation returns the {@link #readValue(InputAviationMessage, ArchiveAviationMessage.Builder)} method of this object.
+     * This implementation returns the {@link #readValue(InputAviationMessage, ArchiveAviationMessageOrBuilder)} method of this object.
      * </p>
      *
      * @return {@inheritDoc}
-     *
-     * @throws IllegalStateException
-     *         if the method cannot be resolved or method return type is {@code Object}.
+     * @throws IllegalStateException if the method cannot be resolved or method return type is {@code Object}.
      */
     @Override
     public Method getValueGetterForType() {
         final Method method;
         try {
-            method = this.getClass().getMethod("readValue", InputAviationMessage.class, ArchiveAviationMessage.Builder.class);
+            method = this.getClass().getMethod("readValue", InputAviationMessage.class, ArchiveAviationMessageOrBuilder.class);
         } catch (final NoSuchMethodException e) {
             throw new IllegalStateException("Unable to resolve method 'readValue' in " + getClass(), e);
         }
@@ -99,9 +96,7 @@ public abstract class AbstractConditionPropertyReader<T> implements ConditionPro
      * This implementation returns always {@code true}. Subclasses should override this method whenever a constraint is applied on the value.
      * </p>
      *
-     * @param value
-     *         value to validate
-     *
+     * @param value value to validate
      * @return {@inheritDoc}
      */
     @Override

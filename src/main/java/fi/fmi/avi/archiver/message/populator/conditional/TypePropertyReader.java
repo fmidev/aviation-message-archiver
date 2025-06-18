@@ -1,15 +1,14 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static java.util.Objects.requireNonNull;
+import com.google.common.collect.BiMap;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
+import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
+import fi.fmi.avi.model.MessageType;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.BiMap;
-
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
-import fi.fmi.avi.model.MessageType;
+import static java.util.Objects.requireNonNull;
 
 public class TypePropertyReader extends AbstractConditionPropertyReader<MessageType> {
     private final BiMap<MessageType, Integer> messageTypeIds;
@@ -20,10 +19,10 @@ public class TypePropertyReader extends AbstractConditionPropertyReader<MessageT
 
     @Nullable
     @Override
-    public MessageType readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+    public MessageType readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
         requireNonNull(input, "input");
         requireNonNull(target, "target");
-        final int typeId = MessagePopulatorHelper.tryGetInt(target, builder -> builder.getType()).orElse(Integer.MIN_VALUE);
+        final int typeId = MessagePopulatorHelper.tryGetInt(target, ArchiveAviationMessageOrBuilder::getType).orElse(Integer.MIN_VALUE);
         return messageTypeIds.inverse().get(typeId);
     }
 

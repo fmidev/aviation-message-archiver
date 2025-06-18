@@ -1,17 +1,16 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
+import fi.fmi.avi.archiver.message.populator.BulletinHeadingSource;
+import fi.fmi.avi.model.bulletin.BulletinHeading;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nullable;
-
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.BulletinHeadingSource;
-import fi.fmi.avi.model.bulletin.BulletinHeading;
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
 
 public class DataDesignatorPropertyReader extends AbstractBulletinHeadingConditionPropertyReader<String> {
     private static final Pattern DESIGNATOR_PATTERN = Pattern.compile("^[A-Z]{4}[0-9]{2}$");
@@ -29,7 +28,7 @@ public class DataDesignatorPropertyReader extends AbstractBulletinHeadingConditi
 
     @Nullable
     @Override
-    public String readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+    public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
         requireNonNull(input, "input");
         requireNonNull(target, "target");
         return getFirstNonNullFromBulletinHeading(input, heading -> heading.getBulletinHeading()//

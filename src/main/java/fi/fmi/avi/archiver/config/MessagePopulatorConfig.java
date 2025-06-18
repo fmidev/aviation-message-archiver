@@ -1,14 +1,18 @@
 package fi.fmi.avi.archiver.config;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
+import com.google.common.collect.ImmutableList;
+import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
+import fi.fmi.avi.archiver.config.model.MessagePopulatorInstanceSpec;
+import fi.fmi.avi.archiver.database.DatabaseAccess;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.populator.MessagePopulationService;
+import fi.fmi.avi.archiver.message.populator.MessagePopulator;
+import fi.fmi.avi.archiver.message.populator.StationIdPopulator;
+import fi.fmi.avi.archiver.message.populator.conditional.*;
+import fi.fmi.avi.archiver.util.StringCaseFormat;
+import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -17,52 +21,39 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
-import fi.fmi.avi.archiver.config.model.PopulatorInstanceSpec;
-import fi.fmi.avi.archiver.database.DatabaseAccess;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.logging.model.LoggingContext;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulationService;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
-import fi.fmi.avi.archiver.message.populator.StationIdPopulator;
-import fi.fmi.avi.archiver.message.populator.conditional.ActivationCondition;
-import fi.fmi.avi.archiver.message.populator.conditional.ConditionPropertyReader;
-import fi.fmi.avi.archiver.message.populator.conditional.ConditionPropertyReaderFactory;
-import fi.fmi.avi.archiver.message.populator.conditional.ConditionPropertyReaderRegistry;
-import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
-import fi.fmi.avi.archiver.message.populator.conditional.GeneralPropertyPredicate;
-import fi.fmi.avi.archiver.message.populator.conditional.PropertyActivationCondition;
-import fi.fmi.avi.archiver.message.populator.conditional.RenamingConditionPropertyReaderFactory;
-import fi.fmi.avi.archiver.util.StringCaseFormat;
-import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
+import static java.util.Objects.requireNonNull;
 
-@ConfigurationProperties(prefix = "message-populators")
+@ConfigurationProperties(prefix = "production-line.message-populators")
 public class MessagePopulatorConfig {
     @Bean(name = "messagePopulators")
     List<MessagePopulator> messagePopulators(final List<MessagePopulatorFactory<?>> messagePopulatorFactories,
-            final List<PopulatorInstanceSpec> messagePopulatorSpecs, final DatabaseAccess databaseAccess,
-            final ConfigValueConverter messagePopulatorConfigValueConverter, final ConditionPropertyReaderFactory conditionPropertyReaderFactory) {
+                                             final List<MessagePopulatorInstanceSpec> messagePopulatorSpecs, final DatabaseAccess databaseAccess,
+                                             final ConfigValueConverter configValueConverter, final ConditionPropertyReaderFactory conditionPropertyReaderFactory) {
         final Map<String, MessagePopulatorFactory<?>> factoriesByName = messagePopulatorFactories.stream()//
                 .collect(Collectors.toMap(MessagePopulatorFactory::getName, Function.identity()));
         final ImmutableList.Builder<MessagePopulator> populatorsBuilder = messagePopulatorSpecs.stream()//
-                .map(spec -> createMessagePopulator(spec, factoriesByName, messagePopulatorConfigValueConverter, conditionPropertyReaderFactory))//
+                .map(spec -> createMessagePopulator(spec, factoriesByName, configValueConverter, conditionPropertyReaderFactory))//
                 .collect(ImmutableList::builder, ImmutableList.Builder::add, (builder1, builder2) -> builder1.addAll(builder2.build()));
         populatorsBuilder.add(new StationIdPopulator(databaseAccess));
         return populatorsBuilder.build();
     }
 
-    private MessagePopulator createMessagePopulator(final PopulatorInstanceSpec spec, final Map<String, MessagePopulatorFactory<?>> populatorFactoriesByName,
-            final ConfigValueConverter converter, final ConditionPropertyReaderFactory conditionPropertyReaderFactory) {
+    private MessagePopulator createMessagePopulator(final MessagePopulatorInstanceSpec spec, final Map<String, MessagePopulatorFactory<?>> populatorFactoriesByName,
+                                                    final ConfigValueConverter converter, final ConditionPropertyReaderFactory conditionPropertyReaderFactory) {
         final MessagePopulator messagePopulator = populatorFactoriesByName.get(spec.getName()).newInstance(spec.getConfig());
         return applyMessagePopulatorActivationCondition(messagePopulator, spec, converter, conditionPropertyReaderFactory);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private MessagePopulator applyMessagePopulatorActivationCondition(final MessagePopulator messagePopulator, final PopulatorInstanceSpec spec,
-            final ConfigValueConverter converter, final ConditionPropertyReaderFactory conditionPropertyReaderFactory) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private MessagePopulator applyMessagePopulatorActivationCondition(final MessagePopulator messagePopulator, final MessagePopulatorInstanceSpec spec,
+                                                                      final ConfigValueConverter converter, final ConditionPropertyReaderFactory conditionPropertyReaderFactory) {
         return spec.getActivateOn().entrySet().stream()//
                 .map(entry -> {
                     try {
@@ -78,7 +69,7 @@ public class MessagePopulatorConfig {
                     }
                 })//
                 .collect(Collectors.collectingAndThen(Collectors.toList(), ActivationCondition::and))//
-                .<MessagePopulator> map(activationCondition -> new ConditionalMessagePopulator(activationCondition, messagePopulator))//
+                .<MessagePopulator>map(activationCondition -> new ConditionalMessagePopulator(activationCondition, messagePopulator))//
                 .orElse(messagePopulator);
     }
 

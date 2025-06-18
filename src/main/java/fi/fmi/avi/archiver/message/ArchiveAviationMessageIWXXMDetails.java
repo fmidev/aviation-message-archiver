@@ -1,11 +1,9 @@
 package fi.fmi.avi.archiver.message;
 
-import java.util.Optional;
-
 import org.inferred.freebuilder.FreeBuilder;
 
 @FreeBuilder
-public abstract class ArchiveAviationMessageIWXXMDetails {
+public abstract class ArchiveAviationMessageIWXXMDetails implements ArchiveAviationMessageIWXXMDetailsOrBuilder {
     private static final ArchiveAviationMessageIWXXMDetails EMPTY = builder().build();
     private static final ArchiveAviationMessageIWXXMDetails EMPTY_PARTIAL = builder().buildPartial();
 
@@ -20,13 +18,9 @@ public abstract class ArchiveAviationMessageIWXXMDetails {
         return equals(EMPTY) || equals(EMPTY_PARTIAL);
     }
 
-    public abstract Optional<String> getXMLNamespace();
-
-    public abstract Optional<String> getCollectIdentifier();
-
     public abstract Builder toBuilder();
 
-    public static class Builder extends ArchiveAviationMessageIWXXMDetails_Builder {
+    public static class Builder extends ArchiveAviationMessageIWXXMDetails_Builder implements ArchiveAviationMessageIWXXMDetailsOrBuilder {
         Builder() {
         }
     }

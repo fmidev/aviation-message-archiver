@@ -1,18 +1,17 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
+import fi.fmi.avi.archiver.message.populator.BulletinHeadingSource;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.Test;
-
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.BulletinHeadingSource;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 class AbstractBulletinHeadingConditionPropertyReaderTest {
     @Test
@@ -68,7 +67,7 @@ class AbstractBulletinHeadingConditionPropertyReaderTest {
         }
 
         @Override
-        public String readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+        public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
             return "";
         }
     }

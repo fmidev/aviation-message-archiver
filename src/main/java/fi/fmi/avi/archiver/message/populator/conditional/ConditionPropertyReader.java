@@ -1,19 +1,16 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import java.lang.reflect.Method;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 
 import javax.annotation.Nullable;
-
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import java.lang.reflect.Method;
 
 /**
- * Implementations of this interface read a single property from {@link InputAviationMessage} or {@link ArchiveAviationMessage.Builder} for condition
+ * Implementations of this interface read a single property from {@link InputAviationMessage} or {@link ArchiveAviationMessageOrBuilder} for condition
  * evaluation.
  *
- * @param <T>
- *         type of property
- *
+ * @param <T> type of property
  * @see PropertyActivationCondition
  */
 public interface ConditionPropertyReader<T> {
@@ -36,27 +33,20 @@ public interface ConditionPropertyReader<T> {
     /**
      * Read the property value.
      *
-     * @param input
-     *         input aviation message
-     * @param target
-     *         target archive aviation message builder
-     *
+     * @param input   input aviation message
+     * @param message archive aviation message or builder
      * @return property value
      */
     @Nullable
-    T readValue(InputAviationMessage input, ArchiveAviationMessage.Builder target);
+    T readValue(InputAviationMessage input, ArchiveAviationMessageOrBuilder message);
 
     /**
      * Validate a property value.
      * If there is no restrictions for the value, this method returns always {@code true}.
      *
-     * @param value
-     *         value to validate
-     *
+     * @param value value to validate
      * @return {@code true} if provided {@code value} is valid, {@code false} otherwise
-     *
-     * @throws NullPointerException
-     *         if provided {@code value} is {@code null}
+     * @throws NullPointerException if provided {@code value} is {@code null}
      */
     boolean validate(final T value);
 

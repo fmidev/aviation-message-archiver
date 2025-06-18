@@ -1,15 +1,15 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import javax.annotation.Nullable;
-
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import javax.annotation.Nullable;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class StationPropertyReaderTest {
     @Test
@@ -37,14 +37,14 @@ class StationPropertyReaderTest {
     }
 
     @ParameterizedTest
-    @CsvSource({ "YUDO", "AAAA", "ZZZZ" })
+    @CsvSource({"YUDO", "AAAA", "ZZZZ"})
     void validate_given_valid_originator_returns_true(final String stationIcaoCode) {
         final StationPropertyReader propertyReader = new StationPropertyReader();
         assertThat(propertyReader.validate(stationIcaoCode)).isTrue();
     }
 
     @ParameterizedTest
-    @CsvSource({ "UDO", "YUDOO", "/UDO", "Y/DO", "YU/O", "YUD/", "0UDO", "Y0DO", "YU0O", "YUD0" })
+    @CsvSource({"UDO", "YUDOO", "/UDO", "Y/DO", "YU/O", "YUD/", "0UDO", "Y0DO", "YU0O", "YUD0"})
     void validate_given_invalid_designator_returns_false(final String stationIcaoCode) {
         final StationPropertyReader propertyReader = new StationPropertyReader();
         assertThat(propertyReader.validate(stationIcaoCode)).isFalse();
@@ -55,7 +55,7 @@ class StationPropertyReaderTest {
         final class TestReader extends AbstractConditionPropertyReader<String> {
             @Nullable
             @Override
-            public String readValue(final InputAviationMessage input, final ArchiveAviationMessage.Builder target) {
+            public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
                 return null;
             }
         }
