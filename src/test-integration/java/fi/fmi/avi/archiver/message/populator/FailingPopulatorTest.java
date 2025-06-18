@@ -8,6 +8,7 @@ import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
@@ -112,7 +113,7 @@ class FailingPopulatorTest {
 
     public static class FailingPopulator implements MessagePopulator {
         @Override
-        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+        public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) {
             final String airportIcaoCode = context.getInputMessage()
                     .getMessage()
                     .getLocationIndicators()

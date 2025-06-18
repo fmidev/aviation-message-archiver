@@ -1,11 +1,11 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static java.util.Objects.requireNonNull;
-
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A {@code MessagePopulator} that invokes backing populator only when provided {@link ActivationCondition} is satisfied.
@@ -20,7 +20,7 @@ public class ConditionalMessagePopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) throws MessageDiscardedException {
+    public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) throws MessageDiscardedException {
         requireNonNull(context, "context");
         requireNonNull(target, "target");
         if (condition.test(context.getInputMessage(), target)) {

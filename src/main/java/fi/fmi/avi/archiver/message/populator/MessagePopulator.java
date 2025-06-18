@@ -1,11 +1,12 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import java.util.function.Function;
-
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
+
+import java.util.function.Function;
 
 /**
  * {@code MessagePopulator} is a component responsible for populating one or more properties of target {@code ArchiveAviationMessage} builder.
@@ -13,7 +14,7 @@ import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopul
  * {@code MessagePopulator} is the main extension point for customizing the message properties and content to be archived.
  *
  * <p>
- * On each parsed message the {@link MessagePopulationService} invokes the {@link #populate(MessagePopulatingContext, ArchiveAviationMessage.Builder)} method
+ * On each parsed message the {@link MessagePopulationService} invokes the {@link #populate(MessageProcessorContext, ArchiveAviationMessage.Builder)} method
  * of all configured message populator instances in the configured order. A populator invoked later in the execution chain may then override values set by
  * previously invoked populators. All populators are always invoked, except when a populator throws an exception. In that case remaining populators in the
  * execution chain are skipped.
@@ -60,7 +61,7 @@ import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopul
  *         dependencies of populator. Inject optional configuration values, that have a decent default value, through Java bean setter methods.
  *     </li>
  *     <li>
- *         Message populator may choose to use {@link MessagePopulatingContext} as its input, or the properties already populated in the target builder,
+ *         Message populator may choose to use {@link MessageProcessorContext} as its input, or the properties already populated in the target builder,
  *         depending on the nature of the populator.
  *     </li>
  *     <li>
@@ -105,5 +106,5 @@ public interface MessagePopulator {
      * @throws RuntimeException
      *         in case of an error that prevents reliable recovery of message processing
      */
-    void populate(final MessagePopulatingContext context, ArchiveAviationMessage.Builder target) throws MessageDiscardedException;
+    void populate(final MessageProcessorContext context, ArchiveAviationMessage.Builder target) throws MessageDiscardedException;
 }

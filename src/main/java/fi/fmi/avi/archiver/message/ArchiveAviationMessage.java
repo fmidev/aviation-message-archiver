@@ -33,7 +33,6 @@ public abstract class ArchiveAviationMessage implements ArchiveAviationMessageOr
         Builder() {
             setArchivalStatus(ArchivalStatus.PENDING);
             setProcessingResult(ProcessingResult.OK);
-            setMessagePositionInFile(MessagePositionInFile.getInitial());
         }
 
         /**

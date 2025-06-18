@@ -1,31 +1,25 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.tryGet;
-import static java.util.Objects.requireNonNull;
-
-import java.time.ZoneOffset;
-import java.time.chrono.ChronoZonedDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
-
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage.Builder;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage.LocationIndicatorType;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
+
+import javax.annotation.Nullable;
+import java.time.ZoneOffset;
+import java.time.chrono.ChronoZonedDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper.tryGet;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Populate {@link Builder} properties from message data in {@link InputAviationMessage}.
@@ -96,7 +90,7 @@ public class MessageDataPopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final MessagePopulatingContext context, final Builder target) {
+    public void populate(final MessageProcessorContext context, final Builder target) {
         requireNonNull(context, "context");
         requireNonNull(target, "target");
         final InputAviationMessage input = context.getInputMessage();

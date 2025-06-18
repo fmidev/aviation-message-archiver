@@ -1,15 +1,15 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.Map;
-
 import com.google.common.base.Preconditions;
-
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
+
+import java.util.Map;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Populate {@link ArchiveAviationMessage.Builder} properties from {@link FileMetadata file metadata} in {@link InputAviationMessage}, including product
@@ -23,7 +23,7 @@ public class FileMetadataPopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+    public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) {
         requireNonNull(context, "context");
         requireNonNull(target, "target");
         final FileMetadata fileMetadata = context.getInputMessage().getFileMetadata();

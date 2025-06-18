@@ -1,29 +1,28 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.TestMessageProcessorContext;
+import fi.fmi.avi.model.PartialDateTime;
+import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
+import fi.fmi.avi.model.bulletin.BulletinHeading;
+import fi.fmi.avi.model.bulletin.DataTypeDesignatorT2;
+import fi.fmi.avi.model.bulletin.immutable.BulletinHeadingImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
+import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.model.PartialDateTime;
-import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
-import fi.fmi.avi.model.bulletin.BulletinHeading;
-import fi.fmi.avi.model.bulletin.DataTypeDesignatorT2;
-import fi.fmi.avi.model.bulletin.immutable.BulletinHeadingImpl;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class BulletinHeadingDataPopulatorTest {
     private static final InputAviationMessage INPUT_MESSAGE_TEMPLATE = InputAviationMessage.builder()//
@@ -54,7 +53,7 @@ class BulletinHeadingDataPopulatorTest {
 
     @Test
     void does_nothing_when_bulletin_information_is_not_available() {
-        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(INPUT_MESSAGE_TEMPLATE);
+        final TestMessageProcessorContext context = TestMessageProcessorContext.create(INPUT_MESSAGE_TEMPLATE);
         final ArchiveAviationMessage expected = MessagePopulatorTests.EMPTY_RESULT;
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
@@ -84,7 +83,7 @@ class BulletinHeadingDataPopulatorTest {
             inputMessageBuilder.mutateCollectIdentifier(
                     builder -> builder.setBulletinHeading(BULLETIN_HEADING_TEMPLATE.toBuilder().setDataTypeDesignatorT2(collectDesignatorT2.get()).build()));
         }
-        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessageBuilder.buildPartial());
+        final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);
@@ -122,7 +121,7 @@ class BulletinHeadingDataPopulatorTest {
             inputMessageBuilder.mutateCollectIdentifier(
                     builder -> builder.setBulletinHeading(BULLETIN_HEADING_TEMPLATE.toBuilder().setDataTypeDesignatorT2(collectDesignatorT2.get()).build()));
         }
-        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessageBuilder.buildPartial());
+        final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);
@@ -155,7 +154,7 @@ class BulletinHeadingDataPopulatorTest {
             inputMessageBuilder.mutateCollectIdentifier(builder -> builder.setBulletinHeading(
                     BULLETIN_HEADING_TEMPLATE.toBuilder().setIssueTime(PartialOrCompleteTimeInstant.of(collectIssueTime)).build()));
         }
-        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessageBuilder.buildPartial());
+        final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);
@@ -179,7 +178,7 @@ class BulletinHeadingDataPopulatorTest {
             inputMessageBuilder.mutateCollectIdentifier(
                     builder -> builder.setBulletinHeading(BULLETIN_HEADING_TEMPLATE.toBuilder().setLocationIndicator(collectLocationIndicator).build()));
         }
-        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessageBuilder.buildPartial());
+        final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);
@@ -202,7 +201,7 @@ class BulletinHeadingDataPopulatorTest {
         if (collectIdentifierString != null) {
             inputMessageBuilder.mutateCollectIdentifier(builder -> builder.setBulletinHeadingString(collectIdentifierString));
         }
-        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessageBuilder.buildPartial());
+        final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);
@@ -247,7 +246,7 @@ class BulletinHeadingDataPopulatorTest {
                     .setNullableAugmentationNumber(collectAugmentationNumber)//
                     .build()));
         }
-        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessageBuilder.buildPartial());
+        final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);
@@ -270,7 +269,7 @@ class BulletinHeadingDataPopulatorTest {
         if (collectIdentifierString != null) {
             inputMessageBuilder.mutateCollectIdentifier(builder -> builder.setBulletinHeadingString(collectIdentifierString));
         }
-        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessageBuilder.buildPartial());
+        final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);

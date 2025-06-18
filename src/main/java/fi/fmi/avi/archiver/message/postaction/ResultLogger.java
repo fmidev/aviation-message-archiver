@@ -1,7 +1,7 @@
 package fi.fmi.avi.archiver.message.postaction;
 
-import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,9 +25,9 @@ public class ResultLogger implements PostAction {
     }
 
     @Override
-    public void run(final ReadableLoggingContext context, final ArchiveAviationMessage message) {
+    public void run(final MessageProcessorContext context, final ArchiveAviationMessage message) {
         requireNonNull(context, "context");
         requireNonNull(message, "message");
-        LOGGER.info("{}Message <{}> {} ({})", this.message, context, message.getArchivalStatus(), message.getProcessingResult());
+        LOGGER.info("{}Message <{}> {} ({})", this.message, context.getLoggingContext(), message.getArchivalStatus(), message.getProcessingResult());
     }
 }

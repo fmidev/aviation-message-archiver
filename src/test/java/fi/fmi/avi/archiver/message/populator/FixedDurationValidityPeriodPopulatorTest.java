@@ -1,24 +1,23 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.assertj.core.api.Assertions.assertThatNoException;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.TestMessageProcessorContext;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import static org.assertj.core.api.Assertions.*;
 
 @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 public class FixedDurationValidityPeriodPopulatorTest {
 
     private static final InputAviationMessage INPUT = InputAviationMessage.builder().buildPartial();
-    private static final MessagePopulatingContext CONTEXT = TestMessagePopulatingContext.create(INPUT);
+    private static final MessageProcessorContext CONTEXT = TestMessageProcessorContext.create(INPUT);
     private static final Duration VALIDITY_END_OFFSET = Duration.ofHours(30);
 
     private FixedDurationValidityPeriodPopulator messagePopulator;

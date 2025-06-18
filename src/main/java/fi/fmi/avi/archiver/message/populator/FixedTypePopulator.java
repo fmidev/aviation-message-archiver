@@ -1,13 +1,14 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
+import fi.fmi.avi.model.MessageType;
 
 import java.util.Map;
 
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
-import fi.fmi.avi.model.MessageType;
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Set a fixed {@link ArchiveAviationMessage#getType() type} on message.
@@ -25,7 +26,7 @@ public class FixedTypePopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+    public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) {
         requireNonNull(context, "context");
         requireNonNull(target, "target");
         target.setType(type);

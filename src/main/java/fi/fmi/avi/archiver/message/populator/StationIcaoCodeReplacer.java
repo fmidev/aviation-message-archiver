@@ -1,12 +1,13 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
 
 import java.util.regex.Pattern;
 
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.conditional.ConditionalMessagePopulator;
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Replace station ICAO code using a regex pattern.
@@ -26,7 +27,7 @@ public class StationIcaoCodeReplacer implements MessagePopulator {
     }
 
     @Override
-    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+    public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) {
         requireNonNull(context, "context");
         requireNonNull(target, "target");
         MessagePopulatorHelper.tryGet(target, reader -> reader.getStationIcaoCode()).ifPresent(icaoCode -> {

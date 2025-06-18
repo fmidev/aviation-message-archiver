@@ -1,23 +1,20 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static java.util.Objects.requireNonNull;
-
-import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.bulletin.BulletinHeading;
 import fi.fmi.avi.model.bulletin.DataTypeDesignatorT1;
+
+import java.time.ZonedDateTime;
+import java.util.*;
+import java.util.function.Function;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Populate {@link ArchiveAviationMessage.Builder} properties from bulletin heading data in {@link InputAviationMessage}.
@@ -62,7 +59,7 @@ public class BulletinHeadingDataPopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+    public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) {
         requireNonNull(context, "context");
         requireNonNull(target, "target");
         final InputAviationMessage input = context.getInputMessage();

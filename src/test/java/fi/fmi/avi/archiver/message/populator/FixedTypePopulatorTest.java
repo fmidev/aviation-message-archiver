@@ -1,17 +1,17 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import com.google.common.testing.NullPointerTester;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.TestMessageProcessorContext;
 import fi.fmi.avi.model.MessageType;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 public class FixedTypePopulatorTest {
@@ -25,7 +25,7 @@ public class FixedTypePopulatorTest {
 
     @Test
     void populate_sets_fixed_type_id() {
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(InputAviationMessage.builder().buildPartial());
+        final MessageProcessorContext context = TestMessageProcessorContext.create(InputAviationMessage.builder().buildPartial());
         final ArchiveAviationMessage.Builder target = ArchiveAviationMessage.builder();
 
         messagePopulator.populate(context, target);

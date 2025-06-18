@@ -1,13 +1,14 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.database.DatabaseAccess;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.ProcessingResult;
 
 import java.util.Optional;
 import java.util.OptionalInt;
 
-import fi.fmi.avi.archiver.database.DatabaseAccess;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ProcessingResult;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Resolves database id for resolved {@link ArchiveAviationMessage#getStationIcaoCode() station ICAO code} and populates the corresponding
@@ -27,7 +28,7 @@ public class StationIdPopulator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+    public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) {
         requireNonNull(context, "context");
         requireNonNull(target, "target");
 

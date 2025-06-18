@@ -1,25 +1,21 @@
 package fi.fmi.avi.archiver.util.instantiation;
 
-import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.populator.MessagePopulator;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.*;
 
 public class AbstractObjectFactoryTest {
     private TestFactory factory;
@@ -171,7 +167,7 @@ public class AbstractObjectFactoryTest {
         }
 
         @Override
-        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+        public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) {
             throw unexpectedInvocation();
         }
 

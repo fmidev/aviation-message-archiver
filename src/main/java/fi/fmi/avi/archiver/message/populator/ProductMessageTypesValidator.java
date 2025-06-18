@@ -1,17 +1,18 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.ProcessingResult;
+import fi.fmi.avi.model.MessageType;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ProcessingResult;
-import fi.fmi.avi.model.MessageType;
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Validate that resolved {@link ArchiveAviationMessage#getType() message type} is one of allowed types per product.
@@ -47,7 +48,7 @@ public class ProductMessageTypesValidator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+    public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) {
         requireNonNull(context, "context");
         requireNonNull(target, "target");
         MessagePopulatorHelper.tryGetInt(target, ArchiveAviationMessage.Builder::getType).ifPresent(type -> {

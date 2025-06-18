@@ -8,7 +8,9 @@ import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.InputAndArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.MessageDiscardedException;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
@@ -84,9 +86,9 @@ public class DiscardingPopulatorTest {
         waitUntilFileExists(product.getFailDir().resolve(FILENAME));
 
         verify(successChannel).send(messageCaptor.capture());
-        @SuppressWarnings("unchecked") final List<ArchiveAviationMessage> successes = (List<ArchiveAviationMessage>) messageCaptor.getValue().getPayload();
+        @SuppressWarnings("unchecked") final List<InputAndArchiveAviationMessage> successes = (List<InputAndArchiveAviationMessage>) messageCaptor.getValue().getPayload();
         assertThat(successes).hasSize(1);
-        assertThat(successes.get(0).getStationIcaoCode()).isEqualTo("EFXX");
+        assertThat(successes.getFirst().archiveMessage().getStationIcaoCode()).isEqualTo("EFXX");
 
         verify(failChannel, times(0)).send(any(Message.class));
         final boolean failures = IntegrationFlowConfig.hasProcessingErrors(messageCaptor.getValue().getHeaders());
@@ -119,7 +121,7 @@ public class DiscardingPopulatorTest {
 
     public static class DiscardingPopulator implements MessagePopulator {
         @Override
-        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) throws MessageDiscardedException {
+        public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) throws MessageDiscardedException {
             final String airportIcaoCode = context.getInputMessage()
                     .getMessage()
                     .getLocationIndicators()

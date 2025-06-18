@@ -5,8 +5,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 
 public interface ArchiveAviationMessageOrBuilder {
-    MessagePositionInFile getMessagePositionInFile();
-
     ProcessingResult getProcessingResult();
 
     ArchivalStatus getArchivalStatus();

@@ -1,13 +1,14 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.ProcessingResult;
 
 import java.time.Clock;
 import java.time.Duration;
 
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ProcessingResult;
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Validates that the message time is not too far in the past.
@@ -28,7 +29,7 @@ public class MessageMaximumAgeValidator implements MessagePopulator {
     }
 
     @Override
-    public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+    public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) {
         requireNonNull(context, "context");
         requireNonNull(target, "target");
         MessagePopulatorHelper.tryGet(target, ArchiveAviationMessage.Builder::getMessageTime)//

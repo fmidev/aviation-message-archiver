@@ -1,20 +1,21 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.logging.model.FileProcessingStatistics;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ImmutableMessageProcessorContext;
+import fi.fmi.avi.archiver.message.MessageDiscardedException;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
+import org.inferred.freebuilder.FreeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.inferred.freebuilder.FreeBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.logging.model.FileProcessingStatistics;
-import fi.fmi.avi.archiver.logging.model.LoggingContext;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.MessageDiscardedException;
+import static java.util.Objects.requireNonNull;
 
 public class MessagePopulationService {
 
@@ -31,7 +32,7 @@ public class MessagePopulationService {
         requireNonNull(loggingContext, "loggingContext");
 
         final List<PopulationResult> populationResults = new ArrayList<>();
-        final MessagePopulatingContextImpl.Builder contextBuilder = MessagePopulatingContextImpl.builder()//
+        final ImmutableMessageProcessorContext.Builder contextBuilder = ImmutableMessageProcessorContext.builder()//
                 .setLoggingContext(loggingContext);
         for (final InputAviationMessage inputMessage : inputMessages) {
             loggingContext.enterBulletinMessage(inputMessage.getMessagePositionInFile());
@@ -56,9 +57,8 @@ public class MessagePopulationService {
         return populationResults;
     }
 
-    private ArchiveAviationMessage populateMessage(final MessagePopulatingContext context) throws MessageDiscardedException {
-        final ArchiveAviationMessage.Builder messageBuilder = ArchiveAviationMessage.builder()//
-                .setMessagePositionInFile(context.getInputMessage().getMessagePositionInFile());
+    private ArchiveAviationMessage populateMessage(final MessageProcessorContext context) throws MessageDiscardedException {
+        final ArchiveAviationMessage.Builder messageBuilder = ArchiveAviationMessage.builder();
         for (final MessagePopulator messagePopulator : messagePopulators) {
             messagePopulator.populate(context, messageBuilder);
         }

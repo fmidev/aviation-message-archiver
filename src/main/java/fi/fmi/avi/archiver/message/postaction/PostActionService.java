@@ -1,7 +1,8 @@
 package fi.fmi.avi.archiver.message.postaction;
 
 import fi.fmi.avi.archiver.logging.model.LoggingContext;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ImmutableMessageProcessorContext;
+import fi.fmi.avi.archiver.message.InputAndArchiveAviationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,14 +19,17 @@ public class PostActionService {
         this.postActions = requireNonNull(postActions, "postActions");
     }
 
-    public void runPostActions(final List<ArchiveAviationMessage> messages, final LoggingContext loggingContext) {
+    public void runPostActions(final List<InputAndArchiveAviationMessage> messages, final LoggingContext loggingContext) {
         requireNonNull(messages, "messages");
         requireNonNull(loggingContext, "loggingContext");
+        final ImmutableMessageProcessorContext.Builder contextBuilder = ImmutableMessageProcessorContext.builder()
+                .setLoggingContext(loggingContext);
         for (final PostAction postAction : postActions) {
-            for (final ArchiveAviationMessage message : messages) {
-                loggingContext.enterBulletinMessage(message.getMessagePositionInFile());
+            for (final InputAndArchiveAviationMessage inputAndArchiveMessage : messages) {
+                loggingContext.enterBulletinMessage(inputAndArchiveMessage.inputMessage().getMessagePositionInFile());
                 try {
-                    postAction.run(loggingContext, message);
+                    contextBuilder.setInputMessage(inputAndArchiveMessage.inputMessage());
+                    postAction.run(contextBuilder.build(), inputAndArchiveMessage.archiveMessage());
                 } catch (final RuntimeException e) {
                     LOGGER.error("Post-action failed on message <{}>.", loggingContext, e);
                 }

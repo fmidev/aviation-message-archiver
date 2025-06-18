@@ -1,24 +1,16 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.EMPTY_RESULT;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.SoftAssertions.assertSoftly;
-
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
-import javax.annotation.Nullable;
-
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.TestMessageProcessorContext;
+import fi.fmi.avi.model.*;
+import fi.fmi.avi.model.GenericAviationWeatherMessage.LocationIndicatorType;
+import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,20 +20,19 @@ import org.junit.jupiter.params.converter.SimpleArgumentConverter;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import javax.annotation.Nullable;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import fi.fmi.avi.model.GenericAviationWeatherMessage.LocationIndicatorType;
-import fi.fmi.avi.model.MessageType;
-import fi.fmi.avi.model.PartialDateTime;
-import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
-import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
-import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
+import static fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.EMPTY_RESULT;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 class MessageDataPopulatorTest {
     private static final InputAviationMessage INPUT_MESSAGE_TEMPLATE = InputAviationMessage.builder()//
@@ -88,7 +79,7 @@ class MessageDataPopulatorTest {
 
     @Test
     void populates_only_mandatory_values_when_other_message_information_is_not_available() {
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(INPUT_MESSAGE_TEMPLATE);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(INPUT_MESSAGE_TEMPLATE);
         final ArchiveAviationMessage expected = ArchiveAviationMessage.builder()//
                 .setMessage(INPUT_MESSAGE_TEMPLATE.getMessage().getOriginalMessage())//
                 .setFormat(MessagePopulatorTests.FormatId.valueOf(INPUT_MESSAGE_TEMPLATE.getMessage().getMessageFormat()).getId())//
@@ -107,7 +98,7 @@ class MessageDataPopulatorTest {
                         .setMessageFormat(expectedFormat.getFormat())//
                         .build())//
                 .buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);
@@ -122,7 +113,7 @@ class MessageDataPopulatorTest {
                         .setMessageType(expectedType.getType())//
                         .build())//
                 .buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);
@@ -144,7 +135,7 @@ class MessageDataPopulatorTest {
                                 .build())//
                         .build())//
                 .buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);
@@ -163,7 +154,7 @@ class MessageDataPopulatorTest {
                         .putAllLocationIndicators(locationIndicators)//
                         .build())//
                 .buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
         final String initialStationIcaoCode = "NULL";
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
@@ -185,7 +176,7 @@ class MessageDataPopulatorTest {
                         .putAllLocationIndicators(locationIndicators)//
                         .build())//
                 .buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
         final String initialStationIcaoCode = "NULL";
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
@@ -215,7 +206,7 @@ class MessageDataPopulatorTest {
                                 .build())//
                         .build())//
                 .buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
         final Instant initialValidFrom = Instant.EPOCH;
         final Instant initialValidTo = initialValidFrom.plus(1, ChronoUnit.DAYS);
@@ -250,7 +241,7 @@ class MessageDataPopulatorTest {
                                 .build())//
                         .build())//
                 .buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
         final Instant initialValidFrom = Instant.EPOCH;
         final Instant initialValidTo = initialValidFrom.plus(1, ChronoUnit.DAYS);
@@ -279,7 +270,7 @@ class MessageDataPopulatorTest {
                         .setXMLNamespace(expectedNamespace)//
                         .build())//
                 .buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);
@@ -294,7 +285,7 @@ class MessageDataPopulatorTest {
                         .setOriginalMessage(expectedMessage)//
                         .build())//
                 .buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);

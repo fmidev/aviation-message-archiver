@@ -3,7 +3,7 @@ package fi.fmi.avi.archiver.amqp;
 import com.rabbitmq.client.amqp.Message;
 import com.rabbitmq.client.amqp.Publisher;
 import fi.fmi.avi.archiver.logging.model.LoggingContext;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.InputAndArchiveAviationMessage;
 import org.slf4j.Logger;
 
 import java.nio.charset.StandardCharsets;
@@ -21,16 +21,16 @@ public class AmqpService {
         this.amqpPublisher = requireNonNull(amqpPublisher, "amqpPublisher");
     }
 
-    public List<ArchiveAviationMessage> publishMessages(final List<ArchiveAviationMessage> messages, final LoggingContext loggingContext) {
+    public List<InputAndArchiveAviationMessage> publishMessages(final List<InputAndArchiveAviationMessage> messages, final LoggingContext loggingContext) {
         requireNonNull(messages, "messages");
         requireNonNull(loggingContext, "loggingContext");
 
         RuntimeException amqpException = null;
-        for (final ArchiveAviationMessage message : messages) {
+        for (final InputAndArchiveAviationMessage inputAndArchiveMessage : messages) {
             try {
-                loggingContext.enterBulletinMessage(message.getMessagePositionInFile());
+                loggingContext.enterBulletinMessage(inputAndArchiveMessage.inputMessage().getMessagePositionInFile());
                 final Message amqpMessage = amqpPublisher
-                        .message(message.getMessage().getBytes(StandardCharsets.UTF_8))
+                        .message(inputAndArchiveMessage.archiveMessage().getMessage().getBytes(StandardCharsets.UTF_8))
                         .messageId(1L);
                 amqpPublisher.publish(amqpMessage, context -> {
                     if (context.status() == Publisher.Status.ACCEPTED) {

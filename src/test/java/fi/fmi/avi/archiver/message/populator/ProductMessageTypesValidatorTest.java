@@ -1,8 +1,20 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.testing.NullPointerTester;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.ProcessingResult;
+import fi.fmi.avi.archiver.message.TestMessageProcessorContext;
+import fi.fmi.avi.model.MessageType;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.Map;
@@ -10,21 +22,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.testing.NullPointerTester;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ProcessingResult;
-import fi.fmi.avi.model.MessageType;
+import static org.assertj.core.api.Assertions.*;
 
 public class ProductMessageTypesValidatorTest {
 
@@ -64,7 +62,7 @@ public class ProductMessageTypesValidatorTest {
     void valid_speci() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.SPECI.getId());
         final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(input);
 
         productMessageTypesValidator.populate(context, builder);
 
@@ -75,7 +73,7 @@ public class ProductMessageTypesValidatorTest {
     void valid_metar() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.METAR.getId());
         final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(input);
 
         productMessageTypesValidator.populate(context, builder);
 
@@ -86,7 +84,7 @@ public class ProductMessageTypesValidatorTest {
     void another_product_identifier_with_taf() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.TAF.getId());
         final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(OTHER_METADATA).buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(input);
 
         productMessageTypesValidator.populate(context, builder);
 
@@ -97,7 +95,7 @@ public class ProductMessageTypesValidatorTest {
     void invalid_taf() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.TAF.getId());
         final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(input);
 
         productMessageTypesValidator.populate(context, builder);
 
@@ -108,7 +106,7 @@ public class ProductMessageTypesValidatorTest {
     void valid_taf() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.TAF.getId());
         final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(TAF_METADATA).buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(input);
 
         productMessageTypesValidator.populate(context, builder);
 
@@ -119,7 +117,7 @@ public class ProductMessageTypesValidatorTest {
     void invalid_type() {
         final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(-1);
         final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial();
-        final MessagePopulatingContext context = TestMessagePopulatingContext.create(input);
+        final MessageProcessorContext context = TestMessageProcessorContext.create(input);
 
         productMessageTypesValidator.populate(context, builder);
 

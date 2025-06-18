@@ -6,7 +6,8 @@ import fi.fmi.avi.archiver.TestConfig;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
+import fi.fmi.avi.archiver.message.InputAndArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.archiver.util.StringCaseFormat;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
@@ -53,16 +54,16 @@ class MessagePopulatorConfigTest {
 
     @Test
     void testMessagePopulatorExecutionChain() {
-        final List<InputAviationMessage> inputMessages = Collections.singletonList(InputAviationMessage.builder()//
+        final InputAviationMessage inputMessage = InputAviationMessage.builder()//
                 .setMessage(GenericAviationWeatherMessageImpl.builder()//
                         .setOriginalMessage("message")//
                         .buildPartial())//
-                .buildPartial());
-        final List<ArchiveAviationMessage> result = messagePopulationIntegrationService.populateMessages(inputMessages,
+                .buildPartial();
+        final List<InputAndArchiveAviationMessage> result = messagePopulationIntegrationService.populateMessages(Collections.singletonList(inputMessage),
                         new MessageHeaders(Collections.emptyMap()))//
                 .getPayload();
 
-        final ArchiveAviationMessage expected = ArchiveAviationMessage.builder()//
+        final InputAndArchiveAviationMessage expected = new InputAndArchiveAviationMessage(inputMessage, ArchiveAviationMessage.builder()//
                 .setRoute(1)//
                 .setFormat(2)//
                 .setType(4)//
@@ -73,7 +74,7 @@ class MessagePopulatorConfigTest {
                 .setValidFrom(Instant.parse("2001-02-04T05:06:07.029Z"))//
                 .setValidTo(Instant.parse("2001-02-05T06:07:08.041Z"))//
                 .setFileModified(Instant.parse("2001-02-02T17:53:54.289Z"))//
-                .build();
+                .build());
         assertThat(result).containsExactly(expected);
     }
 
@@ -84,7 +85,7 @@ class MessagePopulatorConfigTest {
         private List<Instant> validityPeriod = Collections.emptyList();
 
         @Override
-        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+        public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) {
             requireNonNull(context, "context");
             requireNonNull(target, "target");
             if (ids.containsKey(IdCategory.ROUTE)) {
@@ -144,7 +145,7 @@ class MessagePopulatorConfigTest {
         }
 
         @Override
-        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+        public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) {
             requireNonNull(context, "context");
             requireNonNull(target, "target");
             if (!station.isEmpty()) {
@@ -179,7 +180,7 @@ class MessagePopulatorConfigTest {
         }
 
         @Override
-        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+        public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) {
             requireNonNull(context, "context");
             requireNonNull(target, "target");
             target.setFileModified(clock.instant().minus(fileModifiedFromNow));

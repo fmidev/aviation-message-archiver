@@ -7,6 +7,7 @@ import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.InputAndArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.populator.MessagePopulationService;
 import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import fi.fmi.avi.archiver.message.populator.StationIdPopulator;
@@ -99,14 +100,14 @@ public class MessagePopulatorConfig {
             this.messagePopulationService = requireNonNull(messagePopulationService, "messagePopulationService");
         }
 
-        public Message<List<ArchiveAviationMessage>> populateMessages(final List<InputAviationMessage> inputMessages, final MessageHeaders headers) {
+        public Message<List<InputAndArchiveAviationMessage>> populateMessages(final List<InputAviationMessage> inputMessages, final MessageHeaders headers) {
             requireNonNull(inputMessages, "inputMessages");
             requireNonNull(headers, "headers");
 
             final LoggingContext loggingContext = SpringLoggingContextHelper.getLoggingContext(headers);
             final List<MessagePopulationService.PopulationResult> populationResults = messagePopulationService.populateMessages(inputMessages, loggingContext);
 
-            final List<ArchiveAviationMessage> populatedMessages = new ArrayList<>();
+            final List<InputAndArchiveAviationMessage> populatedMessages = new ArrayList<>();
             boolean failures = false;
             for (final MessagePopulationService.PopulationResult populationResult : populationResults) {
                 loggingContext.enterBulletinMessage(populationResult.getInputMessage().getMessagePositionInFile());
@@ -117,7 +118,8 @@ public class MessagePopulatorConfig {
                             LOGGER.error("PopulationResult of status {} is missing message in <{}>.", MessagePopulationService.PopulationResult.Status.STORE,
                                     loggingContext);
                         } else {
-                            populatedMessages.add(archiveMessage);
+                            final InputAviationMessage inputMessage = populationResult.getInputMessage();
+                            populatedMessages.add(new InputAndArchiveAviationMessage(inputMessage, archiveMessage));
                         }
                         break;
                     case DISCARD:

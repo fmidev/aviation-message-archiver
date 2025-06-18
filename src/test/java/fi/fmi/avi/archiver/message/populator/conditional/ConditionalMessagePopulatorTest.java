@@ -1,25 +1,21 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageDiscardedException;
+import fi.fmi.avi.archiver.message.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.TestMessageProcessorContext;
+import fi.fmi.avi.archiver.message.populator.MessagePopulator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.MessageDiscardedException;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
-import fi.fmi.avi.archiver.message.populator.TestMessagePopulatingContext;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 class ConditionalMessagePopulatorTest {
@@ -29,14 +25,14 @@ class ConditionalMessagePopulatorTest {
     private MessagePopulator delegate;
     private AutoCloseable mocks;
 
-    private MessagePopulatingContext context;
+    private MessageProcessorContext context;
     private ArchiveAviationMessage.Builder target;
     private ConditionalMessagePopulator populator;
 
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
-        context = TestMessagePopulatingContext.create(InputAviationMessage.builder().buildPartial());
+        context = TestMessageProcessorContext.create(InputAviationMessage.builder().buildPartial());
         target = ArchiveAviationMessage.builder();
         populator = new ConditionalMessagePopulator(condition, delegate);
     }

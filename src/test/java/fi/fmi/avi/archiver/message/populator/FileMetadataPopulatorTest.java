@@ -1,6 +1,18 @@
 package fi.fmi.avi.archiver.message.populator;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import com.google.common.collect.ImmutableMap;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.TestMessageProcessorContext;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -9,20 +21,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-
-import com.google.common.collect.ImmutableMap;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.config.model.FileConfig;
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("UnnecessaryLocalVariable")
 @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
@@ -75,9 +74,9 @@ class FileMetadataPopulatorTest {
     void populates_route(final String productId, final MessagePopulatorTests.RouteId expected) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductId(productId))//
-                        .setFileConfig(PRODUCTS.get(productId).getFileConfigs().get(0)))//
+                        .setFileConfig(PRODUCTS.get(productId).getFileConfigs().getFirst()))//
                 .build();
-        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
+        final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);
@@ -92,9 +91,9 @@ class FileMetadataPopulatorTest {
     void populates_format(final String productId, final MessagePopulatorTests.FormatId expected) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(fileMetadata -> fileMetadata.mutateFileReference(ref -> ref.setProductId(productId))//
-                        .setFileConfig(PRODUCTS.get(productId).getFileConfigs().get(0)))//
+                        .setFileConfig(PRODUCTS.get(productId).getFileConfigs().getFirst()))//
                 .build();
-        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(inputMessage);
+        final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
         populator.populate(context, builder);
@@ -103,7 +102,7 @@ class FileMetadataPopulatorTest {
 
     @Test
     void populates_fileModified() {
-        final TestMessagePopulatingContext context = TestMessagePopulatingContext.create(INPUT_MESSAGE_TEMPLATE);
+        final TestMessageProcessorContext context = TestMessageProcessorContext.create(INPUT_MESSAGE_TEMPLATE);
         final Instant expected = FILE_MODIFIED;
 
         final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
