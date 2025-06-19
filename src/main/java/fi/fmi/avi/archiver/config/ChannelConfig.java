@@ -100,13 +100,13 @@ public class ChannelConfig {
     }
 
     @Bean
-    ExecutorService amqpExecutor() {
-        return newBlockingSingleThreadExecutor("AMQP-");
+    ExecutorService postActionExecutor() {
+        return newBlockingSingleThreadExecutor("PostAction-");
     }
 
     @Bean
-    MessageChannel amqpChannel() {
-        return new PublishSubscribeChannel(amqpExecutor());
+    MessageChannel postActionChannel() {
+        return new PublishSubscribeChannel(postActionExecutor());
     }
 
     @Bean

@@ -1,7 +1,6 @@
 package fi.fmi.avi.archiver.message.populator.conditional;
 
 import com.google.common.testing.AbstractPackageSanityTests;
-
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
@@ -11,6 +10,7 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
     protected void setUp() throws Exception {
         super.setUp();
 
+        setDefault(ArchiveAviationMessage.class, ArchiveAviationMessage.builder().buildPartial());
         setDefault(ArchiveAviationMessage.Builder.class, ArchiveAviationMessage.builder());
         setDefault(GeneralPropertyPredicate.class, GeneralPropertyPredicate.builder().buildPartial());
         setDefault(GeneralPropertyPredicate.Builder.class, GeneralPropertyPredicate.builder());

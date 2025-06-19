@@ -422,6 +422,9 @@ production-line:
   # - config: map of action-specific configuration options. Some of them may be mandatory. May be omitted, when no configuration options are given.
   # For more info on post-action configuration in general, see README.md in the project root directory.
   post-actions:
+    - name: ResultLogger
+      config:
+        message: Message archiving process finished.
   # Map route name to numeric identifier.
   # Name is preferably same as 'avidb_message_routes.name' value in the database.
   # Numeric identifier must be equal to 'avidb_message_routes.route_id' in the database.
