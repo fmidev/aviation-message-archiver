@@ -323,7 +323,8 @@ can be found in the [AviationProduct](src/main/java/fi/fmi/avi/archiver/config/m
 
 ### Message populators
 
-[Message populators](src/main/java/fi/fmi/avi/archiver/message/populator/MessagePopulator.java) are small classes that
+[Message populators](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessagePopulator.java) are small
+classes that
 are responsible for populating the archive data object with message data parsed from the input file. Each message
 populator focuses on a single responsibility, and together all configured populators construct the complete message
 entity to be archived. Message populators also decide whether a message is considered
@@ -360,7 +361,8 @@ production-line:
 ```
 
 Message populator name is generally by convention the same as the class simple name. For example, name
-of `fi.fmi.avi.archiver.message.populator.MessageDataPopulator` class is `MessageDataPopulator` in the configuration.
+of `fi.fmi.avi.archiver.message.processor.populator.MessageDataPopulator` class is `MessageDataPopulator` in the
+configuration.
 
 A base configuration is provided in the [application.yml] file as an example.
 
@@ -382,11 +384,11 @@ the [MessagePopulatorFactoryConfig](src/main/java/fi/fmi/avi/archiver/config/Mes
 Populate properties parsed from input bulletin heading.
 
 * **name:**
-  [BulletinHeadingDataPopulator](src/main/java/fi/fmi/avi/archiver/message/populator/BulletinHeadingDataPopulator.java)
+  [BulletinHeadingDataPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/BulletinHeadingDataPopulator.java)
 * **config:**
     * `bulletin-heading-sources` (optional) - List of bulletin heading sources in preferred order.  
       Available values are specified
-      in [BulletinHeadingSource](src/main/java/fi/fmi/avi/archiver/message/populator/BulletinHeadingSource.java)
+      in [BulletinHeadingSource](src/main/java/fi/fmi/avi/archiver/message/processor/populator/BulletinHeadingSource.java)
       enum.  
       Example:
       ```yaml
@@ -400,7 +402,7 @@ Populate properties parsed from input bulletin heading.
 Populate properties available in input file metadata.
 
 * **name:**
-  [FileMetadataPopulator](src/main/java/fi/fmi/avi/archiver/message/populator/FileMetadataPopulator.java)
+  [FileMetadataPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FileMetadataPopulator.java)
 * **config:** ~
 
 ##### FileNameDataPopulator
@@ -408,7 +410,7 @@ Populate properties available in input file metadata.
 Populate properties parsed from file name.
 
 * **name:**
-  [FileNameDataPopulator](src/main/java/fi/fmi/avi/archiver/message/populator/FileNameDataPopulator.java)
+  [FileNameDataPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FileNameDataPopulator.java)
 * **config:** ~
 
 ##### FixedDurationValidityPeriodPopulator
@@ -416,7 +418,7 @@ Populate properties parsed from file name.
 Set validity period to a fixed duration period starting from message time.
 
 * **name:**
-  [FixedDurationValidityPeriodPopulator](src/main/java/fi/fmi/avi/archiver/message/populator/FixedDurationValidityPeriodPopulator.java)
+  [FixedDurationValidityPeriodPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedDurationValidityPeriodPopulator.java)
 * **config:**
     * `validity-end-offset` (mandatory) - Validity period length from message time as ISO 8601
       duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).  
@@ -430,7 +432,7 @@ Set validity period to a fixed duration period starting from message time.
 Set processing result to specified value.
 
 * **name:**
-  [FixedProcessingResultPopulator](src/main/java/fi/fmi/avi/archiver/message/populator/FixedProcessingResultPopulator.java)
+  [FixedProcessingResultPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedProcessingResultPopulator.java)
 * **config:**
     * `result` (mandatory) - Processing result code name. Available values are specified
       in [ProcessingResult](src/main/java/fi/fmi/avi/archiver/message/ProcessingResult.java) enum.  
@@ -444,7 +446,7 @@ Set processing result to specified value.
 Set route to specified value.
 
 * **name:**
-  [FixedRoutePopulator](src/main/java/fi/fmi/avi/archiver/message/populator/FixedRoutePopulator.java)
+  [FixedRoutePopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedRoutePopulator.java)
 * **config:**
     * `route` (mandatory) - Route name.  
       Available values are specified in the `production-line.route-ids` [identifier mapping](#identifier-mappings)
@@ -459,7 +461,7 @@ Set route to specified value.
 Set message type to specified value.
 
 * **name:**
-  [FixedTypePopulator](src/main/java/fi/fmi/avi/archiver/message/populator/FixedTypePopulator.java)
+  [FixedTypePopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedTypePopulator.java)
 * **config:**
     * `type` (mandatory) - Message type name.  
       Available values are specified in the `production-line.type-ids` [identifier mapping](#identifier-mappings)
@@ -474,7 +476,7 @@ Set message type to specified value.
 Trim whitespaces around message content.
 
 * **name:**
-  [MessageContentTrimmer](src/main/java/fi/fmi/avi/archiver/message/populator/MessageContentTrimmer.java)
+  [MessageContentTrimmer](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageContentTrimmer.java)
 * **config:** ~
 
 ##### MessageDataPopulator
@@ -482,7 +484,7 @@ Trim whitespaces around message content.
 Populate properties parsed from message content.
 
 * **name:**
-  [MessageDataPopulator](src/main/java/fi/fmi/avi/archiver/message/populator/MessageDataPopulator.java)
+  [MessageDataPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageDataPopulator.java)
 * **config:**
     * `message-type-location-indicator-types` (optional) - Message type-specific list of location indicator types in
       order of preference for reading the station ICAO code.  
@@ -524,7 +526,7 @@ Populate properties parsed from message content.
 Discard message.
 
 * **name:**
-  [MessageDiscarder](src/main/java/fi/fmi/avi/archiver/message/populator/MessageDiscarder.java)
+  [MessageDiscarder](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageDiscarder.java)
 * **config:** ~
 
 ##### MessageFutureTimeValidator
@@ -532,7 +534,7 @@ Discard message.
 Reject message if message time is too far in the future.
 
 * **name:**
-  [MessageFutureTimeValidator](src/main/java/fi/fmi/avi/archiver/message/populator/MessageFutureTimeValidator.java)
+  [MessageFutureTimeValidator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageFutureTimeValidator.java)
 * **config:**
     * `accept-in-future` (mandatory) - Maximum duration as ISO 8601
       duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)) from current
@@ -547,7 +549,7 @@ Reject message if message time is too far in the future.
 Reject message if message time is too far in the past.
 
 * **name:**
-  [MessageMaximumAgeValidator](src/main/java/fi/fmi/avi/archiver/message/populator/MessageMaximumAgeValidator.java)
+  [MessageMaximumAgeValidator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageMaximumAgeValidator.java)
 * **config:**
     * `confname` (mandatory) - Maximum duration as ISO 8601
       duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)) until current
@@ -562,7 +564,7 @@ Reject message if message time is too far in the past.
 Reject message if message type is not one of the valid types configured for the product.
 
 * **name:**
-  [ProductMessageTypesValidator](src/main/java/fi/fmi/avi/archiver/message/populator/ProductMessageTypesValidator.java)
+  [ProductMessageTypesValidator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/ProductMessageTypesValidator.java)
 * **config:**
     * `confname` (mandatory) - Product-specific list of valid message types.  
       Available products are specified under list property `production-line.products`. Available message types are
@@ -587,7 +589,7 @@ Reject message if message type is not one of the valid types configured for the 
 Replace all occurrences of regular expression pattern in the station ICAO code with the provided replacement.
 
 * **name:**
-  [StationIcaoCodeReplacer](src/main/java/fi/fmi/avi/archiver/message/populator/StationIcaoCodeReplacer.java)
+  [StationIcaoCodeReplacer](src/main/java/fi/fmi/avi/archiver/message/processor/populator/StationIcaoCodeReplacer.java)
 * **config:**
     * `pattern` (mandatory) - Pattern to find in station ICAO code.  
       Pattern syntax is specified
@@ -610,7 +612,8 @@ Replace all occurrences of regular expression pattern in the station ICAO code w
 Set the numeric station id matching station ICAO code, and reject the message if such ICAO code cannot be found in the
 database stations table.
 
-[StationIdPopulator](src/main/java/fi/fmi/avi/archiver/message/populator/StationIdPopulator.java) is implicitly added in
+[StationIdPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/StationIdPopulator.java) is
+implicitly added in
 the end of the message populator execution chain, and it cannot be omitted nor configured in the middle of the execution
 chain.
 
@@ -637,7 +640,7 @@ activate-on:
 ```
 
 Conditional execution is provided
-by [ConditionalMessagePopulator](src/main/java/fi/fmi/avi/archiver/message/populator/conditional/ConditionalMessagePopulator.java)
+by [ConditionalMessagePopulator](src/main/java/fi/fmi/avi/archiver/message/processor/conditional/ConditionalMessagePopulator.java)
 class.
 
 ##### Activation property
@@ -744,7 +747,7 @@ Activation operator may be one of:
   ```
 
 Activation operators are provided
-by [GeneralPropertyPredicate](src/main/java/fi/fmi/avi/archiver/message/populator/conditional/GeneralPropertyPredicate.java)
+by [GeneralPropertyPredicate](src/main/java/fi/fmi/avi/archiver/message/processor/conditional/GeneralPropertyPredicate.java)
 class.
 
 ### Identifier mappings

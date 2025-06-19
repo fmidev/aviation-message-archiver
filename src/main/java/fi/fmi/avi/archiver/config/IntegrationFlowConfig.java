@@ -5,6 +5,7 @@ import fi.fmi.avi.archiver.ProcessingState;
 import fi.fmi.avi.archiver.amqp.AmqpService;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.config.util.SpringLoggingContextHelper;
 import fi.fmi.avi.archiver.database.DatabaseService;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
@@ -13,6 +14,7 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.logging.GenericStructuredLoggable;
 import fi.fmi.avi.archiver.logging.model.*;
 import fi.fmi.avi.archiver.logging.slf4j.SLF4JLoggables;
+import fi.fmi.avi.archiver.message.processor.postaction.PostActionService;
 import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
 import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
 import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
@@ -65,7 +67,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static fi.fmi.avi.archiver.config.SpringLoggingContextHelper.*;
+import static fi.fmi.avi.archiver.config.util.SpringLoggingContextHelper.*;
 import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggable;
 import static java.util.Objects.requireNonNull;
 
@@ -117,9 +119,9 @@ public class IntegrationFlowConfig {
     IntegrationFlow archivalFlow(final FileToStringTransformer fileToStringTransformer, final RequestHandlerRetryAdvice fileReadingRetryAdvice,
                                  final ParserConfig.FileParserIntegrationService fileParserIntegrationService,
                                  final MessagePopulatorConfig.MessagePopulationIntegrationService messagePopulationIntegrationService,
-                                 final DatabaseService databaseService, final AmqpService amqpService,
+                                 final DatabaseService databaseService, final PostActionService postActionService, final AmqpService amqpService,
                                  final MessageChannel processingChannel, final MessageChannel parserChannel, final MessageChannel populatorChannel,
-                                 final MessageChannel databaseChannel, final MessageChannel amqpChannel, final MessageChannel archiveChannel,
+                                 final MessageChannel databaseChannel, final MessageChannel postActionChannel, final MessageChannel archiveChannel,
                                  final MessageChannel successChannel, final MessageChannel failChannel) {
         return IntegrationFlows.from(processingChannel)
                 .handle(loggingEnvSetter(ProcessingPhase.READ))
@@ -140,8 +142,9 @@ public class IntegrationFlowConfig {
                 .handle(loggingEnvSetter(ProcessingPhase.STORE))
                 .handle(withPayloadAndLoggingContext(databaseService::insertMessages))
                 .handle(loggingEnvCleaner())
-                .channel(amqpChannel)
-                .handle(loggingEnvSetter(ProcessingPhase.PUBLISH))//
+                .channel(postActionChannel)
+                .handle(loggingEnvSetter(ProcessingPhase.POST_ACTIONS))//
+                .handle(withPayloadAndLoggingContext(postActionService::runPostActions))//
                 .handle(withPayloadAndLoggingContext(amqpService::publishMessages))//
                 .handle(loggingEnvCleaner())//
                 .channel(archiveChannel)
@@ -159,7 +162,7 @@ public class IntegrationFlowConfig {
     private void logFileContentOverview(final LoggingContext loggingContext) {
         if (LOGGER.isInfoEnabled()) {
             final List<BulletinLogReference> bulletins = loggingContext.getAllBulletins();
-            if (bulletins.size() == 1 && !bulletins.get(0).getHeading().isPresent()) {
+            if (bulletins.size() == 1 && bulletins.getFirst().getHeading().isEmpty()) {
                 loggingContext.enterBulletin(0);
                 LOGGER.info("Messages in <{}>: {}", loggingContext, loggingContext.getBulletinMessages());
                 loggingContext.leaveBulletin();
@@ -278,10 +281,9 @@ public class IntegrationFlowConfig {
     @SuppressWarnings("rawtypes")
     GenericTransformer<Message, Message> errorMessageToOriginalTransformer() {
         return message -> {
-            if (!(message instanceof ErrorMessage)) {
+            if (!(message instanceof final ErrorMessage errorMessage)) {
                 return message;
             }
-            final ErrorMessage errorMessage = (ErrorMessage) message;
             final Throwable throwable = errorMessage.getPayload();
             final Message<?> failedMessage;
             if (throwable instanceof MessagingException) {

@@ -1,14 +1,7 @@
 package fi.fmi.avi.archiver.spring.retry;
 
-import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
-import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.LOGGING_CONTEXT;
-import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.RETRY_COUNT_LOGNAME;
-import static java.util.Objects.requireNonNull;
-
-import java.time.Duration;
-
-import javax.annotation.Nullable;
-
+import fi.fmi.avi.archiver.config.util.SpringLoggingContextHelper;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.handler.advice.RequestHandlerRetryAdvice;
@@ -21,8 +14,13 @@ import org.springframework.retry.listener.RetryListenerSupport;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.retry.support.RetryTemplateBuilder;
 
-import fi.fmi.avi.archiver.config.SpringLoggingContextHelper;
-import fi.fmi.avi.archiver.logging.model.LoggingContext;
+import javax.annotation.Nullable;
+import java.time.Duration;
+
+import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
+import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.LOGGING_CONTEXT;
+import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.RETRY_COUNT_LOGNAME;
+import static java.util.Objects.requireNonNull;
 
 public class RetryAdviceFactory {
     private final Duration initialInterval;
@@ -38,7 +36,7 @@ public class RetryAdviceFactory {
     }
 
     public static RequestHandlerRetryAdvice create(final String description, final Duration initialInterval, final Duration maxInterval,
-            final int retryMultiplier, final Duration timeout) {
+                                                   final int retryMultiplier, final Duration timeout) {
         requireNonNull(description, "description");
         requireNonNull(initialInterval, "initialInterval");
         requireNonNull(maxInterval, "maxInterval");
@@ -60,7 +58,7 @@ public class RetryAdviceFactory {
     }
 
     private static RetryTemplate createRetryTemplate(final String description, final Duration timeout, final RequestHandlerRetryAdvice retryAdvice,
-            final ExponentialBackOffPolicy backOffPolicy) {
+                                                     final ExponentialBackOffPolicy backOffPolicy) {
         final RetryTemplateBuilder retryTemplateBuilder = new RetryTemplateBuilder();
 
         if (timeout.isZero()) {
@@ -96,8 +94,7 @@ public class RetryAdviceFactory {
         @Override
         public <T, E extends Throwable> boolean open(final RetryContext context, final RetryCallback<T, E> callback) {
             final boolean returnValue = super.open(context, callback);
-            @Nullable
-            final Object message = context.getAttribute(ErrorMessageUtils.FAILED_MESSAGE_CONTEXT_KEY);
+            @Nullable final Object message = context.getAttribute(ErrorMessageUtils.FAILED_MESSAGE_CONTEXT_KEY);
             if (message instanceof Message<?>) {
                 final LoggingContext loggingContext = SpringLoggingContextHelper.getLoggingContext((Message<?>) message);
                 LOGGING_CONTEXT.set(context, loggingContext);

@@ -5,6 +5,7 @@ import fi.fmi.avi.archiver.logging.model.FileProcessingStatistics;
 import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import fi.fmi.avi.archiver.message.ArchivalStatus;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.InputAndArchiveAviationMessage;
 
 import java.util.List;
 
@@ -18,16 +19,17 @@ public class DatabaseService {
         this.databaseAccess = requireNonNull(databaseAccess, "databaseAccess");
     }
 
-    public List<ArchiveAviationMessage> insertMessages(final List<ArchiveAviationMessage> messages, final LoggingContext loggingContext) {
+    public List<InputAndArchiveAviationMessage> insertMessages(final List<InputAndArchiveAviationMessage> messages, final LoggingContext loggingContext) {
         requireNonNull(messages, "messages");
         requireNonNull(loggingContext, "loggingContext");
 
         RuntimeException databaseInsertionException = null;
-        final ImmutableList.Builder<ArchiveAviationMessage> updatedMessages = ImmutableList.builder();
-        for (final ArchiveAviationMessage message : messages) {
+        final ImmutableList.Builder<InputAndArchiveAviationMessage> updatedMessages = ImmutableList.builder();
+        for (final InputAndArchiveAviationMessage inputAndArchiveMessage : messages) {
+            final ArchiveAviationMessage message = inputAndArchiveMessage.archiveMessage();
             ArchivalStatus archivalStatus = message.getArchivalStatus();
             try {
-                loggingContext.enterBulletinMessage(message.getMessagePositionInFile());
+                loggingContext.enterBulletinMessage(inputAndArchiveMessage.inputMessage().getMessagePositionInFile());
                 if (message.getProcessingResult() == fi.fmi.avi.archiver.message.ProcessingResult.OK) {
                     databaseAccess.insertAviationMessage(message, loggingContext);
                     archivalStatus = ArchivalStatus.ARCHIVED;
@@ -42,7 +44,7 @@ public class DatabaseService {
                 archivalStatus = ArchivalStatus.FAILED;
                 loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
             } finally {
-                updatedMessages.add(message.toBuilder().setArchivalStatus(archivalStatus).build());
+                updatedMessages.add(inputAndArchiveMessage.withArchiveMessage(message.toBuilder().setArchivalStatus(archivalStatus).build()));
                 loggingContext.leaveMessage();
             }
         }

@@ -4,8 +4,6 @@ import org.inferred.freebuilder.FreeBuilder;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Optional;
-import java.util.OptionalInt;
 
 import static java.util.Objects.requireNonNull;
 
@@ -13,7 +11,7 @@ import static java.util.Objects.requireNonNull;
  * Model representing an aviation message in the database.
  */
 @FreeBuilder
-public abstract class ArchiveAviationMessage {
+public abstract class ArchiveAviationMessage implements ArchiveAviationMessageOrBuilder {
 
     ArchiveAviationMessage() {
     }
@@ -22,45 +20,19 @@ public abstract class ArchiveAviationMessage {
         return new Builder();
     }
 
-    public abstract MessagePositionInFile getMessagePositionInFile();
-
-    public abstract ProcessingResult getProcessingResult();
-
-    public abstract ArchivalStatus getArchivalStatus();
-
-    public abstract int getRoute();
-
-    public abstract int getFormat();
-
-    public abstract int getType();
-
-    public abstract Instant getMessageTime();
-
-    public abstract String getStationIcaoCode();
-
-    public abstract OptionalInt getStationId();
-
-    public abstract Optional<Instant> getValidFrom();
-
-    public abstract Optional<Instant> getValidTo();
-
-    public abstract Optional<Instant> getFileModified();
-
-    public abstract Optional<String> getHeading();
-
-    public abstract Optional<String> getVersion();
-
     public abstract ArchiveAviationMessageIWXXMDetails getIWXXMDetails();
 
-    public abstract String getMessage();
+    @Override
+    public ArchiveAviationMessageIWXXMDetailsOrBuilder getIWXXMDetailsOrBuilder() {
+        return getIWXXMDetails();
+    }
 
     public abstract Builder toBuilder();
 
-    public static class Builder extends ArchiveAviationMessage_Builder {
+    public static class Builder extends ArchiveAviationMessage_Builder implements ArchiveAviationMessageOrBuilder {
         Builder() {
             setArchivalStatus(ArchivalStatus.PENDING);
             setProcessingResult(ProcessingResult.OK);
-            setMessagePositionInFile(MessagePositionInFile.getInitial());
         }
 
         /**
@@ -92,6 +64,11 @@ public abstract class ArchiveAviationMessage {
         @Override
         public Builder setFileModified(final Instant fileModified) {
             return super.setFileModified(truncateToMicros(requireNonNull(fileModified, "fileModified")));
+        }
+
+        @Override
+        public ArchiveAviationMessageIWXXMDetailsOrBuilder getIWXXMDetailsOrBuilder() {
+            return getIWXXMDetailsBuilder();
         }
     }
 }
