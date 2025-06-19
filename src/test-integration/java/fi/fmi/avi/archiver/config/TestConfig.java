@@ -1,4 +1,4 @@
-package fi.fmi.avi.archiver;
+package fi.fmi.avi.archiver.config;
 
 import com.google.common.base.Preconditions;
 import fi.fmi.avi.archiver.amqp.AmqpService;

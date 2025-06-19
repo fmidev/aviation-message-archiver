@@ -4,7 +4,6 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import fi.fmi.avi.archiver.AviationMessageArchiver;
-import fi.fmi.avi.archiver.TestConfig;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.FileConfig;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
@@ -52,7 +51,7 @@ import java.util.*;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.config.MessagePopulatorConfigTest"})
+@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.config.ConditionalMessagePopulatorConfigTest"})
 @ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},
         loader = AnnotationConfigContextLoader.class,
         initializers = {ConfigDataApplicationContextInitializer.class})

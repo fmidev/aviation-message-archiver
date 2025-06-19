@@ -1,11 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.assertThatNoException;
-
-import java.time.DateTimeException;
-import java.util.regex.PatternSyntaxException;
-
+import fi.fmi.avi.archiver.AviationMessageArchiver;
 import org.assertj.core.api.ThrowableAssertAlternative;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -14,8 +9,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import fi.fmi.avi.archiver.AviationMessageArchiver;
-import fi.fmi.avi.archiver.TestConfig;
+import java.time.DateTimeException;
+import java.util.regex.PatternSyntaxException;
+
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 public class InvalidConfigDetectionTest {
     private static final String TEST_CONFIG_LOCATION = "classpath:" + InvalidConfigDetectionTest.class.getName().replace('.', '/') + ".yml";
