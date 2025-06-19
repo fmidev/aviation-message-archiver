@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.context.annotation.Profile;
 import org.springframework.util.FileSystemUtils;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ import java.time.ZoneId;
 import static java.util.Objects.requireNonNull;
 
 @Configuration
-@ActiveProfiles("integration-test")
+@Profile("integration-test")
 public class TestConfig {
     private static final String TEST_CLASS_NAME_MESSAGE = "Set in your test class: @SpringBootTest(\"testclass.name=test.class.FQN\" })";
 
