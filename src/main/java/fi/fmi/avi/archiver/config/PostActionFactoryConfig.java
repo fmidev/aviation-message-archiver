@@ -1,8 +1,8 @@
 package fi.fmi.avi.archiver.config;
 
 import fi.fmi.avi.archiver.config.model.PostActionFactory;
-import fi.fmi.avi.archiver.message.postaction.PostAction;
-import fi.fmi.avi.archiver.message.postaction.ResultLogger;
+import fi.fmi.avi.archiver.message.processor.postaction.PostAction;
+import fi.fmi.avi.archiver.message.processor.postaction.ResultLogger;
 import fi.fmi.avi.archiver.util.StringCaseFormat;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 import fi.fmi.avi.archiver.util.instantiation.PropertyRenamingObjectFactory;

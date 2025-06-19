@@ -1,8 +1,8 @@
 package fi.fmi.avi.archiver.util.instantiation;
 
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.MessageProcessorContext;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.processor.populator.MessagePopulator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

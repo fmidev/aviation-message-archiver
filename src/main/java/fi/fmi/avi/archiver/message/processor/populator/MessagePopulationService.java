@@ -1,0 +1,99 @@
+package fi.fmi.avi.archiver.message.processor.populator;
+
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.logging.model.FileProcessingStatistics;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.MessageDiscardedException;
+import fi.fmi.avi.archiver.message.processor.ImmutableMessageProcessorContext;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
+import org.inferred.freebuilder.FreeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static java.util.Objects.requireNonNull;
+
+public class MessagePopulationService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessagePopulationService.class);
+
+    private final List<MessagePopulator> messagePopulators;
+
+    public MessagePopulationService(final List<MessagePopulator> messagePopulators) {
+        this.messagePopulators = requireNonNull(messagePopulators, "messagePopulators");
+    }
+
+    public List<PopulationResult> populateMessages(final List<InputAviationMessage> inputMessages, final LoggingContext loggingContext) {
+        requireNonNull(inputMessages, "inputMessages");
+        requireNonNull(loggingContext, "loggingContext");
+
+        final List<PopulationResult> populationResults = new ArrayList<>();
+        final ImmutableMessageProcessorContext.Builder contextBuilder = ImmutableMessageProcessorContext.builder()//
+                .setLoggingContext(loggingContext);
+        for (final InputAviationMessage inputMessage : inputMessages) {
+            loggingContext.enterBulletinMessage(inputMessage.getMessagePositionInFile());
+            final PopulationResult.Builder builder = PopulationResult.builder()//
+                    .setInputMessage(inputMessage);
+            try {
+                final ArchiveAviationMessage archiveAviationMessage = populateMessage(contextBuilder.setInputMessage(inputMessage).build());
+                builder.setArchiveMessage(archiveAviationMessage)//
+                        .setStatus(PopulationResult.Status.STORE);
+            } catch (final MessageDiscardedException e) {
+                builder.setStatus(PopulationResult.Status.DISCARD);
+                LOGGER.info("Discarded message <{}>: {}", loggingContext, e.getMessage());
+                loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.DISCARDED);
+            } catch (final Exception e) {
+                builder.setStatus(PopulationResult.Status.FAIL);
+                LOGGER.error("Failed to populate message <{}>.", loggingContext, e);
+                loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
+            }
+            populationResults.add(builder.build());
+        }
+        loggingContext.leaveBulletin();
+        return populationResults;
+    }
+
+    private ArchiveAviationMessage populateMessage(final MessageProcessorContext context) throws MessageDiscardedException {
+        final ArchiveAviationMessage.Builder messageBuilder = ArchiveAviationMessage.builder();
+        for (final MessagePopulator messagePopulator : messagePopulators) {
+            messagePopulator.populate(context, messageBuilder);
+        }
+        return messageBuilder.build();
+    }
+
+    @FreeBuilder
+    public static abstract class PopulationResult {
+        PopulationResult() {
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public abstract InputAviationMessage getInputMessage();
+
+        public abstract Optional<ArchiveAviationMessage> getArchiveMessage();
+
+        public abstract Status getStatus();
+
+        public abstract Builder toBuilder();
+
+        public enum Status {
+            STORE, DISCARD, FAIL
+        }
+
+        public static class Builder extends MessagePopulationService_PopulationResult_Builder {
+            Builder() {
+            }
+
+            @Override
+            public PopulationResult build() {
+                return super.build();
+            }
+        }
+    }
+}

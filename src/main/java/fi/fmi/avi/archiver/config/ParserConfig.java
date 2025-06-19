@@ -1,21 +1,21 @@
 package fi.fmi.avi.archiver.config;
 
-import static fi.fmi.avi.archiver.config.IntegrationFlowConfig.FILE_METADATA;
-import static java.util.Objects.requireNonNull;
-
-import java.util.List;
-
+import fi.fmi.avi.archiver.config.util.SpringLoggingContextHelper;
+import fi.fmi.avi.archiver.file.FileMetadata;
+import fi.fmi.avi.archiver.file.FileParser;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.logging.model.LoggingContext;
+import fi.fmi.avi.converter.AviMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 
-import fi.fmi.avi.archiver.file.FileMetadata;
-import fi.fmi.avi.archiver.file.FileParser;
-import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.logging.model.LoggingContext;
-import fi.fmi.avi.converter.AviMessageConverter;
+import java.util.List;
+
+import static fi.fmi.avi.archiver.config.IntegrationFlowConfig.FILE_METADATA;
+import static java.util.Objects.requireNonNull;
 
 @Configuration
 public class ParserConfig {

@@ -14,14 +14,14 @@ import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 import fi.fmi.avi.archiver.message.InputAndArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.MessageProcessorContext;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.FormatId;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.RouteId;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.StationId;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.TypeId;
-import fi.fmi.avi.archiver.message.populator.conditional.AbstractConditionPropertyReader;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorHelper;
+import fi.fmi.avi.archiver.message.processor.conditional.AbstractConditionPropertyReader;
+import fi.fmi.avi.archiver.message.processor.populator.MessagePopulator;
+import fi.fmi.avi.archiver.message.processor.populator.MessagePopulatorTests.FormatId;
+import fi.fmi.avi.archiver.message.processor.populator.MessagePopulatorTests.RouteId;
+import fi.fmi.avi.archiver.message.processor.populator.MessagePopulatorTests.StationId;
+import fi.fmi.avi.archiver.message.processor.populator.MessagePopulatorTests.TypeId;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
 import fi.fmi.avi.converter.ConversionHints;
@@ -294,7 +294,7 @@ class ConditionalMessagePopulatorConfigTest {
         @Nullable
         @Override
         public MessageType readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
-            final OptionalInt messageTypeId = MessagePopulatorHelper.tryGetInt(target, ArchiveAviationMessageOrBuilder::getType);
+            final OptionalInt messageTypeId = MessageProcessorHelper.tryGetInt(target, ArchiveAviationMessageOrBuilder::getType);
             return messageTypeId.isPresent() ? messageTypeIds.inverse().get(messageTypeId.getAsInt()) : null;
         }
 

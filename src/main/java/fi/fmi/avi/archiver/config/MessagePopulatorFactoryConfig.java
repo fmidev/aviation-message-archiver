@@ -3,7 +3,7 @@ package fi.fmi.avi.archiver.config;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.message.ProcessingResult;
-import fi.fmi.avi.archiver.message.populator.*;
+import fi.fmi.avi.archiver.message.processor.populator.*;
 import fi.fmi.avi.archiver.util.StringCaseFormat;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 import fi.fmi.avi.archiver.util.instantiation.PropertyRenamingObjectFactory;

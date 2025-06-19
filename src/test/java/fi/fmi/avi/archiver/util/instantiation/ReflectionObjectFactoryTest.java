@@ -2,8 +2,8 @@ package fi.fmi.avi.archiver.util.instantiation;
 
 import com.google.common.testing.NullPointerTester;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.MessageProcessorContext;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.processor.populator.MessagePopulator;
 import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory.Builder;
 import org.junit.jupiter.api.Test;
 
@@ -23,8 +23,7 @@ class ReflectionObjectFactoryTest {
     @Test
     public void testNulls() {
         final NullPointerTester tester = new NullPointerTester();
-        @SuppressWarnings("rawtypes")
-        final Class<ReflectionObjectFactory> classUnderTest = ReflectionObjectFactory.class;
+        @SuppressWarnings("rawtypes") final Class<ReflectionObjectFactory> classUnderTest = ReflectionObjectFactory.class;
         final NullPointerTester.Visibility minimalVisibility = NullPointerTester.Visibility.PACKAGE;
         tester.testStaticMethods(classUnderTest, minimalVisibility);
         tester.testConstructors(classUnderTest, minimalVisibility);

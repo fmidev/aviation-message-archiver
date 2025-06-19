@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.config.model;
 
-import fi.fmi.avi.archiver.message.postaction.PostAction;
+import fi.fmi.avi.archiver.message.processor.postaction.PostAction;
 import fi.fmi.avi.archiver.util.instantiation.ForwardingObjectFactory;
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactory;
 

@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.config.model;
 
-import fi.fmi.avi.archiver.message.populator.conditional.GeneralPropertyPredicate;
+import fi.fmi.avi.archiver.message.processor.conditional.GeneralPropertyPredicate;
 import org.inferred.freebuilder.FreeBuilder;
 
 import javax.annotation.Nullable;
@@ -11,7 +11,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 @FreeBuilder
-public abstract class MessagePopulatorInstanceSpec implements ConfigurableComponentInstanceSpec {
+public abstract class MessagePopulatorInstanceSpec implements MessageProcessorInstanceSpec {
     MessagePopulatorInstanceSpec() {
     }
 

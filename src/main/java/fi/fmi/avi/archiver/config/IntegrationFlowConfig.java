@@ -5,6 +5,7 @@ import fi.fmi.avi.archiver.ProcessingState;
 import fi.fmi.avi.archiver.amqp.AmqpService;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.config.util.SpringLoggingContextHelper;
 import fi.fmi.avi.archiver.database.DatabaseService;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
@@ -13,7 +14,7 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.logging.GenericStructuredLoggable;
 import fi.fmi.avi.archiver.logging.model.*;
 import fi.fmi.avi.archiver.logging.slf4j.SLF4JLoggables;
-import fi.fmi.avi.archiver.message.postaction.PostActionService;
+import fi.fmi.avi.archiver.message.processor.postaction.PostActionService;
 import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
 import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
 import fi.fmi.avi.archiver.spring.integration.file.filters.AcceptUnchangedFileListFilter;
@@ -66,7 +67,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static fi.fmi.avi.archiver.config.SpringLoggingContextHelper.*;
+import static fi.fmi.avi.archiver.config.util.SpringLoggingContextHelper.*;
 import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggable;
 import static java.util.Objects.requireNonNull;
 

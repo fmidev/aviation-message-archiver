@@ -2,16 +2,21 @@ package fi.fmi.avi.archiver.config;
 
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorInstanceSpec;
-import fi.fmi.avi.archiver.config.util.ConfigurableComponentsUtil;
+import fi.fmi.avi.archiver.config.util.MessageProcessorsHelper;
+import fi.fmi.avi.archiver.config.util.SpringLoggingContextHelper;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.InputAndArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulationService;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
-import fi.fmi.avi.archiver.message.populator.StationIdPopulator;
-import fi.fmi.avi.archiver.message.populator.conditional.*;
+import fi.fmi.avi.archiver.message.processor.conditional.ConditionPropertyReader;
+import fi.fmi.avi.archiver.message.processor.conditional.ConditionPropertyReaderFactory;
+import fi.fmi.avi.archiver.message.processor.conditional.ConditionPropertyReaderRegistry;
+import fi.fmi.avi.archiver.message.processor.conditional.RenamingConditionPropertyReaderFactory;
+import fi.fmi.avi.archiver.message.processor.populator.ConditionalMessagePopulator;
+import fi.fmi.avi.archiver.message.processor.populator.MessagePopulationService;
+import fi.fmi.avi.archiver.message.processor.populator.MessagePopulator;
+import fi.fmi.avi.archiver.message.processor.populator.StationIdPopulator;
 import fi.fmi.avi.archiver.util.StringCaseFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +40,9 @@ public class MessagePopulatorConfig {
             final List<MessagePopulatorFactory<? extends MessagePopulator>> messagePopulatorFactories,
             final List<MessagePopulatorInstanceSpec> messagePopulatorSpecs,
             final DatabaseAccess databaseAccess,
-            final ConfigurableComponentsUtil configurableComponentsUtil) {
+            final MessageProcessorsHelper messageProcessorsHelper) {
         return Stream.concat(
-                        configurableComponentsUtil.createConditionalComponents(
+                        messageProcessorsHelper.createMessageProcessors(
                                 messagePopulatorFactories, messagePopulatorSpecs,
                                 ConditionalMessagePopulator::new),
                         Stream.of(new StationIdPopulator(databaseAccess)))
