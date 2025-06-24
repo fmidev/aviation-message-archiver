@@ -36,11 +36,11 @@ public class MessagePopulatorFactoryConfig {
         return new MessagePopulatorHelper(clock);
     }
 
-    private <T extends MessagePopulator> ReflectionObjectFactory.Builder<T> builder(final Class<T> type) {
+    <T extends MessagePopulator> ReflectionObjectFactory.Builder<T> builder(final Class<T> type) {
         return ReflectionObjectFactory.builder(type, configValueConverter);
     }
 
-    private <T extends MessagePopulator> MessagePopulatorFactory<T> build(final ReflectionObjectFactory.Builder<T> builder) {
+    <T extends MessagePopulator> MessagePopulatorFactory<T> build(final ReflectionObjectFactory.Builder<T> builder) {
         return new MessagePopulatorFactory<>(new PropertyRenamingObjectFactory<>(builder.build(), StringCaseFormat::dashToCamel));
     }
 
@@ -51,9 +51,9 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
-    MessagePopulatorFactory<FileNameDataPopulator> fileNameDataPopulatorFactory() {
+    MessagePopulatorFactory<FileNameDataPopulator> fileNameDataPopulatorFactory(final MessagePopulatorHelper messagePopulatorHelper) {
         return build(builder(FileNameDataPopulator.class)//
-                .addDependencyArg(messagePopulatorHelper())//
+                .addDependencyArg(messagePopulatorHelper)//
                 .addDependencyArg(clock));
     }
 
@@ -64,17 +64,21 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
-    MessagePopulatorFactory<BulletinHeadingDataPopulator> bulletinHeadingDataPopulatorFactory(final Map<MessageType, Integer> messageTypeIds,
-                                                                                              final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
+    MessagePopulatorFactory<BulletinHeadingDataPopulator> bulletinHeadingDataPopulatorFactory(
+            final MessagePopulatorHelper messagePopulatorHelper,
+            final Map<MessageType, Integer> messageTypeIds,
+            final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
         return build(builder(BulletinHeadingDataPopulator.class)//
-                .addDependencyArgs(messagePopulatorHelper(), messageFormatIds, messageTypeIds));
+                .addDependencyArgs(messagePopulatorHelper, messageFormatIds, messageTypeIds));
     }
 
     @Bean
-    MessagePopulatorFactory<MessageDataPopulator> messageDataPopulatorFactory(final Map<MessageType, Integer> messageTypeIds,
-                                                                              final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
+    MessagePopulatorFactory<MessageDataPopulator> messageDataPopulatorFactory(
+            final MessagePopulatorHelper messagePopulatorHelper,
+            final Map<MessageType, Integer> messageTypeIds,
+            final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
         return build(builder(MessageDataPopulator.class)//
-                .addDependencyArgs(messagePopulatorHelper(), messageFormatIds, messageTypeIds));
+                .addDependencyArgs(messagePopulatorHelper, messageFormatIds, messageTypeIds));
     }
 
     @Bean

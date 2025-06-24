@@ -105,9 +105,9 @@ spring.config.activate.on-profile: (!testMissingPostActionExecutionChain)
 
 production-line:
   post-actions:
-    - name: ResultLogger
+    - name: TestPostAction
       config:
-        message: Strange things happen.
+        id: test
 ---
 spring.config.activate.on-profile: (!testMissingStaticRouteIds & !testEmptyStaticRouteIds)
 

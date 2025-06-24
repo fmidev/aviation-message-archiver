@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.message.processor.populator;
 
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
 import fi.fmi.avi.model.PartialDateTime;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
@@ -21,9 +22,9 @@ class MessagePopulatorHelperTest {
     private static final FileMetadata FILE_METADATA_TEMPLATE = FileMetadata.builder()//
             .setFileReference(FileReference.create("testproduct", "null"))//
             .mutateFileConfig(fileConfig -> fileConfig//
-                    .setFormat(MessagePopulatorTests.FormatId.TAC.getFormat())//
-                    .setFormatId(MessagePopulatorTests.FormatId.TAC.getId())//
-                    .setPattern(MessagePopulatorTests.FILE_NAME_PATTERN)//
+                    .setFormat(MessageProcessorTestHelper.FormatId.TAC.getFormat())//
+                    .setFormatId(MessageProcessorTestHelper.FormatId.TAC.getId())//
+                    .setPattern(MessageProcessorTestHelper.FILE_NAME_PATTERN)//
                     .setNameTimeZone(ZoneOffset.UTC))//
             .buildPartial();
 

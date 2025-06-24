@@ -7,6 +7,7 @@ import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
 import fi.fmi.avi.archiver.message.processor.TestMessageProcessorContext;
 import fi.fmi.avi.model.*;
 import fi.fmi.avi.model.GenericAviationWeatherMessage.LocationIndicatorType;
@@ -30,7 +31,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static fi.fmi.avi.archiver.message.processor.populator.MessagePopulatorTests.EMPTY_RESULT;
+import static fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper.EMPTY_ARCHIVE_MESSAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
@@ -40,9 +41,9 @@ class MessageDataPopulatorTest {
                     .setFileReference(FileReference.create("testproduct", "taf.txt"))//
                     .setFileModified(Instant.parse("2000-01-02T03:05:34Z"))//
                     .mutateFileConfig(fileConfig -> fileConfig//
-                            .setFormat(MessagePopulatorTests.FormatId.TAC.getFormat())//
-                            .setFormatId(MessagePopulatorTests.FormatId.TAC.getId())//
-                            .setPattern(MessagePopulatorTests.FILE_NAME_PATTERN)//
+                            .setFormat(MessageProcessorTestHelper.FormatId.TAC.getFormat())//
+                            .setFormatId(MessageProcessorTestHelper.FormatId.TAC.getId())//
+                            .setPattern(MessageProcessorTestHelper.FILE_NAME_PATTERN)//
                             .setNameTimeZone(ZoneOffset.UTC)))//
             .setMessage(GenericAviationWeatherMessageImpl.builder()//
                     .setTranslated(false)//
@@ -74,7 +75,7 @@ class MessageDataPopulatorTest {
     }
 
     private MessageDataPopulator newPopulator(final MessagePopulatorHelper helper) {
-        return new MessageDataPopulator(helper, MessagePopulatorTests.FORMAT_IDS, MessagePopulatorTests.TYPE_IDS);
+        return new MessageDataPopulator(helper, MessageProcessorTestHelper.FORMAT_IDS, MessageProcessorTestHelper.TYPE_IDS);
     }
 
     @Test
@@ -82,17 +83,17 @@ class MessageDataPopulatorTest {
         final MessageProcessorContext context = TestMessageProcessorContext.create(INPUT_MESSAGE_TEMPLATE);
         final ArchiveAviationMessage expected = ArchiveAviationMessage.builder()//
                 .setMessage(INPUT_MESSAGE_TEMPLATE.getMessage().getOriginalMessage())//
-                .setFormat(MessagePopulatorTests.FormatId.valueOf(INPUT_MESSAGE_TEMPLATE.getMessage().getMessageFormat()).getId())//
+                .setFormat(MessageProcessorTestHelper.FormatId.valueOf(INPUT_MESSAGE_TEMPLATE.getMessage().getMessageFormat()).getId())//
                 .buildPartial();
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.buildPartial()).isEqualTo(expected);
     }
 
     @ParameterizedTest
-    @EnumSource(MessagePopulatorTests.FormatId.class)
-    void populates_format(final MessagePopulatorTests.FormatId expectedFormat) {
+    @EnumSource(MessageProcessorTestHelper.FormatId.class)
+    void populates_format(final MessageProcessorTestHelper.FormatId expectedFormat) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
                         .setMessageFormat(expectedFormat.getFormat())//
@@ -100,14 +101,14 @@ class MessageDataPopulatorTest {
                 .buildPartial();
         final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.getFormat()).isEqualTo(expectedFormat.getId());
     }
 
     @ParameterizedTest
-    @EnumSource(MessagePopulatorTests.TypeId.class)
-    void populates_type_when_exists(final MessagePopulatorTests.TypeId expectedType) {
+    @EnumSource(MessageProcessorTestHelper.TypeId.class)
+    void populates_type_when_exists(final MessageProcessorTestHelper.TypeId expectedType) {
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
                         .setMessageType(expectedType.getType())//
@@ -115,7 +116,7 @@ class MessageDataPopulatorTest {
                 .buildPartial();
         final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.getType()).isEqualTo(expectedType.getId());
     }
@@ -138,7 +139,7 @@ class MessageDataPopulatorTest {
                 .buildPartial();
         final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.getMessageTime()).isEqualTo(expectedTime);
     }
@@ -146,7 +147,7 @@ class MessageDataPopulatorTest {
     @ParameterizedTest
     @CsvFileSource(resources = "MessageDataPopulatorTest_populates_stationIcaoCode_when_exists.csv", numLinesToSkip = 1)
     void populates_stationIcaoCode_when_exists(
-            final PopulatorConfig populatorConfig, final MessagePopulatorTests.TypeId messageType,
+            final PopulatorConfig populatorConfig, final MessageProcessorTestHelper.TypeId messageType,
             @ConvertWith(ToLocationIndicatorMap.class) final Map<LocationIndicatorType, String> locationIndicators,
             @Nullable final String expectedStationIcaoCode) {
         populatorConfig.accept(populator);
@@ -159,7 +160,7 @@ class MessageDataPopulatorTest {
         final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
         final String initialStationIcaoCode = "NULL";
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
+        final ArchiveAviationMessage.Builder builder = EMPTY_ARCHIVE_MESSAGE.toBuilder()//
                 .setStationIcaoCode(initialStationIcaoCode);
         populator.populate(context, builder);
         assertThat(builder.getStationIcaoCode()).isEqualTo(Optional.ofNullable(expectedStationIcaoCode).orElse(initialStationIcaoCode));
@@ -169,7 +170,7 @@ class MessageDataPopulatorTest {
     @CsvFileSource(resources = "MessageDataPopulatorTest_populates_stationIcaoCode_when_exists.csv", numLinesToSkip = 1)
     void populates_stationIcaoCode_when_exists_and_message_type_is_already_set(
             final PopulatorConfig populatorConfig,
-            final MessagePopulatorTests.TypeId messageType,
+            final MessageProcessorTestHelper.TypeId messageType,
             @ConvertWith(ToLocationIndicatorMap.class) final Map<LocationIndicatorType, String> locationIndicators,
             @Nullable final String expectedStationIcaoCode) {
         populatorConfig.accept(populator);
@@ -182,7 +183,7 @@ class MessageDataPopulatorTest {
         final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
         final String initialStationIcaoCode = "NULL";
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
+        final ArchiveAviationMessage.Builder builder = EMPTY_ARCHIVE_MESSAGE.toBuilder()//
                 .setType(messageType.getId())//
                 .setStationIcaoCode(initialStationIcaoCode);
         populator.populate(context, builder);
@@ -213,7 +214,7 @@ class MessageDataPopulatorTest {
 
         final Instant initialValidFrom = Instant.EPOCH;
         final Instant initialValidTo = initialValidFrom.plus(1, ChronoUnit.DAYS);
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
+        final ArchiveAviationMessage.Builder builder = EMPTY_ARCHIVE_MESSAGE.toBuilder()//
                 .setValidFrom(initialValidFrom)//
                 .setValidTo(initialValidTo);
         populator.populate(context, builder);
@@ -251,7 +252,7 @@ class MessageDataPopulatorTest {
         @Nullable final ZonedDateTime initialMessageTime = partialOrCompleteTimeInstant(partialPrimaryReference, completePrimaryReference)//
                 .flatMap(time -> helper.resolveCompleteTime(time, inputMessage.getFileMetadata()))//
                 .orElse(null);
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder()//
+        final ArchiveAviationMessage.Builder builder = EMPTY_ARCHIVE_MESSAGE.toBuilder()//
                 .setValidFrom(initialValidFrom)//
                 .setValidTo(initialValidTo);
         if (initialMessageTime != null) {
@@ -274,7 +275,7 @@ class MessageDataPopulatorTest {
                 .buildPartial();
         final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.getIWXXMDetailsBuilder().getXMLNamespace()).isEqualTo(Optional.of(expectedNamespace));
     }
@@ -289,7 +290,7 @@ class MessageDataPopulatorTest {
                 .buildPartial();
         final MessageProcessorContext context = TestMessageProcessorContext.create(inputMessage);
 
-        final ArchiveAviationMessage.Builder builder = EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.getMessage()).isEqualTo(expectedMessage);
     }

@@ -1,0 +1,89 @@
+production-line:
+  products:
+    - id: testTAC
+      route: TEST
+      input-dir: ${testclass.workdir.path}/testTAC/input
+      archive-dir: ${testclass.workdir.path}/testTAC/archived
+      fail-dir: ${testclass.workdir.path}/testTAC/failed
+      files:
+        - pattern: '^.*\.txt$'
+          name-time-zone: Z
+          format: TAC
+    - id: testIWXXM
+      route: TEST
+      input-dir: ${testclass.workdir.path}/testIWXXM/input
+      archive-dir: ${testclass.workdir.path}/testIWXXM/archived
+      fail-dir: ${testclass.workdir.path}/testIWXXM/failed
+      files:
+        - pattern: '^.*\.xml$'
+          name-time-zone: Z
+          format: IWXXM
+    - id: test2TAC
+      route: TEST2
+      input-dir: ${testclass.workdir.path}/test2TAC/input
+      archive-dir: ${testclass.workdir.path}/test2TAC/archived
+      fail-dir: ${testclass.workdir.path}/test2TAC/failed
+      files:
+        - pattern: '^.*\.txt$'
+          name-time-zone: Z
+          format: TAC
+    - id: test2IWXXM
+      route: TEST2
+      input-dir: ${testclass.workdir.path}/test2IWXXM/input
+      archive-dir: ${testclass.workdir.path}/test2IWXXM/archived
+      fail-dir: ${testclass.workdir.path}/test2IWXXM/failed
+      files:
+        - pattern: '^.*\.xml$'
+          name-time-zone: Z
+          format: IWXXM
+  message-populators:
+    - name: FileMetadataPopulator
+    - name: BulletinHeadingDataPopulator
+    - name: MessageDataPopulator
+  post-actions:
+    - name: TestPostAction
+      activate-on:
+        test-product-identifier:
+          is-any-of:
+            - testTAC
+            - test2TAC
+      config:
+        id: is-testtac-or-test2tac
+    - name: TestPostAction
+      activate-on:
+        test-product-identifier:
+          is: testIWXXM
+        test-target-message-type:
+          is-any-of:
+            - METAR
+          # Multiple conditions for a property
+          # This is logically redundant, but valid:
+          is-not: SPECI
+          # This is logically redundant, but valid:
+          does-not-match: 'crap'
+      config:
+        id: is-testiwxxm-and-metar
+    - name: TestPostAction
+      activate-on:
+        # Multiple conditions on different properties
+        test-product-identifier:
+          matches: '^test\d*IWXXM$'
+        test-target-message-type:
+          is-none-of:
+            - METAR
+            - SPECI
+          presence: PRESENT
+      config:
+        id: is-iwxxm-and-not-metar-speci
+    - name: TestPostAction
+      activate-on:
+        test-input-valid-from:
+          presence: EMPTY
+      config:
+        id: no-validfrom
+    - name: TestPostAction
+      activate-on:
+        test-input-valid-to:
+          presence: OPTIONAL
+      config:
+        id: possible-validto

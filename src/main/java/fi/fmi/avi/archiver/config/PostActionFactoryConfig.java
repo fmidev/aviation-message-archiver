@@ -20,11 +20,11 @@ public class PostActionFactoryConfig {
         this.configValueConverter = requireNonNull(configValueConverter, "configValueConverter");
     }
 
-    private <T extends PostAction> ReflectionObjectFactory.Builder<T> builder(final Class<T> type) {
+    <T extends PostAction> ReflectionObjectFactory.Builder<T> builder(final Class<T> type) {
         return ReflectionObjectFactory.builder(type, configValueConverter);
     }
 
-    private <T extends PostAction> PostActionFactory<T> build(final ReflectionObjectFactory.Builder<T> builder) {
+    <T extends PostAction> PostActionFactory<T> build(final ReflectionObjectFactory.Builder<T> builder) {
         return new PostActionFactory<>(new PropertyRenamingObjectFactory<>(builder.build(), StringCaseFormat::dashToCamel));
     }
 

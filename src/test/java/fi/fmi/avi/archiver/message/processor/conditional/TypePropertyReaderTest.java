@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableBiMap;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
-import fi.fmi.avi.archiver.message.processor.populator.MessagePopulatorTests;
-import fi.fmi.avi.archiver.message.processor.populator.MessagePopulatorTests.TypeId;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper.TypeId;
 import fi.fmi.avi.model.MessageType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,7 +20,7 @@ class TypePropertyReaderTest {
     void readValue_given_target_without_type_returns_null() {
         final InputAviationMessage input = InputAviationMessage.builder().buildPartial();
         final ArchiveAviationMessage.Builder target = ArchiveAviationMessage.builder();
-        final TypePropertyReader propertyReader = new TypePropertyReader(MessagePopulatorTests.TYPE_IDS);
+        final TypePropertyReader propertyReader = new TypePropertyReader(MessageProcessorTestHelper.TYPE_IDS);
 
         final MessageType result = propertyReader.readValue(input, target);
 
@@ -28,12 +28,12 @@ class TypePropertyReaderTest {
     }
 
     @ParameterizedTest
-    @EnumSource(MessagePopulatorTests.TypeId.class)
-    void readValue_given_target_with_type_returns_type(final MessagePopulatorTests.TypeId typeId) {
+    @EnumSource(MessageProcessorTestHelper.TypeId.class)
+    void readValue_given_target_with_type_returns_type(final MessageProcessorTestHelper.TypeId typeId) {
         final InputAviationMessage input = InputAviationMessage.builder().buildPartial();
         final ArchiveAviationMessage.Builder target = ArchiveAviationMessage.builder()//
                 .setType(typeId.getId());
-        final TypePropertyReader propertyReader = new TypePropertyReader(MessagePopulatorTests.TYPE_IDS);
+        final TypePropertyReader propertyReader = new TypePropertyReader(MessageProcessorTestHelper.TYPE_IDS);
 
         final MessageType result = propertyReader.readValue(input, target);
 

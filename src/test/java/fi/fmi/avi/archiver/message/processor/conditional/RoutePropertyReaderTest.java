@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableBiMap;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
-import fi.fmi.avi.archiver.message.processor.populator.MessagePopulatorTests;
-import fi.fmi.avi.archiver.message.processor.populator.MessagePopulatorTests.RouteId;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper.RouteId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -19,7 +19,7 @@ class RoutePropertyReaderTest {
     void readValue_given_target_without_route_returns_null() {
         final InputAviationMessage input = InputAviationMessage.builder().buildPartial();
         final ArchiveAviationMessage.Builder target = ArchiveAviationMessage.builder();
-        final RoutePropertyReader propertyReader = new RoutePropertyReader(MessagePopulatorTests.ROUTE_IDS);
+        final RoutePropertyReader propertyReader = new RoutePropertyReader(MessageProcessorTestHelper.ROUTE_IDS);
 
         final String result = propertyReader.readValue(input, target);
 
@@ -32,7 +32,7 @@ class RoutePropertyReaderTest {
         final InputAviationMessage input = InputAviationMessage.builder().buildPartial();
         final ArchiveAviationMessage.Builder target = ArchiveAviationMessage.builder()//
                 .setRoute(routeId.getId());
-        final RoutePropertyReader propertyReader = new RoutePropertyReader(MessagePopulatorTests.ROUTE_IDS);
+        final RoutePropertyReader propertyReader = new RoutePropertyReader(MessageProcessorTestHelper.ROUTE_IDS);
 
         final String result = propertyReader.readValue(input, target);
 

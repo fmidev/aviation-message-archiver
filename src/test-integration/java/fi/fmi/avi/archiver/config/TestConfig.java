@@ -2,6 +2,8 @@ package fi.fmi.avi.archiver.config;
 
 import com.google.common.base.Preconditions;
 import fi.fmi.avi.archiver.amqp.AmqpService;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -18,6 +20,7 @@ import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
@@ -40,6 +43,11 @@ public class TestConfig {
     @Bean
     ApplicationConversionService conversionService() {
         return new ApplicationConversionService();
+    }
+
+    @Bean
+    MessageProcessorTestHelper messageProcessorTestHelper(final Map<String, AviationProduct> aviationProducts) {
+        return new MessageProcessorTestHelper(aviationProducts);
     }
 
     @Bean
