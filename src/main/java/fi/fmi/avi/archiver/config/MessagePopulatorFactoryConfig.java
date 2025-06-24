@@ -4,10 +4,7 @@ import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 import fi.fmi.avi.archiver.message.processor.populator.*;
-import fi.fmi.avi.archiver.util.StringCaseFormat;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
-import fi.fmi.avi.archiver.util.instantiation.PropertyRenamingObjectFactory;
-import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import org.springframework.context.annotation.Bean;
@@ -21,27 +18,18 @@ import java.util.regex.Pattern;
 import static java.util.Objects.requireNonNull;
 
 @Configuration
-public class MessagePopulatorFactoryConfig {
+public class MessagePopulatorFactoryConfig extends AbstractMessagePopulatorFactoryConfig {
 
-    private final ConfigValueConverter configValueConverter;
     private final Clock clock;
 
     MessagePopulatorFactoryConfig(final ConfigValueConverter configValueConverter, final Clock clock) {
-        this.configValueConverter = requireNonNull(configValueConverter, "configValueConverter");
+        super(configValueConverter);
         this.clock = requireNonNull(clock, "clock");
     }
 
     @Bean
     MessagePopulatorHelper messagePopulatorHelper() {
         return new MessagePopulatorHelper(clock);
-    }
-
-    <T extends MessagePopulator> ReflectionObjectFactory.Builder<T> builder(final Class<T> type) {
-        return ReflectionObjectFactory.builder(type, configValueConverter);
-    }
-
-    <T extends MessagePopulator> MessagePopulatorFactory<T> build(final ReflectionObjectFactory.Builder<T> builder) {
-        return new MessagePopulatorFactory<>(new PropertyRenamingObjectFactory<>(builder.build(), StringCaseFormat::dashToCamel));
     }
 
     @Bean

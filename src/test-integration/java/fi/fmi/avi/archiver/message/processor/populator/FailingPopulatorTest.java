@@ -1,6 +1,7 @@
 package fi.fmi.avi.archiver.message.processor.populator;
 
 import fi.fmi.avi.archiver.AviationMessageArchiver;
+import fi.fmi.avi.archiver.config.AbstractMessagePopulatorFactoryConfig;
 import fi.fmi.avi.archiver.config.ConversionConfig;
 import fi.fmi.avi.archiver.config.IntegrationFlowConfig;
 import fi.fmi.avi.archiver.config.TestConfig;
@@ -10,7 +11,6 @@ import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
-import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -126,10 +126,14 @@ class FailingPopulatorTest {
 
     @Configuration
     @Profile({"integration-test", "failingPopulatorTest"})
-    static class FailingPopulatorConfig {
+    static class FailingPopulatorConfig extends AbstractMessagePopulatorFactoryConfig {
+        FailingPopulatorConfig(final ConfigValueConverter configValueConverter) {
+            super(configValueConverter);
+        }
+
         @Bean
-        public MessagePopulatorFactory<FailingPopulator> failingPopulatorFactory(final ConfigValueConverter messagePopulatorConfigValueConverter) {
-            return new MessagePopulatorFactory<>(ReflectionObjectFactory.builder(FailingPopulator.class, messagePopulatorConfigValueConverter).build());
+        public MessagePopulatorFactory<FailingPopulator> failingPopulatorFactory() {
+            return build(builder(FailingPopulator.class));
         }
     }
 }
