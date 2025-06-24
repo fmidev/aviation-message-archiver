@@ -399,6 +399,14 @@ public class InvalidConfigDetectionTest {
     }
 
     @Test
+    void testMissingPostActionExecutionChain() {
+        assertThatExceptionIsThrownByProfile("testMissingPostActionExecutionChain")//
+                .isInstanceOf(NullPointerException.class)//
+                .withMessageMatching(containsWord("postActions"))//
+        ;
+    }
+
+    @Test
     void testEmptyMessagePopulatorExecutionChain() {
         assertThatExceptionIsThrownByProfile("testEmptyMessagePopulatorExecutionChain")//
                 .isInstanceOf(IllegalStateException.class)//
