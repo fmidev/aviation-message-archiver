@@ -23,23 +23,47 @@ public class TestPostAction implements PostAction {
     }
 
     @Override
-    public void run(final MessageProcessorContext context, final ArchiveAviationMessage message) {
+    public final void run(final MessageProcessorContext context, final ArchiveAviationMessage message) {
+        requireNonNull(context, "context");
+        requireNonNull(message, "message");
         invocations.add(new Invocation(context, message));
+        doOnRun(context, message);
     }
 
-    public void reset() {
+    /**
+     * This method is invoked upon {@link #run(MessageProcessorContext, ArchiveAviationMessage)} after invocation has been registered.
+     * Subclasses may override this method to add custom functionality on run.
+     *
+     * @param context context (see {@link #run(MessageProcessorContext, ArchiveAviationMessage)})
+     * @param message message (see {@link #run(MessageProcessorContext, ArchiveAviationMessage)})
+     */
+    @SuppressWarnings("unused")
+    protected void doOnRun(final MessageProcessorContext context, final ArchiveAviationMessage message) {
+        requireNonNull(context, "context");
+        requireNonNull(message, "message");
+    }
+
+    public final void reset() {
         invocations.clear();
+        doOnReset();
     }
 
-    public List<Invocation> getInvocations() {
+    /**
+     * This method is invoked upon {@link #reset()} after invocations have been cleared.
+     * Subclasses may override this method to add custom functionality on reset.
+     */
+    protected void doOnReset() {
+    }
+
+    public final List<Invocation> getInvocations() {
         return List.copyOf(invocations);
     }
 
-    public String getId() {
+    public final String getId() {
         return id;
     }
 
-    public <ID extends Enum<ID> & EnumId> ID getEnumId(final Class<ID> enumIdClass) {
+    public final <ID extends Enum<ID> & EnumId> ID getEnumId(final Class<ID> enumIdClass) {
         requireNonNull(enumIdClass, "enumIdClass");
         return EnumId.fromId(enumIdClass, id);
     }
