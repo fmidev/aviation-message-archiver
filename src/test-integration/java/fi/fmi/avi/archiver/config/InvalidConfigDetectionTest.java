@@ -1,74 +1,11 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.AviationMessageArchiver;
-import org.assertj.core.api.ThrowableAssertAlternative;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.Banner;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.context.ConfigurableApplicationContext;
 
 import java.time.DateTimeException;
 import java.util.regex.PatternSyntaxException;
 
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.assertThatNoException;
-
-public class InvalidConfigDetectionTest {
-    private static final String TEST_CONFIG_LOCATION = "classpath:" + InvalidConfigDetectionTest.class.getName().replace('.', '/') + ".yml";
-
-    private ConfigurableApplicationContext applicationContext;
-
-    private static SpringApplication createContextBuilder(final String testProfile) {
-        return new SpringApplicationBuilder()//
-                .bannerMode(Banner.Mode.OFF)//
-                .sources(AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class)//
-                .properties(//
-                        "testclass.name=fi.fmi.avi.archiver.config.InvalidConfigDetectionTest", //
-                        "spring.config.additional-location=" + TEST_CONFIG_LOCATION
-                )//
-                .profiles("integration-test", "local", "h2", testProfile)//
-                .build();
-    }
-
-    private static String containsWord(final String word) {
-        return "^.*\\b(?:" + word + ")\\b.*$";
-    }
-
-    @AfterEach
-    void tearDown() {
-        if (applicationContext != null) {
-            applicationContext.close();
-        }
-    }
-
-    private void assertThatNoExceptionIsThrownByProfile(final String profile) {
-        final SpringApplication application = createContextBuilder(profile);
-        assertThatNoException()//
-                .isThrownBy(() -> applicationContext = application.run());
-    }
-
-    private ThrowableAssertAlternative<?> assertThatExceptionIsThrownByProfile(final String profile) {
-        final SpringApplication application = createContextBuilder(profile);
-        return assertThatExceptionOfType(RuntimeException.class)//
-                .isThrownBy(() -> {
-                    try {
-                        applicationContext = application.run();
-                    } catch (final Exception leafException) {
-                        Throwable exception = leafException;
-                        while (exception.getClass().getName().startsWith("org.springframework.") && exception.getCause() != null) {
-                            exception = exception.getCause();
-                        }
-                        throw exception;
-                    }
-                });
-    }
-
-    @Test
-    void testProductOk() {
-        assertThatNoExceptionIsThrownByProfile("testProductOk");
-    }
+public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
 
     @Test
     void testMissingProductId() {
@@ -386,23 +323,10 @@ public class InvalidConfigDetectionTest {
     }
 
     @Test
-    void testEqualArchiveAndFailDirsInMultipleProductsOk() {
-        assertThatNoExceptionIsThrownByProfile("testEqualArchiveAndFailDirsInMultipleProductsOk");
-    }
-
-    @Test
     void testMissingMessagePopulatorExecutionChain() {
         assertThatExceptionIsThrownByProfile("testMissingMessagePopulatorExecutionChain")//
                 .isInstanceOf(NullPointerException.class)//
                 .withMessageMatching(containsWord("messagePopulators"))//
-        ;
-    }
-
-    @Test
-    void testMissingPostActionExecutionChain() {
-        assertThatExceptionIsThrownByProfile("testMissingPostActionExecutionChain")//
-                .isInstanceOf(NullPointerException.class)//
-                .withMessageMatching(containsWord("postActions"))//
         ;
     }
 
