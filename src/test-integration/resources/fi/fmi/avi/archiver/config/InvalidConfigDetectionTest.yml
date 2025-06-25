@@ -493,6 +493,76 @@ spring.config.activate.on-profile: testEmptyMessagePopulatorExecutionChain
 production-line:
   message-populators: [ ]
 ---
+spring.config.activate.on-profile: testNonExistentMessagePopulator
+
+production-line:
+  message-populators:
+    - name: NonExistentMessagePopulator
+---
+spring.config.activate.on-profile: testMessagePopulatorWithMissingMandatoryConfig
+
+production-line:
+  message-populators:
+    - name: FixedDurationValidityPeriodPopulator
+---
+spring.config.activate.on-profile: testMessagePopulatorWithNonExistentConfig
+
+production-line:
+  message-populators:
+    - name: NoOp
+      config:
+        nonExistentConfig: any value
+---
+spring.config.activate.on-profile: testMessagePopulatorWithInvalidConfigValue
+
+production-line:
+  message-populators:
+    - name: NoOp
+      config:
+        dummy-int: three
+---
+spring.config.activate.on-profile: testMessagePopulatorWithNonExistentProperty
+
+production-line:
+  message-populators:
+    - name: NoOp
+      nonExistentProperty: any value
+---
+spring.config.activate.on-profile: testNonExistentPostAction
+
+production-line:
+  post-actions:
+    - name: NonExistentPostAction
+---
+spring.config.activate.on-profile: testPostActionWithMissingMandatoryConfig
+
+production-line:
+  post-actions:
+    - name: TestPostAction
+---
+spring.config.activate.on-profile: testPostActionWithNonExistentConfig
+
+production-line:
+  post-actions:
+    - name: NoOp
+      config:
+        nonExistentConfig: any value
+---
+spring.config.activate.on-profile: testPostActionWithInvalidConfigValue
+
+production-line:
+  post-actions:
+    - name: NoOp
+      config:
+        dummy-int: three
+---
+spring.config.activate.on-profile: testPostActionWithNonExistentProperty
+
+production-line:
+  post-actions:
+    - name: NoOp
+      nonExistentProperty: any value
+---
 spring.config.activate.on-profile: testMissingStaticRouteIds
 
 production-line:

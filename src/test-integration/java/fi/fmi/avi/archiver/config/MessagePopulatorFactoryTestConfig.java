@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.config;
 
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.message.processor.populator.MessageAppendingPopulator;
+import fi.fmi.avi.archiver.message.processor.populator.NoOp;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,5 +19,10 @@ public class MessagePopulatorFactoryTestConfig extends AbstractMessagePopulatorF
     MessagePopulatorFactory<MessageAppendingPopulator> messageAppendingPopulator() {
         return build(builder(MessageAppendingPopulator.class)
                 .addConfigArg("content", String.class));
+    }
+
+    @Bean
+    MessagePopulatorFactory<NoOp> noOpPopulator() {
+        return build(builder(NoOp.class));
     }
 }

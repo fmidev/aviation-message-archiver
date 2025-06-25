@@ -1,6 +1,7 @@
 package fi.fmi.avi.archiver.config;
 
 import fi.fmi.avi.archiver.config.model.PostActionFactory;
+import fi.fmi.avi.archiver.message.processor.postaction.NoOp;
 import fi.fmi.avi.archiver.message.processor.postaction.TestPostAction;
 import fi.fmi.avi.archiver.message.processor.postaction.TestPostActionRegistry;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
@@ -25,5 +26,10 @@ public class PostActionFactoryTestConfig extends AbstractPostActionFactoryConfig
         return build(builder(TestPostAction.class)
                 .addDependencyArg(testPostActionRegistry)
                 .addConfigArg("id", String.class));
+    }
+
+    @Bean
+    PostActionFactory<NoOp> noOpPostActionFactory() {
+        return build(builder(NoOp.class));
     }
 }

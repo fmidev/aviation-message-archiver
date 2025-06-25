@@ -14,6 +14,10 @@ public class ValidProductionLineConfigTest extends AbstractConfigValidityTest {
     @ValueSource(strings = {
             "testProduct",
             "testEqualArchiveAndFailDirsInMultipleProducts",
+            "testMessagePopulatorWithEmptyConfigSection",
+            "testMessagePopulatorWithEmptyActivateOnSection",
+            "testPostActionWithEmptyConfigSection",
+            "testPostActionWithEmptyActivateOnSection",
     })
     void testConfigIsValidForProfile(final String profileName) {
         assertThatNoExceptionIsThrownByProfile(profileName);

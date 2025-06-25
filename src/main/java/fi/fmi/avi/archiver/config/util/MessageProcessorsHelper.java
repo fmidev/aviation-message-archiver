@@ -7,7 +7,9 @@ import fi.fmi.avi.archiver.util.instantiation.ObjectFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -40,7 +42,9 @@ public class MessageProcessorsHelper {
             final S spec,
             final Map<String, ? extends ObjectFactory<? extends T>> factoriesByName,
             final BiFunction<ActivationCondition, T, C> conditionalComponentFactory) {
-        final T component = factoriesByName.get(spec.getName()).newInstance(spec.getConfig());
+        final T component = Optional.ofNullable(factoriesByName.get(spec.getName()))
+                .orElseThrow(() -> new IllegalArgumentException(String.format(Locale.US, "Unknown %s: <%s>", spec.getProcessorInformalType(), spec.getName())))
+                .newInstance(spec.getConfig());
         return applyActivationCondition(component, spec, conditionalComponentFactory);
     }
 

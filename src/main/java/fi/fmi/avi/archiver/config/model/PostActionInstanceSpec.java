@@ -15,6 +15,11 @@ public abstract class PostActionInstanceSpec implements MessageProcessorInstance
     PostActionInstanceSpec() {
     }
 
+    @Override
+    public String getProcessorInformalType() {
+        return "post-action";
+    }
+
     public static class Builder extends PostActionInstanceSpec_Builder {
         Builder() {
         }

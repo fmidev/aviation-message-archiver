@@ -5,6 +5,10 @@ import fi.fmi.avi.archiver.message.processor.conditional.GeneralPropertyPredicat
 import java.util.Map;
 
 public interface MessageProcessorInstanceSpec {
+    default String getProcessorInformalType() {
+        return "message processor";
+    }
+
     String getName();
 
     Map<String, GeneralPropertyPredicate.Builder<?>> getActivateOn();

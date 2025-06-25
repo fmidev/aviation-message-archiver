@@ -41,4 +41,32 @@ production-line:
           name-time-zone: Z
           format: TAC
 ---
+spring.config.activate.on-profile: testMessagePopulatorWithEmptyConfigSection
+
+production-line:
+  message-populators:
+    - name: FileMetadataPopulator
+      config:
+---
+spring.config.activate.on-profile: testMessagePopulatorWithEmptyActivateOnSection
+
+production-line:
+  message-populators:
+    - name: FileMetadataPopulator
+      activate-on:
+---
+spring.config.activate.on-profile: testPostActionWithEmptyConfigSection
+
+production-line:
+  post-actions:
+    - name: NoOp
+      config:
+---
+spring.config.activate.on-profile: testPostActionWithEmptyActivateOnSection
+
+production-line:
+  post-actions:
+    - name: NoOp
+      activate-on:
+---
 spring.config.activate.on-profile: testMissingPostActionExecutionChain
