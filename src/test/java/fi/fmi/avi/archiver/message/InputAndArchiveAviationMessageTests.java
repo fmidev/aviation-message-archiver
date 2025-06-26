@@ -13,10 +13,14 @@ public final class InputAndArchiveAviationMessageTests {
     }
 
     public static List<InputAndArchiveAviationMessage> createList(final Collection<InputAviationMessage> inputMessages, final ArchiveAviationMessage... archiveMessages) {
+        requireNonNull(inputMessages, "inputMessages");
+        requireNonNull(archiveMessages, "archiveMessages");
         return createList(inputMessages, Arrays.asList(archiveMessages));
     }
 
     public static List<InputAndArchiveAviationMessage> createList(final Collection<InputAviationMessage> inputMessages, final Collection<ArchiveAviationMessage> archiveMessages) {
+        requireNonNull(inputMessages, "inputMessages");
+        requireNonNull(archiveMessages, "archiveMessages");
         final Iterator<InputAviationMessage> inputIterator = inputMessages.iterator();
         final Iterator<ArchiveAviationMessage> archiveIterator = archiveMessages.iterator();
         final List<InputAndArchiveAviationMessage> builder = new ArrayList<>(inputMessages.size());

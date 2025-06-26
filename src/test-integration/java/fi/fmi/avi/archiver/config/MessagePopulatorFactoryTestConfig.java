@@ -16,13 +16,13 @@ public class MessagePopulatorFactoryTestConfig extends AbstractMessagePopulatorF
     }
 
     @Bean
-    MessagePopulatorFactory<MessageAppendingPopulator> messageAppendingPopulator() {
+    MessagePopulatorFactory<MessageAppendingPopulator> messageAppendingPopulatorFactory() {
         return build(builder(MessageAppendingPopulator.class)
                 .addConfigArg("content", String.class));
     }
 
     @Bean
-    MessagePopulatorFactory<NoOp> noOpPopulator() {
+    MessagePopulatorFactory<NoOp> noOpPopulatorFactory() {
         return build(builder(NoOp.class));
     }
 }

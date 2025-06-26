@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
+import com.google.common.base.Preconditions;
 import fi.fmi.avi.archiver.AviationMessageArchiver;
 import org.assertj.core.api.ThrowableAssertAlternative;
 import org.junit.jupiter.api.AfterEach;
@@ -8,6 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
@@ -19,6 +21,7 @@ public abstract class AbstractConfigValidityTest {
     }
 
     protected static String containsWord(final String word) {
+        requireNonNull(word, "word");
         return "^.*\\b(?:" + word + ")\\b.*$";
     }
 
@@ -43,12 +46,16 @@ public abstract class AbstractConfigValidityTest {
     }
 
     protected void assertThatNoExceptionIsThrownByProfile(final String profile) {
+        requireNonNull(profile, "profile");
+        Preconditions.checkArgument(!profile.isEmpty(), "profile is empty");
         final SpringApplication application = createContextBuilder(profile);
         assertThatNoException()//
                 .isThrownBy(() -> applicationContext = application.run());
     }
 
     protected ThrowableAssertAlternative<?> assertThatExceptionIsThrownByProfile(final String profile) {
+        requireNonNull(profile, "profile");
+        Preconditions.checkArgument(!profile.isEmpty(), "profile is empty");
         final SpringApplication application = createContextBuilder(profile);
         return assertThatExceptionOfType(RuntimeException.class)//
                 .isThrownBy(() -> {
@@ -65,6 +72,8 @@ public abstract class AbstractConfigValidityTest {
     }
 
     protected <T> T bean(final String name, final Class<T> beanType) {
+        requireNonNull(name, "name");
+        requireNonNull(beanType, "beanType");
         return applicationContext.getBean(name, beanType);
     }
 }
