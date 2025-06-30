@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
+import fi.fmi.avi.archiver.config.model.ForwardingMessagePopulatorFactory;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.message.processor.populator.MessagePopulator;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
@@ -12,6 +13,6 @@ public abstract class AbstractMessagePopulatorFactoryConfig extends AbstractMess
 
     @Override
     protected <T extends MessagePopulator> MessagePopulatorFactory<T> build(final ReflectionObjectFactory.Builder<T> builder) {
-        return new MessagePopulatorFactory<>(createDelegateFactory(builder));
+        return new ForwardingMessagePopulatorFactory<>(createDelegateFactory(builder));
     }
 }

@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
+import fi.fmi.avi.archiver.config.model.ForwardingPostActionFactory;
 import fi.fmi.avi.archiver.config.model.PostActionFactory;
 import fi.fmi.avi.archiver.message.processor.postaction.PostAction;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
@@ -11,6 +12,6 @@ public abstract class AbstractPostActionFactoryConfig extends AbstractMessagePro
     }
 
     protected <T extends PostAction> PostActionFactory<T> build(final ReflectionObjectFactory.Builder<T> builder) {
-        return new PostActionFactory<>(createDelegateFactory(builder));
+        return new ForwardingPostActionFactory<>(createDelegateFactory(builder));
     }
 }
