@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Function;
+import java.util.function.ToIntFunction;
 
 import static java.util.Objects.requireNonNull;
 
@@ -44,9 +45,9 @@ public final class MessageProcessorHelper {
      * @param <F>    builder type
      * @return value returned by {@code reader} or {@link OptionalInt#empty()} if value could not be read
      */
-    public static <F> OptionalInt tryGetInt(final F input, final Function<F, Integer> reader) {
+    public static <F> OptionalInt tryGetInt(final F input, final ToIntFunction<F> reader) {
         try {
-            return OptionalInt.of(reader.apply(input));
+            return OptionalInt.of(reader.applyAsInt(input));
         } catch (final IllegalStateException ignored) {
             return OptionalInt.empty();
         }
