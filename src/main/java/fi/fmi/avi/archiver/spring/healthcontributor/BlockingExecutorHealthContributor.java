@@ -1,41 +1,26 @@
 package fi.fmi.avi.archiver.spring.healthcontributor;
 
 import fi.fmi.avi.archiver.spring.integration.util.MonitorableCallerBlocksPolicy;
-import org.springframework.boot.actuate.health.*;
+import org.springframework.boot.actuate.health.AbstractHealthIndicator;
+import org.springframework.boot.actuate.health.Health;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import static java.util.Objects.requireNonNull;
 
-public class BlockingExecutorHealthContributor implements CompositeHealthContributor {
+public class BlockingExecutorHealthContributor extends RegistryCompositeHealthContributor {
 
     private final Duration timeout;
-    private final Map<String, HealthContributor> healthContributors = new HashMap<>();
 
     public BlockingExecutorHealthContributor(final Duration timeout) {
         this.timeout = requireNonNull(timeout, "timeout");
     }
 
-    public void register(final String name, final MonitorableCallerBlocksPolicy policy) {
+    public void registerPolicy(final String name, final MonitorableCallerBlocksPolicy policy) {
         requireNonNull(name, "name");
         requireNonNull(policy, "policy");
-        healthContributors.put(name, new BlockingExecutorHealthIndicator(policy));
-    }
-
-    @Override
-    public HealthContributor getContributor(final String name) {
-        requireNonNull(name, "name");
-        return healthContributors.get(name);
-    }
-
-    @Override
-    public Iterator<NamedContributor<HealthContributor>> iterator() {
-        return healthContributors.entrySet().stream()
-                .map((entry) -> NamedContributor.of(entry.getKey(), entry.getValue())).iterator();
+        registerContributor(name, new BlockingExecutorHealthIndicator(policy));
     }
 
     private class BlockingExecutorHealthIndicator extends AbstractHealthIndicator {

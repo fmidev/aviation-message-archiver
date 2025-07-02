@@ -1,10 +1,8 @@
 package fi.fmi.avi.archiver.config;
 
 import com.google.common.base.Preconditions;
-import fi.fmi.avi.archiver.amqp.AmqpService;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,12 +26,6 @@ import static java.util.Objects.requireNonNull;
 @Profile("integration-test")
 public class TestConfig {
     private static final String TEST_CLASS_NAME_MESSAGE = "Set in your test class: @SpringBootTest(\"testclass.name=test.class.FQN\" })";
-
-    // TODO SDM-2644 Temporary mock
-    @Bean
-    AmqpService amqpService() {
-        return Mockito.mock(AmqpService.class);
-    }
 
     @Bean
     Clock clock() {
