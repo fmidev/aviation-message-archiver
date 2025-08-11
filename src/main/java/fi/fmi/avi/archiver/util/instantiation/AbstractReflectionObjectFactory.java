@@ -1,7 +1,5 @@
 package fi.fmi.avi.archiver.util.instantiation;
 
-import static java.util.Objects.requireNonNull;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -12,15 +10,16 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * A skeletal {@code ObjectFactory} implementation.
  * It separates config entries to instantiation config (constructor parameters) and property config (bean setter parameters). After a new instance is
  * created, it sets all property config values by invoking corresponding setters via reflection, converting config values to appropriate types.
  *
- * @param <T>
- *         type of objects this factory produces
+ * @param <T> type of objects this factory produces
  */
-public abstract class AbstractObjectFactory<T> implements ObjectFactory<T> {
+public abstract class AbstractReflectionObjectFactory<T> implements ObjectFactory<T> {
     private static String classString(final Object object) {
         return object == null ? "null" : object.getClass().toString();
     }
@@ -35,9 +34,7 @@ public abstract class AbstractObjectFactory<T> implements ObjectFactory<T> {
     /**
      * Creates a new object instance.
      *
-     * @param instantiationConfig
-     *         instantiation config values flagged by {@link #isInstantiationConfigOption(String)}.
-     *
+     * @param instantiationConfig instantiation config values flagged by {@link #isInstantiationConfigOption(String)}.
      * @return a new object instance
      */
     protected abstract T createInstance(final Map<String, ?> instantiationConfig);
@@ -51,9 +48,7 @@ public abstract class AbstractObjectFactory<T> implements ObjectFactory<T> {
      * configuration options from property options.
      * </p>
      *
-     * @param configOptionName
-     *         name of configuration option
-     *
+     * @param configOptionName name of configuration option
      * @return {@code true} if provided configuration option is required for instantiation, {@code false} otherwise
      */
     protected boolean isInstantiationConfigOption(final String configOptionName) {
@@ -65,9 +60,7 @@ public abstract class AbstractObjectFactory<T> implements ObjectFactory<T> {
      * Create a new object instance, applying provided configuration.
      * Typically there is no need ot override this method.
      *
-     * @param config
-     *         configuration
-     *
+     * @param config configuration
      * @return new configured instance
      */
     @Override
@@ -76,7 +69,7 @@ public abstract class AbstractObjectFactory<T> implements ObjectFactory<T> {
 
         final Map<Boolean, Map<String, Object>> partitionedConfig = config.entrySet().stream()//
                 .collect(Collectors.partitioningBy(entry -> isInstantiationConfigOption(entry.getKey()), //
-                        Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+                        Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue)));
         final Map<String, Object> instantiationConfig = partitionedConfig.getOrDefault(true, Collections.emptyMap());
         final Map<String, Object> propertyConfig = partitionedConfig.getOrDefault(false, Collections.emptyMap());
 
@@ -93,7 +86,7 @@ public abstract class AbstractObjectFactory<T> implements ObjectFactory<T> {
     }
 
     private void setConfigProperty(final String propertyName, final Object propertyConfigValue, final T instance, final Map<String, Method> setters) {
-        final Method setterMethod = setters.get(setterName(propertyName));
+        final Method setterMethod = setters.get(BeanMethodNamePrefix.SET.prefix(propertyName));
         if (setterMethod == null) {
             throw new IllegalArgumentException(String.format(Locale.ROOT, "Unknown config option '%s' for '%s' (%s)", propertyName, getName(), getType()));
         }
@@ -118,7 +111,7 @@ public abstract class AbstractObjectFactory<T> implements ObjectFactory<T> {
     private Map<String, Method> getSettersByName(final Class<T> beanClass) {
         return Arrays.stream(beanClass.getMethods())//
                 .filter(this::isSetter)//
-                .collect(Collectors.toMap(Method::getName, Function.identity()));
+                .collect(Collectors.toUnmodifiableMap(Method::getName, Function.identity()));
     }
 
     private boolean isSetter(final Method method) {
@@ -126,13 +119,7 @@ public abstract class AbstractObjectFactory<T> implements ObjectFactory<T> {
         final int modifiers = method.getModifiers();
         return !Modifier.isStatic(modifiers) //
                 && method.getParameterCount() == 1 //
-                && name.length() > 3 //
-                && name.startsWith("set")//
-                && Character.isUpperCase(name.charAt(3));
-    }
-
-    private String setterName(final String propertyName) {
-        return "set" + Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
+                && BeanMethodNamePrefix.SET.isPrefixed(name);
     }
 
 }

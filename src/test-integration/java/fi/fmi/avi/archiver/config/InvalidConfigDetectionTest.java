@@ -354,7 +354,7 @@ public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
     @Test
     void testMessagePopulatorWithMissingMandatoryConfig() {
         assertThatExceptionIsThrownByProfile("testMessagePopulatorWithMissingMandatoryConfig")//
-                .isInstanceOf(IllegalArgumentException.class)//
+                .isInstanceOf(IllegalStateException.class)//
                 .withMessageContaining("Missing required config option")//
                 .withMessageMatching(containsWord("FixedDurationValidityPeriodPopulator"))//
                 .withMessageMatching(containsWord("validityEndOffset"))//
@@ -364,7 +364,7 @@ public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
     @Test
     void testMessagePopulatorWithNonExistentConfig() {
         assertThatExceptionIsThrownByProfile("testMessagePopulatorWithNonExistentConfig")//
-                .isInstanceOf(IllegalArgumentException.class)//
+                .isInstanceOf(IllegalStateException.class)//
                 .withMessageContaining("Unknown config option")//
                 .withMessageMatching(containsWord("NoOp"))//
                 .withMessageMatching(containsWord("nonExistentConfig"))//
@@ -413,7 +413,7 @@ public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
     @Test
     void testPostActionWithMissingMandatoryConfig() {
         assertThatExceptionIsThrownByProfile("testPostActionWithMissingMandatoryConfig")//
-                .isInstanceOf(IllegalArgumentException.class)//
+                .isInstanceOf(IllegalStateException.class)//
                 .withMessageContaining("Missing required config option")//
                 .withMessageMatching(containsWord("TestPostAction"))//
                 .withMessageMatching(containsWord("id"))//
@@ -423,7 +423,7 @@ public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
     @Test
     void testPostActionWithNonExistentConfig() {
         assertThatExceptionIsThrownByProfile("testPostActionWithNonExistentConfig")//
-                .isInstanceOf(IllegalArgumentException.class)//
+                .isInstanceOf(IllegalStateException.class)//
                 .withMessageContaining("Unknown config option")//
                 .withMessageMatching(containsWord("NoOp"))//
                 .withMessageMatching(containsWord("nonExistentConfig"))//

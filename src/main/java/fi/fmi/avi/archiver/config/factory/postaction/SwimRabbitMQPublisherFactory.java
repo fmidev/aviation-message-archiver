@@ -11,26 +11,34 @@ import fi.fmi.avi.archiver.config.model.PostActionFactory;
 import fi.fmi.avi.archiver.message.processor.postaction.SwimRabbitMQPublisher;
 import fi.fmi.avi.archiver.spring.healthcontributor.RabbitMQConnectionHealthIndicator;
 import fi.fmi.avi.archiver.spring.healthcontributor.SwimRabbitMQConnectionHealthContributor;
+import fi.fmi.avi.archiver.util.instantiation.AbstractTypedConfigObjectFactory;
+import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfig;
+import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cglib.proxy.Proxy;
 
+import java.lang.reflect.Proxy;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
-public class SwimRabbitMQPublisherFactory implements PostActionFactory<SwimRabbitMQPublisher>, AutoCloseable {
+public class SwimRabbitMQPublisherFactory
+        extends AbstractTypedConfigObjectFactory<SwimRabbitMQPublisher, SwimRabbitMQPublisherFactory.Config>
+        implements PostActionFactory<SwimRabbitMQPublisher>, AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisherFactory.class);
 
     private final SwimRabbitMQConnectionHealthContributor healthContributorRegistry;
     private final Clock clock;
     private final List<AutoCloseable> closeableResources = new ArrayList<>();
 
-    public SwimRabbitMQPublisherFactory(final SwimRabbitMQConnectionHealthContributor healthContributorRegistry, final Clock clock) {
+    public SwimRabbitMQPublisherFactory(
+            final ObjectFactoryConfigFactory configFactory,
+            final SwimRabbitMQConnectionHealthContributor healthContributorRegistry,
+            final Clock clock) {
+        super(configFactory);
         this.healthContributorRegistry = requireNonNull(healthContributorRegistry, "healthContributorRegistry");
         this.clock = requireNonNull(clock, "clock");
     }
@@ -73,30 +81,28 @@ public class SwimRabbitMQPublisherFactory implements PostActionFactory<SwimRabbi
     }
 
     @Override
-    public SwimRabbitMQPublisher newInstance(final Map<String, Object> config) {
-        // TODO: better handling and arrangement of config, detect unknown config keys
-        final String name = config.get("id").toString();
-        final String username = config.get("username").toString();
-        final String password = config.get("password").toString();
-        final String uri = config.get("uri").toString();
-        final String exchangeName = config.get("exchange").toString();
-        final String routingKey = config.get("routing-key").toString();
+    public Class<Config> getConfigType() {
+        return Config.class;
+    }
 
+    public SwimRabbitMQPublisher newInstance(final Config config) {
+        requireNonNull(config, "config");
+        final Config.ConnectionConfig connectionConfig = config.getConnection();
         final RabbitMQConnectionHealthIndicator healthIndicator = newHealthIndicator();
         final Environment environment = registerCloseable(newAmqpEnvironmentBuilder().build());
         final Connection connection = createLazyForwardingProxy(Connection.class, () -> registerCloseable(environment
                 .connectionBuilder()
-                .username(username)
-                .password(password)
-                .uri(uri)
+                .username(connectionConfig.getUsername())
+                .password(connectionConfig.getPassword())
+                .uri(connectionConfig.getUri())
                 .listeners(SwimRabbitMQPublisherFactory::log, healthIndicator)
                 .build()));
         final Publisher publisher = createLazyForwardingProxy(Publisher.class, () -> registerCloseable(connection.publisherBuilder()
-                .exchange(exchangeName)
-                .key(routingKey)
+                .exchange(config.getExchange())
+                .key(config.getRoutingKey())
                 .build()));
         final SwimRabbitMQPublisher action = newSwimRabbitMQPublisher(publisher);
-        healthContributorRegistry.registerContributor(name, healthIndicator);
+        healthContributorRegistry.registerContributor(config.getId(), healthIndicator);
         return action;
     }
 
@@ -133,6 +139,24 @@ public class SwimRabbitMQPublisherFactory implements PostActionFactory<SwimRabbi
                 }
             });
             closeableResources.clear();
+        }
+    }
+
+    public interface Config extends ObjectFactoryConfig {
+        String getId();
+
+        ConnectionConfig getConnection();
+
+        String getExchange();
+
+        String getRoutingKey();
+
+        interface ConnectionConfig extends ObjectFactoryConfig {
+            String getUri();
+
+            String getUsername();
+
+            String getPassword();
         }
     }
 }

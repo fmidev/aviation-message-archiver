@@ -1,16 +1,16 @@
 package fi.fmi.avi.archiver.util.instantiation;
 
-import static java.util.Objects.requireNonNull;
+import org.springframework.core.MethodParameter;
+import org.springframework.core.convert.ConversionException;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.Executable;
 import java.util.Collection;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
-import org.springframework.core.MethodParameter;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.TypeDescriptor;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A {@code ConfigValueConverter} implementation delegating conversion to Spring {@link ConversionService}.
@@ -41,20 +41,22 @@ public class SpringConversionServiceConfigValueConverter implements ConfigValueC
 
     @Nullable
     private Object convert(final @Nullable Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
-        return propertyConfigValue == null
-                ? null
-                : conversionService.convert(propertyConfigValue, typeDescriptorForObject(propertyConfigValue),
-                        new TypeDescriptor(MethodParameter.forExecutable(targetExecutable, parameterIndex)));
+        try {
+            return propertyConfigValue == null
+                    ? null
+                    : conversionService.convert(propertyConfigValue, typeDescriptorForObject(propertyConfigValue),
+                    new TypeDescriptor(MethodParameter.forExecutable(targetExecutable, parameterIndex)));
+        } catch (final ConversionException exception) {
+            throw new ConfigValueConversionException(exception);
+        }
     }
 
     @Nullable
     private TypeDescriptor typeDescriptorForObject(@Nullable final Object object) {
-        if (object instanceof Collection && !((Collection<?>) object).isEmpty()) {
-            final Collection<?> collection = (Collection<?>) object;
+        if (object instanceof final Collection<?> collection && !collection.isEmpty()) {
             return TypeDescriptor.collection(collection.getClass(), typeDescriptorForObject(collection.iterator().next()));
-        } else if (object instanceof Map && !((Map<?, ?>) object).isEmpty()) {
-            final Map<?, ?> map = (Map<?, ?>) object;
-            final Map.Entry<?, ?> entry = ((Map<?, ?>) object).entrySet().iterator().next();
+        } else if (object instanceof final Map<?, ?> map && !map.isEmpty()) {
+            final Map.Entry<?, ?> entry = map.entrySet().iterator().next();
             return TypeDescriptor.map(map.getClass(), typeDescriptorForObject(entry.getKey()), typeDescriptorForObject(entry.getValue()));
         } else {
             return TypeDescriptor.forObject(object);

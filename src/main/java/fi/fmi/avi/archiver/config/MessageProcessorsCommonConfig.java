@@ -1,6 +1,8 @@
 package fi.fmi.avi.archiver.config;
 
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
+import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfigFactory;
+import fi.fmi.avi.archiver.util.instantiation.ProxyObjectFactoryConfigFactory;
 import fi.fmi.avi.archiver.util.instantiation.SpringConversionServiceConfigValueConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,5 +21,10 @@ public class MessageProcessorsCommonConfig {
     @Bean
     ConfigValueConverter configValueConverter() {
         return new SpringConversionServiceConfigValueConverter(conversionService);
+    }
+
+    @Bean
+    ObjectFactoryConfigFactory objectFactoryConfigFactory(final ConfigValueConverter configValueConverter) {
+        return new ProxyObjectFactoryConfigFactory(configValueConverter);
     }
 }

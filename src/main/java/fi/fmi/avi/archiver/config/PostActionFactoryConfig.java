@@ -6,6 +6,7 @@ import fi.fmi.avi.archiver.message.processor.postaction.ResultLogger;
 import fi.fmi.avi.archiver.message.processor.postaction.SwimRabbitMQPublisher;
 import fi.fmi.avi.archiver.spring.healthcontributor.SwimRabbitMQConnectionHealthContributor;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
+import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -26,7 +27,9 @@ public class PostActionFactoryConfig extends AbstractPostActionFactoryConfig {
 
     @Bean
     PostActionFactory<SwimRabbitMQPublisher> swimRabbitMQPublisherPostActionFactory(
-            final SwimRabbitMQConnectionHealthContributor swimRabbitMQConnectionHealthContributor, final Clock clock) {
-        return new SwimRabbitMQPublisherFactory(swimRabbitMQConnectionHealthContributor, clock);
+            final ObjectFactoryConfigFactory objectFactoryConfigFactory,
+            final SwimRabbitMQConnectionHealthContributor swimRabbitMQConnectionHealthContributor,
+            final Clock clock) {
+        return decorateAutoCloseable(new SwimRabbitMQPublisherFactory(objectFactoryConfigFactory, swimRabbitMQConnectionHealthContributor, clock));
     }
 }
