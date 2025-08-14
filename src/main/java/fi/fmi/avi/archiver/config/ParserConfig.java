@@ -1,15 +1,13 @@
 package fi.fmi.avi.archiver.config;
 
-import fi.fmi.avi.archiver.config.util.SpringLoggingContextHelper;
+import fi.fmi.avi.archiver.ProcessingServiceContext;
+import fi.fmi.avi.archiver.config.util.SpringProcessingServiceContextHelper;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileParser;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
-import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import fi.fmi.avi.converter.AviMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.support.MessageBuilder;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 
 import java.util.List;
@@ -37,14 +35,10 @@ public class ParserConfig {
             this.fileParser = requireNonNull(fileParser, "fileParser");
         }
 
-        public Message<List<InputAviationMessage>> parse(final String content, final MessageHeaders headers) {
+        public List<InputAviationMessage> parse(final String fileContent, final MessageHeaders headers) {
             final FileMetadata fileMetadata = FILE_METADATA.getNonNull(headers);
-            final LoggingContext loggingContext = SpringLoggingContextHelper.getLoggingContext(headers);
-            final FileParser.FileParseResult result = fileParser.parse(content, fileMetadata, loggingContext);
-            return MessageBuilder.withPayload(result.getInputAviationMessages())
-                    .copyHeaders(headers)
-                    .setHeader(IntegrationFlowConfig.PROCESSING_ERRORS.getName(), IntegrationFlowConfig.hasProcessingErrors(headers) || result.getParseErrors())
-                    .build();
+            final ProcessingServiceContext context = SpringProcessingServiceContextHelper.getProcessingServiceContext(headers);
+            return fileParser.parse(fileContent, fileMetadata, context);
         }
     }
 
