@@ -22,6 +22,11 @@ public class MessageProcessorConditionPropertyReaderConfig {
     }
 
     @Bean
+    ArchivalStatusPropertyReader archivalStatusPropertyReader() {
+        return new ArchivalStatusPropertyReader();
+    }
+
+    @Bean
     FormatPropertyReader formatPropertyReader(final BiMap<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
         return new FormatPropertyReader(messageFormatIds);
     }
