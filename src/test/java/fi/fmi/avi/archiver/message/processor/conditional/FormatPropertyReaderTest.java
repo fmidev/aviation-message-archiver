@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableBiMap;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
-import fi.fmi.avi.archiver.message.processor.populator.MessagePopulatorTests;
-import fi.fmi.avi.archiver.message.processor.populator.MessagePopulatorTests.FormatId;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper.FormatId;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,7 +20,7 @@ class FormatPropertyReaderTest {
     void readValue_given_target_without_format_returns_null() {
         final InputAviationMessage input = InputAviationMessage.builder().buildPartial();
         final ArchiveAviationMessage.Builder target = ArchiveAviationMessage.builder();
-        final FormatPropertyReader propertyReader = new FormatPropertyReader(MessagePopulatorTests.FORMAT_IDS);
+        final FormatPropertyReader propertyReader = new FormatPropertyReader(MessageProcessorTestHelper.FORMAT_IDS);
 
         final GenericAviationWeatherMessage.Format result = propertyReader.readValue(input, target);
 
@@ -28,12 +28,12 @@ class FormatPropertyReaderTest {
     }
 
     @ParameterizedTest
-    @EnumSource(MessagePopulatorTests.FormatId.class)
+    @EnumSource(MessageProcessorTestHelper.FormatId.class)
     void readValue_given_target_with_format_returns_format(final FormatId formatId) {
         final InputAviationMessage input = InputAviationMessage.builder().buildPartial();
         final ArchiveAviationMessage.Builder target = ArchiveAviationMessage.builder()//
                 .setFormat(formatId.getId());
-        final FormatPropertyReader propertyReader = new FormatPropertyReader(MessagePopulatorTests.FORMAT_IDS);
+        final FormatPropertyReader propertyReader = new FormatPropertyReader(MessageProcessorTestHelper.FORMAT_IDS);
 
         final GenericAviationWeatherMessage.Format result = propertyReader.readValue(input, target);
 

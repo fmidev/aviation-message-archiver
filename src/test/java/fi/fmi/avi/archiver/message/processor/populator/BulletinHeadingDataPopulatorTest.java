@@ -4,6 +4,7 @@ import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
 import fi.fmi.avi.archiver.message.processor.TestMessageProcessorContext;
 import fi.fmi.avi.model.PartialDateTime;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
@@ -30,9 +31,9 @@ class BulletinHeadingDataPopulatorTest {
                     .setFileReference(FileReference.create("testproduct", "taf.txt"))//
                     .setFileModified(Instant.parse("2000-01-02T03:05:34Z"))//
                     .mutateFileConfig(fileConfig -> fileConfig//
-                            .setFormat(MessagePopulatorTests.FormatId.TAC.getFormat())//
-                            .setFormatId(MessagePopulatorTests.FormatId.TAC.getId())//
-                            .setPattern(MessagePopulatorTests.FILE_NAME_PATTERN)//
+                            .setFormat(MessageProcessorTestHelper.FormatId.TAC.getFormat())//
+                            .setFormatId(MessageProcessorTestHelper.FormatId.TAC.getId())//
+                            .setPattern(MessageProcessorTestHelper.FILE_NAME_PATTERN)//
                             .setNameTimeZone(ZoneOffset.UTC)))//
             .buildPartial();
     private static final BulletinHeadingImpl BULLETIN_HEADING_TEMPLATE = BulletinHeadingImpl.builder()//
@@ -47,16 +48,16 @@ class BulletinHeadingDataPopulatorTest {
 
     @BeforeEach
     void setUp() {
-        populator = new BulletinHeadingDataPopulator(new MessagePopulatorHelper(Clock.systemUTC()), MessagePopulatorTests.FORMAT_IDS,
-                MessagePopulatorTests.TYPE_IDS);
+        populator = new BulletinHeadingDataPopulator(new MessagePopulatorHelper(Clock.systemUTC()), MessageProcessorTestHelper.FORMAT_IDS,
+                MessageProcessorTestHelper.TYPE_IDS);
     }
 
     @Test
     void does_nothing_when_bulletin_information_is_not_available() {
         final TestMessageProcessorContext context = TestMessageProcessorContext.create(INPUT_MESSAGE_TEMPLATE);
-        final ArchiveAviationMessage expected = MessagePopulatorTests.EMPTY_RESULT;
+        final ArchiveAviationMessage expected = MessageProcessorTestHelper.EMPTY_ARCHIVE_MESSAGE;
 
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessageProcessorTestHelper.EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.buildPartial()).isEqualTo(expected);
     }
@@ -73,7 +74,7 @@ class BulletinHeadingDataPopulatorTest {
             "XML_AERODROME_VT_LONG, FCT_AERODROME_VT_LONG, IWXXM", //
     })
     void populates_format_when_exists(@Nullable final T2 gtsDesignatorT2, @Nullable final T2 collectDesignatorT2,
-                                      final MessagePopulatorTests.FormatId expectedFormat) {
+                                      final MessageProcessorTestHelper.FormatId expectedFormat) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder();
         if (gtsDesignatorT2 != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(
@@ -85,7 +86,7 @@ class BulletinHeadingDataPopulatorTest {
         }
         final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessageProcessorTestHelper.EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.getFormat()).isEqualTo(expectedFormat.getId());
     }
@@ -111,7 +112,7 @@ class BulletinHeadingDataPopulatorTest {
             "FCT_SPACE_WEATHER, WRN_AIRMET, SWX", //
     })
     void populates_type_when_exists(@Nullable final T2 gtsDesignatorT2, @Nullable final T2 collectDesignatorT2,
-                                    final MessagePopulatorTests.TypeId expectedType) {
+                                    final MessageProcessorTestHelper.TypeId expectedType) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder();
         if (gtsDesignatorT2 != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(
@@ -123,7 +124,7 @@ class BulletinHeadingDataPopulatorTest {
         }
         final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessageProcessorTestHelper.EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.getType()).isEqualTo(expectedType.getId());
     }
@@ -156,7 +157,7 @@ class BulletinHeadingDataPopulatorTest {
         }
         final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessageProcessorTestHelper.EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.getMessageTime()).isEqualTo(expectedTime);
     }
@@ -180,7 +181,7 @@ class BulletinHeadingDataPopulatorTest {
         }
         final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessageProcessorTestHelper.EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.getStationIcaoCode()).isEqualTo(expectedStationIcaoCode);
     }
@@ -203,7 +204,7 @@ class BulletinHeadingDataPopulatorTest {
         }
         final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessageProcessorTestHelper.EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.getHeading()).isEqualTo(Optional.ofNullable(expectedHeading));
     }
@@ -248,7 +249,7 @@ class BulletinHeadingDataPopulatorTest {
         }
         final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessageProcessorTestHelper.EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.getVersion()).isEqualTo(Optional.ofNullable(expectedVersion));
     }
@@ -271,7 +272,7 @@ class BulletinHeadingDataPopulatorTest {
         }
         final TestMessageProcessorContext context = TestMessageProcessorContext.create(inputMessageBuilder.buildPartial());
 
-        final ArchiveAviationMessage.Builder builder = MessagePopulatorTests.EMPTY_RESULT.toBuilder();
+        final ArchiveAviationMessage.Builder builder = MessageProcessorTestHelper.EMPTY_ARCHIVE_MESSAGE.toBuilder();
         populator.populate(context, builder);
         assertThat(builder.getIWXXMDetailsBuilder().getCollectIdentifier()).isEqualTo(Optional.ofNullable(expectedCollectIdentifier));
     }

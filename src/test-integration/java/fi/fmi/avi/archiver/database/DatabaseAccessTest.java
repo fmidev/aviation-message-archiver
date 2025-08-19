@@ -1,8 +1,8 @@
 package fi.fmi.avi.archiver.database;
 
 import fi.fmi.avi.archiver.AviationMessageArchiver;
-import fi.fmi.avi.archiver.TestConfig;
 import fi.fmi.avi.archiver.config.ConversionConfig;
+import fi.fmi.avi.archiver.config.TestConfig;
 import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import fi.fmi.avi.archiver.logging.model.NoOpLoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
@@ -33,12 +33,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.database.DatabaseAccessTest" })
-@Sql(scripts = { "classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.database.DatabaseAccessTest"})
+@Sql(scripts = {"classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class },//
+@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = { ConfigDataApplicationContextInitializer.class })
+        initializers = {ConfigDataApplicationContextInitializer.class})
 @ActiveProfiles("integration-test")
 class DatabaseAccessTest {
 

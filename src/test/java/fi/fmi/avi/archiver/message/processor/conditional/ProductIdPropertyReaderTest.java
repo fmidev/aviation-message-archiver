@@ -9,7 +9,7 @@ import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
-import fi.fmi.avi.archiver.message.processor.populator.MessagePopulatorTests.FormatId;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper.FormatId;
 import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

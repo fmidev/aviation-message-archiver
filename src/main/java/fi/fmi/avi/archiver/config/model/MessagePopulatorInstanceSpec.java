@@ -15,6 +15,11 @@ public abstract class MessagePopulatorInstanceSpec implements MessageProcessorIn
     MessagePopulatorInstanceSpec() {
     }
 
+    @Override
+    public String getProcessorInformalType() {
+        return "message populator";
+    }
+
     public static class Builder extends MessagePopulatorInstanceSpec_Builder {
         Builder() {
         }

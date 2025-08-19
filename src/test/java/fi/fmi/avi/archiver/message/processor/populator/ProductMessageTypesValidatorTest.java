@@ -11,6 +11,7 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
 import fi.fmi.avi.archiver.message.processor.TestMessageProcessorContext;
 import fi.fmi.avi.model.MessageType;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,8 +38,8 @@ public class ProductMessageTypesValidatorTest {
                             .setId(TAF_PRODUCT)//
                             .buildPartial())//
             .collect(ImmutableMap.toImmutableMap(AviationProduct::getId, Function.identity()));
-    private static final Set<MessageType> METAR_TYPES = ImmutableSet.of(MessagePopulatorTests.TypeId.SPECI.getType(),
-            MessagePopulatorTests.TypeId.METAR.getType());
+    private static final Set<MessageType> METAR_TYPES = ImmutableSet.of(MessageProcessorTestHelper.TypeId.SPECI.getType(),
+            MessageProcessorTestHelper.TypeId.METAR.getType());
     private static final Set<MessageType> TAF_TYPE = Collections.singleton(MessageType.TAF);
     private static final Map<String, Set<MessageType>> PRODUCT_MESSAGE_TYPES = ImmutableMap.of(METAR_PRODUCT, METAR_TYPES, TAF_PRODUCT, TAF_TYPE);
     private static final FileMetadata METAR_METADATA = FileMetadata.builder()//
@@ -55,12 +56,12 @@ public class ProductMessageTypesValidatorTest {
 
     @BeforeEach
     public void setUp() {
-        productMessageTypesValidator = new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, PRODUCTS, PRODUCT_MESSAGE_TYPES);
+        productMessageTypesValidator = new ProductMessageTypesValidator(MessageProcessorTestHelper.TYPE_IDS, PRODUCTS, PRODUCT_MESSAGE_TYPES);
     }
 
     @Test
     void valid_speci() {
-        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.SPECI.getId());
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessageProcessorTestHelper.TypeId.SPECI.getId());
         final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial();
         final MessageProcessorContext context = TestMessageProcessorContext.create(input);
 
@@ -71,7 +72,7 @@ public class ProductMessageTypesValidatorTest {
 
     @Test
     void valid_metar() {
-        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.METAR.getId());
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessageProcessorTestHelper.TypeId.METAR.getId());
         final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial();
         final MessageProcessorContext context = TestMessageProcessorContext.create(input);
 
@@ -82,7 +83,7 @@ public class ProductMessageTypesValidatorTest {
 
     @Test
     void another_product_identifier_with_taf() {
-        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.TAF.getId());
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessageProcessorTestHelper.TypeId.TAF.getId());
         final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(OTHER_METADATA).buildPartial();
         final MessageProcessorContext context = TestMessageProcessorContext.create(input);
 
@@ -93,7 +94,7 @@ public class ProductMessageTypesValidatorTest {
 
     @Test
     void invalid_taf() {
-        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.TAF.getId());
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessageProcessorTestHelper.TypeId.TAF.getId());
         final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(METAR_METADATA).buildPartial();
         final MessageProcessorContext context = TestMessageProcessorContext.create(input);
 
@@ -104,7 +105,7 @@ public class ProductMessageTypesValidatorTest {
 
     @Test
     void valid_taf() {
-        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessagePopulatorTests.TypeId.TAF.getId());
+        final ArchiveAviationMessage.Builder builder = ArchiveAviationMessage.builder().setType(MessageProcessorTestHelper.TypeId.TAF.getId());
         final InputAviationMessage input = InputAviationMessage.builder().setFileMetadata(TAF_METADATA).buildPartial();
         final MessageProcessorContext context = TestMessageProcessorContext.create(input);
 
@@ -127,7 +128,7 @@ public class ProductMessageTypesValidatorTest {
     @Test
     void misconfigured_message_type() {
         assertThatIllegalArgumentException().isThrownBy(() -> //
-                new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, PRODUCTS,
+                new ProductMessageTypesValidator(MessageProcessorTestHelper.TYPE_IDS, PRODUCTS,
                         ImmutableMap.of(TAF_PRODUCT, Collections.singleton(new MessageType("test")))));
 
     }
@@ -135,12 +136,11 @@ public class ProductMessageTypesValidatorTest {
     @Test
     void misconfigured_product() {
         assertThatIllegalArgumentException().isThrownBy(() -> //
-                new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, PRODUCTS,
+                new ProductMessageTypesValidator(MessageProcessorTestHelper.TYPE_IDS, PRODUCTS,
                         ImmutableMap.of(OTHER_PRODUCT, Collections.singleton(MessageType.METAR))));
     }
 
     // Test nulls apart from constructor
-    @SuppressWarnings("UnstableApiUsage")
     @Test
     public void testNulls() {
         final Class<?> classUnderTest = ProductMessageTypesValidator.class;
@@ -159,8 +159,8 @@ public class ProductMessageTypesValidatorTest {
     @Test
     void testConstructorNulls() {
         assertThatNullPointerException().isThrownBy(() -> new ProductMessageTypesValidator(null, PRODUCTS, PRODUCT_MESSAGE_TYPES));
-        assertThatNullPointerException().isThrownBy(() -> new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, null, PRODUCT_MESSAGE_TYPES));
-        assertThatNullPointerException().isThrownBy(() -> new ProductMessageTypesValidator(MessagePopulatorTests.TYPE_IDS, PRODUCTS, null));
+        assertThatNullPointerException().isThrownBy(() -> new ProductMessageTypesValidator(MessageProcessorTestHelper.TYPE_IDS, null, PRODUCT_MESSAGE_TYPES));
+        assertThatNullPointerException().isThrownBy(() -> new ProductMessageTypesValidator(MessageProcessorTestHelper.TYPE_IDS, PRODUCTS, null));
     }
 
 }

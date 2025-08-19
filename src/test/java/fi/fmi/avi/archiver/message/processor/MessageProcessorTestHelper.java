@@ -1,30 +1,78 @@
-package fi.fmi.avi.archiver.message.processor.populator;
+package fi.fmi.avi.archiver.message.processor;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.Maps;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
+import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-public final class MessagePopulatorTests {
+import static java.util.Objects.requireNonNull;
+
+public class MessageProcessorTestHelper {
     public static final Pattern FILE_NAME_PATTERN = Pattern.compile("(metar|taf|tca|speci|sigmet|vaa|airmet|swx)"
             + "(?:_(?:(?<yyyy>\\d{4})-)?(?:(?<MM>\\d{2})-)?(?<dd>\\d{2})?T(?<hh>\\d{2})?(?::(?<mm>\\d{2}))?(?::(?<ss>\\d{2}))?)?" + "(?:\\.txt|\\.xml)");
-    public static final ArchiveAviationMessage EMPTY_RESULT = ArchiveAviationMessage.builder().buildPartial();
+    public static final ArchiveAviationMessage EMPTY_ARCHIVE_MESSAGE = ArchiveAviationMessage.builder().buildPartial();
     public static final BiMap<GenericAviationWeatherMessage.Format, Integer> FORMAT_IDS = Arrays.stream(FormatId.values())//
             .collect(ImmutableBiMap.toImmutableBiMap(FormatId::getFormat, FormatId::getId));
     public static final BiMap<String, Integer> ROUTE_IDS = Arrays.stream(RouteId.values())//
             .collect(ImmutableBiMap.toImmutableBiMap(RouteId::getName, RouteId::getId));
     public static final BiMap<MessageType, Integer> TYPE_IDS = Arrays.stream(TypeId.values())//
             .collect(ImmutableBiMap.toImmutableBiMap(TypeId::getType, TypeId::getId));
+    public static final Map<FormatId, String> TEST_FILENAMES = Arrays.stream(FormatId.values())
+            .collect(Collectors.collectingAndThen(
+                    Collectors.toMap(Function.identity(), formatId -> "messagefile" + formatId.getDefaultFileSuffix()),
+                    Maps::immutableEnumMap));
 
-    private MessagePopulatorTests() {
-        throw new AssertionError();
+    private final Map<String, AviationProduct> aviationProducts;
+
+    public MessageProcessorTestHelper(final Map<String, AviationProduct> aviationProducts) {
+        this.aviationProducts = requireNonNull(aviationProducts, "aviationProducts");
     }
+
+    public FileConfig fileConfig(final String productId) {
+        requireNonNull(productId, "productId");
+        return aviationProducts.get(productId).getFileConfigs().getFirst();
+    }
+
+    public InputAviationMessage.Builder setProductId(final String productId, final InputAviationMessage.Builder builder) {
+        requireNonNull(productId, "productId");
+        requireNonNull(builder, "builder");
+        final FileConfig fileConfig = fileConfig(productId);
+        final FormatId formatId = FormatId.valueOf(fileConfig.getFormat());
+        return builder
+                .mutateFileMetadata(metadataBuilder -> metadataBuilder
+                        .setFileConfig(fileConfig)
+                        .setFileReference(FileReference.builder()
+                                .setProductId(productId)
+                                .setFilename(TEST_FILENAMES.get(formatId))
+                                .build()))
+                .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
+                        .setMessageFormat(formatId.getFormat())
+                        .build());
+    }
+
+    public ArchiveAviationMessage.Builder setProductId(final String productId, final ArchiveAviationMessage.Builder builder) {
+        requireNonNull(productId, "productId");
+        requireNonNull(builder, "builder");
+        final FileConfig fileConfig = fileConfig(productId);
+        return builder
+                .setRoute(aviationProducts.get(productId).getRouteId())
+                .setFormat(FormatId.valueOf(fileConfig.getFormat()).getId());
+    }
+
 
     /**
      * A mapper between {@link fi.fmi.avi.model.GenericAviationWeatherMessage.Format} and numeric database id.
@@ -34,16 +82,18 @@ public final class MessagePopulatorTests {
      * </p>
      */
     public enum FormatId implements NumericIdHolder {
-        TAC(GenericAviationWeatherMessage.Format.TAC, 1), //
-        IWXXM(GenericAviationWeatherMessage.Format.IWXXM, 2), //
+        TAC(GenericAviationWeatherMessage.Format.TAC, 1, ".txt"), //
+        IWXXM(GenericAviationWeatherMessage.Format.IWXXM, 2, ".xml"), //
         ;
 
         private final GenericAviationWeatherMessage.Format format;
         private final int id;
+        private final String defaultFileSuffix;
 
-        FormatId(final GenericAviationWeatherMessage.Format format, final int id) {
+        FormatId(final GenericAviationWeatherMessage.Format format, final int id, final String defaultFileSuffix) {
             this.format = format;
             this.id = id;
+            this.defaultFileSuffix = defaultFileSuffix;
         }
 
         public static FormatId valueOf(final GenericAviationWeatherMessage.Format format) {
@@ -61,6 +111,10 @@ public final class MessagePopulatorTests {
         @Override
         public int getId() {
             return id;
+        }
+
+        public String getDefaultFileSuffix() {
+            return defaultFileSuffix;
         }
     }
 

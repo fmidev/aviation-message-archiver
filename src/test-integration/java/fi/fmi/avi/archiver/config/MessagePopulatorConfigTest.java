@@ -2,18 +2,13 @@ package fi.fmi.avi.archiver.config;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.AviationMessageArchiver;
-import fi.fmi.avi.archiver.TestConfig;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.InputAndArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
 import fi.fmi.avi.archiver.message.processor.populator.MessagePopulator;
-import fi.fmi.avi.archiver.util.StringCaseFormat;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
-import fi.fmi.avi.archiver.util.instantiation.ObjectFactory;
-import fi.fmi.avi.archiver.util.instantiation.PropertyRenamingObjectFactory;
-import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
 import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -175,6 +170,7 @@ class MessagePopulatorConfigTest {
             this.fileModifiedFromNow = requireNonNull(fileModifiedFromNow, "fileModified");
         }
 
+        @SuppressWarnings("unused")
         public FixedValueTestPopulator3(final Duration fileModifiedFromNow, final Clock clock) {
             throw new AssertionError("Not expecting FixedValueTestPopulator3(Duration, Clock) to be invoked");
         }
@@ -194,29 +190,27 @@ class MessagePopulatorConfigTest {
 
     @Configuration
     @Profile({"integration-test", "MessagePopulatorTest"})
-    static class MessagePopulatorTestConfig {
-        private <T extends MessagePopulator> MessagePopulatorFactory<T> messagePopulatorFactory(final ObjectFactory<T> factory) {
-            return new MessagePopulatorFactory<>(new PropertyRenamingObjectFactory<>(factory, StringCaseFormat::dashToCamel));
+    static class MessagePopulatorTestConfig extends AbstractMessagePopulatorFactoryConfig {
+        MessagePopulatorTestConfig(final ConfigValueConverter configValueConverter) {
+            super(configValueConverter);
         }
 
         @Bean
-        public MessagePopulatorFactory<FixedValueTestPopulator1> fixedValueTestPopulator1(final ConfigValueConverter messagePopulatorConfigValueConverter) {
-            return messagePopulatorFactory(ReflectionObjectFactory.builder(FixedValueTestPopulator1.class, messagePopulatorConfigValueConverter).build());
+        MessagePopulatorFactory<FixedValueTestPopulator1> fixedValueTestPopulator1() {
+            return build(builder(FixedValueTestPopulator1.class));
         }
 
         @Bean
-        public MessagePopulatorFactory<FixedValueTestPopulator2> fixedValueTestPopulator2(final ConfigValueConverter messagePopulatorConfigValueConverter) {
-            return messagePopulatorFactory(ReflectionObjectFactory.builder(FixedValueTestPopulator2.class, messagePopulatorConfigValueConverter)//
-                    .addConfigArg("station", String.class)//
-                    .build());
+        MessagePopulatorFactory<FixedValueTestPopulator2> fixedValueTestPopulator2() {
+            return build(builder(FixedValueTestPopulator2.class)//
+                    .addConfigArg("station", String.class));
         }
 
         @Bean
-        public MessagePopulatorFactory<FixedValueTestPopulator3> fixedValueTestPopulator3(final ConfigValueConverter messagePopulatorConfigValueConverter) {
-            return messagePopulatorFactory(ReflectionObjectFactory.builder(FixedValueTestPopulator3.class, messagePopulatorConfigValueConverter)//
+        MessagePopulatorFactory<FixedValueTestPopulator3> fixedValueTestPopulator3() {
+            return build(builder(FixedValueTestPopulator3.class)//
                     .addDependencyArg(Clock.fixed(Instant.parse("2001-02-03T04:05:06.789Z"), ZoneOffset.UTC))//
-                    .addConfigArg("fileModifiedFromNow", Duration.class)//
-                    .build());
+                    .addConfigArg("fileModifiedFromNow", Duration.class));
         }
     }
 }

@@ -1,7 +1,9 @@
-package fi.fmi.avi.archiver;
+package fi.fmi.avi.archiver.config;
 
 import com.google.common.base.Preconditions;
 import fi.fmi.avi.archiver.amqp.AmqpService;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -9,7 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.context.annotation.Profile;
 import org.springframework.util.FileSystemUtils;
 
 import java.io.IOException;
@@ -18,11 +20,12 @@ import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
 @Configuration
-@ActiveProfiles("integration-test")
+@Profile("integration-test")
 public class TestConfig {
     private static final String TEST_CLASS_NAME_MESSAGE = "Set in your test class: @SpringBootTest(\"testclass.name=test.class.FQN\" })";
 
@@ -40,6 +43,11 @@ public class TestConfig {
     @Bean
     ApplicationConversionService conversionService() {
         return new ApplicationConversionService();
+    }
+
+    @Bean
+    MessageProcessorTestHelper messageProcessorTestHelper(final Map<String, AviationProduct> aviationProducts) {
+        return new MessageProcessorTestHelper(aviationProducts);
     }
 
     @Bean

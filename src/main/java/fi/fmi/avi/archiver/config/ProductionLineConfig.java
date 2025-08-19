@@ -11,6 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.context.annotation.Bean;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -32,13 +33,13 @@ public class ProductionLineConfig {
     @ConstructorBinding
     ProductionLineConfig(final List<AviationProduct.Builder> products,
                          final List<MessagePopulatorInstanceSpec.Builder> messagePopulators,
-                         final List<PostActionInstanceSpec.Builder> postActions,
+                         @Nullable final List<PostActionInstanceSpec.Builder> postActions,
                          final Map<String, Integer> routeIds,
                          final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
                          final Map<MessageType, Integer> typeIds) {
         this.aviationProductBuilders = requireNonNull(products, "products");
         this.messagePopulatorSpecBuilders = requireNonNull(messagePopulators, "messagePopulators");
-        this.postActionInstanceSpecBuilders = requireNonNull(postActions, "postActions");
+        this.postActionInstanceSpecBuilders = postActions == null ? List.of() : postActions;
         this.routeIds = requireNonNull(routeIds, "routeIds");
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");

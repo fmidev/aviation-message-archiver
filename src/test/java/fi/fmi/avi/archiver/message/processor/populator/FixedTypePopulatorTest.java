@@ -5,6 +5,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
 import fi.fmi.avi.archiver.message.processor.TestMessageProcessorContext;
 import fi.fmi.avi.model.MessageType;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,12 +16,12 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 
 @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 public class FixedTypePopulatorTest {
-    private static final MessagePopulatorTests.TypeId TYPE_ID = MessagePopulatorTests.TypeId.METAR;
+    private static final MessageProcessorTestHelper.TypeId TYPE_ID = MessageProcessorTestHelper.TypeId.METAR;
     private FixedTypePopulator messagePopulator;
 
     @BeforeEach
     void setUp() {
-        messagePopulator = new FixedTypePopulator(MessagePopulatorTests.TYPE_IDS, TYPE_ID.getType());
+        messagePopulator = new FixedTypePopulator(MessageProcessorTestHelper.TYPE_IDS, TYPE_ID.getType());
     }
 
     @Test
@@ -37,12 +38,11 @@ public class FixedTypePopulatorTest {
     void populator_with_illegal_type() {
         final MessageType illegalType = new MessageType("ILLEGAL");
         assertThatIllegalArgumentException()//
-                .isThrownBy(() -> new FixedTypePopulator(MessagePopulatorTests.TYPE_IDS, illegalType))//
+                .isThrownBy(() -> new FixedTypePopulator(MessageProcessorTestHelper.TYPE_IDS, illegalType))//
                 .withMessageContaining(illegalType.toString());
     }
 
     @Test
-    @SuppressWarnings("UnstableApiUsage")
     public void testNulls() {
         final Class<?> classUnderTest = FixedTypePopulator.class;
         final NullPointerTester.Visibility minimalVisibility = NullPointerTester.Visibility.PACKAGE;

@@ -5,6 +5,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
 import fi.fmi.avi.archiver.message.processor.TestMessageProcessorContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,12 +17,12 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 
 @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 public class FixedRoutePopulatorTest {
-    private static final MessagePopulatorTests.RouteId ROUTE_ID = MessagePopulatorTests.RouteId.TEST2;
+    private static final MessageProcessorTestHelper.RouteId ROUTE_ID = MessageProcessorTestHelper.RouteId.TEST2;
     private FixedRoutePopulator messagePopulator;
 
     @BeforeEach
     void setUp() {
-        messagePopulator = new FixedRoutePopulator(MessagePopulatorTests.ROUTE_IDS, ROUTE_ID.getName());
+        messagePopulator = new FixedRoutePopulator(MessageProcessorTestHelper.ROUTE_IDS, ROUTE_ID.getName());
     }
 
     @Test
@@ -44,12 +45,11 @@ public class FixedRoutePopulatorTest {
     void populator_with_illegal_route() {
         final String routeName = "test";
         assertThatIllegalArgumentException()//
-                .isThrownBy(() -> new FixedRoutePopulator(MessagePopulatorTests.ROUTE_IDS, routeName))//
+                .isThrownBy(() -> new FixedRoutePopulator(MessageProcessorTestHelper.ROUTE_IDS, routeName))//
                 .withMessageContaining(routeName);
     }
 
     @Test
-    @SuppressWarnings("UnstableApiUsage")
     public void testNulls() {
         final Class<?> classUnderTest = FixedRoutePopulator.class;
         final NullPointerTester.Visibility minimalVisibility = NullPointerTester.Visibility.PACKAGE;

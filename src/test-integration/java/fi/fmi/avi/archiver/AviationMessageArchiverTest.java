@@ -4,12 +4,16 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
 import fi.fmi.avi.archiver.config.ConversionConfig;
+import fi.fmi.avi.archiver.config.TestConfig;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.database.DatabaseAccessTestUtil;
+import fi.fmi.avi.archiver.file.FileReference;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
 import fi.fmi.avi.archiver.message.ProcessingResult;
+import fi.fmi.avi.archiver.message.processor.postaction.TestPostAction;
+import fi.fmi.avi.archiver.message.processor.postaction.TestPostActionRegistry;
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.inferred.freebuilder.FreeBuilder;
@@ -44,20 +48,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiPredicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-@SuppressWarnings("UnstableApiUsage")
-@SpringBootTest({ "auto.startup=false", "testclass.name=fi.fmi.avi.archiver.AviationMessageArchiverTest" })
-@Sql(scripts = { "classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql" }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.AviationMessageArchiverTest"})
+@Sql(scripts = {"classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ContextConfiguration(classes = { AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class },//
+@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},//
         loader = AnnotationConfigContextLoader.class,//
-        initializers = { ConfigDataApplicationContextInitializer.class })
+        initializers = {ConfigDataApplicationContextInitializer.class})
 @ActiveProfiles("integration-test")
 class AviationMessageArchiverTest {
 
@@ -65,7 +67,10 @@ class AviationMessageArchiverTest {
     private static final Set<String> INCLUDE_INPUT_FILES = ImmutableSet.of();
 
     private final RecursiveComparisonConfiguration archiveMessageComparisonConfiguration = RecursiveComparisonConfiguration.builder()
-            .withEqualsForFields(new MessageContentPredicate(), "message")
+            .withEqualsForFields(MessageContentPredicate.INSTANCE, "message")
+            .build();
+    private final RecursiveComparisonConfiguration postActionInvocationComparisonConfiguration = RecursiveComparisonConfiguration.builder()
+            .withEqualsForFields(MessageContentPredicate.INSTANCE, "archiveAviationMessage.message")
             .build();
 
     @Autowired
@@ -74,6 +79,8 @@ class AviationMessageArchiverTest {
     private DatabaseAccess databaseAccess;
     @Autowired
     private Clock clock;
+    @Autowired
+    private TestPostActionRegistry testPostActionRegistry;
     private DatabaseAccessTestUtil databaseAccessTestUtil;
 
     @SuppressWarnings("ConstantConditions")
@@ -833,6 +840,7 @@ class AviationMessageArchiverTest {
     @BeforeEach
     public void setUp() {
         databaseAccessTestUtil = new DatabaseAccessTestUtil(databaseAccess, clock.instant());
+        testPostActionRegistry.resetAll();
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -855,6 +863,8 @@ class AviationMessageArchiverTest {
         } else {
             databaseAccessTestUtil.assertRejectedMessagesEmpty();
         }
+
+        assertPostActionInvocations(Stream.of(testCase));
     }
 
     private void skipExcluded(final AviationMessageArchiverTestCase testCase) {
@@ -870,7 +880,7 @@ class AviationMessageArchiverTest {
     void test_all_at_once() throws IOException {
         final List<AviationMessageArchiverTestCase> cases = test_archival()//
                 .filter(this::isIncluded)//
-                .collect(Collectors.toList());
+                .toList();
         cases.parallelStream().forEach(this::copyFileSetLastModified);
         cases.parallelStream().forEach(this::renameTempFile);
         cases.parallelStream().forEach(this::assertFileOperations);
@@ -886,6 +896,7 @@ class AviationMessageArchiverTest {
                         .containsAll(testCase.getRejectedMessages());
             }
         });
+        assertPostActionInvocations(cases.stream());
     }
 
     private void assertFileFlow(final AviationMessageArchiverTestCase testCase) {
@@ -917,7 +928,7 @@ class AviationMessageArchiverTest {
         final AviationProduct product = testCase.getProduct(aviationProducts);
         final Path testFile = testCase.getTestFile(product);
 
-        if (testCase.getUnhandled()) {
+        if (testCase.isUnhandled()) {
             assertThat(testFile).exists();
         } else {
             try {
@@ -926,6 +937,32 @@ class AviationMessageArchiverTest {
                 throw new RuntimeException(e);
             }
             assertThat(testFile).doesNotExist();
+        }
+    }
+
+    private void assertPostActionInvocations(final Stream<AviationMessageArchiverTestCase> testCases) {
+        assertThat(TestablePostActionInvocation.fromInvocations(testPostActionRegistry.get("test").getInvocations().stream()))
+                .usingRecursiveFieldByFieldElementComparator(postActionInvocationComparisonConfiguration)
+                .containsExactlyInAnyOrderElementsOf(TestablePostActionInvocation.fromTestCases(testCases));
+    }
+
+    private enum MessageContentPredicate implements BiPredicate<String, String> {
+        INSTANCE;
+
+        @Override
+        public boolean test(final String left, final String right) {
+            if (left.equals(right)) {
+                return true;
+            } else {
+                try {
+                    XMLUnit.setIgnoreWhitespace(true);
+                    XMLUnit.setIgnoreComments(true);
+                    return XMLUnit.compareXML(left, right).identical();
+                } catch (final IOException | SAXException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }
         }
     }
 
@@ -961,9 +998,9 @@ class AviationMessageArchiverTest {
 
         public abstract List<ArchiveAviationMessage> getRejectedMessages();
 
-        public abstract boolean getExpectFail();
+        public abstract boolean isExpectFail();
 
-        public abstract boolean getUnhandled();
+        public abstract boolean isUnhandled();
 
         public int getFormat() {
             return Streams.concat(getArchivedMessages().stream(), getRejectedMessages().stream())//
@@ -997,7 +1034,7 @@ class AviationMessageArchiverTest {
 
         public void assertInputAndOutputFilesEquals(final AviationProduct product) throws InterruptedException, IOException {
             final byte[] expectedContent = readResourceToByteArray(getInputFileName());
-            final Path expectedOutputDir = getExpectFail() ? product.getFailDir() : product.getArchiveDir();
+            final Path expectedOutputDir = isExpectFail() ? product.getFailDir() : product.getArchiveDir();
             final Path outputFile = waitUntilFileExists(expectedOutputDir, getInputFileName());
 
             assertThat(outputFile)//
@@ -1039,22 +1076,46 @@ class AviationMessageArchiverTest {
         }
     }
 
-    private static class MessageContentPredicate implements BiPredicate<String, String> {
-        @Override
-        public boolean test(final String left, final String right) {
-            if (left.equals(right)) {
-                return true;
-            } else {
-                try {
-                    XMLUnit.setIgnoreWhitespace(true);
-                    XMLUnit.setIgnoreComments(true);
-                    return XMLUnit.compareXML(left, right).identical();
-                } catch (final IOException | SAXException e) {
-                    e.printStackTrace();
-                    return false;
-                }
-            }
+    private record TestablePostActionInvocation(
+            FileReference fileReference,
+            Optional<Instant> fileModified,
+            ArchiveAviationMessage archiveAviationMessage
+    ) {
+        private TestablePostActionInvocation {
+            requireNonNull(fileReference, "fileReference");
+            requireNonNull(fileModified, "fileModified");
+            requireNonNull(archiveAviationMessage, "archiveAviationMessage");
+        }
+
+        private static List<TestablePostActionInvocation> fromTestCases(final Stream<AviationMessageArchiverTestCase> testCases) {
+            return testCases
+                    .flatMap(testCase -> Stream.concat(
+                                    testCase.getArchivedMessages().stream(),
+                                    testCase.getRejectedMessages().stream())
+                            .map(archiveAviationMessage -> from(testCase, archiveAviationMessage)))
+                    .toList();
+        }
+
+        public static List<TestablePostActionInvocation> fromInvocations(final Stream<TestPostAction.Invocation> invocations) {
+            return invocations
+                    .map(TestablePostActionInvocation::from)
+                    .toList();
+        }
+
+        private static TestablePostActionInvocation from(final AviationMessageArchiverTestCase testCase, final ArchiveAviationMessage archiveAviationMessage) {
+            return new TestablePostActionInvocation(
+                    FileReference.create(testCase.getProductName(), testCase.getInputFileName()),
+                    Optional.of(testCase.getFileModified()),
+                    archiveAviationMessage
+            );
+        }
+
+        private static TestablePostActionInvocation from(final TestPostAction.Invocation invocation) {
+            return new TestablePostActionInvocation(
+                    invocation.context().getInputMessage().getFileMetadata().getFileReference(),
+                    invocation.context().getInputMessage().getFileMetadata().getFileModified(),
+                    invocation.message()
+            );
         }
     }
-
 }

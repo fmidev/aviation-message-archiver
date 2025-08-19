@@ -4,10 +4,7 @@ import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 import fi.fmi.avi.archiver.message.processor.populator.*;
-import fi.fmi.avi.archiver.util.StringCaseFormat;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
-import fi.fmi.avi.archiver.util.instantiation.PropertyRenamingObjectFactory;
-import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import org.springframework.context.annotation.Bean;
@@ -21,27 +18,18 @@ import java.util.regex.Pattern;
 import static java.util.Objects.requireNonNull;
 
 @Configuration
-public class MessagePopulatorFactoryConfig {
+public class MessagePopulatorFactoryConfig extends AbstractMessagePopulatorFactoryConfig {
 
-    private final ConfigValueConverter configValueConverter;
     private final Clock clock;
 
     MessagePopulatorFactoryConfig(final ConfigValueConverter configValueConverter, final Clock clock) {
-        this.configValueConverter = requireNonNull(configValueConverter, "configValueConverter");
+        super(configValueConverter);
         this.clock = requireNonNull(clock, "clock");
     }
 
     @Bean
     MessagePopulatorHelper messagePopulatorHelper() {
         return new MessagePopulatorHelper(clock);
-    }
-
-    private <T extends MessagePopulator> ReflectionObjectFactory.Builder<T> builder(final Class<T> type) {
-        return ReflectionObjectFactory.builder(type, configValueConverter);
-    }
-
-    private <T extends MessagePopulator> MessagePopulatorFactory<T> build(final ReflectionObjectFactory.Builder<T> builder) {
-        return new MessagePopulatorFactory<>(new PropertyRenamingObjectFactory<>(builder.build(), StringCaseFormat::dashToCamel));
     }
 
     @Bean
@@ -51,9 +39,9 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
-    MessagePopulatorFactory<FileNameDataPopulator> fileNameDataPopulatorFactory() {
+    MessagePopulatorFactory<FileNameDataPopulator> fileNameDataPopulatorFactory(final MessagePopulatorHelper messagePopulatorHelper) {
         return build(builder(FileNameDataPopulator.class)//
-                .addDependencyArg(messagePopulatorHelper())//
+                .addDependencyArg(messagePopulatorHelper)//
                 .addDependencyArg(clock));
     }
 
@@ -64,17 +52,21 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
-    MessagePopulatorFactory<BulletinHeadingDataPopulator> bulletinHeadingDataPopulatorFactory(final Map<MessageType, Integer> messageTypeIds,
-                                                                                              final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
+    MessagePopulatorFactory<BulletinHeadingDataPopulator> bulletinHeadingDataPopulatorFactory(
+            final MessagePopulatorHelper messagePopulatorHelper,
+            final Map<MessageType, Integer> messageTypeIds,
+            final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
         return build(builder(BulletinHeadingDataPopulator.class)//
-                .addDependencyArgs(messagePopulatorHelper(), messageFormatIds, messageTypeIds));
+                .addDependencyArgs(messagePopulatorHelper, messageFormatIds, messageTypeIds));
     }
 
     @Bean
-    MessagePopulatorFactory<MessageDataPopulator> messageDataPopulatorFactory(final Map<MessageType, Integer> messageTypeIds,
-                                                                              final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
+    MessagePopulatorFactory<MessageDataPopulator> messageDataPopulatorFactory(
+            final MessagePopulatorHelper messagePopulatorHelper,
+            final Map<MessageType, Integer> messageTypeIds,
+            final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
         return build(builder(MessageDataPopulator.class)//
-                .addDependencyArgs(messagePopulatorHelper(), messageFormatIds, messageTypeIds));
+                .addDependencyArgs(messagePopulatorHelper, messageFormatIds, messageTypeIds));
     }
 
     @Bean
