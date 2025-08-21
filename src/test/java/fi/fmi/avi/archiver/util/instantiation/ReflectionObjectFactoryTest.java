@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.*;
 
 class ReflectionObjectFactoryTest {
     private static Builder<TestPopulator> builder() {
-        return ReflectionObjectFactory.builder(TestPopulator.class, AbstractObjectFactoryTest.TestConverter.INSTANCE);
+        return ReflectionObjectFactory.builder(TestPopulator.class, TestConfigValueConverter.INSTANCE);
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -46,7 +46,7 @@ class ReflectionObjectFactoryTest {
     @Test
     void default_name_is_class_simple_name() {
         final ReflectionObjectFactory<TestPopulator> factory = builder().build();
-        assertThat(factory.getName()).isEqualTo(AbstractObjectFactoryTest.TestPopulator.class.getSimpleName());
+        assertThat(factory.getName()).isEqualTo(AbstractReflectionObjectFactoryTest.TestPopulator.class.getSimpleName());
     }
 
     @Test
@@ -62,7 +62,7 @@ class ReflectionObjectFactoryTest {
                 .setName("CustomName")//
                 .clearName()//
                 .build();
-        assertThat(factory.getName()).isEqualTo(AbstractObjectFactoryTest.TestPopulator.class.getSimpleName());
+        assertThat(factory.getName()).isEqualTo(AbstractReflectionObjectFactoryTest.TestPopulator.class.getSimpleName());
     }
 
     @Test
@@ -71,7 +71,7 @@ class ReflectionObjectFactoryTest {
                 .setName("CustomName")//
                 .setNullableName(null)//
                 .build();
-        assertThat(factory.getName()).isEqualTo(AbstractObjectFactoryTest.TestPopulator.class.getSimpleName());
+        assertThat(factory.getName()).isEqualTo(AbstractReflectionObjectFactoryTest.TestPopulator.class.getSimpleName());
     }
 
     @Test

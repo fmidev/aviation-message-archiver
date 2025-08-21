@@ -1,0 +1,11 @@
+production-line:
+  post-actions:
+    - name: SwimRabbitMQPublisher
+      config:
+        id: default
+        connection:
+          uri: amqp://localhost:5672/%2f
+          username: user
+          password: pass
+        exchange: aviation-message-archiver
+        routing-key: aviation-message-archiver

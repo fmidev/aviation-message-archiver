@@ -11,7 +11,7 @@ import java.time.Instant;
 
 import static java.util.Objects.requireNonNull;
 
-public class AmqpConnectionHealthContributor implements HealthIndicator, Connection.StateListener {
+public class RabbitMQConnectionHealthIndicator implements HealthIndicator, Connection.StateListener {
 
     private static final String DETAIL_STATUS = "status";
     private static final String DETAIL_LAST_STATE_CHANGE = "lastStateChange";
@@ -20,7 +20,7 @@ public class AmqpConnectionHealthContributor implements HealthIndicator, Connect
     private final Clock clock;
     private volatile ConnectionState lastKnownState;
 
-    public AmqpConnectionHealthContributor(final Clock clock) {
+    public RabbitMQConnectionHealthIndicator(final Clock clock) {
         this.clock = requireNonNull(clock, "clock");
         this.lastKnownState =
                 new ConnectionState(Status.UNINITIALIZED, null, clock.instant());

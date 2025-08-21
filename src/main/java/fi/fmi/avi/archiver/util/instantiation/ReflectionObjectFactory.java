@@ -1,20 +1,12 @@
 package fi.fmi.avi.archiver.util.instantiation;
 
-import static java.util.Objects.requireNonNull;
-
+import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A {@code ObjectFactory} constructing and injecting any config properties using Java reflection API.
@@ -30,10 +22,9 @@ import javax.annotation.Nullable;
  * {@link Builder#setName(String) builder}.
  * </p>
  *
- * @param <T>
- *         target object type this factory constructs
+ * @param <T> target object type this factory constructs
  */
-public class ReflectionObjectFactory<T> extends AbstractObjectFactory<T> {
+public class ReflectionObjectFactory<T> extends AbstractReflectionObjectFactory<T> {
     private final Class<T> type;
     private final ConfigValueConverter configValueConverter;
     private final Object[] constructorArgsTemplate;
@@ -56,13 +47,9 @@ public class ReflectionObjectFactory<T> extends AbstractObjectFactory<T> {
     /**
      * Create a new {@code Builder} for a factory creating instances of provided {@code type}.
      *
-     * @param type
-     *         type of object this factory will construct
-     * @param configValueConverter
-     *         configuration value converter
-     * @param <T>
-     *         type of object this factory will construct
-     *
+     * @param type                 type of object this factory will construct
+     * @param configValueConverter configuration value converter
+     * @param <T>                  type of object this factory will construct
      * @return new builder instance
      */
     public static <T> Builder<T> builder(final Class<T> type, final ConfigValueConverter configValueConverter) {
@@ -159,8 +146,7 @@ public class ReflectionObjectFactory<T> extends AbstractObjectFactory<T> {
                 throw new IllegalStateException(String.format(Locale.ROOT, "No suitable public constructor found for [%s] with args assignable from %s", type,
                         listOfClassNames(constructorParameterTypes)));
             }
-            @SuppressWarnings("unchecked")
-            final Constructor<T> constructor = (Constructor<T>) constructors.next();
+            @SuppressWarnings("unchecked") final Constructor<T> constructor = (Constructor<T>) constructors.next();
             if (constructors.hasNext()) {
                 throw new IllegalStateException(String.format(Locale.ROOT, "Multiple constructors found for [%s] with args assignable from %s", type,
                         listOfClassNames(constructorParameterTypes)));
@@ -173,8 +159,7 @@ public class ReflectionObjectFactory<T> extends AbstractObjectFactory<T> {
                 return false;
             }
             for (int i = 0; i < classes.length; i++) {
-                @Nullable
-                final Class<?> parameterType = constructorParameterTypes.get(i);
+                @Nullable final Class<?> parameterType = constructorParameterTypes.get(i);
                 if (parameterType != null && !classes[i].isAssignableFrom(parameterType)) {
                     return false;
                 }

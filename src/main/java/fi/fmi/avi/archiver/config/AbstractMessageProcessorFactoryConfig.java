@@ -7,8 +7,6 @@ import fi.fmi.avi.archiver.util.instantiation.ObjectFactory;
 import fi.fmi.avi.archiver.util.instantiation.PropertyRenamingObjectFactory;
 import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
 
-import javax.annotation.Nonnull;
-
 import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractMessageProcessorFactoryConfig<P extends MessageProcessor> {
@@ -24,7 +22,11 @@ public abstract class AbstractMessageProcessorFactoryConfig<P extends MessagePro
 
     protected abstract <T extends P> ObjectFactory<T> build(final ReflectionObjectFactory.Builder<T> builder);
 
-    protected <T extends P> @Nonnull PropertyRenamingObjectFactory<T> createDelegateFactory(final ReflectionObjectFactory.Builder<T> builder) {
-        return new PropertyRenamingObjectFactory<>(builder.build(), StringCaseFormat::dashToCamel);
+    protected <T extends P> ObjectFactory<T> createDecoratedFactory(final ReflectionObjectFactory.Builder<T> builder) {
+        return createDecoratedFactory(builder.build());
+    }
+
+    protected <T extends P> ObjectFactory<T> createDecoratedFactory(final ObjectFactory<T> factory) {
+        return new PropertyRenamingObjectFactory<>(factory, StringCaseFormat::dashToCamel);
     }
 }

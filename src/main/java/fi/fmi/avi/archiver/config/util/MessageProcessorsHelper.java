@@ -32,8 +32,11 @@ public class MessageProcessorsHelper {
             final List<? extends ObjectFactory<? extends T>> factories,
             final List<S> specs,
             final BiFunction<ActivationCondition, T, C> conditionalComponentFactory) {
+        requireNonNull(factories, "factories");
+        requireNonNull(specs, "specs");
+        requireNonNull(conditionalComponentFactory, "conditionalComponentFactory");
         final Map<String, ObjectFactory<? extends T>> factoriesByName = factories.stream()//
-                .collect(Collectors.toMap(ObjectFactory::getName, Function.identity()));
+                .collect(Collectors.toUnmodifiableMap(ObjectFactory::getName, Function.identity()));
         return specs.stream()
                 .map(spec -> createMessageProcessor(spec, factoriesByName, conditionalComponentFactory));
     }
@@ -42,9 +45,17 @@ public class MessageProcessorsHelper {
             final S spec,
             final Map<String, ? extends ObjectFactory<? extends T>> factoriesByName,
             final BiFunction<ActivationCondition, T, C> conditionalComponentFactory) {
-        final T component = Optional.ofNullable(factoriesByName.get(spec.getName()))
-                .orElseThrow(() -> new IllegalArgumentException(String.format(Locale.US, "Unknown %s: <%s>", spec.getProcessorInformalType(), spec.getName())))
-                .newInstance(spec.getConfig());
+        requireNonNull(spec, "spec");
+        requireNonNull(factoriesByName, "factoriesByName");
+        requireNonNull(conditionalComponentFactory, "conditionalComponentFactory");
+        final ObjectFactory<? extends T> factory = Optional.ofNullable(factoriesByName.get(spec.getName()))
+                .orElseThrow(() -> new IllegalArgumentException(String.format(Locale.US, "Unknown %s: <%s>", spec.getProcessorInformalType(), spec.getName())));
+        final T component;
+        try {
+            component = factory.newInstance(spec.getConfig());
+        } catch (final RuntimeException exception) {
+            throw new IllegalStateException("Failed to instantiate %s '%s': %s".formatted(spec.getProcessorInformalType(), spec.getName(), exception.getMessage()), exception);
+        }
         return applyActivationCondition(component, spec, conditionalComponentFactory);
     }
 
@@ -53,6 +64,9 @@ public class MessageProcessorsHelper {
             final T component,
             final S spec,
             final BiFunction<ActivationCondition, T, C> conditionalComponentFactory) {
+        requireNonNull(component, "component");
+        requireNonNull(spec, "spec");
+        requireNonNull(conditionalComponentFactory, "conditionalComponentFactory");
         return spec.getActivateOn().entrySet().stream()//
                 .map(entry -> {
                     try {
@@ -64,7 +78,8 @@ public class MessageProcessorsHelper {
                                 .build();
                         return new PropertyActivationCondition(conditionPropertyReader, propertyPredicate);
                     } catch (final RuntimeException e) {
-                        throw new IllegalStateException("Unable to initialize '" + spec.getName() + "' activateOn: " + e.getMessage(), e);
+                        throw new IllegalStateException("Unable to initialize %s '%s' activateOn: %s"
+                                .formatted(spec.getProcessorInformalType(), spec.getName(), e.getMessage()), e);
                     }
                 })//
                 .collect(Collectors.collectingAndThen(Collectors.toList(), ActivationCondition::and))//

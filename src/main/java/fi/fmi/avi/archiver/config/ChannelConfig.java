@@ -147,7 +147,7 @@ public class ChannelConfig {
     private ExecutorService newBlockingSingleThreadExecutor(final String threadNamePrefix) {
         final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(executorQueueSize);
         final MonitorableCallerBlocksPolicy callerBlocksPolicy = new MonitorableCallerBlocksPolicy(clock, Long.MAX_VALUE);
-        executorHealthContributor.register(threadNamePrefix + "executor", callerBlocksPolicy);
+        executorHealthContributor.registerPolicy(threadNamePrefix + "executor", callerBlocksPolicy);
         return new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS, queue,
                 newThreadFactory(threadNamePrefix), callerBlocksPolicy);
     }
