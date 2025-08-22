@@ -396,12 +396,13 @@ public class IntegrationFlowConfig {
                         .map(fileConfig -> IntegrationFlows.from(inputChannel)//
                                 .filter(new RegexPatternFileListFilter(fileConfig.getPattern())::accept)//
                                 .enrichHeaders(spec -> spec//
-                                        .header(PRODUCT_KEY, product, true)//
+                                        .defaultOverwrite(true)
+                                        .header(PRODUCT_KEY, product)//
                                         .errorChannel(errorMessageChannel)
                                         .headerFunction(FILE_REFERENCE.getName(),
-                                                message -> FileReference.create(product.getId(), FILENAME.getNonNull(message.getHeaders())), true)
-                                        .headerFunction(PROCESSING_IDENTIFIER.getName(), message -> FileProcessingIdentifier.newInstance(), true)//
-                                        .headerFunction(SpringProcessingServiceContextHelper.HEADER.getName(), message -> createProcessingServiceContext(), true))//
+                                                message -> FileReference.create(product.getId(), FILENAME.getNonNull(message.getHeaders())))
+                                        .headerFunction(PROCESSING_IDENTIFIER.getName(), message -> FileProcessingIdentifier.newInstance())//
+                                        .headerFunction(SpringProcessingServiceContextHelper.HEADER.getName(), message -> createProcessingServiceContext()))//
                                 .handle(loggingEnvSetter(ProcessingPhase.START))//
                                 .handle((payload, headers) -> {
                                     final FileReference file = FILE_REFERENCE.getNonNull(headers);
