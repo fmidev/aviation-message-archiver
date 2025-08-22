@@ -1,11 +1,13 @@
 package fi.fmi.avi.archiver.message.processor.populator;
 
 import fi.fmi.avi.archiver.AviationMessageArchiver;
+import fi.fmi.avi.archiver.DefaultProcessingServiceContext;
+import fi.fmi.avi.archiver.ProcessingServiceContext;
 import fi.fmi.avi.archiver.config.ConversionConfig;
-import fi.fmi.avi.archiver.config.MessagePopulatorConfig;
 import fi.fmi.avi.archiver.config.TestConfig;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
+import fi.fmi.avi.archiver.logging.model.NoOpLoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.InputAndArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.InputAndArchiveAviationMessageTests;
@@ -26,7 +28,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.messaging.MessageHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
@@ -72,11 +73,12 @@ class ConditionalMessagePopulatorIntegrationTest {
     private static final String TEST2_IWXXM_PRODUCT_ID = "test2IWXXM";
 
     @Autowired
-    private MessagePopulatorConfig.MessagePopulationIntegrationService messagePopulationIntegrationService;
+    private MessagePopulationService messagePopulationService;
     @Autowired
     private MessageProcessorTestHelper messageProcessorTestHelper;
 
     private InputAviationMessage inputTemplate;
+    private ProcessingServiceContext processingServiceContext;
 
     @BeforeEach
     void setUp() {
@@ -94,11 +96,11 @@ class ConditionalMessagePopulatorIntegrationTest {
                         .putLocationIndicators(GenericAviationWeatherMessage.LocationIndicatorType.AERODROME, StationId.YUDO.getIcaoCode())
                         .build());
         inputTemplate = messageProcessorTestHelper.setProductId(TEST_TAC_PRODUCT_ID, builder).build();
+        processingServiceContext = new DefaultProcessingServiceContext(NoOpLoggingContext.getInstance());
     }
 
     private List<InputAndArchiveAviationMessage> populate(final List<InputAviationMessage> inputMessages) {
-        return messagePopulationIntegrationService.populateMessages(inputMessages, new MessageHeaders(Collections.emptyMap()))
-                .getPayload();
+        return messagePopulationService.populateMessages(inputMessages, processingServiceContext);
     }
 
     @Test

@@ -1,32 +1,6 @@
 package fi.fmi.avi.archiver.file;
 
-import static java.util.Objects.requireNonNull;
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
-import javax.annotation.Nullable;
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
-import org.inferred.freebuilder.FreeBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
+import fi.fmi.avi.archiver.ProcessingServiceContext;
 import fi.fmi.avi.archiver.logging.model.BulletinLogReference;
 import fi.fmi.avi.archiver.logging.model.FileProcessingStatistics;
 import fi.fmi.avi.archiver.logging.model.LoggingContext;
@@ -45,6 +19,27 @@ import fi.fmi.avi.util.BulletinHeadingDecoder;
 import fi.fmi.avi.util.GTSDataExchangeTranscoder;
 import fi.fmi.avi.util.GTSDataParseException;
 import fi.fmi.avi.util.GTSMeteorologicalMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
+import javax.annotation.Nullable;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.*;
+
+import static java.util.Objects.requireNonNull;
 
 public class FileParser {
 
@@ -69,6 +64,11 @@ public class FileParser {
         } catch (final ParserConfigurationException e) {
             throw new IllegalStateException("Unable to initialize file parser", e);
         }
+    }
+
+    private static List<InputAviationMessage> error(final ProcessingServiceContext context) {
+        context.signalProcessingErrors();
+        return Collections.emptyList();
     }
 
     private static boolean usesCollectSchema(final Document document) {
@@ -100,13 +100,14 @@ public class FileParser {
         }
     }
 
-    public FileParseResult parse(final String content, final FileMetadata fileMetadata, final LoggingContext loggingContext) {
-        requireNonNull(content, "content");
+    public List<InputAviationMessage> parse(final String fileContent, final FileMetadata fileMetadata, final ProcessingServiceContext context) {
+        requireNonNull(fileContent, "fileContent");
         requireNonNull(fileMetadata, "fileMetadata");
-        requireNonNull(loggingContext, "loggingContext");
+        requireNonNull(context, "context");
 
+        final LoggingContext loggingContext = context.getLoggingContext();
         final GenericAviationWeatherMessage.Format fileFormat = fileMetadata.getFileConfig().getFormat();
-        final List<GTSDataExchangeTranscoder.ParseResult> parseResults = GTSDataExchangeTranscoder.parseAll(content);
+        final List<GTSDataExchangeTranscoder.ParseResult> parseResults = GTSDataExchangeTranscoder.parseAll(fileContent);
         if (parseResults.isEmpty()) {
             loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
             throw new IllegalArgumentException("Nothing to parse in <" + loggingContext + ">");
@@ -114,7 +115,7 @@ public class FileParser {
         final boolean bulletinParseSuccess = parseResults.stream().anyMatch(result -> result.getMessage().isPresent());
 
         try {
-            final FileParseResult.Builder resultBuilder = FileParseResult.builder();
+            final ArrayList<InputAviationMessage> resultBuilder = new ArrayList<>();
             final InputAviationMessage.Builder inputMessageTemplate = InputAviationMessage.builder()//
                     .setFileMetadata(fileMetadata);
             if (bulletinParseSuccess) {
@@ -126,13 +127,13 @@ public class FileParser {
                             .setCharIndex(result.getStartIndex())//
                             .build());
                     if (result.getError().isPresent()) {
-                        resultBuilder.setParseErrors(true);
+                        context.signalProcessingErrors();
                         final GTSDataParseException error = result.getError().get();
                         LOGGER.error("Error parsing GTS envelope <{}>: {}", loggingContext, error.getMessage());
                         loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
                     } else if (result.getMessage().isPresent()) {
                         final GTSMeteorologicalMessage gtsMessage = result.getMessage().get();
-                        resultBuilder.mergeFrom(parseContent(content, gtsMessage, fileFormat, inputMessageTemplate, bulletinIndex, loggingContext));
+                        resultBuilder.addAll(parseContent(fileContent, gtsMessage, fileFormat, inputMessageTemplate, bulletinIndex, context));
                     }
                 }
             } else {
@@ -146,80 +147,88 @@ public class FileParser {
                             .orElse("");
                     LOGGER.debug("No GTS envelope detected in <{}>: {}. Parsing leniently as heading and text.", loggingContext, errorMessage);
                 }
-                final GTSMeteorologicalMessage gtsMessage = GTSMeteorologicalMessage.parseHeadingAndTextLenient(content);
+                final GTSMeteorologicalMessage gtsMessage = GTSMeteorologicalMessage.parseHeadingAndTextLenient(fileContent);
                 loggingContext.enterBulletin(BulletinLogReference.builder()//
                         .setIndex(0)//
                         .setHeading(gtsMessage.getHeading())//
                         .setCharIndex(0)//
                         .build());
-                resultBuilder.mergeFrom(parseContent(content, gtsMessage, fileFormat, inputMessageTemplate, 0, loggingContext));
+                resultBuilder.addAll(parseContent(fileContent, gtsMessage, fileFormat, inputMessageTemplate, 0, context));
             }
             loggingContext.leaveBulletin();
-            return resultBuilder.build();
+            return List.copyOf(resultBuilder);
         } catch (final RuntimeException e) {
             LOGGER.error("Unable to parse any input messages from <{}>", loggingContext, e);
             loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
-            return FileParseResult.error();
+            return error(context);
         }
     }
 
-    private FileParseResult parseContent(final String fileContent, final GTSMeteorologicalMessage gtsMessage,
-            final GenericAviationWeatherMessage.Format fileFormat, final InputAviationMessage.Builder inputMessageTemplate, final int bulletinIndex,
-            final LoggingContext loggingContext) {
+    private List<InputAviationMessage> parseContent(
+            final String fileContent, final GTSMeteorologicalMessage gtsMessage,
+            final GenericAviationWeatherMessage.Format fileFormat, final InputAviationMessage.Builder inputMessageTemplate,
+            final int bulletinIndex, final ProcessingServiceContext context) {
         try {
-            return parseContentUnsafe(fileContent, gtsMessage, fileFormat, inputMessageTemplate, bulletinIndex, loggingContext);
+            return parseContentUnsafe(fileContent, gtsMessage, fileFormat, inputMessageTemplate, bulletinIndex, context);
         } catch (final RuntimeException e) {
+            final LoggingContext loggingContext = context.getLoggingContext();
             LOGGER.error("Error while parsing <{}>: {}.", loggingContext, e.getMessage(), e);
             loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
-            return FileParseResult.error();
+            return error(context);
         }
     }
 
-    private FileParseResult parseContentUnsafe(final String fileContent, final GTSMeteorologicalMessage gtsMessage,
-            final GenericAviationWeatherMessage.Format fileFormat, final InputAviationMessage.Builder inputMessageTemplate, final int bulletinIndex,
-            final LoggingContext loggingContext) {
+    private List<InputAviationMessage> parseContentUnsafe(
+            final String fileContent, final GTSMeteorologicalMessage gtsMessage,
+            final GenericAviationWeatherMessage.Format fileFormat, final InputAviationMessage.Builder inputMessageTemplate,
+            final int bulletinIndex, final ProcessingServiceContext context) {
         final InputAviationMessage.Builder inputBuilder = InputAviationMessage.builder().mergeFrom(inputMessageTemplate);
         final Optional<InputBulletinHeading> gtsHeading = parseGtsHeading(gtsMessage.getHeading());
         if (gtsHeading.isPresent()) {
             inputBuilder.setGtsBulletinHeading(gtsHeading.get());
             if (fileFormat == GenericAviationWeatherMessage.Format.TAC) {
                 return parseBulletin(inputBuilder, gtsMessage.toString(GTSMeteorologicalMessage.MessageFormat.HEADING_AND_TEXT).trim(), fileFormat,
-                        bulletinIndex, loggingContext);
+                        bulletinIndex, context);
             } else {
-                return parseBulletin(inputBuilder, gtsMessage.getText().trim(), fileFormat, bulletinIndex, loggingContext);
+                return parseBulletin(inputBuilder, gtsMessage.getText().trim(), fileFormat, bulletinIndex, context);
             }
         } else {
+            final LoggingContext loggingContext = context.getLoggingContext();
             loggingContext.modifyBulletin(reference -> reference.toBuilder().clearHeading().build());
             LOGGER.debug("{} bulletin <{}> does not contain GTS heading.", fileFormat, loggingContext);
         }
-        return parseBulletin(inputBuilder, fileContent.trim(), fileFormat, bulletinIndex, loggingContext);
+        return parseBulletin(inputBuilder, fileContent.trim(), fileFormat, bulletinIndex, context);
     }
 
-    private FileParseResult parseBulletin(final InputAviationMessage.Builder inputBuilder, final String content,
-            final GenericAviationWeatherMessage.Format fileFormat, final int bulletinIndex, final LoggingContext loggingContext) {
+    private List<InputAviationMessage> parseBulletin(
+            final InputAviationMessage.Builder inputBuilder, final String bulletinContent,
+            final GenericAviationWeatherMessage.Format fileFormat, final int bulletinIndex,
+            final ProcessingServiceContext context) {
         if (fileFormat == GenericAviationWeatherMessage.Format.TAC) {
-            return parseTac(inputBuilder, content, bulletinIndex, loggingContext);
+            return parseTac(inputBuilder, bulletinContent, bulletinIndex, context);
         } else {
             try {
-                final Document iwxxmDocument = stringToDocument(content);
+                final Document iwxxmDocument = toDocument(bulletinContent);
                 if (usesCollectSchema(iwxxmDocument)) {
-                    return parseIwxxmCollectDocument(inputBuilder, iwxxmDocument, bulletinIndex, loggingContext);
+                    return parseIwxxmCollectDocument(inputBuilder, iwxxmDocument, bulletinIndex, context);
                 } else {
-                    return parseIwxxmMessage(inputBuilder, iwxxmDocument, bulletinIndex, loggingContext);
+                    return parseIwxxmMessage(inputBuilder, iwxxmDocument, bulletinIndex, context);
                 }
             } catch (final IOException | SAXException | ParserConfigurationException e) {
+                final LoggingContext loggingContext = context.getLoggingContext();
                 LOGGER.error("Unable to parse bulletin <{}> as IWXXM document: {}", loggingContext, String.valueOf(e));
                 loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
-                return FileParseResult.error();
+                return error(context);
             }
         }
     }
 
-    private FileParseResult parseTac(final InputAviationMessage.Builder inputBuilder, final String bulletinContent, final int bulletinIndex,
-            final LoggingContext loggingContext) {
+    private List<InputAviationMessage> parseTac(
+            final InputAviationMessage.Builder inputBuilder, final String bulletinContent, final int bulletinIndex,
+            final ProcessingServiceContext context) {
+        final LoggingContext loggingContext = context.getLoggingContext();
         final ConversionResult<GenericMeteorologicalBulletin> bulletinConversion = aviMessageConverter.convertMessage(bulletinContent,
                 TACConverter.TAC_TO_GENERIC_BULLETIN_POJO, CONVERSION_HINTS);
-        final FileParseResult.Builder resultBuilder = FileParseResult.builder();
         if (bulletinConversion.getConvertedMessage().isPresent()) {
             final List<GenericAviationWeatherMessage> parsedMessages = bulletinConversion.getConvertedMessage().get().getMessages();
             if (bulletinConversion.getConversionIssues().isEmpty()) {
@@ -227,7 +236,7 @@ public class FileParser {
             } else {
                 LOGGER.warn("Issues while parsing TAC bulletin <{}>: {}", loggingContext, bulletinConversion.getConversionIssues());
             }
-            return addMessages(resultBuilder, inputBuilder, parsedMessages, bulletinIndex, loggingContext).build();
+            return toInputAviationMessages(inputBuilder, parsedMessages, bulletinIndex, loggingContext);
         } else {
             final ConversionResult<GenericAviationWeatherMessage> messageConversion = aviMessageConverter.convertMessage(bulletinContent,
                     TACConverter.TAC_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO, CONVERSION_HINTS);
@@ -238,37 +247,41 @@ public class FileParser {
                 } else {
                     LOGGER.warn("Issues while parsing single TAC message <{}>: {}", loggingContext, messageConversion.getConversionIssues());
                 }
-                return addMessages(resultBuilder, inputBuilder, Collections.singletonList(message), bulletinIndex, loggingContext).build();
+                return toInputAviationMessages(inputBuilder, Collections.singletonList(message), bulletinIndex, loggingContext);
             } else {
                 LOGGER.error("Unable to parse TAC content <{}>: {}", loggingContext, messageConversion.getConversionIssues());
                 loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
-                return FileParseResult.error();
+                return error(context);
             }
         }
     }
 
-    private FileParseResult.Builder addMessages(final FileParseResult.Builder resultBuilder, final InputAviationMessage.Builder inputBuilder,
-            final List<GenericAviationWeatherMessage> parsedMessages, final int bulletinIndex, final LoggingContext loggingContext) {
+    private List<InputAviationMessage> toInputAviationMessages(
+            final InputAviationMessage.Builder inputBuilder, final List<GenericAviationWeatherMessage> parsedMessages,
+            final int bulletinIndex, final LoggingContext loggingContext) {
+        final ArrayList<InputAviationMessage> resultBuilder = new ArrayList<>(parsedMessages.size());
         for (int messageIndex = 0, size = parsedMessages.size(); messageIndex < size; messageIndex++) {
             final GenericAviationWeatherMessage message = parsedMessages.get(messageIndex);
             loggingContext.enterMessage(MessageLogReference.builder()//
                     .setIndex(messageIndex)//
                     .setContent(message.getOriginalMessage())//
                     .build());
-            resultBuilder.addInputAviationMessages(InputAviationMessage.builder()//
+            resultBuilder.add(InputAviationMessage.builder()//
                     .mergeFrom(inputBuilder)//
                     .setMessagePositionInFile(MessagePositionInFile.getInstance(bulletinIndex, messageIndex))//
                     .setMessage(message)//
                     .build());
             loggingContext.leaveMessage();
         }
-        return resultBuilder;
+        return Collections.unmodifiableList(resultBuilder);
     }
 
-    private FileParseResult parseIwxxmCollectDocument(final InputAviationMessage.Builder inputBuilder, final Document iwxxmDocument, final int bulletinIndex,
-            final LoggingContext loggingContext) {
+    private List<InputAviationMessage> parseIwxxmCollectDocument(
+            final InputAviationMessage.Builder inputBuilder, final Document iwxxmDocument, final int bulletinIndex,
+            final ProcessingServiceContext context) {
         final ConversionResult<GenericMeteorologicalBulletin> conversion = aviMessageConverter.convertMessage(iwxxmDocument,
                 IWXXMConverter.WMO_COLLECT_DOM_TO_GENERIC_BULLETIN_POJO, CONVERSION_HINTS);
+        final LoggingContext loggingContext = context.getLoggingContext();
         if (conversion.getConvertedMessage().isPresent()) {
             final GenericMeteorologicalBulletin bulletin = conversion.getConvertedMessage().get();
             final List<GenericAviationWeatherMessage> parsedMessages = bulletin.getMessages();
@@ -277,11 +290,10 @@ public class FileParser {
             } else {
                 LOGGER.warn("Issues while parsing IWXXM collect document <{}>: {}", loggingContext, conversion.getConversionIssues());
             }
-            @Nullable
-            final String collectIdentifier = getCollectIdentifier(iwxxmDocument);
+            @Nullable final String collectIdentifier = getCollectIdentifier(iwxxmDocument);
             if (collectIdentifier == null) {
                 LOGGER.warn("IWXXM collect document <{}> is missing bulletinIdentifier.", loggingContext);
-            } else if (!inputBuilder.getGtsBulletinHeadingBuilder().getBulletinHeadingString().isPresent()) {
+            } else if (inputBuilder.getGtsBulletinHeadingBuilder().getBulletinHeadingString().isEmpty()) {
                 loggingContext.modifyBulletin(reference -> reference.toBuilder().setHeading(collectIdentifier).build());
             }
 
@@ -289,19 +301,20 @@ public class FileParser {
                     .setBulletinHeading(bulletin.getHeading())//
                     .setNullableBulletinHeadingString(collectIdentifier)//
                     .build());
-            return addMessages(FileParseResult.builder(), inputBuilder, parsedMessages, bulletinIndex, loggingContext).build();
+            return toInputAviationMessages(inputBuilder, parsedMessages, bulletinIndex, loggingContext);
         } else {
             LOGGER.error("Unable to parse IWXXM collect document <{}>: {}", loggingContext, conversion.getConversionIssues());
             loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
-            return FileParseResult.error();
+            return error(context);
         }
     }
 
-    private FileParseResult parseIwxxmMessage(final InputAviationMessage.Builder inputBuilder, final Document iwxxmDocument, final int bulletinIndex,
-            final LoggingContext loggingContext) {
+    private List<InputAviationMessage> parseIwxxmMessage(
+            final InputAviationMessage.Builder inputBuilder, final Document iwxxmDocument, final int bulletinIndex,
+            final ProcessingServiceContext context) {
         final ConversionResult<GenericAviationWeatherMessage> conversion = aviMessageConverter.convertMessage(iwxxmDocument,
                 IWXXMConverter.IWXXM_DOM_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO, CONVERSION_HINTS);
-        final FileParseResult.Builder resultBuilder = FileParseResult.builder();
+        final LoggingContext loggingContext = context.getLoggingContext();
         if (conversion.getConvertedMessage().isPresent()) {
             final GenericAviationWeatherMessage message = conversion.getConvertedMessage().get();
             if (!conversion.getConversionIssues().isEmpty()) {
@@ -309,43 +322,16 @@ public class FileParser {
             } else {
                 LOGGER.debug("Successfully parsed <{}> as IWXXM {} message.", loggingContext, message.getMessageType().orElse(UNKNOWN_MESSAGE_TYPE));
             }
-            addMessages(resultBuilder, inputBuilder, Collections.singletonList(message), bulletinIndex, loggingContext);
+            return toInputAviationMessages(inputBuilder, Collections.singletonList(message), bulletinIndex, loggingContext);
         } else {
-            resultBuilder.setParseErrors(true);
             LOGGER.error("Unable to parse IWXXM message document <{}>: {}", loggingContext, conversion.getConversionIssues());
             loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
+            return error(context);
         }
-        return resultBuilder.build();
     }
 
-    private Document stringToDocument(final String content) throws IOException, SAXException, ParserConfigurationException {
+    private Document toDocument(final String documentContent) throws IOException, SAXException, ParserConfigurationException {
         final DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        return documentBuilder.parse(new InputSource(new StringReader(content)));
-    }
-
-    @FreeBuilder
-    public static abstract class FileParseResult {
-        private static final FileParseResult ERROR = FileParseResult.builder().setParseErrors(true).build();
-
-        FileParseResult() {
-        }
-
-        public static Builder builder() {
-            return new Builder();
-        }
-
-        public static FileParseResult error() {
-            return ERROR;
-        }
-
-        public abstract List<InputAviationMessage> getInputAviationMessages();
-
-        public abstract boolean getParseErrors();
-
-        public static class Builder extends FileParser_FileParseResult_Builder {
-            Builder() {
-                setParseErrors(false);
-            }
-        }
+        return documentBuilder.parse(new InputSource(new StringReader(documentContent)));
     }
 }

@@ -1,6 +1,6 @@
 package fi.fmi.avi.archiver.spring.retry;
 
-import fi.fmi.avi.archiver.config.util.SpringLoggingContextHelper;
+import fi.fmi.avi.archiver.config.util.SpringProcessingServiceContextHelper;
 import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,9 +94,8 @@ public class RetryAdviceFactory {
         @Override
         public <T, E extends Throwable> boolean open(final RetryContext context, final RetryCallback<T, E> callback) {
             final boolean returnValue = super.open(context, callback);
-            @Nullable final Object message = context.getAttribute(ErrorMessageUtils.FAILED_MESSAGE_CONTEXT_KEY);
-            if (message instanceof Message<?>) {
-                final LoggingContext loggingContext = SpringLoggingContextHelper.getLoggingContext((Message<?>) message);
+            if (context.getAttribute(ErrorMessageUtils.FAILED_MESSAGE_CONTEXT_KEY) instanceof final Message<?> message) {
+                final LoggingContext loggingContext = SpringProcessingServiceContextHelper.getProcessingServiceContext(message).getLoggingContext();
                 LOGGING_CONTEXT.set(context, loggingContext);
             }
             return returnValue;

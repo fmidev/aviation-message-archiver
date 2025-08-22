@@ -38,7 +38,6 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
         setDefault(InputAviationMessage.Builder.class, InputAviationMessage.builder());
         setDefault(InputBulletinHeading.class, InputBulletinHeading.builder().buildPartial());
         setDefault(MessageHeaders.class, new MessageHeaders(Collections.emptyMap()));
-        setDefault(MessagePopulationService.PopulationResult.class, MessagePopulationService.PopulationResult.builder().buildPartial());
         setDefault(MessagePopulatorHelper.class, new MessagePopulatorHelper(Clock.systemUTC()));
         setDefault(PartialOrCompleteTimeInstant.class, PartialOrCompleteTimeInstant.builder().buildPartial());
         setDefault(PartialOrCompleteTimePeriod.class, PartialOrCompleteTimePeriod.builder().buildPartial());

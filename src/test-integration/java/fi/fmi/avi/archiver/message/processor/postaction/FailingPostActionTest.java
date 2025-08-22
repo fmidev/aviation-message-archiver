@@ -1,12 +1,13 @@
 package fi.fmi.avi.archiver.message.processor.postaction;
 
 import fi.fmi.avi.archiver.AviationMessageArchiver;
+import fi.fmi.avi.archiver.ProcessingServiceContext;
 import fi.fmi.avi.archiver.config.AbstractPostActionFactoryConfig;
 import fi.fmi.avi.archiver.config.ConversionConfig;
-import fi.fmi.avi.archiver.config.IntegrationFlowConfig;
 import fi.fmi.avi.archiver.config.TestConfig;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.PostActionFactory;
+import fi.fmi.avi.archiver.config.util.SpringProcessingServiceContextHelper;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
 import fi.fmi.avi.archiver.util.TestFileUtil;
@@ -85,8 +86,8 @@ class FailingPostActionTest {
 
         verify(failChannel, never()).send(any(Message.class));
         verify(successChannel).send(successChannelCaptor.capture());
-        final boolean failures = IntegrationFlowConfig.hasProcessingErrors(successChannelCaptor.getValue().getHeaders());
-        assertThat(failures).isFalse();
+        final ProcessingServiceContext processingServiceContext = SpringProcessingServiceContextHelper.getProcessingServiceContext(successChannelCaptor.getValue().getHeaders());
+        assertThat(processingServiceContext.isProcessingErrors()).isFalse();
     }
 
     public static class FailingPostAction extends TestPostAction {

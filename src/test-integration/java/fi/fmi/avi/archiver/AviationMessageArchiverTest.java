@@ -9,6 +9,7 @@ import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.database.DatabaseAccessTestUtil;
 import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.message.ArchivalStatus;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
 import fi.fmi.avi.archiver.message.ProcessingResult;
@@ -107,6 +108,7 @@ class AviationMessageArchiverTest {
                                 .setValidTo(Instant.parse("2020-05-19T12:00:00Z"))
                                 .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                                 .setHeading("FTXX33 XXXX 181500")
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .build())
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -126,6 +128,7 @@ class AviationMessageArchiverTest {
                                 .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                                 .setHeading("FTXX33 XXXX 181500")
                                 .setProcessingResult(ProcessingResult.UNKNOWN_STATION_ICAO_CODE)
+                                .setArchivalStatus(ArchivalStatus.REJECTED)
                                 .build())
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -145,6 +148,7 @@ class AviationMessageArchiverTest {
                                 .setValidTo(Instant.parse("2020-06-19T12:00:00Z"))
                                 .setFileModified(Instant.parse("2020-06-15T00:00:00Z"))
                                 .setHeading("FTXX33 XXXX 181500")
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .build())
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -233,6 +237,7 @@ class AviationMessageArchiverTest {
                                 .setValidFrom(Instant.parse("2020-05-18T12:00:00Z"))
                                 .setValidTo(Instant.parse("2020-05-19T12:00:00Z"))
                                 .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .build())
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -250,6 +255,7 @@ class AviationMessageArchiverTest {
                                         .setMessage("TAF YUDO 160000Z NIL=")
                                         .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                                         .setHeading("FTYU31 YUDO 160000")
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build(), //
                                 ArchiveAviationMessage.builder()
                                         .setMessageTime(Instant.parse("2020-05-16T00:00:00Z"))
@@ -261,6 +267,7 @@ class AviationMessageArchiverTest {
                                         .setMessage("TAF YUDD 160000Z NIL=")
                                         .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                                         .setHeading("FTYU31 YUDO 160000")
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build())
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -278,6 +285,7 @@ class AviationMessageArchiverTest {
                                         .setMessage("TAF YUDO 160000Z NIL=")
                                         .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                                         .setHeading("FTYU31 YUDO 160000")
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build(), //
                                 ArchiveAviationMessage.builder()
                                         .setMessageTime(Instant.parse("2020-05-16T00:00:00Z"))
@@ -289,6 +297,7 @@ class AviationMessageArchiverTest {
                                         .setMessage("TAF YUDD 160000Z NIL=")
                                         .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                                         .setHeading("FTYU31 YUDO 160000")
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build(), //
                                 ArchiveAviationMessage.builder()
                                         .setMessageTime(Instant.parse("2020-05-18T00:00:00Z"))
@@ -300,6 +309,7 @@ class AviationMessageArchiverTest {
                                         .setMessage("TAF YUDO 180000Z NIL=")
                                         .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                                         .setHeading("FTYU31 YUDO 180000")
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build(), //
                                 ArchiveAviationMessage.builder()
                                         .setMessageTime(Instant.parse("2020-05-18T00:00:00Z"))
@@ -311,6 +321,7 @@ class AviationMessageArchiverTest {
                                         .setMessage("TAF YUDD 180000Z NIL=")
                                         .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                                         .setHeading("FTYU31 YUDO 180000")
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build())
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -328,6 +339,7 @@ class AviationMessageArchiverTest {
                                         .setMessage("TAF YUDO 160000Z NIL=")
                                         .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                                         .setHeading("FTYU31 YUDO 160000")
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build(), //
                                 ArchiveAviationMessage.builder()
                                         .setMessageTime(Instant.parse("2020-05-16T00:00:00Z"))
@@ -339,6 +351,7 @@ class AviationMessageArchiverTest {
                                         .setMessage("TAF YUDD 160000Z NIL=")
                                         .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                                         .setHeading("FTYU31 YUDO 160000")
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build())
                         .expectFail()//
                         .build(),//
@@ -357,6 +370,7 @@ class AviationMessageArchiverTest {
                                 .setMessage("TAF YUDO 160000Z NIL=")
                                 .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                                 .setHeading("FTYU31 YUDO 160000")
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .build())
                         .addRejectedMessages(ArchiveAviationMessage.builder()
                                 .setMessageTime(Instant.parse("2020-05-16T00:00:00Z"))
@@ -368,6 +382,7 @@ class AviationMessageArchiverTest {
                                 .setFileModified(Instant.parse("2020-05-15T00:00:00Z"))
                                 .setHeading("FTYU31 YUDO 160000")
                                 .setProcessingResult(ProcessingResult.UNKNOWN_STATION_ICAO_CODE)
+                                .setArchivalStatus(ArchivalStatus.REJECTED)
                                 .build())
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -396,6 +411,7 @@ class AviationMessageArchiverTest {
                                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
                                         .setXMLNamespace("http://icao.int/iwxxm/2.1")//
                                         .build())
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .build())
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -414,6 +430,7 @@ class AviationMessageArchiverTest {
                                 .setValidTo(Instant.parse("2017-07-31T12:00:00Z"))
                                 .setFileModified(Instant.parse("2017-07-30T10:30:00Z"))
                                 .setProcessingResult(ProcessingResult.UNKNOWN_STATION_ICAO_CODE)
+                                .setArchivalStatus(ArchivalStatus.REJECTED)
                                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
                                         .setXMLNamespace("http://icao.int/iwxxm/2.1")//
                                         .build())
@@ -439,6 +456,7 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/2.1")
                                                 .setCollectIdentifier("A_LTFI31EFKL301115_C_EFKL_201902011315--.xml")
                                                 .build())
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build(), //
                                 ArchiveAviationMessage.builder()
                                         .setMessageTime(Instant.parse("2017-07-27T11:37:00Z"))
@@ -455,6 +473,7 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/2.1")
                                                 .setCollectIdentifier("A_LTFI31EFKL301115_C_EFKL_201902011315--.xml")
                                                 .build())
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build())
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -477,6 +496,7 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/2.1")
                                                 .setCollectIdentifier("A_LTFI31EFKL301115_C_EFKL_201902011315--.xml")
                                                 .build())
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build(), //
                                 ArchiveAviationMessage.builder()
                                         .setMessageTime(Instant.parse("2017-07-27T11:37:00Z"))
@@ -493,6 +513,7 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/2.1")
                                                 .setCollectIdentifier("A_LTFI31EFKL301115_C_EFKL_201902011315--.xml")
                                                 .build())
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build())
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -522,6 +543,7 @@ class AviationMessageArchiverTest {
                                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
                                         .setXMLNamespace("http://icao.int/iwxxm/2.1")//
                                         .build())
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .build())
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -545,6 +567,7 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/2.1")
                                                 .setCollectIdentifier("A_LTFI31EFKL301115_C_EFKL_201902011315--.xml")
                                                 .build())
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build(), //
                                 ArchiveAviationMessage.builder()
                                         .setMessageTime(Instant.parse("2017-07-27T11:37:00Z"))
@@ -562,6 +585,7 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/2.1")
                                                 .setCollectIdentifier("A_LTFI31EFKL301115_C_EFKL_201902011315--.xml")
                                                 .build())
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build())//
                         .build(), //
                 AviationMessageArchiverTestCase.builder()//
@@ -583,6 +607,7 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/3.0")
                                                 .setCollectIdentifier("A_LCFI32EFKL211300_C_EFKL_20211021130000.xml")
                                                 .build())
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build(), //
                                 ArchiveAviationMessage.builder()
                                         .setMessageTime(Instant.parse("2021-10-21T14:36:00Z"))
@@ -600,6 +625,7 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/3.0")
                                                 .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
                                                 .build())
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build(), //
                                 ArchiveAviationMessage.builder()
                                         .setMessageTime(Instant.parse("2021-10-21T14:37:00Z"))
@@ -617,6 +643,7 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/3.0")
                                                 .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
                                                 .build())
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build())
                         .build(), //
                 AviationMessageArchiverTestCase.builder()//
@@ -638,6 +665,7 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/3.0")
                                                 .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
                                                 .build())
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build(), //
                                 ArchiveAviationMessage.builder()
                                         .setMessageTime(Instant.parse("2021-10-21T14:36:00Z"))
@@ -655,6 +683,7 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/3.0")
                                                 .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
                                                 .build())
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build(), //
                                 ArchiveAviationMessage.builder()
                                         .setMessageTime(Instant.parse("2021-10-21T14:37:00Z"))
@@ -672,6 +701,7 @@ class AviationMessageArchiverTest {
                                                 .setXMLNamespace("http://icao.int/iwxxm/3.0")
                                                 .setCollectIdentifier("A_LCFI32EFKL211400_C_EFKL_20211021140000.xml")
                                                 .build())
+                                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                         .build())
                         .build(), //
                 AviationMessageArchiverTestCase.builder()//
@@ -691,6 +721,7 @@ class AviationMessageArchiverTest {
                                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
                                         .setXMLNamespace("http://icao.int/iwxxm/3.0")//
                                         .build())
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .build())
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -712,6 +743,7 @@ class AviationMessageArchiverTest {
                                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
                                         .setXMLNamespace("http://icao.int/iwxxm/3.0")//
                                         .build())
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .build())
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -734,6 +766,7 @@ class AviationMessageArchiverTest {
                                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
                                         .setXMLNamespace("http://icao.int/iwxxm/3.0")//
                                         .build())//
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .build())//
                         .build(),//
                 AviationMessageArchiverTestCase.builder()//
@@ -756,6 +789,7 @@ class AviationMessageArchiverTest {
                                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
                                         .setXMLNamespace("http://icao.int/iwxxm/3.0")//
                                         .build())//
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .build())//
                         .build(), //
                 AviationMessageArchiverTestCase.builder()//
@@ -784,6 +818,7 @@ class AviationMessageArchiverTest {
                                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
                                         .setXMLNamespace("http://icao.int/iwxxm/3.0")//
                                         .build())
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .build())
                         .build(), //
                 AviationMessageArchiverTestCase.builder()//
@@ -805,6 +840,7 @@ class AviationMessageArchiverTest {
                                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
                                         .setXMLNamespace("http://icao.int/iwxxm/2023-1")//
                                         .build())
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .build())
                         .build(), //
                 AviationMessageArchiverTestCase.builder()//
@@ -826,6 +862,7 @@ class AviationMessageArchiverTest {
                                 .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
                                         .setXMLNamespace("http://icao.int/iwxxm/2023-1")//
                                         .build())
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .build())
                         .build(), //
                 AviationMessageArchiverTestCase.builder()//

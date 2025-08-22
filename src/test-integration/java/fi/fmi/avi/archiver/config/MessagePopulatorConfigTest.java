@@ -2,11 +2,14 @@ package fi.fmi.avi.archiver.config;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.AviationMessageArchiver;
+import fi.fmi.avi.archiver.DefaultProcessingServiceContext;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
+import fi.fmi.avi.archiver.logging.model.NoOpLoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.InputAndArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.processor.populator.MessagePopulationService;
 import fi.fmi.avi.archiver.message.processor.populator.MessagePopulator;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
@@ -17,7 +20,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.messaging.MessageHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
@@ -45,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MessagePopulatorConfigTest {
 
     @Autowired
-    private MessagePopulatorConfig.MessagePopulationIntegrationService messagePopulationIntegrationService;
+    private MessagePopulationService messagePopulationService;
 
     @Test
     void testMessagePopulatorExecutionChain() {
@@ -54,9 +56,9 @@ class MessagePopulatorConfigTest {
                         .setOriginalMessage("message")//
                         .buildPartial())//
                 .buildPartial();
-        final List<InputAndArchiveAviationMessage> result = messagePopulationIntegrationService.populateMessages(Collections.singletonList(inputMessage),
-                        new MessageHeaders(Collections.emptyMap()))//
-                .getPayload();
+        final DefaultProcessingServiceContext context = new DefaultProcessingServiceContext(NoOpLoggingContext.getInstance());
+        final List<InputAndArchiveAviationMessage> result = messagePopulationService.populateMessages(
+                Collections.singletonList(inputMessage), context);
 
         final InputAndArchiveAviationMessage expected = new InputAndArchiveAviationMessage(inputMessage, ArchiveAviationMessage.builder()//
                 .setRoute(1)//
@@ -95,7 +97,9 @@ class MessagePopulatorConfigTest {
             if (!messageTime.equals(Instant.EPOCH)) {
                 target.setMessageTime(messageTime);
             }
+            //noinspection SizeReplaceableByIsEmpty: for consistency with the next if statemenet
             if (validityPeriod.size() >= 1 && validityPeriod.get(0) != null) {
+                //noinspection SequencedCollectionMethodCanBeUsed: for consistency with the next if statemenet
                 target.setValidFrom(validityPeriod.get(0));
             }
             if (validityPeriod.size() >= 2 && validityPeriod.get(1) != null) {

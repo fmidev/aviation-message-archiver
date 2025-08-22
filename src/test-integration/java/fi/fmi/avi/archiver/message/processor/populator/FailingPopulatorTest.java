@@ -1,12 +1,13 @@
 package fi.fmi.avi.archiver.message.processor.populator;
 
 import fi.fmi.avi.archiver.AviationMessageArchiver;
+import fi.fmi.avi.archiver.ProcessingServiceContext;
 import fi.fmi.avi.archiver.config.AbstractMessagePopulatorFactoryConfig;
 import fi.fmi.avi.archiver.config.ConversionConfig;
-import fi.fmi.avi.archiver.config.IntegrationFlowConfig;
 import fi.fmi.avi.archiver.config.TestConfig;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
+import fi.fmi.avi.archiver.config.util.SpringProcessingServiceContextHelper;
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
@@ -78,8 +79,8 @@ class FailingPopulatorTest {
 
         verify(successChannel, times(0)).send(any(Message.class));
         verify(failChannel).send(failChannelCaptor.capture());
-        final boolean failures = IntegrationFlowConfig.hasProcessingErrors(failChannelCaptor.getValue().getHeaders());
-        assertThat(failures).isTrue();
+        final ProcessingServiceContext processingServiceContext = SpringProcessingServiceContextHelper.getProcessingServiceContext(failChannelCaptor.getValue().getHeaders());
+        assertThat(processingServiceContext.isProcessingErrors()).isTrue();
 
         verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture(), any());
         assertThat(databaseMessageCaptor.getValue().getStationIcaoCode()).isEqualTo("EFXX");
