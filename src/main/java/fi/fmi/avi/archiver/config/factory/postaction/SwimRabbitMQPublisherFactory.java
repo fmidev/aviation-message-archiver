@@ -48,14 +48,17 @@ public class SwimRabbitMQPublisherFactory
                 type.getClassLoader(),
                 new Class[]{type},
                 (proxy, method, args) -> {
-                    T instance = instanceRef.get();
-                    if (instance == null) {
-                        try {
-                            instance = factory.get();
-                            instanceRef.set(instance);
-                        } catch (final RuntimeException exception) {
-                            LOGGER.error("Could not create instance of {}: {}", type, exception.getMessage(), exception);
-                            throw exception;
+                    T instance;
+                    synchronized (instanceRef) {
+                        instance = instanceRef.get();
+                        if (instance == null) {
+                            try {
+                                instance = factory.get();
+                                instanceRef.set(instance);
+                            } catch (final RuntimeException exception) {
+                                LOGGER.error("Could not create instance of {}: {}", type, exception.getMessage(), exception);
+                                throw exception;
+                            }
                         }
                     }
                     return method.invoke(instance, args);
