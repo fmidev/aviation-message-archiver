@@ -43,26 +43,33 @@ public class SwimRabbitMQPublisherFactory
         this.clock = requireNonNull(clock, "clock");
     }
 
-    private static <T> T createLazyForwardingProxy(final Class<T> type, final Supplier<T> factory, final AtomicReference<T> instanceRef) {
+    private static <T> T createLazyForwardingProxy(
+            final Class<T> type,
+            final Supplier<T> factory,
+            final AtomicReference<T> instanceRef) {
+        final Object lock = new Object();
         return type.cast(Proxy.newProxyInstance(
                 type.getClassLoader(),
-                new Class[]{type},
+                new Class<?>[]{type},
                 (proxy, method, args) -> {
-                    T instance;
-                    synchronized (instanceRef) {
-                        instance = instanceRef.get();
-                        if (instance == null) {
-                            try {
-                                instance = factory.get();
-                                instanceRef.set(instance);
-                            } catch (final RuntimeException exception) {
-                                LOGGER.error("Could not create instance of {}: {}", type, exception.getMessage(), exception);
-                                throw exception;
+                    T instance = instanceRef.get();
+                    if (instance == null) {
+                        synchronized (lock) {
+                            instance = instanceRef.get();
+                            if (instance == null) {
+                                try {
+                                    instance = factory.get();
+                                    instanceRef.set(instance);
+                                } catch (final RuntimeException exception) {
+                                    LOGGER.error("Could not create instance of {}: {}", type, exception.getMessage(), exception);
+                                    throw exception;
+                                }
                             }
                         }
                     }
                     return method.invoke(instance, args);
-                }));
+                }
+        ));
     }
 
     private static void log(final Resource.Context context) {
