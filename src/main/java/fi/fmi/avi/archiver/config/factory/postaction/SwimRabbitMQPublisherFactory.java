@@ -110,7 +110,7 @@ public class SwimRabbitMQPublisherFactory
                 .exchange(config.getExchange())
                 .key(config.getRoutingKey())
                 .listeners(context -> {
-                    if (context.currentState() == Resource.State.CLOSED) {
+                    if (context.currentState() == Resource.State.CLOSED && context.failureCause() != null) {
                         LOGGER.error("AMQP publisher closed unexpectedly - connection and publisher will be recreated on next publish attempt");
                         publisherRef.set(null);
                         connectionRef.set(null);
