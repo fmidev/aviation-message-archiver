@@ -43,28 +43,26 @@ public class SwimRabbitMQPublisherFactory
         this.clock = requireNonNull(clock, "clock");
     }
 
-    private static <T> T createLazyForwardingProxy(
+    private static <T extends AutoCloseable> T createLazyForwardingProxy(
             final Class<T> type,
             final Supplier<T> factory,
             final AtomicReference<T> instanceRef) {
-        final Object lock = new Object();
         return type.cast(Proxy.newProxyInstance(
                 type.getClassLoader(),
                 new Class<?>[]{type},
                 (proxy, method, args) -> {
                     T instance = instanceRef.get();
-                    if (instance == null) {
-                        synchronized (lock) {
-                            instance = instanceRef.get();
-                            if (instance == null) {
-                                try {
-                                    instance = factory.get();
-                                    instanceRef.set(instance);
-                                } catch (final RuntimeException exception) {
-                                    LOGGER.error("Could not create instance of {}: {}", type, exception.getMessage(), exception);
-                                    throw exception;
-                                }
+                    while (instance == null) {
+                        T newInstance = factory.get();
+                        if (instanceRef.compareAndSet(null, newInstance)) {
+                            instance = newInstance;
+                        } else {
+                            try {
+                                newInstance.close();
+                            } catch (final Exception e) {
+                                LOGGER.warn("Failed to close unused instance", e);
                             }
+                            instance = instanceRef.get();
                         }
                     }
                     return method.invoke(instance, args);
@@ -122,8 +120,8 @@ public class SwimRabbitMQPublisherFactory
                 .listeners(context -> {
                     if (context.currentState() == Resource.State.CLOSED && context.failureCause() != null) {
                         LOGGER.error("AMQP publisher closed unexpectedly - connection and publisher will be recreated on next publish attempt");
-                        publisherRef.set(null);
-                        connectionRef.set(null);
+                        unregisterAndClose(connectionRef, "connection");
+                        unregisterAndClose(publisherRef, "publisher");
                     }
                 })
                 .build()), publisherRef);
@@ -153,6 +151,24 @@ public class SwimRabbitMQPublisherFactory
             closeableResources.add(closeableResource);
         }
         return closeableResource;
+    }
+
+    private <T extends AutoCloseable> T unregisterCloseable(final T closeableResource) {
+        synchronized (closeableResources) {
+            closeableResources.remove(closeableResource);
+        }
+        return closeableResource;
+    }
+
+    private void unregisterAndClose(final AtomicReference<? extends AutoCloseable> reference, final String resourceType) {
+        final AutoCloseable resource = reference.getAndSet(null);
+        if (resource != null) {
+            try {
+                unregisterCloseable(resource).close();
+            } catch (final Exception e) {
+                LOGGER.warn("Failed to close {} during cleanup", resourceType, e);
+            }
+        }
     }
 
     @Override
