@@ -5,6 +5,7 @@ import com.rabbitmq.client.amqp.Publisher;
 import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
+import fi.fmi.avi.archiver.spring.healthcontributor.RabbitMQPublisherHealthIndicator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,9 +17,11 @@ public class SwimRabbitMQPublisher implements PostAction {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisher.class);
 
     private final Publisher amqpPublisher;
+    private final RabbitMQPublisherHealthIndicator healthIndicator;
 
-    public SwimRabbitMQPublisher(final Publisher amqpPublisher) {
+    public SwimRabbitMQPublisher(final Publisher amqpPublisher, final RabbitMQPublisherHealthIndicator healthIndicator) {
         this.amqpPublisher = requireNonNull(amqpPublisher, "amqpPublisher");
+        this.healthIndicator = requireNonNull(healthIndicator, "healthIndicator");
     }
 
     @Override
@@ -28,6 +31,7 @@ public class SwimRabbitMQPublisher implements PostAction {
                 .message(message.getMessage().getBytes(StandardCharsets.UTF_8))
                 .messageId(1L);
         amqpPublisher.publish(amqpMessage, publisherContext -> {
+            healthIndicator.update(publisherContext);
             if (publisherContext.status() == Publisher.Status.ACCEPTED) {
                 LOGGER.debug("Published message <{}>.", loggingContext);
             } else if (publisherContext.failureCause() != null) {
