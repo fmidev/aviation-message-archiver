@@ -1,10 +1,7 @@
 package fi.fmi.avi.archiver.config.factory.postaction;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.rabbitmq.client.amqp.Connection;
-import com.rabbitmq.client.amqp.Environment;
-import com.rabbitmq.client.amqp.Publisher;
-import com.rabbitmq.client.amqp.Resource;
+import com.rabbitmq.client.amqp.*;
 import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
 import fi.fmi.avi.archiver.config.model.PostActionFactory;
 import fi.fmi.avi.archiver.message.processor.postaction.SwimRabbitMQPublisher;
@@ -87,6 +84,30 @@ public class SwimRabbitMQPublisherFactory
         }
     }
 
+    private static void createTopology(final Connection connection, final Config config) {
+        try (final Management management = connection.management()) {
+            management.exchange()
+                    .name(config.getExchange())
+                    .type(Management.ExchangeType.DIRECT)
+                    .autoDelete(false)
+                    .declare();
+            management.queue()
+                    .name(config.getQueue())
+                    .type(Management.QueueType.CLASSIC)
+                    .autoDelete(false)
+                    .declare();
+            management.binding()
+                    .sourceExchange(config.getExchange())
+                    .destinationQueue(config.getQueue())
+                    .key(config.getRoutingKey())
+                    .bind();
+        } catch (final Exception e) {
+            LOGGER.error("Failed to create AMQP topology for exchange '{}', queue '{}', routing key '{}'",
+                    config.getExchange(), config.getQueue(), config.getRoutingKey(), e);
+            throw e;
+        }
+    }
+
     @Override
     public Class<SwimRabbitMQPublisher> getType() {
         return SwimRabbitMQPublisher.class;
@@ -113,6 +134,10 @@ public class SwimRabbitMQPublisherFactory
                 .uri(connectionConfig.getUri())
                 .listeners(SwimRabbitMQPublisherFactory::log, healthIndicator)
                 .build()), connectionRef);
+
+        if (config.createTopology()) {
+            createTopology(connection, config);
+        }
 
         final Publisher publisher = createLazyForwardingProxy(Publisher.class, () -> registerCloseable(connection.publisherBuilder()
                 .exchange(config.getExchange())
@@ -192,7 +217,11 @@ public class SwimRabbitMQPublisherFactory
 
         String getExchange();
 
+        String getQueue();
+
         String getRoutingKey();
+
+        boolean createTopology();
 
         interface ConnectionConfig extends ObjectFactoryConfig {
             String getUri();

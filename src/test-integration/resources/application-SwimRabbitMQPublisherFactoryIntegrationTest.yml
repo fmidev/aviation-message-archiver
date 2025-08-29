@@ -8,4 +8,6 @@ production-line:
           username: user
           password: pass
         exchange: aviation-message-archiver
+        queue: aviation-message-archiver
         routing-key: aviation-message-archiver
+        createTopology: false
