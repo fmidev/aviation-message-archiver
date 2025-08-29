@@ -4,13 +4,15 @@ import com.rabbitmq.client.amqp.Publisher;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 
+import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
 
-public class RabbitMQPublisherHealthIndicator implements HealthIndicator {
+public class RabbitMQPublisherHealthIndicator implements HealthIndicator, Consumer<Publisher.Context> {
 
     private static final String DETAIL_PUBLISHER_STATUS = "publisherStatus";
     private static final String DETAIL_LAST_STATE_CHANGE = "lastStateChange";
@@ -25,7 +27,8 @@ public class RabbitMQPublisherHealthIndicator implements HealthIndicator {
                 new PublisherState(State.UNINITIALIZED, null, null, clock.instant());
     }
 
-    public void update(final Publisher.Context context) {
+    @Override
+    public void accept(final Publisher.Context context) {
         requireNonNull(context, "context");
         final State state = context.status() == Publisher.Status.ACCEPTED ? State.UP : State.DOWN;
         lastKnownState = new PublisherState(state, context.status(), context.failureCause(), clock.instant());
@@ -54,8 +57,13 @@ public class RabbitMQPublisherHealthIndicator implements HealthIndicator {
         UNINITIALIZED, UP, DOWN
     }
 
-    private record PublisherState(State state, Publisher.Status publisherStatus, Throwable failureCause,
+    private record PublisherState(State state, @Nullable Publisher.Status publisherStatus,
+                                  @Nullable Throwable failureCause,
                                   Instant timestamp) {
+        public PublisherState {
+            requireNonNull(state, "state");
+            requireNonNull(timestamp, "timestamp");
+        }
     }
 
 }

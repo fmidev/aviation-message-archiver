@@ -22,6 +22,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
@@ -129,8 +130,7 @@ public class SwimRabbitMQPublisherFactory
                 .build()), publisherRef);
 
         final SwimRabbitMQPublisher action = newSwimRabbitMQPublisher(publisher, publisherHealthIndicator);
-        healthContributorRegistry.registerContributor("connection", connectionHealthIndicator);
-        healthContributorRegistry.registerContributor("publisher", publisherHealthIndicator);
+        healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
         return action;
     }
 
@@ -150,7 +150,7 @@ public class SwimRabbitMQPublisherFactory
     }
 
     @VisibleForTesting
-    SwimRabbitMQPublisher newSwimRabbitMQPublisher(final Publisher publisher, final RabbitMQPublisherHealthIndicator publisherHealthIndicator) {
+    SwimRabbitMQPublisher newSwimRabbitMQPublisher(final Publisher publisher, final Consumer<Publisher.Context> publisherHealthIndicator) {
         return new SwimRabbitMQPublisher(publisher, publisherHealthIndicator);
     }
 
