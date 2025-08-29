@@ -1,6 +1,7 @@
 package fi.fmi.avi.archiver.database;
 
 import com.google.common.collect.ImmutableList;
+import fi.fmi.avi.archiver.ProcessingServiceContext;
 import fi.fmi.avi.archiver.logging.model.FileProcessingStatistics;
 import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import fi.fmi.avi.archiver.message.ArchivalStatus;
@@ -19,10 +20,11 @@ public class DatabaseService {
         this.databaseAccess = requireNonNull(databaseAccess, "databaseAccess");
     }
 
-    public List<InputAndArchiveAviationMessage> insertMessages(final List<InputAndArchiveAviationMessage> messages, final LoggingContext loggingContext) {
+    public List<InputAndArchiveAviationMessage> insertMessages(final List<InputAndArchiveAviationMessage> messages, final ProcessingServiceContext context) {
         requireNonNull(messages, "messages");
-        requireNonNull(loggingContext, "loggingContext");
+        requireNonNull(context, "context");
 
+        final LoggingContext loggingContext = context.getLoggingContext();
         RuntimeException databaseInsertionException = null;
         final ImmutableList.Builder<InputAndArchiveAviationMessage> updatedMessages = ImmutableList.builder();
         for (final InputAndArchiveAviationMessage inputAndArchiveMessage : messages) {
@@ -42,6 +44,7 @@ public class DatabaseService {
             } catch (final RuntimeException e) {
                 databaseInsertionException = e;
                 archivalStatus = ArchivalStatus.FAILED;
+                context.signalProcessingErrors();
                 loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
             } finally {
                 updatedMessages.add(inputAndArchiveMessage.withArchiveMessage(message.toBuilder().setArchivalStatus(archivalStatus).build()));

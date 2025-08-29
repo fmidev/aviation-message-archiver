@@ -138,7 +138,7 @@ public class IntegrationFlowConfig {
                 .handle(loggingEnvCleaner())
                 .channel(databaseChannel)
                 .handle(loggingEnvSetter(ProcessingPhase.STORE))
-                .handle(mapPayloadWithLoggingContext(databaseService::insertMessages))
+                .handle(mapPayloadWithProcessingServiceContext(databaseService::insertMessages))
                 .handle(loggingEnvCleaner())
                 .channel(postActionChannel)
                 .handle(loggingEnvSetter(ProcessingPhase.POST_ACTIONS))//
