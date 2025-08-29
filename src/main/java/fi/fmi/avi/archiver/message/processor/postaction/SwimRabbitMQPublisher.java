@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
 
@@ -16,9 +17,11 @@ public class SwimRabbitMQPublisher implements PostAction {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisher.class);
 
     private final Publisher amqpPublisher;
+    private final Consumer<Publisher.Context> healthIndicator;
 
-    public SwimRabbitMQPublisher(final Publisher amqpPublisher) {
+    public SwimRabbitMQPublisher(final Publisher amqpPublisher, final Consumer<Publisher.Context> healthIndicator) {
         this.amqpPublisher = requireNonNull(amqpPublisher, "amqpPublisher");
+        this.healthIndicator = requireNonNull(healthIndicator, "healthIndicator");
     }
 
     @Override
@@ -28,6 +31,7 @@ public class SwimRabbitMQPublisher implements PostAction {
                 .message(message.getMessage().getBytes(StandardCharsets.UTF_8))
                 .messageId(1L);
         amqpPublisher.publish(amqpMessage, publisherContext -> {
+            healthIndicator.accept(publisherContext);
             if (publisherContext.status() == Publisher.Status.ACCEPTED) {
                 LOGGER.debug("Published message <{}>.", loggingContext);
             } else if (publisherContext.failureCause() != null) {

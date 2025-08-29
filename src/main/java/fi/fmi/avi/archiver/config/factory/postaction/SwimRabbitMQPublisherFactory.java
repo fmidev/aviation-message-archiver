@@ -9,6 +9,7 @@ import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
 import fi.fmi.avi.archiver.config.model.PostActionFactory;
 import fi.fmi.avi.archiver.message.processor.postaction.SwimRabbitMQPublisher;
 import fi.fmi.avi.archiver.spring.healthcontributor.RabbitMQConnectionHealthIndicator;
+import fi.fmi.avi.archiver.spring.healthcontributor.RabbitMQPublisherHealthIndicator;
 import fi.fmi.avi.archiver.spring.healthcontributor.SwimRabbitMQConnectionHealthContributor;
 import fi.fmi.avi.archiver.util.instantiation.AbstractTypedConfigObjectFactory;
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfig;
@@ -21,6 +22,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
@@ -100,7 +102,8 @@ public class SwimRabbitMQPublisherFactory
     public SwimRabbitMQPublisher newInstance(final Config config) {
         requireNonNull(config, "config");
         final Config.ConnectionConfig connectionConfig = config.getConnection();
-        final RabbitMQConnectionHealthIndicator healthIndicator = newHealthIndicator();
+        final RabbitMQConnectionHealthIndicator connectionHealthIndicator = newConnectionHealthIndicator();
+        final RabbitMQPublisherHealthIndicator publisherHealthIndicator = newPublisherHealthIndicator();
         final Environment environment = registerCloseable(newAmqpEnvironmentBuilder().build());
 
         final AtomicReference<Connection> connectionRef = new AtomicReference<>();
@@ -111,7 +114,7 @@ public class SwimRabbitMQPublisherFactory
                 .username(connectionConfig.getUsername())
                 .password(connectionConfig.getPassword())
                 .uri(connectionConfig.getUri())
-                .listeners(SwimRabbitMQPublisherFactory::log, healthIndicator)
+                .listeners(SwimRabbitMQPublisherFactory::log, connectionHealthIndicator)
                 .build()), connectionRef);
 
         final Publisher publisher = createLazyForwardingProxy(Publisher.class, () -> registerCloseable(connection.publisherBuilder()
@@ -126,8 +129,8 @@ public class SwimRabbitMQPublisherFactory
                 })
                 .build()), publisherRef);
 
-        final SwimRabbitMQPublisher action = newSwimRabbitMQPublisher(publisher);
-        healthContributorRegistry.registerContributor(config.getId(), healthIndicator);
+        final SwimRabbitMQPublisher action = newSwimRabbitMQPublisher(publisher, publisherHealthIndicator);
+        healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
         return action;
     }
 
@@ -137,13 +140,18 @@ public class SwimRabbitMQPublisherFactory
     }
 
     @VisibleForTesting
-    RabbitMQConnectionHealthIndicator newHealthIndicator() {
+    RabbitMQConnectionHealthIndicator newConnectionHealthIndicator() {
         return new RabbitMQConnectionHealthIndicator(clock);
     }
 
     @VisibleForTesting
-    SwimRabbitMQPublisher newSwimRabbitMQPublisher(final Publisher publisher) {
-        return new SwimRabbitMQPublisher(publisher);
+    RabbitMQPublisherHealthIndicator newPublisherHealthIndicator() {
+        return new RabbitMQPublisherHealthIndicator(clock);
+    }
+
+    @VisibleForTesting
+    SwimRabbitMQPublisher newSwimRabbitMQPublisher(final Publisher publisher, final Consumer<Publisher.Context> publisherHealthIndicator) {
+        return new SwimRabbitMQPublisher(publisher, publisherHealthIndicator);
     }
 
     private <T extends AutoCloseable> T registerCloseable(final T closeableResource) {
