@@ -138,12 +138,13 @@ public class SwimRabbitMQPublisherFactory
                 .listeners(SwimRabbitMQPublisherFactory::log, healthIndicator)
                 .build()), connectionRef);
 
-        final Config.TopologyConfig topologyConfig = config.getTopology();
-        if (topologyConfig.create()) {
-            createTopology(connection, topologyConfig);
-        }
+        final Publisher publisher = createLazyForwardingProxy(Publisher.class, () -> {
+            final Config.TopologyConfig topologyConfig = config.getTopology();
+            if (topologyConfig.create()) {
+                createTopology(connection, topologyConfig);
+            }
 
-        final Publisher publisher = createLazyForwardingProxy(Publisher.class, () -> registerCloseable(connection.publisherBuilder()
+            return registerCloseable(connection.publisherBuilder()
                 .exchange(topologyConfig.getExchange().getName())
                 .key(topologyConfig.getRoutingKey())
                 .listeners(context -> {
@@ -153,7 +154,8 @@ public class SwimRabbitMQPublisherFactory
                         unregisterAndClose(publisherRef, "publisher");
                     }
                 })
-                .build()), publisherRef);
+                .build());
+        }, publisherRef);
 
         final SwimRabbitMQPublisher action = newSwimRabbitMQPublisher(publisher);
         healthContributorRegistry.registerContributor(config.getId(), healthIndicator);
