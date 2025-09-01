@@ -17,6 +17,7 @@ import java.lang.reflect.Proxy;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -84,21 +85,23 @@ public class SwimRabbitMQPublisherFactory
         }
     }
 
-    private static void createTopology(final Connection connection, final Config config) {
+    private static void createTopology(final Connection connection, final Config.TopologyConfig config) {
         try (final Management management = connection.management()) {
+            final Config.ExchangeConfig exchangeConfig = config.getExchange();
+            final Config.QueueConfig queueConfig = config.getQueue();
             management.exchange()
-                    .name(config.getExchange())
-                    .type(Management.ExchangeType.DIRECT)
-                    .autoDelete(false)
+                    .name(exchangeConfig.getName())
+                    .type(exchangeConfig.getType().orElse(Management.ExchangeType.DIRECT))
+                    .autoDelete(exchangeConfig.autoDelete().orElse(false))
                     .declare();
             management.queue()
-                    .name(config.getQueue())
-                    .type(Management.QueueType.CLASSIC)
-                    .autoDelete(false)
+                    .name(queueConfig.getName())
+                    .type(queueConfig.getType().orElse(Management.QueueType.CLASSIC))
+                    .autoDelete(queueConfig.autoDelete().orElse(false))
                     .declare();
             management.binding()
-                    .sourceExchange(config.getExchange())
-                    .destinationQueue(config.getQueue())
+                    .sourceExchange(exchangeConfig.getName())
+                    .destinationQueue(queueConfig.getName())
                     .key(config.getRoutingKey())
                     .bind();
         } catch (final Exception e) {
@@ -135,13 +138,14 @@ public class SwimRabbitMQPublisherFactory
                 .listeners(SwimRabbitMQPublisherFactory::log, healthIndicator)
                 .build()), connectionRef);
 
-        if (config.createTopology()) {
-            createTopology(connection, config);
+        final Config.TopologyConfig topologyConfig = config.getTopology();
+        if (topologyConfig.create()) {
+            createTopology(connection, topologyConfig);
         }
 
         final Publisher publisher = createLazyForwardingProxy(Publisher.class, () -> registerCloseable(connection.publisherBuilder()
-                .exchange(config.getExchange())
-                .key(config.getRoutingKey())
+                .exchange(topologyConfig.getExchange().getName())
+                .key(topologyConfig.getRoutingKey())
                 .listeners(context -> {
                     if (context.currentState() == Resource.State.CLOSED && context.failureCause() != null) {
                         LOGGER.error("AMQP publisher closed unexpectedly - connection and publisher will be recreated on next publish attempt");
@@ -215,13 +219,7 @@ public class SwimRabbitMQPublisherFactory
 
         ConnectionConfig getConnection();
 
-        String getExchange();
-
-        String getQueue();
-
-        String getRoutingKey();
-
-        boolean createTopology();
+        TopologyConfig getTopology();
 
         interface ConnectionConfig extends ObjectFactoryConfig {
             String getUri();
@@ -229,6 +227,32 @@ public class SwimRabbitMQPublisherFactory
             String getUsername();
 
             String getPassword();
+        }
+
+        interface TopologyConfig extends ObjectFactoryConfig {
+            boolean create();
+
+            String getRoutingKey();
+
+            ExchangeConfig getExchange();
+
+            QueueConfig getQueue();
+        }
+
+        interface ExchangeConfig extends ObjectFactoryConfig {
+            String getName();
+
+            Optional<Management.ExchangeType> getType();
+
+            Optional<Boolean> autoDelete();
+        }
+
+        interface QueueConfig extends ObjectFactoryConfig {
+            String getName();
+
+            Optional<Management.QueueType> getType();
+
+            Optional<Boolean> autoDelete();
         }
     }
 }
