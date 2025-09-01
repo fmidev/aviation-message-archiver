@@ -7,5 +7,10 @@ production-line:
           uri: amqp://localhost:5672/%2f
           username: user
           password: pass
-        exchange: aviation-message-archiver
-        routing-key: aviation-message-archiver
+        topology:
+          create: false
+          exchange:
+            name: aviation-message-archiver
+          queue:
+            name: aviation-message-archiver
+          routingKey: aviation-message-archiver

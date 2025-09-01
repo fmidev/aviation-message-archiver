@@ -1,10 +1,7 @@
 package fi.fmi.avi.archiver.config.factory.postaction;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.rabbitmq.client.amqp.Connection;
-import com.rabbitmq.client.amqp.Environment;
-import com.rabbitmq.client.amqp.Publisher;
-import com.rabbitmq.client.amqp.Resource;
+import com.rabbitmq.client.amqp.*;
 import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
 import fi.fmi.avi.archiver.config.model.PostActionFactory;
 import fi.fmi.avi.archiver.message.processor.postaction.SwimRabbitMQPublisher;
@@ -19,8 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Proxy;
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -89,6 +85,34 @@ public class SwimRabbitMQPublisherFactory
         }
     }
 
+    private static void createTopology(final Connection connection, final Config.TopologyConfig config) {
+        try (final Management management = connection.management()) {
+            final Config.ExchangeConfig exchangeConfig = config.getExchange();
+            final Config.QueueConfig queueConfig = config.getQueue();
+            management.exchange()
+                    .name(exchangeConfig.getName())
+                    .type(exchangeConfig.getType().orElse(Management.ExchangeType.DIRECT))
+                    .autoDelete(exchangeConfig.autoDelete().orElse(false))
+                    .arguments(exchangeConfig.getArguments().orElse(Collections.emptyMap()))
+                    .declare();
+            management.queue()
+                    .name(queueConfig.getName())
+                    .type(queueConfig.getType().orElse(Management.QueueType.CLASSIC))
+                    .autoDelete(queueConfig.autoDelete().orElse(false))
+                    .arguments(queueConfig.getArguments().orElse(Collections.emptyMap()))
+                    .declare();
+            management.binding()
+                    .sourceExchange(exchangeConfig.getName())
+                    .destinationQueue(queueConfig.getName())
+                    .key(config.getRoutingKey())
+                    .bind();
+        } catch (final Exception e) {
+            LOGGER.error("Failed to create AMQP topology for exchange '{}', queue '{}', routing key '{}'",
+                    config.getExchange(), config.getQueue(), config.getRoutingKey(), e);
+            throw e;
+        }
+    }
+
     @Override
     public Class<SwimRabbitMQPublisher> getType() {
         return SwimRabbitMQPublisher.class;
@@ -117,9 +141,15 @@ public class SwimRabbitMQPublisherFactory
                 .listeners(SwimRabbitMQPublisherFactory::log, connectionHealthIndicator)
                 .build()), connectionRef);
 
-        final Publisher publisher = createLazyForwardingProxy(Publisher.class, () -> registerCloseable(connection.publisherBuilder()
-                .exchange(config.getExchange())
-                .key(config.getRoutingKey())
+        final Publisher publisher = createLazyForwardingProxy(Publisher.class, () -> {
+            final Config.TopologyConfig topologyConfig = config.getTopology();
+            if (topologyConfig.create()) {
+                createTopology(connection, topologyConfig);
+            }
+
+            return registerCloseable(connection.publisherBuilder()
+                .exchange(topologyConfig.getExchange().getName())
+                .key(topologyConfig.getRoutingKey())
                 .listeners(context -> {
                     if (context.currentState() == Resource.State.CLOSED && context.failureCause() != null) {
                         LOGGER.error("AMQP publisher closed unexpectedly - connection and publisher will be recreated on next publish attempt");
@@ -127,7 +157,8 @@ public class SwimRabbitMQPublisherFactory
                         unregisterAndClose(publisherRef, "publisher");
                     }
                 })
-                .build()), publisherRef);
+                .build());
+        }, publisherRef);
 
         final SwimRabbitMQPublisher action = newSwimRabbitMQPublisher(publisher, publisherHealthIndicator);
         healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
@@ -198,9 +229,7 @@ public class SwimRabbitMQPublisherFactory
 
         ConnectionConfig getConnection();
 
-        String getExchange();
-
-        String getRoutingKey();
+        TopologyConfig getTopology();
 
         interface ConnectionConfig extends ObjectFactoryConfig {
             String getUri();
@@ -208,6 +237,36 @@ public class SwimRabbitMQPublisherFactory
             String getUsername();
 
             String getPassword();
+        }
+
+        interface TopologyConfig extends ObjectFactoryConfig {
+            boolean create();
+
+            String getRoutingKey();
+
+            ExchangeConfig getExchange();
+
+            QueueConfig getQueue();
+        }
+
+        interface ExchangeConfig extends ObjectFactoryConfig {
+            String getName();
+
+            Optional<Management.ExchangeType> getType();
+
+            Optional<Boolean> autoDelete();
+
+            Optional<Map<String, Object>> getArguments();
+        }
+
+        interface QueueConfig extends ObjectFactoryConfig {
+            String getName();
+
+            Optional<Management.QueueType> getType();
+
+            Optional<Boolean> autoDelete();
+
+            Optional<Map<String, Object>> getArguments();
         }
     }
 }
