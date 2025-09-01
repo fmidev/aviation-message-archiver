@@ -15,9 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Proxy;
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -93,11 +91,13 @@ public class SwimRabbitMQPublisherFactory
                     .name(exchangeConfig.getName())
                     .type(exchangeConfig.getType().orElse(Management.ExchangeType.DIRECT))
                     .autoDelete(exchangeConfig.autoDelete().orElse(false))
+                    .arguments(exchangeConfig.getArguments().orElse(Collections.emptyMap()))
                     .declare();
             management.queue()
                     .name(queueConfig.getName())
                     .type(queueConfig.getType().orElse(Management.QueueType.CLASSIC))
                     .autoDelete(queueConfig.autoDelete().orElse(false))
+                    .arguments(queueConfig.getArguments().orElse(Collections.emptyMap()))
                     .declare();
             management.binding()
                     .sourceExchange(exchangeConfig.getName())
@@ -245,6 +245,8 @@ public class SwimRabbitMQPublisherFactory
             Optional<Management.ExchangeType> getType();
 
             Optional<Boolean> autoDelete();
+
+            Optional<Map<String, Object>> getArguments();
         }
 
         interface QueueConfig extends ObjectFactoryConfig {
@@ -253,6 +255,8 @@ public class SwimRabbitMQPublisherFactory
             Optional<Management.QueueType> getType();
 
             Optional<Boolean> autoDelete();
+
+            Optional<Map<String, Object>> getArguments();
         }
     }
 }
