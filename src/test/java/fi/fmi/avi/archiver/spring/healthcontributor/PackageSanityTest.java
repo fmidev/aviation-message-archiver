@@ -14,8 +14,11 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        setDefault(Clock.class, Clock.fixed(Instant.EPOCH, ZoneOffset.UTC));
+        final Clock clock = Clock.fixed(Instant.EPOCH, ZoneOffset.UTC);
+        setDefault(Clock.class, clock);
         setDefault(MonitorableCallerBlocksPolicy.class, mock(MonitorableCallerBlocksPolicy.class));
+        setDefault(RabbitMQConnectionHealthIndicator.class, new RabbitMQConnectionHealthIndicator(clock));
+        setDefault(RabbitMQPublisherHealthIndicator.class, new RabbitMQPublisherHealthIndicator(clock));
     }
 
 }
