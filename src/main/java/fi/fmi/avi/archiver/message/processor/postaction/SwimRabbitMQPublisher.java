@@ -113,8 +113,11 @@ public final class SwimRabbitMQPublisher implements PostAction, AutoCloseable {
                 amqpPublisher.publish(amqpMessage, publishContext -> {
                     try {
                         healthIndicator.accept(publishContext);
-                    } catch (final Throwable throwable) {
-                        LOGGER.error("Health indicator threw", throwable);
+                    } catch (final RuntimeException runtimeException) {
+                        LOGGER.error("Health indicator threw", runtimeException);
+                    } catch (final Error error) {
+                        LOGGER.error("Fatal error in health indicator", error);
+                        throw error;
                     } finally {
                         future.complete(publishContext);
                     }
@@ -131,7 +134,10 @@ public final class SwimRabbitMQPublisher implements PostAction, AutoCloseable {
                     if (cause instanceof final Exception exception) {
                         throw exception;
                     }
-                    throw new RuntimeException(cause);
+                    if (cause instanceof final Error error) {
+                        throw error;
+                    }
+                    throw executionException;
                 }
 
                 if (result.status() == Publisher.Status.ACCEPTED) {
@@ -142,8 +148,9 @@ public final class SwimRabbitMQPublisher implements PostAction, AutoCloseable {
                 final Throwable failure = result.failureCause();
                 if (failure instanceof final Exception exception) {
                     throw exception;
-                } else if (failure != null) {
-                    throw new RuntimeException(failure);
+                }
+                if (failure instanceof final Error error) {
+                    throw error;
                 }
                 throw new IllegalStateException("AMQP publish failed with status " + result.status());
             };
