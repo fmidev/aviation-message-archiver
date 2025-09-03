@@ -85,7 +85,7 @@ public class SwimRabbitMQPublisherFactory
                         if (cause instanceof Error err) {
                             throw err;
                         }
-                        throw new RuntimeException(cause);
+                        throw cause;
                     }
                 }
         ));
