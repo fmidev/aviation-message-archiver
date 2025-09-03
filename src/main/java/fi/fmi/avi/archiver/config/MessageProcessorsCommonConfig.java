@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.config;
 
+import fi.fmi.avi.archiver.spring.convert.MapToObjectFactoryConfigConverter;
 import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfigFactory;
 import fi.fmi.avi.archiver.util.instantiation.ProxyObjectFactoryConfigFactory;
@@ -23,8 +24,20 @@ public class MessageProcessorsCommonConfig {
         return new SpringConversionServiceConfigValueConverter(conversionService);
     }
 
+    /**
+     * Init {@code ObjectFactoryConfigFactory}.
+     *
+     * <p>
+     * Direct nested config is disabled, but indirect nested config is enabled via
+     * {@link MapToObjectFactoryConfigConverter} initialized in {@link ConversionPostConstructs#postConstruct()},
+     * used by {@code configValueConverter}.
+     * </p>
+     *
+     * @param configValueConverter configValueConverter
+     * @return objectFactoryConfigFactory
+     */
     @Bean
     ObjectFactoryConfigFactory objectFactoryConfigFactory(final ConfigValueConverter configValueConverter) {
-        return new ProxyObjectFactoryConfigFactory(configValueConverter);
+        return new ProxyObjectFactoryConfigFactory(configValueConverter, false);
     }
 }

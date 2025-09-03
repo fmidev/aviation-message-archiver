@@ -13,4 +13,4 @@ production-line:
             name: aviation-message-archiver
           queue:
             name: aviation-message-archiver
-          routingKey: aviation-message-archiver
+          routing-key: aviation-message-archiver

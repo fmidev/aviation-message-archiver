@@ -7,9 +7,13 @@ import fi.fmi.avi.archiver.util.instantiation.ObjectFactory;
 import fi.fmi.avi.archiver.util.instantiation.PropertyRenamingObjectFactory;
 import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
 
+import java.util.function.UnaryOperator;
+
 import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractMessageProcessorFactoryConfig<P extends MessageProcessor> {
+    public static final UnaryOperator<String> CONFIG_PROPERTY_RENAME_OPERATOR = StringCaseFormat::dashToCamel;
+
     protected final ConfigValueConverter configValueConverter;
 
     protected AbstractMessageProcessorFactoryConfig(final ConfigValueConverter configValueConverter) {
@@ -27,6 +31,6 @@ public abstract class AbstractMessageProcessorFactoryConfig<P extends MessagePro
     }
 
     protected <T extends P> ObjectFactory<T> createDecoratedFactory(final ObjectFactory<T> factory) {
-        return new PropertyRenamingObjectFactory<>(factory, StringCaseFormat::dashToCamel);
+        return new PropertyRenamingObjectFactory<>(factory, CONFIG_PROPERTY_RENAME_OPERATOR);
     }
 }

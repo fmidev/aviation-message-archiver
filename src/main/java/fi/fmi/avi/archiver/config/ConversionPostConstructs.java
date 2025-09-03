@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.config;
 
 import fi.fmi.avi.archiver.spring.convert.MapToObjectFactoryConfigConverter;
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfigFactory;
+import fi.fmi.avi.archiver.util.instantiation.PropertyRenamingObjectFactoryConfigFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 
@@ -25,6 +26,8 @@ public class ConversionPostConstructs {
 
     @PostConstruct
     public void postConstruct() {
-        conversionService.addConverter(new MapToObjectFactoryConfigConverter(objectFactoryConfigFactory));
+        final PropertyRenamingObjectFactoryConfigFactory decoratedObjectFactoryConfigFactory = new PropertyRenamingObjectFactoryConfigFactory(
+                objectFactoryConfigFactory, AbstractMessageProcessorFactoryConfig.CONFIG_PROPERTY_RENAME_OPERATOR);
+        conversionService.addConverter(new MapToObjectFactoryConfigConverter(decoratedObjectFactoryConfigFactory));
     }
 }
