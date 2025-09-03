@@ -3,6 +3,7 @@ production-line:
     - name: SwimRabbitMQPublisher
       config:
         id: default
+        publisher-queue-capacity: 50
         connection:
           uri: amqp://localhost:5672/%2f
           username: user
@@ -14,3 +15,5 @@ production-line:
           queue:
             name: aviation-message-archiver
           routing-key: aviation-message-archiver
+        retry:
+          timeout: PT2M
