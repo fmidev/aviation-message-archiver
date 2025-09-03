@@ -78,7 +78,7 @@ public class SwimRabbitMQPublisherFactory
                     try {
                         return method.invoke(instance, args);
                     } catch (final InvocationTargetException ite) {
-                        Throwable cause = ite.getTargetException();
+                        final Throwable cause = ite.getTargetException();
                         if (cause instanceof RuntimeException re) {
                             throw re;
                         }
