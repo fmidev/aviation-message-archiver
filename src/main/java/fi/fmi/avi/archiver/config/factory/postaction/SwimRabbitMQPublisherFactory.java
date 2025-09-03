@@ -13,14 +13,26 @@ import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfig;
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.backoff.ExponentialBackOffPolicy;
+import org.springframework.retry.listener.RetryListenerSupport;
+import org.springframework.retry.support.RetryTemplate;
+import org.springframework.retry.support.RetryTemplateBuilder;
 
+import javax.annotation.Nullable;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
+import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.LOGGING_CONTEXT;
+import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.RETRY_COUNT_LOGNAME;
 import static java.util.Objects.requireNonNull;
 
 public class SwimRabbitMQPublisherFactory
@@ -63,7 +75,18 @@ public class SwimRabbitMQPublisherFactory
                             instance = instanceRef.get();
                         }
                     }
-                    return method.invoke(instance, args);
+                    try {
+                        return method.invoke(instance, args);
+                    } catch (final InvocationTargetException ite) {
+                        Throwable cause = ite.getTargetException();
+                        if (cause instanceof RuntimeException re) {
+                            throw re;
+                        }
+                        if (cause instanceof Error err) {
+                            throw err;
+                        }
+                        throw new RuntimeException(cause);
+                    }
                 }
         ));
     }
@@ -113,6 +136,23 @@ public class SwimRabbitMQPublisherFactory
         }
     }
 
+    private static RetryTemplate amqpPublishRetryTemplate(final Config.RetryConfig retryConfig) {
+        final ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
+        backOffPolicy.setInitialInterval(retryConfig.getInitialInterval().orElse(Duration.ofMillis(500)).toMillis());
+        backOffPolicy.setMultiplier(retryConfig.getMultiplier().orElse(2));
+        backOffPolicy.setMaxInterval(retryConfig.getMaxInterval().orElse(Duration.ofMinutes(1)).toMillis());
+
+        final RetryTemplateBuilder retryTemplateBuilder = new RetryTemplateBuilder();
+        if (retryConfig.getTimeout().isZero()) {
+            retryTemplateBuilder.infiniteRetry();
+        } else {
+            retryTemplateBuilder.withinMillis(retryConfig.getTimeout().toMillis());
+        }
+        retryTemplateBuilder.customBackoff(backOffPolicy);
+        retryTemplateBuilder.withListener(new AmqpRetryLogger());
+        return retryTemplateBuilder.build();
+    }
+
     @Override
     public Class<SwimRabbitMQPublisher> getType() {
         return SwimRabbitMQPublisher.class;
@@ -148,19 +188,19 @@ public class SwimRabbitMQPublisherFactory
             }
 
             return registerCloseable(connection.publisherBuilder()
-                .exchange(topologyConfig.getExchange().getName())
-                .key(topologyConfig.getRoutingKey())
-                .listeners(context -> {
-                    if (context.currentState() == Resource.State.CLOSED && context.failureCause() != null) {
-                        LOGGER.error("AMQP publisher closed unexpectedly - connection and publisher will be recreated on next publish attempt");
-                        unregisterAndClose(connectionRef, "connection");
-                        unregisterAndClose(publisherRef, "publisher");
-                    }
-                })
-                .build());
+                    .exchange(topologyConfig.getExchange().getName())
+                    .key(topologyConfig.getRoutingKey())
+                    .listeners(context -> {
+                        if (context.currentState() == Resource.State.CLOSED && context.failureCause() != null) {
+                            LOGGER.error("AMQP publisher closed unexpectedly - connection and publisher will be recreated on next publish attempt");
+                            unregisterAndClose(connectionRef, "connection");
+                            unregisterAndClose(publisherRef, "publisher");
+                        }
+                    })
+                    .build());
         }, publisherRef);
 
-        final SwimRabbitMQPublisher action = newSwimRabbitMQPublisher(publisher, publisherHealthIndicator);
+        final SwimRabbitMQPublisher action = newSwimRabbitMQPublisher(publisher, config, publisherHealthIndicator);
         healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
         return action;
     }
@@ -181,8 +221,11 @@ public class SwimRabbitMQPublisherFactory
     }
 
     @VisibleForTesting
-    SwimRabbitMQPublisher newSwimRabbitMQPublisher(final Publisher publisher, final Consumer<Publisher.Context> publisherHealthIndicator) {
-        return new SwimRabbitMQPublisher(publisher, publisherHealthIndicator);
+    SwimRabbitMQPublisher newSwimRabbitMQPublisher(final Publisher publisher, final Config config,
+                                                   final Consumer<Publisher.Context> publisherHealthIndicator) {
+        return new SwimRabbitMQPublisher(publisher, config.getPublisherQueueCapacity(),
+                config.getPublishTimeout().orElse(Duration.ofSeconds(30)), amqpPublishRetryTemplate(config.getRetry()),
+                publisherHealthIndicator);
     }
 
     private <T extends AutoCloseable> T registerCloseable(final T closeableResource) {
@@ -227,9 +270,15 @@ public class SwimRabbitMQPublisherFactory
     public interface Config extends ObjectFactoryConfig {
         String getId();
 
+        int getPublisherQueueCapacity();
+
+        Optional<Duration> getPublishTimeout();
+
         ConnectionConfig getConnection();
 
         TopologyConfig getTopology();
+
+        RetryConfig getRetry();
 
         interface ConnectionConfig extends ObjectFactoryConfig {
             String getUri();
@@ -268,5 +317,42 @@ public class SwimRabbitMQPublisherFactory
 
             Optional<Map<String, Object>> getArguments();
         }
+
+        interface RetryConfig extends ObjectFactoryConfig {
+            Optional<Duration> getInitialInterval();
+
+            Optional<Integer> getMultiplier();
+
+            Optional<Duration> getMaxInterval();
+
+            Duration getTimeout();
+        }
     }
+
+    private static final class AmqpRetryLogger extends RetryListenerSupport {
+        private static final Logger LOGGER = LoggerFactory.getLogger(AmqpRetryLogger.class);
+
+        @Override
+        public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, @Nullable final Throwable throwable) {
+            super.close(context, callback, throwable);
+            final int retryCount = context.getRetryCount();
+            if (retryCount > 0) {
+                if (throwable == null) {
+                    LOGGER.info("AMQP publish attempt {} succeeded for <{}>.",
+                            loggableValue(RETRY_COUNT_LOGNAME, retryCount + 1), LOGGING_CONTEXT.get(context));
+                } else {
+                    LOGGER.error("AMQP publish attempts (total {}) exhausted for <{}>.",
+                            loggableValue(RETRY_COUNT_LOGNAME, retryCount), LOGGING_CONTEXT.get(context));
+                }
+            }
+        }
+
+        @Override
+        public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
+            super.onError(context, callback, throwable);
+            LOGGER.warn("AMQP publish failed on attempt {} for <{}>. Retrying.",
+                    loggableValue(RETRY_COUNT_LOGNAME, context.getRetryCount()), LOGGING_CONTEXT.get(context), throwable);
+        }
+    }
+
 }
