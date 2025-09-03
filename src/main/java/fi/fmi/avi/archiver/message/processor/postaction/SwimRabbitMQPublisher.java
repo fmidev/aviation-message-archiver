@@ -20,7 +20,6 @@ import static java.util.Objects.requireNonNull;
 
 public final class SwimRabbitMQPublisher implements PostAction, AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisher.class);
-    private static final String WORKER_THREAD = "SwimRabbitMQPublisher-Worker";
 
     private final Publisher amqpPublisher;
     private final RetryTemplate retryTemplate;
@@ -30,33 +29,15 @@ public final class SwimRabbitMQPublisher implements PostAction, AutoCloseable {
 
     public SwimRabbitMQPublisher(
             final Publisher amqpPublisher,
-            final int queueCapacity,
+            final ThreadPoolExecutor publishExecutor,
             final Duration publishTimeout,
             final RetryTemplate retryTemplate,
             final Consumer<Publisher.Context> healthIndicator) {
         this.amqpPublisher = requireNonNull(amqpPublisher, "amqpPublisher");
+        this.executor = requireNonNull(publishExecutor, "publishExecutor");
         this.retryTemplate = requireNonNull(retryTemplate, "retryTemplate");
         this.healthIndicator = requireNonNull(healthIndicator, "healthIndicator");
         this.publishTimeout = requireNonNull(publishTimeout, "publishTimeout");
-
-        final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(queueCapacity);
-        this.executor = new ThreadPoolExecutor(
-                1, 1,
-                0L, TimeUnit.SECONDS,
-                queue,
-                runnable -> {
-                    final Thread thread = new Thread(runnable, WORKER_THREAD);
-                    thread.setDaemon(true);
-                    return thread;
-                },
-                (runnable, exec) -> {
-                    if (runnable instanceof final PublishRunnable publishRunnable) {
-                        LOGGER.error("AMQP publish queue full; skipping publish for <{}>", publishRunnable.loggingContext);
-                    } else {
-                        LOGGER.error("AMQP publish queue full; skipping publish task");
-                    }
-                }
-        );
     }
 
     @Override
@@ -78,13 +59,17 @@ public final class SwimRabbitMQPublisher implements PostAction, AutoCloseable {
         }
     }
 
-    private final class PublishRunnable implements Runnable {
+    public final class PublishRunnable implements Runnable {
         private final ArchiveAviationMessage message;
         private final ReadableLoggingContext loggingContext;
 
         private PublishRunnable(final ArchiveAviationMessage message, final ReadableLoggingContext loggingContext) {
             this.message = requireNonNull(message, "message");
             this.loggingContext = requireNonNull(loggingContext, "loggingContext");
+        }
+
+        public ReadableLoggingContext getLoggingContext() {
+            return loggingContext;
         }
 
         @Override

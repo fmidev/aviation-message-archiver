@@ -26,6 +26,9 @@ import java.lang.reflect.Proxy;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -39,6 +42,7 @@ public class SwimRabbitMQPublisherFactory
         extends AbstractTypedConfigObjectFactory<SwimRabbitMQPublisher, SwimRabbitMQPublisherFactory.Config>
         implements PostActionFactory<SwimRabbitMQPublisher>, AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisherFactory.class);
+    private static final String WORKER_THREAD = "SwimRabbitMQPublisher-Worker";
 
     private final SwimRabbitMQConnectionHealthContributor healthContributorRegistry;
     private final Clock clock;
@@ -143,6 +147,7 @@ public class SwimRabbitMQPublisherFactory
         backOffPolicy.setMaxInterval(retryConfig.getMaxInterval().orElse(Duration.ofMinutes(1)).toMillis());
 
         final RetryTemplateBuilder retryTemplateBuilder = new RetryTemplateBuilder();
+        retryTemplateBuilder.customBackoff(backOffPolicy);
         if (retryConfig.getTimeout().isPositive()) {
             retryTemplateBuilder.withinMillis(retryConfig.getTimeout().toMillis());
         } else {
@@ -150,6 +155,26 @@ public class SwimRabbitMQPublisherFactory
         }
         retryTemplateBuilder.withListener(new AmqpRetryLogger());
         return retryTemplateBuilder.build();
+    }
+
+    private static ThreadPoolExecutor publishExecutor(final int publishQueueCapacity) {
+        return new ThreadPoolExecutor(
+                1, 1,
+                0L, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(publishQueueCapacity),
+                runnable -> {
+                    final Thread thread = new Thread(runnable, WORKER_THREAD);
+                    thread.setDaemon(true);
+                    return thread;
+                },
+                (runnable, exec) -> {
+                    if (runnable instanceof final SwimRabbitMQPublisher.PublishRunnable publishRunnable) {
+                        LOGGER.error("AMQP publish queue full; skipping publish for <{}>", publishRunnable.getLoggingContext());
+                    } else {
+                        LOGGER.error("AMQP publish queue full; skipping publish task");
+                    }
+                }
+        );
     }
 
     @Override
@@ -199,8 +224,9 @@ public class SwimRabbitMQPublisherFactory
                     .build());
         }, publisherRef);
 
-        final SwimRabbitMQPublisher action = registerCloseable(newSwimRabbitMQPublisher(publisher, config.getPublisherQueueCapacity(),
-                config.getPublishTimeout().orElse(Duration.ofSeconds(30)), amqpPublishRetryTemplate(config.getRetry()), publisherHealthIndicator));
+        final SwimRabbitMQPublisher action = registerCloseable(newSwimRabbitMQPublisher(publisher,
+                publishExecutor(config.getPublisherQueueCapacity()), config.getPublishTimeout().orElse(Duration.ofSeconds(30)),
+                amqpPublishRetryTemplate(config.getRetry()), publisherHealthIndicator));
         healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
         return action;
     }
@@ -221,10 +247,10 @@ public class SwimRabbitMQPublisherFactory
     }
 
     @VisibleForTesting
-    SwimRabbitMQPublisher newSwimRabbitMQPublisher(final Publisher publisher, final int publisherQueueCapacity,
+    SwimRabbitMQPublisher newSwimRabbitMQPublisher(final Publisher publisher, final ThreadPoolExecutor publishExecutor,
                                                    final Duration publishTimeout, final RetryTemplate amqpPublishRetryTemplate,
                                                    final Consumer<Publisher.Context> publisherHealthIndicator) {
-        return new SwimRabbitMQPublisher(publisher, publisherQueueCapacity, publishTimeout, amqpPublishRetryTemplate, publisherHealthIndicator);
+        return new SwimRabbitMQPublisher(publisher, publishExecutor, publishTimeout, amqpPublishRetryTemplate, publisherHealthIndicator);
     }
 
     private <T extends AutoCloseable> T registerCloseable(final T closeableResource) {
