@@ -50,7 +50,7 @@ public final class SwimRabbitMQPublisher implements PostAction, AutoCloseable {
                     return thread;
                 },
                 (runnable, exec) -> {
-                    if (runnable instanceof PublishRunnable publishRunnable) {
+                    if (runnable instanceof final PublishRunnable publishRunnable) {
                         LOGGER.error("AMQP publish queue full; skipping publish for <{}>", publishRunnable.loggingContext);
                     } else {
                         LOGGER.error("AMQP publish queue full; skipping publish task");
@@ -72,7 +72,7 @@ public final class SwimRabbitMQPublisher implements PostAction, AutoCloseable {
                 LOGGER.warn("Publisher executor did not terminate cleanly.");
                 executor.shutdownNow();
             }
-        } catch (InterruptedException ie) {
+        } catch (final InterruptedException ie) {
             executor.shutdownNow();
             Thread.currentThread().interrupt();
         }
@@ -128,7 +128,7 @@ public final class SwimRabbitMQPublisher implements PostAction, AutoCloseable {
                     throw interruptedException;
                 } catch (final ExecutionException executionException) {
                     final Throwable cause = executionException.getCause();
-                    if (cause instanceof Exception exception) {
+                    if (cause instanceof final Exception exception) {
                         throw exception;
                     }
                     throw new RuntimeException(cause);
@@ -140,7 +140,7 @@ public final class SwimRabbitMQPublisher implements PostAction, AutoCloseable {
                 }
 
                 final Throwable failure = result.failureCause();
-                if (failure instanceof Exception exception) {
+                if (failure instanceof final Exception exception) {
                     throw exception;
                 } else if (failure != null) {
                     throw new RuntimeException(failure);

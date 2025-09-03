@@ -63,7 +63,7 @@ public class SwimRabbitMQPublisherFactory
                 (proxy, method, args) -> {
                     T instance = instanceRef.get();
                     while (instance == null) {
-                        T newInstance = factory.get();
+                        final T newInstance = factory.get();
                         if (instanceRef.compareAndSet(null, newInstance)) {
                             instance = newInstance;
                         } else {
@@ -79,10 +79,10 @@ public class SwimRabbitMQPublisherFactory
                         return method.invoke(instance, args);
                     } catch (final InvocationTargetException ite) {
                         final Throwable cause = ite.getTargetException();
-                        if (cause instanceof RuntimeException re) {
+                        if (cause instanceof final RuntimeException re) {
                             throw re;
                         }
-                        if (cause instanceof Error err) {
+                        if (cause instanceof final Error err) {
                             throw err;
                         }
                         throw cause;
