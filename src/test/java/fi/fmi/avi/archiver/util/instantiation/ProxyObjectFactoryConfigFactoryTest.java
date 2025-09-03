@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -120,14 +121,36 @@ class ProxyObjectFactoryConfigFactoryTest {
         return Pattern.compile(".*(\\{|, )" + Pattern.quote(key + "=" + value) + "(, |}).*");
     }
 
+    static Stream<Arguments> create_does_not_check_nested_config_when_disabled() {
+        return Stream.of(
+                args(ConfigWithInvalidSubConfig.class, mock(InvalidSubConfig.class),
+                        ConfigWithInvalidSubConfig::getInvalidSubConfig),
+                args(ConfigWithOptionalInvalidSubConfig.class, Optional.of(mock(InvalidSubConfig.class)),
+                        ConfigWithOptionalInvalidSubConfig::getInvalidSubConfig)
+        );
+    }
+
+    static <T extends ObjectFactoryConfig, S> Arguments args(
+            final Class<T> configType, final S invalidSubConfigInstance, final Function<T, S> getInvalidSubConfig) {
+        return arguments(configType, invalidSubConfigInstance, getInvalidSubConfig);
+    }
+
     @BeforeEach
     public void setUp() {
-        factory = new ProxyObjectFactoryConfigFactory(TestConfigValueConverter.INSTANCE);
+        factory = new ProxyObjectFactoryConfigFactory(TestConfigValueConverter.INSTANCE, true);
     }
 
     @ParameterizedTest
     @ValueSource(classes = {ObjectFactoryConfig.class, EmptyConfig.class, ValidConfig.class})
     void isValidConfigType_returns_true_on_valid_config_types(final Class<? extends ObjectFactoryConfig> configType) {
+        assertThat(factory.isValidConfigType(configType)).isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {ConfigWithInvalidSubConfig.class, ConfigWithOptionalInvalidSubConfig.class})
+    void isValidConfigType_does_not_check_nested_config_when_disabled(final Class<? extends ObjectFactoryConfig> configType) {
+        factory = new ProxyObjectFactoryConfigFactory(TestConfigValueConverter.INSTANCE, false);
+
         assertThat(factory.isValidConfigType(configType)).isTrue();
     }
 
@@ -146,6 +169,22 @@ class ProxyObjectFactoryConfigFactoryTest {
                 .as(description)
                 .isThrownBy(() -> factory.create(configType, configMap))
                 .withMessageContaining(expectedMessageExcerpt);
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    <T extends ObjectFactoryConfig, S> void create_does_not_check_nested_config_when_disabled(
+            final Class<T> configType, final S invalidSubConfigInstance, final Function<T, S> getInvalidSubConfig) {
+        // given
+        final ConfigValueConverter configValueConverter = mock(ConfigValueConverter.class, invocation -> invalidSubConfigInstance);
+        factory = new ProxyObjectFactoryConfigFactory(configValueConverter, false);
+        final Map<Object, Object> configMap = Map.of("invalidSubConfig", Map.of());
+
+        // when
+        final T config = factory.create(configType, configMap);
+
+        // then
+        assertThat(getInvalidSubConfig.apply(config)).isSameAs(invalidSubConfigInstance);
     }
 
     @ParameterizedTest

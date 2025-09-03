@@ -34,6 +34,10 @@ public enum TestConfigValueConverter implements ConfigValueConverter {
 
     private Object convert(final @Nonnull Object propertyConfigValue, final Type parameterType) {
         try {
+            if (parameterType instanceof final Class<?> parameterClass
+                    && parameterClass.isInstance(propertyConfigValue)) {
+                return propertyConfigValue;
+            }
             final String propertyConfigValueString = String.valueOf(propertyConfigValue);
             if (String.class.equals(parameterType)) {
                 return propertyConfigValueString;

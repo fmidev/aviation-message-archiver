@@ -25,9 +25,11 @@ import static java.util.Objects.requireNonNull;
  */
 public class ProxyObjectFactoryConfigFactory implements ObjectFactoryConfigFactory {
     private final ConfigValueConverter configValueConverter;
+    private final boolean enableNestedConfig;
 
-    public ProxyObjectFactoryConfigFactory(final ConfigValueConverter configValueConverter) {
+    public ProxyObjectFactoryConfigFactory(final ConfigValueConverter configValueConverter, final boolean enableNestedConfig) {
         this.configValueConverter = requireNonNull(configValueConverter, "configValueConverter");
+        this.enableNestedConfig = enableNestedConfig;
     }
 
     private static boolean isConfigPropertyMethod(final Method method) {
@@ -36,7 +38,7 @@ public class ProxyObjectFactoryConfigFactory implements ObjectFactoryConfigFacto
 
     @Override
     public <C extends ObjectFactoryConfig> boolean isValidConfigType(final Class<C> configType) {
-        return validateConfigClass(configType, new Context<>(false, true));
+        return validateConfigClass(configType, new Context<>(false, enableNestedConfig));
     }
 
     private <T> boolean validateConfigClass(final Class<T> type, final Context<Class<?>> context) {
@@ -135,17 +137,18 @@ public class ProxyObjectFactoryConfigFactory implements ObjectFactoryConfigFacto
     }
 
     private Object convertToMethodReturnType(final Object propertyName, final Method method, final Object value, final Context<Class<?>> context) {
-        final Class<?> unwrappedReturnType = OptionalType.getAnyValueType(method.getGenericReturnType())
-                .orElse(method.getReturnType());
-        if (ObjectFactoryConfig.class.isAssignableFrom(unwrappedReturnType) && value instanceof Map) {
-            //noinspection unchecked
-            return create((Class<? extends ObjectFactoryConfig>) unwrappedReturnType, (Map<?, ?>) value, context);
-        } else {
-            try {
-                return configValueConverter.toReturnValueType(value, method);
-            } catch (final ConfigValueConversionException exception) {
-                throw new IllegalArgumentException("Failed to resolve value for config option [%s]: %s".formatted(propertyName, exception.getMessage()), exception);
+        if (enableNestedConfig) {
+            final Class<?> unwrappedReturnType = OptionalType.getAnyValueType(method.getGenericReturnType())
+                    .orElse(method.getReturnType());
+            if (ObjectFactoryConfig.class.isAssignableFrom(unwrappedReturnType) && value instanceof final Map<?, ?> sourceMap) {
+                //noinspection unchecked
+                return create((Class<? extends ObjectFactoryConfig>) unwrappedReturnType, sourceMap, context);
             }
+        }
+        try {
+            return configValueConverter.toReturnValueType(value, method);
+        } catch (final ConfigValueConversionException exception) {
+            throw new IllegalArgumentException("Failed to resolve value for config option [%s]: %s".formatted(propertyName, exception.getMessage()), exception);
         }
     }
 
