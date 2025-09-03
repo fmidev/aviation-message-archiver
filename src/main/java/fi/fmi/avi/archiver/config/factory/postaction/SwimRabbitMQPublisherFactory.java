@@ -143,12 +143,11 @@ public class SwimRabbitMQPublisherFactory
         backOffPolicy.setMaxInterval(retryConfig.getMaxInterval().orElse(Duration.ofMinutes(1)).toMillis());
 
         final RetryTemplateBuilder retryTemplateBuilder = new RetryTemplateBuilder();
-        if (retryConfig.getTimeout().isZero()) {
-            retryTemplateBuilder.infiniteRetry();
-        } else {
+        if (retryConfig.getTimeout().isPositive()) {
             retryTemplateBuilder.withinMillis(retryConfig.getTimeout().toMillis());
+        } else {
+            retryTemplateBuilder.infiniteRetry();
         }
-        retryTemplateBuilder.customBackoff(backOffPolicy);
         retryTemplateBuilder.withListener(new AmqpRetryLogger());
         return retryTemplateBuilder.build();
     }
