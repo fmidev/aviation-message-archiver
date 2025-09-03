@@ -165,8 +165,8 @@ public class SwimRabbitMQPublisherFactory
     public SwimRabbitMQPublisher newInstance(final Config config) {
         requireNonNull(config, "config");
         final Config.ConnectionConfig connectionConfig = config.getConnection();
-        final RabbitMQConnectionHealthIndicator connectionHealthIndicator = newConnectionHealthIndicator();
-        final RabbitMQPublisherHealthIndicator publisherHealthIndicator = newPublisherHealthIndicator();
+        final RabbitMQConnectionHealthIndicator connectionHealthIndicator = newConnectionHealthIndicator(clock);
+        final RabbitMQPublisherHealthIndicator publisherHealthIndicator = newPublisherHealthIndicator(clock);
         final Environment environment = registerCloseable(newAmqpEnvironmentBuilder().build());
 
         final AtomicReference<Connection> connectionRef = new AtomicReference<>();
@@ -199,7 +199,8 @@ public class SwimRabbitMQPublisherFactory
                     .build());
         }, publisherRef);
 
-        final SwimRabbitMQPublisher action = newSwimRabbitMQPublisher(publisher, config, publisherHealthIndicator);
+        final SwimRabbitMQPublisher action = registerCloseable(newSwimRabbitMQPublisher(publisher, config.getPublisherQueueCapacity(),
+                config.getPublishTimeout().orElse(Duration.ofSeconds(30)), amqpPublishRetryTemplate(config.getRetry()), publisherHealthIndicator));
         healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
         return action;
     }
@@ -210,21 +211,20 @@ public class SwimRabbitMQPublisherFactory
     }
 
     @VisibleForTesting
-    RabbitMQConnectionHealthIndicator newConnectionHealthIndicator() {
+    RabbitMQConnectionHealthIndicator newConnectionHealthIndicator(final Clock clock) {
         return new RabbitMQConnectionHealthIndicator(clock);
     }
 
     @VisibleForTesting
-    RabbitMQPublisherHealthIndicator newPublisherHealthIndicator() {
+    RabbitMQPublisherHealthIndicator newPublisherHealthIndicator(final Clock clock) {
         return new RabbitMQPublisherHealthIndicator(clock);
     }
 
     @VisibleForTesting
-    SwimRabbitMQPublisher newSwimRabbitMQPublisher(final Publisher publisher, final Config config,
+    SwimRabbitMQPublisher newSwimRabbitMQPublisher(final Publisher publisher, final int publisherQueueCapacity,
+                                                   final Duration publishTimeout, final RetryTemplate amqpPublishRetryTemplate,
                                                    final Consumer<Publisher.Context> publisherHealthIndicator) {
-        return new SwimRabbitMQPublisher(publisher, config.getPublisherQueueCapacity(),
-                config.getPublishTimeout().orElse(Duration.ofSeconds(30)), amqpPublishRetryTemplate(config.getRetry()),
-                publisherHealthIndicator);
+        return new SwimRabbitMQPublisher(publisher, publisherQueueCapacity, publishTimeout, amqpPublishRetryTemplate, publisherHealthIndicator);
     }
 
     private <T extends AutoCloseable> T registerCloseable(final T closeableResource) {
