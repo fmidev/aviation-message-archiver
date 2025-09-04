@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
+import java.time.Clock;
 import java.util.Map;
 
 @Configuration
@@ -49,6 +50,11 @@ public class MessageProcessorConditionPropertyReaderConfig {
     @Bean
     TypePropertyReader typePropertyReader(final BiMap<MessageType, Integer> messageTypeIds) {
         return new TypePropertyReader(messageTypeIds);
+    }
+
+    @Bean
+    MessageAgePropertyReader messageAgePropertyReader(final Clock clock) {
+        return new MessageAgePropertyReader(clock);
     }
 
     @PostConstruct

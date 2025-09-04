@@ -604,4 +604,185 @@ class GeneralPropertyPredicateTest {
                 .toString();
         assertThat(result).isEqualTo("presence{OPTIONAL} & isAnyOf{[1, 2, 3]} & isNoneOf{[4, 5, 6]} & matches{^\\d$} & doesNotMatch{^[a-z]*$}");
     }
+
+    @Test
+    void integer_between_inclusiveExclusive_bounds_returns_true() {
+        final GeneralPropertyPredicate<Integer> predicate = GeneralPropertyPredicate.<Integer>builder()
+                .setIsGreaterOrEqualTo(10)   // inclusive lower
+                .setIsLessThan(20)           // exclusive upper
+                .build();
+
+        assertThat(predicate.test(10)).isTrue();
+        assertThat(predicate.test(15)).isTrue();
+        assertThat(predicate.test(19)).isTrue();
+        assertThat(predicate.test(20)).isFalse();
+        assertThat(predicate.test(9)).isFalse();
+    }
+
+    @Test
+    void integer_upper_inclusive_and_lower_exclusive() {
+        final GeneralPropertyPredicate<Integer> predicate = GeneralPropertyPredicate.<Integer>builder()
+                .setIsGreaterThan(5)         // exclusive lower
+                .setIsLessOrEqualTo(7)       // inclusive upper
+                .build();
+
+        assertThat(predicate.test(5)).isFalse();
+        assertThat(predicate.test(6)).isTrue();
+        assertThat(predicate.test(7)).isTrue();
+        assertThat(predicate.test(8)).isFalse();
+    }
+
+    @Test
+    void non_comparable_without_comparator_fails_bounds() {
+        final GeneralPropertyPredicate<Box> predicate = GeneralPropertyPredicate.<Box>builder()
+                .setIsGreaterThan(new Box(1))
+                .build();
+
+        // No comparator and Box is not Comparable
+        assertThat(predicate.test(new Box(2))).isFalse();
+    }
+
+    @Test
+    void non_comparable_without_comparator_but_no_bounds_passes_other_checks() {
+        final GeneralPropertyPredicate<Box> predicate = GeneralPropertyPredicate.<Box>builder().build();
+        assertThat(predicate.test(new Box(1))).isTrue();
+    }
+
+
+    @Test
+    void custom_comparator_enables_bounds_for_non_comparable() {
+        final Comparator<Box> byV = Comparator.comparingInt(b -> b.v);
+
+        final GeneralPropertyPredicate<Box> predicate = GeneralPropertyPredicate.<Box>builder()
+                .setComparator(byV)
+                .setIsGreaterOrEqualTo(new Box(5))
+                .setIsLessThan(new Box(10))
+                .build();
+
+        assertThat(predicate.test(new Box(4))).isFalse();
+        assertThat(predicate.test(new Box(5))).isTrue();
+        assertThat(predicate.test(new Box(9))).isTrue();
+        assertThat(predicate.test(new Box(10))).isFalse();
+    }
+
+    @Test
+    void builder_validate_checks_scalar_bounds() {
+        final GeneralPropertyPredicate.Builder<Integer> builder = GeneralPropertyPredicate.<Integer>builder()
+                .setIsGreaterOrEqualTo(1)
+                .setIsLessThan(100);
+
+        builder.validate(v -> v != null && v > 0);
+    }
+
+    @Test
+    void builder_validate_throws_when_scalar_bound_invalid() {
+        final GeneralPropertyPredicate.Builder<Integer> builder = GeneralPropertyPredicate.<Integer>builder()
+                .setIsLessOrEqualTo(-1);
+
+        assertThatIllegalStateException()
+                .isThrownBy(() -> builder.validate(v -> v != null && v >= 0))
+                .withMessageContaining("isLessOrEqualTo")
+                .withMessageContaining("-1");
+    }
+
+    @Test
+    void builder_build_throws_when_presence_EMPTY_and_any_bound_is_set() {
+        final GeneralPropertyPredicate.Builder<Integer> builder = GeneralPropertyPredicate.<Integer>builder()
+                .setPresence(PresencePolicy.EMPTY)
+                .setIsGreaterThan(0);
+
+        assertThatIllegalStateException()
+                .isThrownBy(builder::build)
+                .withMessageContaining("presence")
+                .withMessageContaining(PresencePolicy.EMPTY.toString());
+    }
+
+    @Test
+    void builder_transform_carries_over_comparable_bounds() {
+        final GeneralPropertyPredicate.Builder<Integer> intBuilder = GeneralPropertyPredicate.<Integer>builder()
+                .setIsGreaterOrEqualTo(10)
+                .setIsLessThan(20);
+
+        final GeneralPropertyPredicate.Builder<String> stringBuilder = intBuilder.transform(Object::toString);
+
+        assertThat(stringBuilder.getIsGreaterOrEqualTo()).isEqualTo("10");
+        assertThat(stringBuilder.getIsLessThan()).isEqualTo("20");
+    }
+
+    @Test
+    void toString_includes_bounds_conditions() {
+        final String result = GeneralPropertyPredicate.<Integer>builder()
+                .setIsGreaterThan(1)
+                .setIsLessOrEqualTo(3)
+                .build()
+                .toString();
+
+        assertThat(result).isEqualTo("presence{PRESENT} & isLessOrEqualTo{3} & isGreaterThan{1}");
+    }
+
+    @Test
+    void null_value_with_presence_PRESENT_fails_even_if_bounds_set() {
+        final var p = GeneralPropertyPredicate.<Integer>builder()
+                .setIsGreaterOrEqualTo(1)
+                .build();
+        assertThat(p.test(null)).isFalse();
+    }
+
+    @Test
+    void null_value_with_presence_OPTIONAL_passes_even_if_bounds_set() {
+        final var p = GeneralPropertyPredicate.<Integer>builder()
+                .setPresence(GeneralPropertyPredicate.PresencePolicy.OPTIONAL)
+                .setIsGreaterOrEqualTo(1)
+                .build();
+        assertThat(p.test(null)).isTrue();
+    }
+
+    @Test
+    void only_upper_inclusive_bound() {
+        final var p = GeneralPropertyPredicate.<Integer>builder()
+                .setIsLessOrEqualTo(10)
+                .build();
+        assertThat(p.test(9)).isTrue();
+        assertThat(p.test(10)).isTrue();
+        assertThat(p.test(11)).isFalse();
+    }
+
+    @Test
+    void only_lower_exclusive_bound() {
+        final var p = GeneralPropertyPredicate.<Integer>builder()
+                .setIsGreaterThan(0)
+                .build();
+        assertThat(p.test(0)).isFalse();
+        assertThat(p.test(1)).isTrue();
+    }
+
+    @Test
+    void contradictory_bounds_greaterOrEqual_to_X_and_lessThan_X_never_match() {
+        final var p = GeneralPropertyPredicate.<Integer>builder()
+                .setIsGreaterOrEqualTo(10)
+                .setIsLessThan(10)
+                .build();
+        assertThat(p.test(9)).isFalse();
+        assertThat(p.test(10)).isFalse();
+        assertThat(p.test(11)).isFalse();
+    }
+
+    @Test
+    void contradictory_bounds_greaterThan_X_and_lessOrEqual_to_X_never_match() {
+        final var p = GeneralPropertyPredicate.<Integer>builder()
+                .setIsGreaterThan(5)
+                .setIsLessOrEqualTo(5)
+                .build();
+        assertThat(p.test(5)).isFalse();
+        assertThat(p.test(4)).isFalse();
+        assertThat(p.test(6)).isFalse();
+    }
+
+    private record Box(int v) {
+        @Override
+        public String toString() {
+            return "Box(" + v + ")";
+        }
+    }
+
 }
