@@ -722,60 +722,60 @@ class GeneralPropertyPredicateTest {
 
     @Test
     void null_value_with_presence_PRESENT_fails_even_if_bounds_set() {
-        final var p = GeneralPropertyPredicate.<Integer>builder()
+        final GeneralPropertyPredicate<Integer> predicate = GeneralPropertyPredicate.<Integer>builder()
                 .setIsGreaterOrEqualTo(1)
                 .build();
-        assertThat(p.test(null)).isFalse();
+        assertThat(predicate.test(null)).isFalse();
     }
 
     @Test
     void null_value_with_presence_OPTIONAL_passes_even_if_bounds_set() {
-        final var p = GeneralPropertyPredicate.<Integer>builder()
+        final GeneralPropertyPredicate<Integer> predicate = GeneralPropertyPredicate.<Integer>builder()
                 .setPresence(GeneralPropertyPredicate.PresencePolicy.OPTIONAL)
                 .setIsGreaterOrEqualTo(1)
                 .build();
-        assertThat(p.test(null)).isTrue();
+        assertThat(predicate.test(null)).isTrue();
     }
 
     @Test
     void only_upper_inclusive_bound() {
-        final var p = GeneralPropertyPredicate.<Integer>builder()
+        final GeneralPropertyPredicate<Integer> predicate = GeneralPropertyPredicate.<Integer>builder()
                 .setIsLessOrEqualTo(10)
                 .build();
-        assertThat(p.test(9)).isTrue();
-        assertThat(p.test(10)).isTrue();
-        assertThat(p.test(11)).isFalse();
+        assertThat(predicate.test(9)).isTrue();
+        assertThat(predicate.test(10)).isTrue();
+        assertThat(predicate.test(11)).isFalse();
     }
 
     @Test
     void only_lower_exclusive_bound() {
-        final var p = GeneralPropertyPredicate.<Integer>builder()
+        final GeneralPropertyPredicate<Integer> predicate = GeneralPropertyPredicate.<Integer>builder()
                 .setIsGreaterThan(0)
                 .build();
-        assertThat(p.test(0)).isFalse();
-        assertThat(p.test(1)).isTrue();
+        assertThat(predicate.test(0)).isFalse();
+        assertThat(predicate.test(1)).isTrue();
     }
 
     @Test
     void contradictory_bounds_greaterOrEqual_to_X_and_lessThan_X_never_match() {
-        final var p = GeneralPropertyPredicate.<Integer>builder()
+        final GeneralPropertyPredicate<Integer> predicate = GeneralPropertyPredicate.<Integer>builder()
                 .setIsGreaterOrEqualTo(10)
                 .setIsLessThan(10)
                 .build();
-        assertThat(p.test(9)).isFalse();
-        assertThat(p.test(10)).isFalse();
-        assertThat(p.test(11)).isFalse();
+        assertThat(predicate.test(9)).isFalse();
+        assertThat(predicate.test(10)).isFalse();
+        assertThat(predicate.test(11)).isFalse();
     }
 
     @Test
     void contradictory_bounds_greaterThan_X_and_lessOrEqual_to_X_never_match() {
-        final var p = GeneralPropertyPredicate.<Integer>builder()
+        final GeneralPropertyPredicate<Integer> predicate = GeneralPropertyPredicate.<Integer>builder()
                 .setIsGreaterThan(5)
                 .setIsLessOrEqualTo(5)
                 .build();
-        assertThat(p.test(5)).isFalse();
-        assertThat(p.test(4)).isFalse();
-        assertThat(p.test(6)).isFalse();
+        assertThat(predicate.test(5)).isFalse();
+        assertThat(predicate.test(4)).isFalse();
+        assertThat(predicate.test(6)).isFalse();
     }
 
     private record Box(int v) {
