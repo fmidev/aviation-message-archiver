@@ -14,3 +14,13 @@ production-line:
           queue:
             name: aviation-message-archiver
           routing-key: aviation-message-archiver
+        message:
+          encoding: GZIP
+          expiry-time: PT12H
+          priorities:
+            - type: TAF
+              status: AMENDMENT
+              priority: 6
+            - type: TAF
+              priority: 5
+            - priority: 0

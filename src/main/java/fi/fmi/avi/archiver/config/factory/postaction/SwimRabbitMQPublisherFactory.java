@@ -1,6 +1,7 @@
 package fi.fmi.avi.archiver.config.factory.postaction;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.BiMap;
 import com.rabbitmq.client.amqp.*;
 import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
 import fi.fmi.avi.archiver.config.model.PostActionFactory;
@@ -11,34 +12,69 @@ import fi.fmi.avi.archiver.spring.healthcontributor.SwimRabbitMQConnectionHealth
 import fi.fmi.avi.archiver.util.instantiation.AbstractTypedConfigObjectFactory;
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfig;
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfigFactory;
+import fi.fmi.avi.model.AviationWeatherMessage;
+import fi.fmi.avi.model.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Proxy;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
 import static java.util.Objects.requireNonNull;
 
 public class SwimRabbitMQPublisherFactory
         extends AbstractTypedConfigObjectFactory<SwimRabbitMQPublisher, SwimRabbitMQPublisherFactory.Config>
         implements PostActionFactory<SwimRabbitMQPublisher>, AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisherFactory.class);
+    private static final Map<MessageType, String> SUBJECT_BY_MESSAGE_TYPE = Map.of(
+            MessageType.METAR, "weather.aviation.metar",
+            MessageType.SPECI, "weather.aviation.metar",
+            MessageType.TAF, "weather.aviation.taf",
+            MessageType.SIGMET, "weather.aviation.sigmet"
+    );
+    /**
+     * Default message priorities as specified in the specification document example.
+     */
+    private static final List<Config.PriorityDescriptor> DEFAULT_PRIORITIES = List.of(
+            new ImmutablePriorityDescriptor(MessageType.SIGMET, 7),
+            new ImmutablePriorityDescriptor(MessageType.SPECI, 6),
+            new ImmutablePriorityDescriptor(MessageType.TAF, AviationWeatherMessage.ReportStatus.AMENDMENT, 6),
+            new ImmutablePriorityDescriptor(MessageType.TAF, 5),
+            new ImmutablePriorityDescriptor(MessageType.METAR, 4)
+    );
 
     private final SwimRabbitMQConnectionHealthContributor healthContributorRegistry;
     private final Clock clock;
     private final List<AutoCloseable> closeableResources = new ArrayList<>();
+    private final int iwxxmFormatId;
+    private final BiMap<MessageType, Integer> messageTypeIds;
+    private final Map<Integer, String> subjectByMessageTypeId;
 
     public SwimRabbitMQPublisherFactory(
             final ObjectFactoryConfigFactory configFactory,
             final SwimRabbitMQConnectionHealthContributor healthContributorRegistry,
-            final Clock clock) {
+            final Clock clock,
+            final int iwxxmFormatId,
+            final BiMap<MessageType, Integer> messageTypeIds) {
         super(configFactory);
         this.healthContributorRegistry = requireNonNull(healthContributorRegistry, "healthContributorRegistry");
         this.clock = requireNonNull(clock, "clock");
+        this.iwxxmFormatId = iwxxmFormatId;
+        this.messageTypeIds = requireNonNull(messageTypeIds, "messageTypeIds");
+
+        subjectByMessageTypeId = SUBJECT_BY_MESSAGE_TYPE.entrySet().stream()
+                .filter(entry -> messageTypeIds.containsKey(entry.getKey()))
+                .collect(Collectors.toUnmodifiableMap(
+                        entry -> requireNonNull(messageTypeIds.get(entry.getKey())),
+                        Map.Entry::getValue));
     }
 
     private static <T extends AutoCloseable> T createLazyForwardingProxy(
@@ -51,7 +87,7 @@ public class SwimRabbitMQPublisherFactory
                 (proxy, method, args) -> {
                     T instance = instanceRef.get();
                     while (instance == null) {
-                        T newInstance = factory.get();
+                        final T newInstance = factory.get();
                         if (instanceRef.compareAndSet(null, newInstance)) {
                             instance = newInstance;
                         } else {
@@ -148,21 +184,60 @@ public class SwimRabbitMQPublisherFactory
             }
 
             return registerCloseable(connection.publisherBuilder()
-                .exchange(topologyConfig.getExchange().getName())
-                .key(topologyConfig.getRoutingKey())
-                .listeners(context -> {
-                    if (context.currentState() == Resource.State.CLOSED && context.failureCause() != null) {
-                        LOGGER.error("AMQP publisher closed unexpectedly - connection and publisher will be recreated on next publish attempt");
-                        unregisterAndClose(connectionRef, "connection");
-                        unregisterAndClose(publisherRef, "publisher");
-                    }
-                })
-                .build());
+                    .exchange(topologyConfig.getExchange().getName())
+                    .key(topologyConfig.getRoutingKey())
+                    .listeners(context -> {
+                        if (context.currentState() == Resource.State.CLOSED && context.failureCause() != null) {
+                            LOGGER.error("AMQP publisher closed unexpectedly - connection and publisher will be recreated on next publish attempt");
+                            unregisterAndClose(connectionRef, "connection");
+                            unregisterAndClose(publisherRef, "publisher");
+                        }
+                    })
+                    .build());
         }, publisherRef);
 
-        final SwimRabbitMQPublisher action = newSwimRabbitMQPublisher(publisher, publisherHealthIndicator);
+        final SwimRabbitMQPublisher action = newSwimRabbitMQPublisher(
+                publisher,
+                publisherHealthIndicator,
+                toPublisherMessageConfig(config.getId(), config.getMessage()));
         healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
         return action;
+    }
+
+    private SwimRabbitMQPublisher.MessageConfig toPublisherMessageConfig(final String configId, final Config.MessageConfig factoryConfig) {
+        final SwimRabbitMQPublisher.MessageConfig.Builder builder = SwimRabbitMQPublisher.MessageConfig.builder();
+        factoryConfig.getEncoding().ifPresent(builder::setEncoding);
+        factoryConfig.getExpiryTime().ifPresent(builder::setExpiryTime);
+        final SwimRabbitMQPublisher.MessageConfig publisherConfig = builder
+                .addAllPriorities(factoryConfig.getPriorities()
+                        .map(List::stream)
+                        .orElseGet(this::getDefaultPriorities)
+                        .map(this::toPublisherPriorityDescriptor))
+                .build();
+        if (publisherConfig.getPriorities().isEmpty()) {
+            LOGGER.warn("Publisher <{}> priorities is empty. Using default priority <{}> for all messages.",
+                    loggableValue("postActionId", configId), SwimRabbitMQPublisher.MessageConfig.DEFAULT_PRIORITY);
+        }
+        return publisherConfig;
+    }
+
+    private Stream<Config.PriorityDescriptor> getDefaultPriorities() {
+        return DEFAULT_PRIORITIES.stream()
+                // Omit priority descriptors for message types not declared in config
+                .filter(priorityDescriptor -> priorityDescriptor.getType()
+                        .map(messageTypeIds::containsKey)
+                        .orElse(true));
+    }
+
+    private SwimRabbitMQPublisher.MessageConfig.PriorityDescriptor toPublisherPriorityDescriptor(final Config.PriorityDescriptor factoryDescriptor) {
+        return SwimRabbitMQPublisher.MessageConfig.PriorityDescriptor.builder()
+                .setMessageType(factoryDescriptor.getType()
+                        .map(messageTypeIds::get)
+                        .map(OptionalInt::of)
+                        .orElseGet(OptionalInt::empty))
+                .setReportStatus(factoryDescriptor.getStatus())
+                .setPriority(factoryDescriptor.getPriority())
+                .build();
     }
 
     @VisibleForTesting
@@ -181,8 +256,17 @@ public class SwimRabbitMQPublisherFactory
     }
 
     @VisibleForTesting
-    SwimRabbitMQPublisher newSwimRabbitMQPublisher(final Publisher publisher, final Consumer<Publisher.Context> publisherHealthIndicator) {
-        return new SwimRabbitMQPublisher(publisher, publisherHealthIndicator);
+    SwimRabbitMQPublisher newSwimRabbitMQPublisher(
+            final Publisher publisher,
+            final Consumer<Publisher.Context> publisherHealthIndicator,
+            final SwimRabbitMQPublisher.MessageConfig messageConfig) {
+        return new SwimRabbitMQPublisher(
+                publisher,
+                publisherHealthIndicator,
+                clock,
+                iwxxmFormatId,
+                subjectByMessageTypeId,
+                messageConfig);
     }
 
     private <T extends AutoCloseable> T registerCloseable(final T closeableResource) {
@@ -231,6 +315,8 @@ public class SwimRabbitMQPublisherFactory
 
         TopologyConfig getTopology();
 
+        MessageConfig getMessage();
+
         interface ConnectionConfig extends ObjectFactoryConfig {
             String getUri();
 
@@ -267,6 +353,43 @@ public class SwimRabbitMQPublisherFactory
             Optional<Boolean> autoDelete();
 
             Optional<Map<String, Object>> getArguments();
+        }
+
+        interface MessageConfig extends ObjectFactoryConfig {
+            Optional<List<PriorityDescriptor>> getPriorities();
+
+            Optional<SwimRabbitMQPublisher.ContentEncoding> getEncoding();
+
+            Optional<Duration> getExpiryTime();
+        }
+
+        interface PriorityDescriptor extends ObjectFactoryConfig {
+            Optional<MessageType> getType();
+
+            Optional<AviationWeatherMessage.ReportStatus> getStatus();
+
+            int getPriority();
+        }
+    }
+
+    private record ImmutablePriorityDescriptor(
+            MessageType nullableType,
+            AviationWeatherMessage.ReportStatus nullableStatus,
+            int getPriority)
+            implements Config.PriorityDescriptor {
+
+        ImmutablePriorityDescriptor(final MessageType type, final int priority) {
+            this(type, null, priority);
+        }
+
+        @Override
+        public Optional<MessageType> getType() {
+            return Optional.ofNullable(nullableType);
+        }
+
+        @Override
+        public Optional<AviationWeatherMessage.ReportStatus> getStatus() {
+            return Optional.ofNullable(nullableStatus);
         }
     }
 }
