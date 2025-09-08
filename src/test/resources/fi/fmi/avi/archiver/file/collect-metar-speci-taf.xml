@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<collect:MeteorologicalBulletin
+  xmlns:collect="http://def.wmo.int/collect/2014"
+  xmlns:gml="http://www.opengis.net/gml/3.2"
+  xmlns:aixm="http://www.aixm.aero/schema/5.1.1"
+  xmlns:iwxxm="http://icao.int/iwxxm/3.0"
+  xmlns:metce="http://def.wmo.int/metce/2013"
+  xmlns:om="http://www.opengis.net/om/2.0"
+  xmlns:sam="http://www.opengis.net/sampling/2.0"
+  xmlns:sams="http://www.opengis.net/samplingSpatial/2.0"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  gml:id="bulletin-metar-speci-taf-proper"
+  xsi:schemaLocation="
+        http://icao.int/iwxxm/3.0 http://schemas.wmo.int/iwxxm/3.0/iwxxm.xsd
+        http://def.wmo.int/collect/2014 http://schemas.wmo.int/collect/1.2/collect.xsd
+        http://www.opengis.net/samplingSpatial/2.0 http://schemas.opengis.net/samplingSpatial/2.0/spatialSamplingFeature.xsd">
+  <collect:meteorologicalInformation>
+    <iwxxm:METAR gml:id="metar-efaa-1"
+                 reportStatus="NORMAL"
+                 permissibleUsage="OPERATIONAL"
+                 automatedStation="true">
+      <iwxxm:issueTime>
+        <gml:TimeInstant gml:id="issue-efaa-1">
+          <gml:timePosition>2025-09-04T15:01:00Z</gml:timePosition>
+        </gml:TimeInstant>
+      </iwxxm:issueTime>
+      <iwxxm:observationTime>
+        <gml:TimeInstant gml:id="obs-efaa-1">
+          <gml:timePosition>2025-09-04T15:00:00Z</gml:timePosition>
+        </gml:TimeInstant>
+      </iwxxm:observationTime>
+      <iwxxm:aerodrome>
+        <aixm:AirportHeliport gml:id="ad-efaa">
+          <aixm:timeSlice>
+            <aixm:AirportHeliportTimeSlice gml:id="adts-efaa">
+              <gml:validTime/>
+              <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+              <aixm:designator>EFAA</aixm:designator>
+              <aixm:name>EXAMPLE AERODROME A</aixm:name>
+              <aixm:locationIndicatorICAO>EFAA</aixm:locationIndicatorICAO>
+            </aixm:AirportHeliportTimeSlice>
+          </aixm:timeSlice>
+        </aixm:AirportHeliport>
+      </iwxxm:aerodrome>
+    </iwxxm:METAR>
+
+    <iwxxm:SPECI gml:id="speci-efcc-1"
+                 reportStatus="NORMAL"
+                 permissibleUsage="OPERATIONAL"
+                 automatedStation="true">
+      <iwxxm:issueTime>
+        <gml:TimeInstant gml:id="issue-efcc-1">
+          <gml:timePosition>2025-09-04T15:21:00Z</gml:timePosition>
+        </gml:TimeInstant>
+      </iwxxm:issueTime>
+      <iwxxm:observationTime>
+        <gml:TimeInstant gml:id="obs-efcc-1">
+          <gml:timePosition>2025-09-04T15:20:00Z</gml:timePosition>
+        </gml:TimeInstant>
+      </iwxxm:observationTime>
+      <iwxxm:aerodrome>
+        <aixm:AirportHeliport gml:id="ad-efcc">
+          <aixm:timeSlice>
+            <aixm:AirportHeliportTimeSlice gml:id="adts-efcc">
+              <gml:validTime/>
+              <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+              <aixm:designator>EFCC</aixm:designator>
+              <aixm:name>EXAMPLE AERODROME C</aixm:name>
+              <aixm:locationIndicatorICAO>EFCC</aixm:locationIndicatorICAO>
+            </aixm:AirportHeliportTimeSlice>
+          </aixm:timeSlice>
+        </aixm:AirportHeliport>
+      </iwxxm:aerodrome>
+    </iwxxm:SPECI>
+
+    <iwxxm:TAF gml:id="taf-efbb-1"
+               permissibleUsage="OPERATIONAL"
+               status="NORMAL">
+      <iwxxm:issueTime>
+        <gml:TimeInstant gml:id="taf-issue-efbb-1">
+          <gml:timePosition>2025-09-04T12:00:00Z</gml:timePosition>
+        </gml:TimeInstant>
+      </iwxxm:issueTime>
+      <iwxxm:validTime>
+        <gml:TimePeriod gml:id="taf-valid-efbb-1">
+          <gml:beginPosition>2025-09-04T12:00:00Z</gml:beginPosition>
+          <gml:endPosition>2025-09-05T12:00:00Z</gml:endPosition>
+        </gml:TimePeriod>
+      </iwxxm:validTime>
+      <iwxxm:aerodrome>
+        <aixm:AirportHeliport gml:id="ad-efbb">
+          <aixm:timeSlice>
+            <aixm:AirportHeliportTimeSlice gml:id="adts-efbb">
+              <gml:validTime/>
+              <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+              <aixm:designator>EFBB</aixm:designator>
+              <aixm:name>EXAMPLE AERODROME B</aixm:name>
+              <aixm:locationIndicatorICAO>EFBB</aixm:locationIndicatorICAO>
+            </aixm:AirportHeliportTimeSlice>
+          </aixm:timeSlice>
+        </aixm:AirportHeliport>
+      </iwxxm:aerodrome>
+      <iwxxm:baseForecast>
+        <om:OM_Observation gml:id="bfct-efbb-1">
+          <om:type xlink:href="http://codes.wmo.int/49-2/observation-type/iwxxm/3.0/MeteorologicalAerodromeForecast"
+                   xlink:title="Aerodrome Base Forecast"/>
+          <om:phenomenonTime xlink:href="#taf-valid-efbb-1"/>
+          <om:resultTime xlink:href="#taf-issue-efbb-1"/>
+          <om:validTime xlink:href="#taf-valid-efbb-1"/>
+          <om:procedure>
+            <metce:Process gml:id="proc-taf-efbb-1">
+              <gml:description>WMO No. 49-2 TAF generation</gml:description>
+            </metce:Process>
+          </om:procedure>
+          <om:observedProperty
+            xlink:href="http://codes.wmo.int/49-2/observable-property/MeteorologicalAerodromeForecast"/>
+          <om:featureOfInterest>
+            <sams:SF_SpatialSamplingFeature gml:id="foi-efbb-1">
+              <sam:type xlink:href="http://www.opengis.net/def/samplingFeatureType/OGC-OM/2.0/SF_SamplingPoint"/>
+              <sam:sampledFeature>
+                <aixm:AirportHeliport gml:id="foi-ad-efbb">
+                  <aixm:timeSlice>
+                    <aixm:AirportHeliportTimeSlice gml:id="foi-adts-efbb">
+                      <gml:validTime/>
+                      <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+                      <aixm:designator>EFBB</aixm:designator>
+                      <aixm:name>EXAMPLE AERODROME</aixm:name>
+                      <aixm:locationIndicatorICAO>EFBB</aixm:locationIndicatorICAO>
+                    </aixm:AirportHeliportTimeSlice>
+                  </aixm:timeSlice>
+                </aixm:AirportHeliport>
+              </sam:sampledFeature>
+              <sams:shape>
+                <gml:Point gml:id="foi-point-efbb"
+                           srsName="http://www.opengis.net/def/crs/EPSG/0/4326"
+                           srsDimension="2">
+                  <gml:pos>24.0 60.0</gml:pos>
+                </gml:Point>
+              </sams:shape>
+            </sams:SF_SpatialSamplingFeature>
+          </om:featureOfInterest>
+          <om:result>
+            <iwxxm:MeteorologicalAerodromeForecastRecord gml:id="taf-rec-efbb-1" cloudAndVisibilityOK="true"/>
+          </om:result>
+        </om:OM_Observation>
+      </iwxxm:baseForecast>
+    </iwxxm:TAF>
+  </collect:meteorologicalInformation>
+
+  <collect:bulletinIdentifier>A_LTFI31EFKL301115_C_EFKL_201902011315--.xml</collect:bulletinIdentifier>
+</collect:MeteorologicalBulletin>

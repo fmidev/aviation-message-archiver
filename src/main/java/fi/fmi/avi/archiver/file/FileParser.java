@@ -37,7 +37,10 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.StringReader;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.function.BiConsumer;
 
 import static java.util.Objects.requireNonNull;
 
@@ -49,19 +52,44 @@ public class FileParser {
     private static final String BULLETIN_ELEMENT_NAME = "MeteorologicalBulletin";
     private static final ConversionHints CONVERSION_HINTS = ConversionHints.ALLOW_ERRORS;
     private static final MessageType UNKNOWN_MESSAGE_TYPE = new MessageType("UNKNOWN");
+    private static final String IWXXM_NS_PREFIX = "icao.int/iwxxm/";
+    private static final String GML_NS_PREFIX = "opengis.net/gml/";
+    private static final String XPATH_OBSERVATION_TIME = String.format("""
+            normalize-space((
+              /*[
+                contains(namespace-uri(),'%1$s')
+                and (local-name()='METAR' or local-name()='SPECI')
+              ]
+              /*[
+                contains(namespace-uri(),'%1$s')
+                and local-name()='observationTime'
+              ]
+              /*[
+                contains(namespace-uri(),'%2$s')
+                and local-name()='TimeInstant'
+              ]
+              /*[
+                contains(namespace-uri(),'%2$s')
+                and local-name()='timePosition'
+              ]
+            )[1])
+            """, IWXXM_NS_PREFIX, GML_NS_PREFIX);
 
     private final AviMessageConverter aviMessageConverter;
     private final DocumentBuilderFactory documentBuilderFactory;
+    private final XPathFactory xPathFactory;
+    private final XPathExpression observationTimeExpression;
 
     public FileParser(final AviMessageConverter aviMessageConverter) {
         this.aviMessageConverter = requireNonNull(aviMessageConverter, "aviMessageConverter");
-
         try {
             final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
             documentBuilderFactory.setNamespaceAware(true);
             documentBuilderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
             this.documentBuilderFactory = documentBuilderFactory;
-        } catch (final ParserConfigurationException e) {
+            this.xPathFactory = XPathFactory.newInstance();
+            this.observationTimeExpression = xPathFactory.newXPath().compile(XPATH_OBSERVATION_TIME);
+        } catch (final ParserConfigurationException | XPathExpressionException e) {
             throw new IllegalStateException("Unable to initialize file parser", e);
         }
     }
@@ -76,19 +104,6 @@ public class FileParser {
         return root.getNamespaceURI().equals(COLLECT_1_2_NAMESPACE) && root.getLocalName().equals(BULLETIN_ELEMENT_NAME);
     }
 
-    @Nullable
-    private static String getCollectIdentifier(final Document collectDocument) {
-        final XPathFactory factory = XPathFactory.newInstance();
-        final XPath xpath = factory.newXPath();
-        xpath.setNamespaceContext(new IWXXMNamespaceContext());
-        try {
-            final XPathExpression expr = xpath.compile("/collect:MeteorologicalBulletin/collect:bulletinIdentifier");
-            return expr.evaluate(collectDocument.getDocumentElement());
-        } catch (final XPathExpressionException e) {
-            return null;
-        }
-    }
-
     private static Optional<InputBulletinHeading> parseGtsHeading(final String headingString) {
         try {
             return Optional.of(InputBulletinHeading.builder()
@@ -97,6 +112,56 @@ public class FileParser {
                     .build());
         } catch (final RuntimeException e) {
             return Optional.empty();
+        }
+    }
+
+    private static List<InputAviationMessage> toInputAviationMessages(
+            final InputAviationMessage.Builder inputBuilder,
+            final List<GenericAviationWeatherMessage> parsedMessages,
+            final int bulletinIndex,
+            final LoggingContext loggingContext) {
+        return toInputAviationMessages(
+                inputBuilder, parsedMessages, bulletinIndex, loggingContext, (builder, message) -> {
+                });
+    }
+
+    private static List<InputAviationMessage> toInputAviationMessages(
+            final InputAviationMessage.Builder inputBuilder,
+            final List<GenericAviationWeatherMessage> parsedMessages,
+            final int bulletinIndex,
+            final LoggingContext loggingContext,
+            final BiConsumer<InputAviationMessage.Builder, GenericAviationWeatherMessage> customizer) {
+        final ArrayList<InputAviationMessage> resultBuilder = new ArrayList<>(parsedMessages.size());
+        for (int messageIndex = 0, size = parsedMessages.size(); messageIndex < size; messageIndex++) {
+            final GenericAviationWeatherMessage message = parsedMessages.get(messageIndex);
+            loggingContext.enterMessage(MessageLogReference.builder()
+                    .setIndex(messageIndex)
+                    .setContent(message.getOriginalMessage())
+                    .build());
+            final InputAviationMessage.Builder builder = InputAviationMessage.builder()
+                    .mergeFrom(inputBuilder)
+                    .setMessagePositionInFile(MessagePositionInFile.getInstance(bulletinIndex, messageIndex))
+                    .setMessage(message);
+            customizer.accept(builder, message);
+            resultBuilder.add(builder.build());
+            loggingContext.leaveMessage();
+        }
+        return Collections.unmodifiableList(resultBuilder);
+    }
+
+    private static boolean looksLikeMetarOrSpeci(final String messageXML) {
+        return messageXML.contains("METAR") || messageXML.contains("SPECI");
+    }
+
+    @Nullable
+    private String getCollectIdentifier(final Document collectDocument) {
+        final XPath xpath = xPathFactory.newXPath();
+        xpath.setNamespaceContext(new IWXXMNamespaceContext());
+        try {
+            final XPathExpression expr = xpath.compile("/collect:MeteorologicalBulletin/collect:bulletinIdentifier");
+            return expr.evaluate(collectDocument.getDocumentElement());
+        } catch (final XPathExpressionException e) {
+            return null;
         }
     }
 
@@ -256,31 +321,33 @@ public class FileParser {
         }
     }
 
-    private List<InputAviationMessage> toInputAviationMessages(
-            final InputAviationMessage.Builder inputBuilder, final List<GenericAviationWeatherMessage> parsedMessages,
-            final int bulletinIndex, final LoggingContext loggingContext) {
-        final ArrayList<InputAviationMessage> resultBuilder = new ArrayList<>(parsedMessages.size());
-        for (int messageIndex = 0, size = parsedMessages.size(); messageIndex < size; messageIndex++) {
-            final GenericAviationWeatherMessage message = parsedMessages.get(messageIndex);
-            loggingContext.enterMessage(MessageLogReference.builder()//
-                    .setIndex(messageIndex)//
-                    .setContent(message.getOriginalMessage())//
-                    .build());
-            resultBuilder.add(InputAviationMessage.builder()//
-                    .mergeFrom(inputBuilder)//
-                    .setMessagePositionInFile(MessagePositionInFile.getInstance(bulletinIndex, messageIndex))//
-                    .setMessage(message)//
-                    .build());
-            loggingContext.leaveMessage();
+    /**
+     * Get observation time from iwxxm:observationTime element for SPECIs and METARs and set it to the input builder.
+     *
+     * @param builder        input aviation message builder
+     * @param document       DOM of a single IWXXM message (METAR/SPECI)
+     * @param loggingContext logging context
+     */
+    private void setObservationTimeFromIwxxm(final InputAviationMessage.Builder builder, final Document document,
+                                             final LoggingContext loggingContext) {
+        try {
+            final String observationTime = observationTimeExpression.evaluate(document);
+            if (!observationTime.isBlank()) {
+                builder.setIwxxmObservationTime(Instant.parse(observationTime));
+            }
+        } catch (final XPathExpressionException | DateTimeParseException e) {
+            LOGGER.warn("Failed to extract observationTime from <{}>", loggingContext, e);
         }
-        return Collections.unmodifiableList(resultBuilder);
     }
 
     private List<InputAviationMessage> parseIwxxmCollectDocument(
-            final InputAviationMessage.Builder inputBuilder, final Document iwxxmDocument, final int bulletinIndex,
+            final InputAviationMessage.Builder inputBuilder,
+            final Document iwxxmDocument,
+            final int bulletinIndex,
             final ProcessingServiceContext context) {
-        final ConversionResult<GenericMeteorologicalBulletin> conversion = aviMessageConverter.convertMessage(iwxxmDocument,
-                IWXXMConverter.WMO_COLLECT_DOM_TO_GENERIC_BULLETIN_POJO, CONVERSION_HINTS);
+        final ConversionResult<GenericMeteorologicalBulletin> conversion =
+                aviMessageConverter.convertMessage(iwxxmDocument,
+                        IWXXMConverter.WMO_COLLECT_DOM_TO_GENERIC_BULLETIN_POJO, CONVERSION_HINTS);
         final LoggingContext loggingContext = context.getLoggingContext();
         if (conversion.getConvertedMessage().isPresent()) {
             final GenericMeteorologicalBulletin bulletin = conversion.getConvertedMessage().get();
@@ -297,11 +364,25 @@ public class FileParser {
                 loggingContext.modifyBulletin(reference -> reference.toBuilder().setHeading(collectIdentifier).build());
             }
 
-            inputBuilder.setCollectIdentifier(InputBulletinHeading.builder()//
-                    .setBulletinHeading(bulletin.getHeading())//
-                    .setNullableBulletinHeadingString(collectIdentifier)//
+            inputBuilder.setCollectIdentifier(InputBulletinHeading.builder()
+                    .setBulletinHeading(bulletin.getHeading())
+                    .setNullableBulletinHeadingString(collectIdentifier)
                     .build());
-            return toInputAviationMessages(inputBuilder, parsedMessages, bulletinIndex, loggingContext);
+            return toInputAviationMessages(
+                    inputBuilder,
+                    parsedMessages,
+                    bulletinIndex,
+                    loggingContext,
+                    (builder, message) -> {
+                        if (looksLikeMetarOrSpeci(message.getOriginalMessage())) {
+                            try {
+                                setObservationTimeFromIwxxm(builder, toDocument(message.getOriginalMessage()), loggingContext);
+                            } catch (final Exception e) {
+                                LOGGER.warn("Failed to create a DOM for extracting observationTime from <{}>", loggingContext, e);
+                            }
+                        }
+                    }
+            );
         } else {
             LOGGER.error("Unable to parse IWXXM collect document <{}>: {}", loggingContext, conversion.getConversionIssues());
             loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
@@ -310,10 +391,13 @@ public class FileParser {
     }
 
     private List<InputAviationMessage> parseIwxxmMessage(
-            final InputAviationMessage.Builder inputBuilder, final Document iwxxmDocument, final int bulletinIndex,
+            final InputAviationMessage.Builder inputBuilder,
+            final Document iwxxmDocument,
+            final int bulletinIndex,
             final ProcessingServiceContext context) {
-        final ConversionResult<GenericAviationWeatherMessage> conversion = aviMessageConverter.convertMessage(iwxxmDocument,
-                IWXXMConverter.IWXXM_DOM_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO, CONVERSION_HINTS);
+        final ConversionResult<GenericAviationWeatherMessage> conversion =
+                aviMessageConverter.convertMessage(iwxxmDocument,
+                        IWXXMConverter.IWXXM_DOM_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO, CONVERSION_HINTS);
         final LoggingContext loggingContext = context.getLoggingContext();
         if (conversion.getConvertedMessage().isPresent()) {
             final GenericAviationWeatherMessage message = conversion.getConvertedMessage().get();
@@ -322,7 +406,17 @@ public class FileParser {
             } else {
                 LOGGER.debug("Successfully parsed <{}> as IWXXM {} message.", loggingContext, message.getMessageType().orElse(UNKNOWN_MESSAGE_TYPE));
             }
-            return toInputAviationMessages(inputBuilder, Collections.singletonList(message), bulletinIndex, loggingContext);
+            return toInputAviationMessages(
+                    inputBuilder,
+                    Collections.singletonList(message),
+                    bulletinIndex,
+                    loggingContext,
+                    (builder, gm) -> {
+                        if (looksLikeMetarOrSpeci(message.getOriginalMessage())) {
+                            setObservationTimeFromIwxxm(builder, iwxxmDocument, loggingContext);
+                        }
+                    }
+            );
         } else {
             LOGGER.error("Unable to parse IWXXM message document <{}>: {}", loggingContext, conversion.getConversionIssues());
             loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
