@@ -147,8 +147,10 @@ class ConditionalPostActionIntegrationTest {
                         .containsExactlyInAnyOrderElementsOf(toInvocationsOnProductIds(messages, TEST_TAC_PRODUCT_ID, TEST2_TAC_PRODUCT_ID));
                 case TestPostActionId.IS_TESTIWXXM_AND_METAR -> assertThatInvocationsOn(id)
                         .containsExactlyInAnyOrderElementsOf(toInvocationsOnProductIds(messages, TEST_IWXXM_PRODUCT_ID));
-                case TestPostActionId.IS_IWXXM_AND_NOT_METAR_SPECI, TestPostActionId.NO_VALIDFROM ->
-                        assertThatInvocationsOn(id).isEmpty();
+                case TestPostActionId.IS_IWXXM_AND_NOT_METAR_SPECI,
+                     TestPostActionId.NO_VALIDFROM,
+                     TestPostActionId.CLOSED_OPEN_VALIDITY,
+                     TestPostActionId.OPEN_CLOSED_VALIDITY -> assertThatInvocationsOn(id).isEmpty();
                 case TestPostActionId.POSSIBLE_VALIDTO -> assertThatInvocationsOn(id)
                         .containsExactlyInAnyOrderElementsOf(TestPostAction.Invocation.list(loggingContext, messages));
                 default -> failOnMissingAssertion(id);
@@ -191,8 +193,10 @@ class ConditionalPostActionIntegrationTest {
             switch (id) {
                 case TestPostActionId.IS_TESTTAC_OR_TEST2TAC -> assertThatInvocationsOn(id)
                         .containsExactlyInAnyOrderElementsOf(toInvocationsOnProductIds(messages, TEST_TAC_PRODUCT_ID, TEST2_TAC_PRODUCT_ID));
-                case TestPostActionId.IS_TESTIWXXM_AND_METAR, TestPostActionId.NO_VALIDFROM ->
-                        assertThatInvocationsOn(id).isEmpty();
+                case TestPostActionId.IS_TESTIWXXM_AND_METAR,
+                     TestPostActionId.NO_VALIDFROM,
+                     TestPostActionId.CLOSED_OPEN_VALIDITY,
+                     TestPostActionId.OPEN_CLOSED_VALIDITY -> assertThatInvocationsOn(id).isEmpty();
                 case TestPostActionId.IS_IWXXM_AND_NOT_METAR_SPECI -> assertThatInvocationsOn(id)
                         .containsExactlyInAnyOrderElementsOf(TestPostAction.Invocation.list(loggingContext, iwxxmTaf, iwxxmSwx));
                 case TestPostActionId.POSSIBLE_VALIDTO -> assertThatInvocationsOn(id)
@@ -221,9 +225,70 @@ class ConditionalPostActionIntegrationTest {
             switch (id) {
                 case TestPostActionId.IS_TESTTAC_OR_TEST2TAC,
                      TestPostActionId.IS_IWXXM_AND_NOT_METAR_SPECI,
-                     TestPostActionId.IS_TESTIWXXM_AND_METAR -> assertThatInvocationsOn(id).isEmpty();
+                     TestPostActionId.IS_TESTIWXXM_AND_METAR,
+                     TestPostActionId.CLOSED_OPEN_VALIDITY,
+                     TestPostActionId.OPEN_CLOSED_VALIDITY -> assertThatInvocationsOn(id).isEmpty();
                 case TestPostActionId.NO_VALIDFROM, TestPostActionId.POSSIBLE_VALIDTO -> assertThatInvocationsOn(id)
                         .containsExactlyInAnyOrderElementsOf(TestPostAction.Invocation.list(loggingContext, messages));
+                default -> failOnMissingAssertion(id);
+            }
+        }
+    }
+
+    @Test
+    void testActivateOnComparableValues() {
+        final InputAndArchiveAviationMessage longer = inputAndArchiveAviationMessage(TEST_TAC_PRODUCT_ID,
+                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
+                        .setValidityTime(PartialOrCompleteTimePeriod.builder()
+                                .setStartTime(PartialOrCompleteTimeInstant.of(VALID_FROM))
+                                .setEndTime(PartialOrCompleteTimeInstant.of(VALID_TO))
+                                .build())
+                        .build()),
+                builder -> builder.setValidFrom(VALID_FROM.toInstant())
+                        .setValidTo(VALID_TO.toInstant()));
+        final InputAndArchiveAviationMessage endEarlier = inputAndArchiveAviationMessage(TEST_TAC_PRODUCT_ID,
+                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
+                        .setValidityTime(PartialOrCompleteTimePeriod.builder()
+                                .setStartTime(PartialOrCompleteTimeInstant.of(VALID_FROM))
+                                .setEndTime(PartialOrCompleteTimeInstant.of(VALID_TO.minusNanos(1)))
+                                .build())
+                        .build()),
+                builder -> builder.setValidFrom(VALID_FROM.toInstant())
+                        .setValidTo(VALID_TO.minusNanos(1).toInstant()));
+        final InputAndArchiveAviationMessage startLater = inputAndArchiveAviationMessage(TEST_TAC_PRODUCT_ID,
+                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
+                        .setValidityTime(PartialOrCompleteTimePeriod.builder()
+                                .setStartTime(PartialOrCompleteTimeInstant.of(VALID_FROM.plusNanos(1)))
+                                .setEndTime(PartialOrCompleteTimeInstant.of(VALID_TO))
+                                .build())
+                        .build()),
+                builder -> builder.setValidFrom(VALID_FROM.plusNanos(1).toInstant())
+                        .setValidTo(VALID_TO.toInstant()));
+        final InputAndArchiveAviationMessage shorter = inputAndArchiveAviationMessage(TEST_TAC_PRODUCT_ID,
+                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
+                        .setValidityTime(PartialOrCompleteTimePeriod.builder()
+                                .setStartTime(PartialOrCompleteTimeInstant.of(VALID_FROM.plusNanos(1)))
+                                .setEndTime(PartialOrCompleteTimeInstant.of(VALID_TO.minusNanos(1)))
+                                .build())
+                        .build()),
+                builder -> builder.setValidFrom(VALID_FROM.plusNanos(1).toInstant())
+                        .setValidTo(VALID_TO.minusNanos(1).toInstant()));
+        final List<InputAndArchiveAviationMessage> messages = List.of(longer, endEarlier, startLater, shorter);
+
+        postActionService.runPostActions(messages, loggingContext);
+
+        for (final TestPostActionId id : TestPostActionId.values()) {
+            switch (id) {
+                case TestPostActionId.IS_TESTTAC_OR_TEST2TAC,
+                     TestPostActionId.POSSIBLE_VALIDTO -> assertThatInvocationsOn(id)
+                        .containsExactlyInAnyOrderElementsOf(TestPostAction.Invocation.list(loggingContext, messages));
+                case TestPostActionId.IS_TESTIWXXM_AND_METAR,
+                     TestPostActionId.IS_IWXXM_AND_NOT_METAR_SPECI,
+                     TestPostActionId.NO_VALIDFROM -> assertThatInvocationsOn(id).isEmpty();
+                case TestPostActionId.CLOSED_OPEN_VALIDITY -> assertThatInvocationsOn(id)
+                        .containsExactlyInAnyOrderElementsOf(TestPostAction.Invocation.list(loggingContext, endEarlier, shorter));
+                case TestPostActionId.OPEN_CLOSED_VALIDITY -> assertThatInvocationsOn(id)
+                        .containsExactlyInAnyOrderElementsOf(TestPostAction.Invocation.list(loggingContext, startLater, shorter));
                 default -> failOnMissingAssertion(id);
             }
         }
@@ -234,6 +299,8 @@ class ConditionalPostActionIntegrationTest {
         IS_TESTIWXXM_AND_METAR,
         IS_IWXXM_AND_NOT_METAR_SPECI,
         NO_VALIDFROM,
-        POSSIBLE_VALIDTO
+        POSSIBLE_VALIDTO,
+        CLOSED_OPEN_VALIDITY,
+        OPEN_CLOSED_VALIDITY,
     }
 }

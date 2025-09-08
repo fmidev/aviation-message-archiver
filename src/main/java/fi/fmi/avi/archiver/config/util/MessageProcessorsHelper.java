@@ -28,29 +28,29 @@ public class MessageProcessorsHelper {
         this.conditionPropertyReaderFactory = requireNonNull(conditionPropertyReaderFactory, "conditionPropertyReaderFactory");
     }
 
-    public <T, C extends T, S extends MessageProcessorInstanceSpec> Stream<T> createMessageProcessors(
-            final List<? extends ObjectFactory<? extends T>> factories,
+    public <P, C extends P, S extends MessageProcessorInstanceSpec> Stream<P> createMessageProcessors(
+            final List<? extends ObjectFactory<? extends P>> factories,
             final List<S> specs,
-            final BiFunction<ActivationCondition, T, C> conditionalComponentFactory) {
+            final BiFunction<ActivationCondition, P, C> conditionalComponentFactory) {
         requireNonNull(factories, "factories");
         requireNonNull(specs, "specs");
         requireNonNull(conditionalComponentFactory, "conditionalComponentFactory");
-        final Map<String, ObjectFactory<? extends T>> factoriesByName = factories.stream()//
+        final Map<String, ObjectFactory<? extends P>> factoriesByName = factories.stream()//
                 .collect(Collectors.toUnmodifiableMap(ObjectFactory::getName, Function.identity()));
         return specs.stream()
                 .map(spec -> createMessageProcessor(spec, factoriesByName, conditionalComponentFactory));
     }
 
-    public <T, C extends T, S extends MessageProcessorInstanceSpec> T createMessageProcessor(
+    public <P, C extends P, S extends MessageProcessorInstanceSpec> P createMessageProcessor(
             final S spec,
-            final Map<String, ? extends ObjectFactory<? extends T>> factoriesByName,
-            final BiFunction<ActivationCondition, T, C> conditionalComponentFactory) {
+            final Map<String, ? extends ObjectFactory<? extends P>> factoriesByName,
+            final BiFunction<ActivationCondition, P, C> conditionalComponentFactory) {
         requireNonNull(spec, "spec");
         requireNonNull(factoriesByName, "factoriesByName");
         requireNonNull(conditionalComponentFactory, "conditionalComponentFactory");
-        final ObjectFactory<? extends T> factory = Optional.ofNullable(factoriesByName.get(spec.getName()))
+        final ObjectFactory<? extends P> factory = Optional.ofNullable(factoriesByName.get(spec.getName()))
                 .orElseThrow(() -> new IllegalArgumentException(String.format(Locale.US, "Unknown %s: <%s>", spec.getProcessorInformalType(), spec.getName())));
-        final T component;
+        final P component;
         try {
             component = factory.newInstance(spec.getConfig());
         } catch (final RuntimeException exception) {
@@ -59,11 +59,11 @@ public class MessageProcessorsHelper {
         return applyActivationCondition(component, spec, conditionalComponentFactory);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public <T, C extends T, S extends MessageProcessorInstanceSpec> T applyActivationCondition(
-            final T component,
+    @SuppressWarnings("unchecked")
+    public <P, C extends P, S extends MessageProcessorInstanceSpec, V> P applyActivationCondition(
+            final P component,
             final S spec,
-            final BiFunction<ActivationCondition, T, C> conditionalComponentFactory) {
+            final BiFunction<ActivationCondition, P, C> conditionalComponentFactory) {
         requireNonNull(component, "component");
         requireNonNull(spec, "spec");
         requireNonNull(conditionalComponentFactory, "conditionalComponentFactory");
@@ -71,19 +71,21 @@ public class MessageProcessorsHelper {
                 .map(entry -> {
                     try {
                         final String propertyName = entry.getKey();
-                        final ConditionPropertyReader conditionPropertyReader = conditionPropertyReaderFactory.getInstance(propertyName);
-                        final GeneralPropertyPredicate<?> propertyPredicate = entry.getValue()
-                                .transform(element -> configValueConverter.toReturnValueType(element, conditionPropertyReader.getValueGetterForType()))//
+                        final ConditionPropertyReader<V> conditionPropertyReader = (ConditionPropertyReader<V>) conditionPropertyReaderFactory.getInstance(propertyName);
+                        final GeneralPropertyPredicate<V> propertyPredicate = entry.getValue()
+                                .transform(
+                                        element -> (V) configValueConverter.toReturnValueType(element, conditionPropertyReader.getValueGetterForType()),
+                                        conditionPropertyReader.getComparator().orElse(null))
                                 .validate(conditionPropertyReader::validate)//
                                 .build();
-                        return new PropertyActivationCondition(conditionPropertyReader, propertyPredicate);
+                        return new PropertyActivationCondition<>(conditionPropertyReader, propertyPredicate);
                     } catch (final RuntimeException e) {
                         throw new IllegalStateException("Unable to initialize %s '%s' activateOn: %s"
                                 .formatted(spec.getProcessorInformalType(), spec.getName(), e.getMessage()), e);
                     }
                 })//
                 .collect(Collectors.collectingAndThen(Collectors.toList(), ActivationCondition::and))//
-                .<T>map(activationCondition -> conditionalComponentFactory.apply(activationCondition, component))//
+                .<P>map(activationCondition -> conditionalComponentFactory.apply(activationCondition, component))//
                 .orElse(component);
     }
 }
