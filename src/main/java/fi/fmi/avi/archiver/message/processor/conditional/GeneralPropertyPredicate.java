@@ -15,7 +15,6 @@ import static java.util.Objects.requireNonNull;
 
 /*
  * When adding properties, check that new property is handled properly in
- * * toString()
  * * Builder() (proper default value in constructor)
  * * Builder.validateState()
  * * Builder.transform()
@@ -31,19 +30,6 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
 
     public static <T> Builder<T> builder() {
         return new Builder<>();
-    }
-
-    private static <C> StringBuilder appendCondition(
-            final StringBuilder builder, final String conditionName, @Nullable final C condition,
-            final Predicate<C> conditionIsEmpty) {
-        if (!conditionIsEmpty.test(condition)) {
-            builder.append(conditionName)
-                    .append('{')
-                    .append(condition)
-                    .append('}')
-                    .append(STRING_SEPARATOR);
-        }
-        return builder;
     }
 
     @Override
@@ -102,34 +88,22 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
 
     public abstract Optional<Comparator<? super T>> getComparator();
 
-    public abstract Optional<T> getIsLessThan();
-
-    public abstract Optional<T> getIsLessOrEqualTo();
-
     public abstract Optional<T> getIsGreaterThan();
 
     public abstract Optional<T> getIsGreaterOrEqualTo();
+
+    public abstract Optional<T> getIsLessThan();
+
+    public abstract Optional<T> getIsLessOrEqualTo();
 
     public abstract Builder<T> toBuilder();
 
     @Override
     public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        appendCondition(builder, "presence", getPresence(), presence -> false);
-        appendCondition(builder, "isAnyOf", getIsAnyOf(), Set::isEmpty);
-        appendCondition(builder, "isNoneOf", getIsNoneOf(), Set::isEmpty);
-        appendCondition(builder, "matches", getMatches(), pattern -> pattern.pattern().isEmpty());
-        appendCondition(builder, "doesNotMatch", getDoesNotMatch(), pattern -> pattern.pattern().isEmpty());
-        appendCondition(builder, "isLessThan", getIsLessThan().orElse(null), Objects::isNull);
-        appendCondition(builder, "isLessOrEqualTo", getIsLessOrEqualTo().orElse(null), Objects::isNull);
-        appendCondition(builder, "isGreaterThan", getIsGreaterThan().orElse(null), Objects::isNull);
-        appendCondition(builder, "isGreaterOrEqualTo", getIsGreaterOrEqualTo().orElse(null), Objects::isNull);
-        if (!builder.isEmpty()) {
-            builder.setLength(builder.length() - STRING_SEPARATOR.length());
-        } else {
-            return "isAnything";
-        }
-        return builder.toString();
+        return Arrays.stream(Builder.Property.values())
+                .map(property -> property.toStringWithValue(this))
+                .filter(string -> !string.isEmpty())
+                .collect(Collectors.joining(STRING_SEPARATOR));
     }
 
     public enum PresencePolicy {
@@ -192,10 +166,8 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
                     .filter(property -> !metaProperties.contains(property))
                     .collect(Collectors.toUnmodifiableSet());
             if (getPresence() == PresencePolicy.EMPTY && !setProperties.isEmpty()) {
-                throw new IllegalStateException(
-                        appendCondition(new StringBuilder(), "presence", PresencePolicy.EMPTY, presence -> false)
-                                .append(" is mutually exclusive with any other conditions")
-                                .toString());
+                throw new IllegalStateException("%s is mutually exclusive with any other conditions"
+                        .formatted(Property.presence.toStringWithValue(PresencePolicy.EMPTY)));
             }
             if (getComparator().isEmpty()) {
                 final EnumSet<Property> setComparableProperties = Property.intersection(Property.Category.COMPARABLE.getProperties(), setProperties);
@@ -276,27 +248,44 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
         @VisibleForTesting
         enum Property {
             // Values are in lower camel case format instead of upper underscore to avoid need for transformation in toString().
-            presence(Category.META, builder -> true),
-            is(Category.COLLECTION, null),
-            isAnyOf(Category.COLLECTION, null) {
+            presence(Category.META, builder -> true,
+                    predicate -> Optional.of(predicate.getPresence())),
+            is(Category.COLLECTION, null,
+                    predicate -> Optional.of(predicate.getIsAnyOf())
+                            .filter(values -> values.size() == 1)
+                            .map(values -> values.iterator().next())),
+            isAnyOf(Category.COLLECTION, null, predicate -> Optional.of(predicate.getIsAnyOf())
+                    .filter(values -> values.size() > 1)) {
                 @Override
                 public boolean isSet(final Builder<?> builder) {
                     return super.isSet(builder) || isSetWithAdd(builder, builder.getIsAnyOf(), is);
                 }
             },
-            isNot(Category.COLLECTION, null),
-            isNoneOf(Category.COLLECTION, null) {
+            isNot(Category.COLLECTION, null, predicate -> Optional.of(predicate.getIsNoneOf())
+                    .filter(values -> values.size() == 1)
+                    .map(values -> values.iterator().next())),
+            isNoneOf(Category.COLLECTION, null, predicate -> Optional.of(predicate.getIsNoneOf())
+                    .filter(values -> values.size() > 1)) {
                 @Override
                 public boolean isSet(final Builder<?> builder) {
                     return super.isSet(builder) || isSetWithAdd(builder, builder.getIsNoneOf(), isNot);
                 }
             },
-            matches(Category.PATTERN, builder -> !builder.getMatches().pattern().isEmpty()),
-            doesNotMatch(Category.PATTERN, builder -> !builder.getDoesNotMatch().pattern().isEmpty()),
-            isLessThan(Category.COMPARABLE, builder -> builder.getIsLessThan().isPresent()),
-            isLessOrEqualTo(Category.COMPARABLE, builder -> builder.getIsLessOrEqualTo().isPresent()),
-            isGreaterThan(Category.COMPARABLE, builder -> builder.getIsGreaterThan().isPresent()),
-            isGreaterOrEqualTo(Category.COMPARABLE, builder -> builder.getIsGreaterOrEqualTo().isPresent());
+            matches(Category.PATTERN, builder -> !builder.getMatches().pattern().isEmpty(),
+                    predicate -> Optional.of(predicate.getMatches())
+                            .filter(pattern -> !pattern.pattern().isEmpty())),
+            doesNotMatch(Category.PATTERN, builder -> !builder.getDoesNotMatch().pattern().isEmpty(),
+                    predicate -> Optional.of(predicate.getDoesNotMatch())
+                            .filter(pattern -> !pattern.pattern().isEmpty())),
+            isGreaterThan(Category.COMPARABLE, builder -> builder.getIsGreaterThan().isPresent(),
+                    GeneralPropertyPredicate::getIsGreaterThan),
+            isGreaterOrEqualTo(Category.COMPARABLE, builder -> builder.getIsGreaterOrEqualTo().isPresent(),
+                    GeneralPropertyPredicate::getIsGreaterOrEqualTo),
+            isLessThan(Category.COMPARABLE, builder -> builder.getIsLessThan().isPresent(),
+                    GeneralPropertyPredicate::getIsLessThan),
+            isLessOrEqualTo(Category.COMPARABLE, builder -> builder.getIsLessOrEqualTo().isPresent(),
+                    GeneralPropertyPredicate::getIsLessOrEqualTo),
+            ;
 
             @VisibleForTesting
             static final Map<Property, Set<Property>> CONTRADICTING_PROPERTIES = createContradictingProperties();
@@ -308,10 +297,12 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
             private final Category category;
             @Nullable
             private final Predicate<Builder<?>> isSet;
+            private final Function<GeneralPropertyPredicate<?>, Optional<?>> getValueForString;
 
-            Property(final Category category, @Nullable final Predicate<Builder<?>> isSet) {
+            Property(final Category category, @Nullable final Predicate<Builder<?>> isSet, final Function<GeneralPropertyPredicate<?>, Optional<?>> getValueForString) {
                 this.category = requireNonNull(category, "category");
                 this.isSet = isSet;
+                this.getValueForString = requireNonNull(getValueForString, "getValueForString");
             }
 
             private static Map<Property, Set<Property>> createContradictingProperties() {
@@ -377,6 +368,14 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
             boolean isSetWithAdd(final Builder<?> builder, final Set<?> values, final Property contradictoryProperty) {
                 return values.size() > 1
                         || !builder.explicitlySetProperties.contains(contradictoryProperty) && !values.isEmpty();
+            }
+
+            public String toStringWithValue(final GeneralPropertyPredicate<?> generalPropertyPredicate) {
+                return toStringWithValue(getValueForString.apply(generalPropertyPredicate).orElse(null));
+            }
+
+            public String toStringWithValue(@Nullable final Object value) {
+                return value == null ? "" : name() + '{' + value + '}';
             }
 
             enum Category {

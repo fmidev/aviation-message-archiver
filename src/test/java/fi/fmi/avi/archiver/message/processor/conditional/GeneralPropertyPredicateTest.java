@@ -709,6 +709,26 @@ class GeneralPropertyPredicateTest {
     }
 
     @Test
+    void toString_returns_string_with_is_and_isNot() {
+        final String result = GeneralPropertyPredicate.<Integer>builder()
+                .setPresence(PresencePolicy.PRESENT).addIsAnyOf(4)
+                .setPresence(PresencePolicy.PRESENT).addIsNoneOf(5)
+                .build()
+                .toString();
+        assertThat(result).isEqualTo("presence{PRESENT} & is{4} & isNot{5}");
+    }
+
+    @Test
+    void toString_returns_string_with_isAnyOf_and_isNoneOf() {
+        final String result = GeneralPropertyPredicate.<Integer>builder()
+                .setPresence(PresencePolicy.PRESENT).addIsAnyOf(4, 5)
+                .setPresence(PresencePolicy.PRESENT).addIsNoneOf(6, 7)
+                .build()
+                .toString();
+        assertThat(result).isEqualTo("presence{PRESENT} & isAnyOf{[4, 5]} & isNoneOf{[6, 7]}");
+    }
+
+    @Test
     void toString_returns_string_describing_all_conditions() {
         final String result = GeneralPropertyPredicate.<Integer>builder()
                 .setPresence(PresencePolicy.OPTIONAL).addIsAnyOf(1, 2, 3)
@@ -718,6 +738,28 @@ class GeneralPropertyPredicateTest {
                 .build()
                 .toString();
         assertThat(result).isEqualTo("presence{OPTIONAL} & isAnyOf{[1, 2, 3]} & isNoneOf{[4, 5, 6]} & matches{^\\d$} & doesNotMatch{^[a-z]*$}");
+    }
+
+    @Test
+    void toString_returns_string_describing_open_comparable_conditions() {
+        final String result = GeneralPropertyPredicate.<Integer>builder()
+                .setComparator(Comparator.naturalOrder())
+                .setIsGreaterThan(2)
+                .setIsLessThan(5)
+                .build()
+                .toString();
+        assertThat(result).isEqualTo("presence{PRESENT} & isGreaterThan{2} & isLessThan{5}");
+    }
+
+    @Test
+    void toString_returns_string_describing_closed_comparable_conditions() {
+        final String result = GeneralPropertyPredicate.<Integer>builder()
+                .setComparator(Comparator.naturalOrder())
+                .setIsGreaterOrEqualTo(2)
+                .setIsLessOrEqualTo(5)
+                .build()
+                .toString();
+        assertThat(result).isEqualTo("presence{PRESENT} & isGreaterOrEqualTo{2} & isLessOrEqualTo{5}");
     }
 
     @Test
@@ -778,18 +820,6 @@ class GeneralPropertyPredicateTest {
         assertThat(predicate.test(new Box(5))).isTrue();
         assertThat(predicate.test(new Box(9))).isTrue();
         assertThat(predicate.test(new Box(10))).isFalse();
-    }
-
-    @Test
-    void toString_includes_bounds_conditions() {
-        final String result = GeneralPropertyPredicate.<Integer>builder()
-                .setComparator(Comparator.naturalOrder())
-                .setIsGreaterThan(1)
-                .setIsLessOrEqualTo(3)
-                .build()
-                .toString();
-
-        assertThat(result).isEqualTo("presence{PRESENT} & isLessOrEqualTo{3} & isGreaterThan{1}");
     }
 
     @Test
