@@ -88,6 +88,14 @@ class ConditionalPostActionIntegrationTest {
         fail("Missing assertion for TestPostActionId: " + id);
     }
 
+    private static void mapMessage(final InputAviationMessage.Builder builder, final Consumer<GenericAviationWeatherMessageImpl.Builder> mapper) {
+        builder.mapMessage(message -> {
+            final GenericAviationWeatherMessageImpl.Builder messageBuilder = GenericAviationWeatherMessageImpl.Builder.from(message);
+            mapper.accept(messageBuilder);
+            return messageBuilder.build();
+        });
+    }
+
     @BeforeEach
     void setUp() {
         testPostActionRegistry.resetAll();
@@ -161,29 +169,19 @@ class ConditionalPostActionIntegrationTest {
     @Test
     void testActivateOnPatternAndNegatedCollection() {
         final InputAndArchiveAviationMessage tacMetar = inputAndArchiveAviationMessage(TEST_TAC_PRODUCT_ID,
-                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
-                        .setMessageType(TypeId.METAR.getType())
-                        .build()),
+                builder -> mapMessage(builder, messageBuilder -> messageBuilder.setMessageType(TypeId.METAR.getType())),
                 builder -> builder.setType(TypeId.METAR.getId()));
         final InputAndArchiveAviationMessage iwxxmSpeci = inputAndArchiveAviationMessage(TEST_IWXXM_PRODUCT_ID,
-                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
-                        .setMessageType(TypeId.SPECI.getType())
-                        .build()),
+                builder -> mapMessage(builder, messageBuilder -> messageBuilder.setMessageType(TypeId.SPECI.getType())),
                 builder -> builder.setType(TypeId.SPECI.getId()));
         final InputAndArchiveAviationMessage tacTaf = inputAndArchiveAviationMessage(TEST2_TAC_PRODUCT_ID,
-                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
-                        .setMessageType(TypeId.TAF.getType())
-                        .build()),
+                builder -> mapMessage(builder, messageBuilder -> messageBuilder.setMessageType(TypeId.TAF.getType())),
                 builder -> builder.setType(TypeId.TAF.getId()));
         final InputAndArchiveAviationMessage iwxxmTaf = inputAndArchiveAviationMessage(TEST2_IWXXM_PRODUCT_ID,
-                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
-                        .setMessageType(TypeId.TAF.getType())
-                        .build()),
+                builder -> mapMessage(builder, messageBuilder -> messageBuilder.setMessageType(TypeId.TAF.getType())),
                 builder -> builder.setType(TypeId.TAF.getId()));
         final InputAndArchiveAviationMessage iwxxmSwx = inputAndArchiveAviationMessage(TEST_IWXXM_PRODUCT_ID,
-                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
-                        .setMessageType(TypeId.SWX.getType())
-                        .build()),
+                builder -> mapMessage(builder, messageBuilder -> messageBuilder.setMessageType(TypeId.SWX.getType())),
                 builder -> builder.setType(TypeId.SWX.getId()));
         final List<InputAndArchiveAviationMessage> messages = List.of(tacMetar, iwxxmSpeci, tacTaf, iwxxmTaf, iwxxmSwx);
 
@@ -209,10 +207,8 @@ class ConditionalPostActionIntegrationTest {
     @Test
     void testActivateOnEmptyValue() {
         final InputAndArchiveAviationMessage testMessage = inputAndArchiveAviationMessage(TEST2_IWXXM_PRODUCT_ID,
-                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
-                        .setMessageType(TypeId.METAR.getType())
-                        .clearValidityTime()
-                        .build()),
+                builder -> mapMessage(builder, messageBuilder -> messageBuilder.setMessageType(TypeId.METAR.getType())
+                        .clearValidityTime()),
                 builder -> builder.setType(TypeId.METAR.getId())
                         .clearValidFrom()
                         .clearValidTo()
@@ -238,39 +234,31 @@ class ConditionalPostActionIntegrationTest {
     @Test
     void testActivateOnComparableValues() {
         final InputAndArchiveAviationMessage longer = inputAndArchiveAviationMessage(TEST_TAC_PRODUCT_ID,
-                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
-                        .setValidityTime(PartialOrCompleteTimePeriod.builder()
-                                .setStartTime(PartialOrCompleteTimeInstant.of(VALID_FROM))
-                                .setEndTime(PartialOrCompleteTimeInstant.of(VALID_TO))
-                                .build())
-                        .build()),
+                builder -> mapMessage(builder, messageBuilder -> messageBuilder.setValidityTime(PartialOrCompleteTimePeriod.builder()
+                        .setStartTime(PartialOrCompleteTimeInstant.of(VALID_FROM))
+                        .setEndTime(PartialOrCompleteTimeInstant.of(VALID_TO))
+                        .build())),
                 builder -> builder.setValidFrom(VALID_FROM.toInstant())
                         .setValidTo(VALID_TO.toInstant()));
         final InputAndArchiveAviationMessage endEarlier = inputAndArchiveAviationMessage(TEST_TAC_PRODUCT_ID,
-                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
-                        .setValidityTime(PartialOrCompleteTimePeriod.builder()
-                                .setStartTime(PartialOrCompleteTimeInstant.of(VALID_FROM))
-                                .setEndTime(PartialOrCompleteTimeInstant.of(VALID_TO.minusNanos(1)))
-                                .build())
-                        .build()),
+                builder -> mapMessage(builder, messageBuilder -> messageBuilder.setValidityTime(PartialOrCompleteTimePeriod.builder()
+                        .setStartTime(PartialOrCompleteTimeInstant.of(VALID_FROM))
+                        .setEndTime(PartialOrCompleteTimeInstant.of(VALID_TO.minusNanos(1)))
+                        .build())),
                 builder -> builder.setValidFrom(VALID_FROM.toInstant())
                         .setValidTo(VALID_TO.minusNanos(1).toInstant()));
         final InputAndArchiveAviationMessage startLater = inputAndArchiveAviationMessage(TEST_TAC_PRODUCT_ID,
-                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
-                        .setValidityTime(PartialOrCompleteTimePeriod.builder()
-                                .setStartTime(PartialOrCompleteTimeInstant.of(VALID_FROM.plusNanos(1)))
-                                .setEndTime(PartialOrCompleteTimeInstant.of(VALID_TO))
-                                .build())
-                        .build()),
+                builder -> mapMessage(builder, messageBuilder -> messageBuilder.setValidityTime(PartialOrCompleteTimePeriod.builder()
+                        .setStartTime(PartialOrCompleteTimeInstant.of(VALID_FROM.plusNanos(1)))
+                        .setEndTime(PartialOrCompleteTimeInstant.of(VALID_TO))
+                        .build())),
                 builder -> builder.setValidFrom(VALID_FROM.plusNanos(1).toInstant())
                         .setValidTo(VALID_TO.toInstant()));
         final InputAndArchiveAviationMessage shorter = inputAndArchiveAviationMessage(TEST_TAC_PRODUCT_ID,
-                builder -> builder.mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)
-                        .setValidityTime(PartialOrCompleteTimePeriod.builder()
-                                .setStartTime(PartialOrCompleteTimeInstant.of(VALID_FROM.plusNanos(1)))
-                                .setEndTime(PartialOrCompleteTimeInstant.of(VALID_TO.minusNanos(1)))
-                                .build())
-                        .build()),
+                builder -> mapMessage(builder, messageBuilder -> messageBuilder.setValidityTime(PartialOrCompleteTimePeriod.builder()
+                        .setStartTime(PartialOrCompleteTimeInstant.of(VALID_FROM.plusNanos(1)))
+                        .setEndTime(PartialOrCompleteTimeInstant.of(VALID_TO.minusNanos(1)))
+                        .build())),
                 builder -> builder.setValidFrom(VALID_FROM.plusNanos(1).toInstant())
                         .setValidTo(VALID_TO.minusNanos(1).toInstant()));
         final List<InputAndArchiveAviationMessage> messages = List.of(longer, endEarlier, startLater, shorter);
