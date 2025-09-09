@@ -16,7 +16,6 @@
     </gml:TimeInstant>
   </iwxxm:observationTime>
 
-  <!-- Keep the rest very light; converter is tolerant with ALLOW_ERRORS -->
   <iwxxm:aerodrome>
     <iwxxm:AerodromePoint gml:id="ad-efxx">
       <gml:identifier codeSpace="urn:icao:doc7910:2013">EFXX</gml:identifier>
