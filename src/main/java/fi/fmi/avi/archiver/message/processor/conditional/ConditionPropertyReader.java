@@ -5,6 +5,8 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
+import java.util.Comparator;
+import java.util.Optional;
 
 /**
  * Implementations of this interface read a single property from {@link InputAviationMessage} or {@link ArchiveAviationMessageOrBuilder} for condition
@@ -29,6 +31,15 @@ public interface ConditionPropertyReader<T> {
      * @return default name of the related property
      */
     String getPropertyName();
+
+    /**
+     * Return a comparator if property values are comparable.
+     * If the value type implements {@link Comparable}, this method would typically return
+     * {@link Comparator#naturalOrder()}. Otherwise, a custom comparator may be returned if applicable.
+     *
+     * @return value comparator if applicable
+     */
+    Optional<Comparator<T>> getComparator();
 
     /**
      * Read the property value.

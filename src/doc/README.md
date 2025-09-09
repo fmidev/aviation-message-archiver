@@ -546,6 +546,8 @@ Reject message if message time is too far in the future.
 
 ##### MessageMaximumAgeValidator
 
+**Deprecated** and will be removed in a future release.
+
 Reject message if message time is too far in the past.
 
 * **name:**

@@ -89,6 +89,7 @@ public class MessagePopulatorFactoryConfig extends AbstractMessagePopulatorFacto
                 .addConfigArg("acceptInFuture", Duration.class));
     }
 
+    @Deprecated(forRemoval = true)
     @Bean
     MessagePopulatorFactory<MessageMaximumAgeValidator> messageMaximumAgeValidatorFactory() {
         return build(builder(MessageMaximumAgeValidator.class)//

@@ -33,6 +33,11 @@ public class MessageProcessorConditionPropertyReaderConfig {
     }
 
     @Bean
+    MessageAgePropertyReader messageAgePropertyReader(final Clock clock) {
+        return new MessageAgePropertyReader(clock);
+    }
+
+    @Bean
     ProductIdPropertyReader productIdentifierPropertyReader(final Map<String, AviationProduct> aviationProducts) {
         return new ProductIdPropertyReader(aviationProducts);
     }
@@ -52,18 +57,12 @@ public class MessageProcessorConditionPropertyReaderConfig {
         return new TypePropertyReader(messageTypeIds);
     }
 
-    @Bean
-    MessageAgePropertyReader messageAgePropertyReader(final Clock clock) {
-        return new MessageAgePropertyReader(clock);
-    }
-
     @PostConstruct
     void registerBulletinHeadingConditionPropertyReaders() {
         BulletinHeadingSource.getPermutations().forEach(bulletinHeadingSources -> {
             register(new DataDesignatorPropertyReader(bulletinHeadingSources));
             register(new OriginatorPropertyReader(bulletinHeadingSources));
         });
-
     }
 
     private void register(final ConditionPropertyReader<?> conditionPropertyReader) {
