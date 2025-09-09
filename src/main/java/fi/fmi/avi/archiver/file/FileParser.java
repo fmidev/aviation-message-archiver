@@ -37,7 +37,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.StringReader;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -322,22 +322,23 @@ public class FileParser {
     }
 
     /**
-     * Get observation time from iwxxm:observationTime element for SPECIs and METARs and set it to the input builder.
+     * Get observation time from iwxxm:observationTime element for SPECIs and METARs.
      *
-     * @param builder        input aviation message builder
      * @param document       DOM of a single IWXXM message (METAR/SPECI)
      * @param loggingContext logging context
+     * @return observation time if found and parsed, empty otherwise
      */
-    private void setObservationTimeFromIwxxm(final InputAviationMessage.Builder builder, final Document document,
-                                             final LoggingContext loggingContext) {
+    private Optional<OffsetDateTime> getObservationTimeFromIwxxm(final Document document,
+                                                                 final LoggingContext loggingContext) {
         try {
             final String observationTime = observationTimeExpression.evaluate(document);
             if (!observationTime.isBlank()) {
-                builder.setIwxxmObservationTime(Instant.parse(observationTime));
+                return Optional.of(OffsetDateTime.parse(observationTime));
             }
         } catch (final XPathExpressionException | DateTimeParseException e) {
             LOGGER.warn("Failed to extract observationTime from <{}>", loggingContext, e);
         }
+        return Optional.empty();
     }
 
     private List<InputAviationMessage> parseIwxxmCollectDocument(
@@ -376,7 +377,7 @@ public class FileParser {
                     (builder, message) -> {
                         if (looksLikeMetarOrSpeci(message.getOriginalMessage())) {
                             try {
-                                setObservationTimeFromIwxxm(builder, toDocument(message.getOriginalMessage()), loggingContext);
+                                builder.setIwxxmObservationTime(getObservationTimeFromIwxxm(toDocument(message.getOriginalMessage()), loggingContext));
                             } catch (final Exception e) {
                                 LOGGER.warn("Failed to create a DOM for extracting observationTime from <{}>", loggingContext, e);
                             }
@@ -413,7 +414,7 @@ public class FileParser {
                     loggingContext,
                     (builder, gm) -> {
                         if (looksLikeMetarOrSpeci(message.getOriginalMessage())) {
-                            setObservationTimeFromIwxxm(builder, iwxxmDocument, loggingContext);
+                            builder.setIwxxmObservationTime(getObservationTimeFromIwxxm(iwxxmDocument, loggingContext));
                         }
                     }
             );

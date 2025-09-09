@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -371,7 +372,7 @@ public class FileParserTest {
         assertThat(result).hasSize(1);
 
         final InputAviationMessage msg = result.getFirst();
-        assertThat(msg.getIwxxmObservationTime()).contains(Instant.parse("2012-08-22T16:30:00Z"));
+        assertThat(msg.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2012-08-22T16:30:00Z"));
     }
 
     @Test
@@ -388,7 +389,7 @@ public class FileParserTest {
         assertThat(result).hasSize(1);
 
         final InputAviationMessage msg = result.getFirst();
-        assertThat(msg.getIwxxmObservationTime()).contains(Instant.parse("2025-09-04T10:15:00Z"));
+        assertThat(msg.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2025-09-04T10:15:00Z"));
     }
 
     @Test
@@ -422,7 +423,7 @@ public class FileParserTest {
         assertThat(result).hasSize(1);
 
         final InputAviationMessage msg = result.getFirst();
-        assertThat(msg.getIwxxmObservationTime()).contains(Instant.parse("2025-09-04T12:34:56Z"));
+        assertThat(msg.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2025-09-04T12:34:56Z"));
     }
 
     @Test
@@ -441,9 +442,9 @@ public class FileParserTest {
         assertThat(result)
                 .extracting(message -> message.getIwxxmObservationTime().orElse(null))
                 .containsExactlyInAnyOrder(
-                        Instant.parse("2025-09-04T10:00:00Z"),
-                        Instant.parse("2025-09-04T10:30:00Z"),
-                        Instant.parse("2025-09-04T11:00:00Z")
+                        OffsetDateTime.parse("2025-09-04T10:00:00Z"),
+                        OffsetDateTime.parse("2025-09-04T10:30:00Z"),
+                        OffsetDateTime.parse("2025-09-04T11:00:00Z")
                 );
     }
 
@@ -471,8 +472,8 @@ public class FileParserTest {
                 .filter(m -> m.getMessage().getMessageType().orElse(null) == MessageType.TAF)
                 .findFirst().orElseThrow();
 
-        assertThat(metar.getIwxxmObservationTime()).contains(Instant.parse("2025-09-04T15:00:00Z"));
-        assertThat(speci.getIwxxmObservationTime()).contains(Instant.parse("2025-09-04T15:20:00Z"));
+        assertThat(metar.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2025-09-04T15:00:00Z"));
+        assertThat(speci.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2025-09-04T15:20:00Z"));
         assertThat(taf.getIwxxmObservationTime()).isEmpty();
     }
 

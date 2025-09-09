@@ -4,7 +4,7 @@ import fi.fmi.avi.archiver.message.MessagePositionInFile;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import org.inferred.freebuilder.FreeBuilder;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 /**
@@ -39,7 +39,7 @@ public abstract class InputAviationMessage {
      *
      * @return observation time or empty if not available
      */
-    public abstract Optional<Instant> getIwxxmObservationTime();
+    public abstract Optional<OffsetDateTime> getIwxxmObservationTime();
 
     /**
      * Return metadata of the file this message belongs to.
