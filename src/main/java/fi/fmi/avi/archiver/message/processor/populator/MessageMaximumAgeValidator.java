@@ -4,6 +4,7 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorHelper;
+import fi.fmi.avi.archiver.message.processor.conditional.MessageAgePropertyReader;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -16,7 +17,10 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * The calculated validity period start is inclusive.
  * </p>
+ *
+ * @deprecated in favor of {@link FixedProcessingResultPopulator} and conditional populator activation using {@link MessageAgePropertyReader}
  */
+@Deprecated(forRemoval = true)
 public class MessageMaximumAgeValidator implements MessagePopulator {
 
     private final Clock clock;

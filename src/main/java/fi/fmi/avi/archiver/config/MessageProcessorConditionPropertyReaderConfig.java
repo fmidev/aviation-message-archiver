@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
+import java.time.Clock;
 import java.util.Map;
 
 @Configuration
@@ -29,6 +30,11 @@ public class MessageProcessorConditionPropertyReaderConfig {
     @Bean
     FormatPropertyReader formatPropertyReader(final BiMap<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
         return new FormatPropertyReader(messageFormatIds);
+    }
+
+    @Bean
+    MessageAgePropertyReader messageAgePropertyReader(final Clock clock) {
+        return new MessageAgePropertyReader(clock);
     }
 
     @Bean
@@ -57,7 +63,6 @@ public class MessageProcessorConditionPropertyReaderConfig {
             register(new DataDesignatorPropertyReader(bulletinHeadingSources));
             register(new OriginatorPropertyReader(bulletinHeadingSources));
         });
-
     }
 
     private void register(final ConditionPropertyReader<?> conditionPropertyReader) {
