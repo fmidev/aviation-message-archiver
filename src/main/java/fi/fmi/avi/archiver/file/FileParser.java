@@ -26,7 +26,6 @@ import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import javax.annotation.Nullable;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -44,6 +43,15 @@ import java.util.function.BiConsumer;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * Parses raw aviation message file content into structured {@link InputAviationMessage} instances.
+ *
+ * <h4>Thread safety</h4>
+ * <p>
+ * This class is <strong>not thread-safe</strong>. It holds compiled {@link XPathExpression}s and calls evaluate on them.
+ * Standard JAXP XPath implementations are not thread-safe.
+ * </p>
+ */
 public class FileParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileParser.class);
@@ -52,8 +60,8 @@ public class FileParser {
     private static final String BULLETIN_ELEMENT_NAME = "MeteorologicalBulletin";
     private static final ConversionHints CONVERSION_HINTS = ConversionHints.ALLOW_ERRORS;
     private static final MessageType UNKNOWN_MESSAGE_TYPE = new MessageType("UNKNOWN");
-    private static final String IWXXM_NS_PREFIX = "icao.int/iwxxm/";
-    private static final String GML_NS_PREFIX = "opengis.net/gml/";
+    private static final String IWXXM_NS_PREFIX = "://icao.int/iwxxm/";
+    private static final String GML_NS_PREFIX = "://www.opengis.net/gml/";
     private static final String XPATH_OBSERVATION_TIME = String.format("""
             normalize-space((
               /*[
@@ -74,10 +82,11 @@ public class FileParser {
               ]
             )[1])
             """, IWXXM_NS_PREFIX, GML_NS_PREFIX);
+    private static final String XPATH_BULLETIN_IDENTIFIER = "/collect:MeteorologicalBulletin/collect:bulletinIdentifier";
 
     private final AviMessageConverter aviMessageConverter;
     private final DocumentBuilderFactory documentBuilderFactory;
-    private final XPathFactory xPathFactory;
+    private final XPathExpression collectIdentifierExpression;
     private final XPathExpression observationTimeExpression;
 
     public FileParser(final AviMessageConverter aviMessageConverter) {
@@ -87,8 +96,12 @@ public class FileParser {
             documentBuilderFactory.setNamespaceAware(true);
             documentBuilderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
             this.documentBuilderFactory = documentBuilderFactory;
-            this.xPathFactory = XPathFactory.newInstance();
-            this.observationTimeExpression = xPathFactory.newXPath().compile(XPATH_OBSERVATION_TIME);
+
+            final XPathFactory xPathFactory = XPathFactory.newInstance();
+            final XPath xPath = xPathFactory.newXPath();
+            xPath.setNamespaceContext(new IWXXMNamespaceContext());
+            this.collectIdentifierExpression = xPath.compile(XPATH_BULLETIN_IDENTIFIER);
+            this.observationTimeExpression = xPath.compile(XPATH_OBSERVATION_TIME);
         } catch (final ParserConfigurationException | XPathExpressionException e) {
             throw new IllegalStateException("Unable to initialize file parser", e);
         }
@@ -150,18 +163,15 @@ public class FileParser {
     }
 
     private static boolean looksLikeMetarOrSpeci(final String messageXML) {
-        return messageXML.contains("METAR") || messageXML.contains("SPECI");
+        final String head = messageXML.substring(0, Math.min(messageXML.length(), 256));
+        return head.contains("METAR") || head.contains("SPECI");
     }
 
-    @Nullable
-    private String getCollectIdentifier(final Document collectDocument) {
-        final XPath xpath = xPathFactory.newXPath();
-        xpath.setNamespaceContext(new IWXXMNamespaceContext());
+    private Optional<String> getCollectIdentifier(final Document collectDocument) {
         try {
-            final XPathExpression expr = xpath.compile("/collect:MeteorologicalBulletin/collect:bulletinIdentifier");
-            return expr.evaluate(collectDocument.getDocumentElement());
+            return Optional.of(collectIdentifierExpression.evaluate(collectDocument.getDocumentElement()));
         } catch (final XPathExpressionException e) {
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -358,8 +368,8 @@ public class FileParser {
             } else {
                 LOGGER.warn("Issues while parsing IWXXM collect document <{}>: {}", loggingContext, conversion.getConversionIssues());
             }
-            @Nullable final String collectIdentifier = getCollectIdentifier(iwxxmDocument);
-            if (collectIdentifier == null) {
+            final Optional<String> collectIdentifier = getCollectIdentifier(iwxxmDocument);
+            if (collectIdentifier.isEmpty()) {
                 LOGGER.warn("IWXXM collect document <{}> is missing bulletinIdentifier.", loggingContext);
             } else if (inputBuilder.getGtsBulletinHeadingBuilder().getBulletinHeadingString().isEmpty()) {
                 loggingContext.modifyBulletin(reference -> reference.toBuilder().setHeading(collectIdentifier).build());
@@ -367,7 +377,7 @@ public class FileParser {
 
             inputBuilder.setCollectIdentifier(InputBulletinHeading.builder()
                     .setBulletinHeading(bulletin.getHeading())
-                    .setNullableBulletinHeadingString(collectIdentifier)
+                    .setBulletinHeadingString(collectIdentifier)
                     .build());
             return toInputAviationMessages(
                     inputBuilder,
