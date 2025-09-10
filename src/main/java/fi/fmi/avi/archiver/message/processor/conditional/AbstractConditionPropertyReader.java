@@ -4,9 +4,7 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static java.util.Objects.requireNonNull;
 
@@ -87,6 +85,25 @@ public abstract class AbstractConditionPropertyReader<T> implements ConditionPro
             }
         }
         return builder.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * This implementation returns {@link Comparator#naturalOrder()} if property type implements {@link Comparable}.
+     * Otherwise, empty is returned. If comparison is not applicable for a {@code Comparable} value type, subclasses
+     * should override this method to always return {@code Optional.empty()}.
+     * </p>
+     *
+     * @return natural order comparator or empty
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Optional<Comparator<T>> getComparator() {
+        return Comparable.class.isAssignableFrom(getValueGetterForType().getReturnType())
+                ? Optional.of((Comparator<T>) Comparator.naturalOrder())
+                : Optional.empty();
     }
 
     /**

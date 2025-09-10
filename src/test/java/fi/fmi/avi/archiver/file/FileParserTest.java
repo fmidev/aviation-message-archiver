@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -356,4 +357,124 @@ public class FileParserTest {
         assertThat(result).isEmpty();
         assertThat(processingServiceContext.isProcessingErrors()).isTrue();
     }
+
+    @Test
+    void metar_iwxxm_2025_2_observation_time() {
+        final String filename = "metar-iwxxm-2025-2.xml";
+        final FileMetadata metadata = DEFAULT_METADATA.toBuilder()
+                .mutateFileReference(ref -> ref.setFilename(filename))
+                .setFileConfig(IWXXM_FILECONFIG)
+                .build();
+
+        final List<InputAviationMessage> result = fileParser.parse(getFileContent(filename), metadata, processingServiceContext);
+
+        assertThat(processingServiceContext.isProcessingErrors()).isFalse();
+        assertThat(result).hasSize(1);
+
+        final InputAviationMessage msg = result.getFirst();
+        assertThat(msg.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2012-08-22T16:30:00Z"));
+    }
+
+    @Test
+    void metar_iwxxm_observation_time() {
+        final String filename = "metar-observationTime.xml";
+        final FileMetadata metadata = DEFAULT_METADATA.toBuilder()
+                .mutateFileReference(ref -> ref.setFilename(filename))
+                .setFileConfig(IWXXM_FILECONFIG)
+                .build();
+
+        final List<InputAviationMessage> result = fileParser.parse(getFileContent(filename), metadata, processingServiceContext);
+
+        assertThat(processingServiceContext.isProcessingErrors()).isFalse();
+        assertThat(result).hasSize(1);
+
+        final InputAviationMessage msg = result.getFirst();
+        assertThat(msg.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2025-09-04T10:15:00Z"));
+    }
+
+    @Test
+    void metar_iwxxm_observation_time_invalid() {
+        final String filename = "metar-observationTime-invalid.xml";
+        final FileMetadata metadata = DEFAULT_METADATA.toBuilder()
+                .mutateFileReference(ref -> ref.setFilename(filename))
+                .setFileConfig(IWXXM_FILECONFIG)
+                .build();
+
+        final List<InputAviationMessage> result = fileParser.parse(getFileContent(filename), metadata, processingServiceContext);
+
+        assertThat(processingServiceContext.isProcessingErrors()).isFalse();
+        assertThat(result).hasSize(1);
+
+        final InputAviationMessage msg = result.getFirst();
+        assertThat(msg.getIwxxmObservationTime()).isEmpty();
+    }
+
+    @Test
+    void speci_iwxxm_observation_time() {
+        final String filename = "speci-observationTime.xml";
+        final FileMetadata metadata = DEFAULT_METADATA.toBuilder()
+                .mutateFileReference(ref -> ref.setFilename(filename))
+                .setFileConfig(IWXXM_FILECONFIG)
+                .build();
+
+        final List<InputAviationMessage> result = fileParser.parse(getFileContent(filename), metadata, processingServiceContext);
+
+        assertThat(processingServiceContext.isProcessingErrors()).isFalse();
+        assertThat(result).hasSize(1);
+
+        final InputAviationMessage msg = result.getFirst();
+        assertThat(msg.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2025-09-04T12:34:56Z"));
+    }
+
+    @Test
+    void metar_iwxxm_collect_three_metars_extracts_observation_times() {
+        final String filename = "metar-collect-3.xml";
+        final FileMetadata metadata = DEFAULT_METADATA.toBuilder()
+                .mutateFileReference(ref -> ref.setFilename(filename))
+                .setFileConfig(IWXXM_FILECONFIG)
+                .build();
+
+        final List<InputAviationMessage> result =
+                fileParser.parse(getFileContent(filename), metadata, processingServiceContext);
+
+        assertThat(processingServiceContext.isProcessingErrors()).isFalse();
+        assertThat(result).hasSize(3);
+        assertThat(result)
+                .extracting(message -> message.getIwxxmObservationTime().orElse(null))
+                .containsExactlyInAnyOrder(
+                        OffsetDateTime.parse("2025-09-04T10:00:00Z"),
+                        OffsetDateTime.parse("2025-09-04T10:30:00Z"),
+                        OffsetDateTime.parse("2025-09-04T11:00:00Z")
+                );
+    }
+
+    @Test
+    void collect_with__metar_speci_and_taf_sets_observation_time_for_metar_and_speci_only() {
+        final String filename = "collect-metar-speci-taf.xml";
+        final FileMetadata metadata = DEFAULT_METADATA.toBuilder()
+                .mutateFileReference(ref -> ref.setFilename(filename))
+                .setFileConfig(IWXXM_FILECONFIG)
+                .build();
+
+        final List<InputAviationMessage> result =
+                fileParser.parse(getFileContent(filename), metadata, processingServiceContext);
+
+        assertThat(processingServiceContext.isProcessingErrors()).isFalse();
+        assertThat(result).hasSize(3);
+
+        final InputAviationMessage metar = result.stream()
+                .filter(m -> m.getMessage().getMessageType().orElse(null) == MessageType.METAR)
+                .findFirst().orElseThrow();
+        final InputAviationMessage speci = result.stream()
+                .filter(m -> m.getMessage().getMessageType().orElse(null) == MessageType.SPECI)
+                .findFirst().orElseThrow();
+        final InputAviationMessage taf = result.stream()
+                .filter(m -> m.getMessage().getMessageType().orElse(null) == MessageType.TAF)
+                .findFirst().orElseThrow();
+
+        assertThat(metar.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2025-09-04T15:00:00Z"));
+        assertThat(speci.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2025-09-04T15:20:00Z"));
+        assertThat(taf.getIwxxmObservationTime()).isEmpty();
+    }
+
 }

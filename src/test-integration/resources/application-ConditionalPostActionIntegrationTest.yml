@@ -87,3 +87,19 @@ production-line:
           presence: OPTIONAL
       config:
         id: possible-validto
+    - name: TestPostAction
+      activate-on:
+        test-input-valid-from:
+          is-greater-or-equal-to: 2001-02-03T04:00:00Z
+        test-input-valid-to:
+          is-less-than: 2001-02-03T05:00:00Z
+      config:
+        id: closed-open-validity
+    - name: TestPostAction
+      activate-on:
+        test-input-valid-from:
+          is-greater-than: 2001-02-03T04:00:00Z
+        test-input-valid-to:
+          is-less-or-equal-to: 2001-02-03T05:00:00Z
+      config:
+        id: open-closed-validity

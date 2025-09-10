@@ -18,6 +18,7 @@ public class ConversionConfig {
         conversionService.addConverter(new StringToDurationConverter());
         conversionService.addConverter(new StringToInstantConverter());
         conversionService.addConverter(new StringToPatternConverter());
+        conversionService.addConverter(new StringToZonedDateTimeConverter());
 
         return conversionService;
     }

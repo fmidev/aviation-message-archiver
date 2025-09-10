@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
+import java.util.Comparator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
@@ -70,6 +71,17 @@ class AbstractConditionPropertyReaderTest {
     }
 
     @Test
+    void getComparator_returns_natural_order_comparator_for_comparable_value_type() {
+        assertThat(new TestConditionPropertyReader().getComparator())
+                .hasValue(Comparator.naturalOrder());
+    }
+
+    @Test
+    void getComparator_returns_empty_for_non_comparable_value_type() {
+        assertThat(new UncomparablePropertyReader().getComparator()).isEmpty();
+    }
+
+    @Test
     void validate_returns_always_true() {
         assertThat(new TestConditionPropertyReader().validate("anyString")).isTrue();
     }
@@ -86,5 +98,16 @@ class AbstractConditionPropertyReaderTest {
         public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
             return "";
         }
+    }
+
+    private static class UncomparablePropertyReader extends AbstractConditionPropertyReader<UncomparableType> {
+        @Nullable
+        @Override
+        public UncomparableType readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder message) {
+            return new UncomparableType();
+        }
+    }
+
+    private static class UncomparableType {
     }
 }
