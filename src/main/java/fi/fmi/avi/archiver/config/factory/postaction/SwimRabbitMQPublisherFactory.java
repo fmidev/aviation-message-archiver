@@ -14,36 +14,22 @@ import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfig;
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.retry.RetryCallback;
-import org.springframework.retry.RetryContext;
-import org.springframework.retry.backoff.ExponentialBackOffPolicy;
-import org.springframework.retry.listener.RetryListenerSupport;
-import org.springframework.retry.support.RetryTemplate;
-import org.springframework.retry.support.RetryTemplateBuilder;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
-import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.LOGGING_CONTEXT;
-import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.RETRY_COUNT_LOGNAME;
 import static java.util.Objects.requireNonNull;
 
 public class SwimRabbitMQPublisherFactory
         extends AbstractTypedConfigObjectFactory<SwimRabbitMQPublisher, SwimRabbitMQPublisherFactory.Config>
         implements PostActionFactory<SwimRabbitMQPublisher>, AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisherFactory.class);
-    private static final String WORKER_THREAD = "SwimRabbitMQPublisher-Worker";
 
     private final SwimRabbitMQConnectionHealthContributor healthContributorRegistry;
     private final Clock clock;
@@ -134,43 +120,6 @@ public class SwimRabbitMQPublisherFactory
         }
     }
 
-    private static RetryTemplate amqpPublishRetryTemplate(final Config.RetryConfig retryConfig) {
-        final ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
-        backOffPolicy.setInitialInterval(retryConfig.getInitialInterval().orElse(Duration.ofMillis(500)).toMillis());
-        backOffPolicy.setMultiplier(retryConfig.getMultiplier().orElse(2));
-        backOffPolicy.setMaxInterval(retryConfig.getMaxInterval().orElse(Duration.ofMinutes(1)).toMillis());
-
-        final RetryTemplateBuilder retryTemplateBuilder = new RetryTemplateBuilder();
-        retryTemplateBuilder.customBackoff(backOffPolicy);
-        if (retryConfig.getTimeout().isPositive()) {
-            retryTemplateBuilder.withinMillis(retryConfig.getTimeout().toMillis());
-        } else {
-            retryTemplateBuilder.infiniteRetry();
-        }
-        retryTemplateBuilder.withListener(new AmqpRetryLogger());
-        return retryTemplateBuilder.build();
-    }
-
-    private static ThreadPoolExecutor publishExecutor(final int publishQueueCapacity) {
-        return new ThreadPoolExecutor(
-                1, 1,
-                0L, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(publishQueueCapacity),
-                runnable -> {
-                    final Thread thread = new Thread(runnable, WORKER_THREAD);
-                    thread.setDaemon(true);
-                    return thread;
-                },
-                (runnable, exec) -> {
-                    if (runnable instanceof final AbstractRetryingPostAction<?>.RetryingRunnable retryingRunnable) {
-                        LOGGER.error("AMQP publish queue full; skipping publish for <{}>", retryingRunnable.getLoggingContext());
-                    } else {
-                        LOGGER.error("AMQP publish queue full; skipping publish task");
-                    }
-                }
-        );
-    }
-
     @Override
     public Class<SwimRabbitMQPublisher> getType() {
         return SwimRabbitMQPublisher.class;
@@ -218,9 +167,10 @@ public class SwimRabbitMQPublisherFactory
                     .build());
         }, publisherRef);
 
-        final SwimRabbitMQPublisher action = registerCloseable(newSwimRabbitMQPublisher(publisher,
-                publishExecutor(config.getPublisherQueueCapacity()), config.getPublishTimeout().orElse(Duration.ofSeconds(30)),
-                amqpPublishRetryTemplate(config.getRetry()), publisherHealthIndicator));
+        final SwimRabbitMQPublisher action = registerCloseable(newSwimRabbitMQPublisher(
+                RetryingPostActionFactories.retryParams(config.getRetry(), getName(),
+                        config.getPublishTimeout().orElse(Duration.ofSeconds(30)), config.getPublisherQueueCapacity()),
+                publisher, publisherHealthIndicator));
         healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
         return action;
     }
@@ -242,15 +192,9 @@ public class SwimRabbitMQPublisherFactory
 
     @VisibleForTesting
     SwimRabbitMQPublisher newSwimRabbitMQPublisher(
-            final Publisher publisher,
-            final ThreadPoolExecutor publishExecutor,
-            final Duration publishTimeout,
-            final RetryTemplate amqpPublishRetryTemplate,
+            final AbstractRetryingPostAction.RetryParams retryParams, final Publisher publisher,
             final Consumer<Publisher.Context> publisherHealthIndicator) {
-        return new SwimRabbitMQPublisher(
-                new AbstractRetryingPostAction.RetryParams(publishExecutor, publishTimeout, amqpPublishRetryTemplate),
-                publisher,
-                publisherHealthIndicator);
+        return new SwimRabbitMQPublisher(retryParams, publisher, publisherHealthIndicator);
     }
 
     private <T extends AutoCloseable> T registerCloseable(final T closeableResource) {
@@ -303,7 +247,7 @@ public class SwimRabbitMQPublisherFactory
 
         TopologyConfig getTopology();
 
-        RetryConfig getRetry();
+        RetryingPostActionFactories.RetryConfig getRetry();
 
         interface ConnectionConfig extends ObjectFactoryConfig {
             String getUri();
@@ -342,42 +286,5 @@ public class SwimRabbitMQPublisherFactory
 
             Optional<Map<String, Object>> getArguments();
         }
-
-        interface RetryConfig extends ObjectFactoryConfig {
-            Optional<Duration> getInitialInterval();
-
-            Optional<Integer> getMultiplier();
-
-            Optional<Duration> getMaxInterval();
-
-            Duration getTimeout();
-        }
     }
-
-    private static final class AmqpRetryLogger extends RetryListenerSupport {
-        private static final Logger LOGGER = LoggerFactory.getLogger(AmqpRetryLogger.class);
-
-        @Override
-        public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, @Nullable final Throwable throwable) {
-            super.close(context, callback, throwable);
-            final int retryCount = context.getRetryCount();
-            if (retryCount > 0) {
-                if (throwable == null) {
-                    LOGGER.info("AMQP publish attempt {} succeeded for <{}>.",
-                            loggableValue(RETRY_COUNT_LOGNAME, retryCount + 1), LOGGING_CONTEXT.get(context));
-                } else {
-                    LOGGER.error("AMQP publish attempts (total {}) exhausted for <{}>.",
-                            loggableValue(RETRY_COUNT_LOGNAME, retryCount), LOGGING_CONTEXT.get(context));
-                }
-            }
-        }
-
-        @Override
-        public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
-            super.onError(context, callback, throwable);
-            LOGGER.warn("AMQP publish failed on attempt {} for <{}>. Retrying.",
-                    loggableValue(RETRY_COUNT_LOGNAME, context.getRetryCount()), LOGGING_CONTEXT.get(context), throwable);
-        }
-    }
-
 }
