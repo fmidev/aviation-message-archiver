@@ -17,17 +17,24 @@ import static java.util.Objects.requireNonNull;
 
 public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.Context> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisher.class);
-
+    private final String instanceId;
     private final Publisher amqpPublisher;
     private final Consumer<Publisher.Context> healthIndicator;
 
     public SwimRabbitMQPublisher(
             final RetryParams retryParams,
+            final String instanceId,
             final Publisher amqpPublisher,
             final Consumer<Publisher.Context> healthIndicator) {
         super(retryParams);
+        this.instanceId = requireNonNull(instanceId, "instanceId");
         this.amqpPublisher = requireNonNull(amqpPublisher, "amqpPublisher");
         this.healthIndicator = requireNonNull(healthIndicator, "healthIndicator");
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + '(' + instanceId + ')';
     }
 
     @Override

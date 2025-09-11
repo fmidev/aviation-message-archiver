@@ -168,11 +168,15 @@ public class SwimRabbitMQPublisherFactory
         }, publisherRef);
 
         final SwimRabbitMQPublisher action = registerCloseable(newSwimRabbitMQPublisher(
-                RetryingPostActionFactories.retryParams(config.getRetry(), getName(),
+                RetryingPostActionFactories.retryParams(config.getRetry(), getInstanceName(config.getId()),
                         config.getPublishTimeout().orElse(Duration.ofSeconds(30)), config.getPublisherQueueCapacity()),
-                publisher, publisherHealthIndicator));
+                config.getId(), publisher, publisherHealthIndicator));
         healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
         return action;
+    }
+
+    private String getInstanceName(final String instanceId) {
+        return getName() + '(' + instanceId + ')';
     }
 
     @VisibleForTesting
@@ -192,9 +196,9 @@ public class SwimRabbitMQPublisherFactory
 
     @VisibleForTesting
     SwimRabbitMQPublisher newSwimRabbitMQPublisher(
-            final AbstractRetryingPostAction.RetryParams retryParams, final Publisher publisher,
+            final AbstractRetryingPostAction.RetryParams retryParams, final String instanceId, final Publisher publisher,
             final Consumer<Publisher.Context> publisherHealthIndicator) {
-        return new SwimRabbitMQPublisher(retryParams, publisher, publisherHealthIndicator);
+        return new SwimRabbitMQPublisher(retryParams, instanceId, publisher, publisherHealthIndicator);
     }
 
     private <T extends AutoCloseable> T registerCloseable(final T closeableResource) {
