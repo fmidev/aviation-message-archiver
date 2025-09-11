@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.rabbitmq.client.amqp.*;
 import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
 import fi.fmi.avi.archiver.config.model.PostActionFactory;
+import fi.fmi.avi.archiver.message.processor.postaction.AbstractRetryingPostAction;
 import fi.fmi.avi.archiver.message.processor.postaction.SwimRabbitMQPublisher;
 import fi.fmi.avi.archiver.spring.healthcontributor.RabbitMQConnectionHealthIndicator;
 import fi.fmi.avi.archiver.spring.healthcontributor.RabbitMQPublisherHealthIndicator;
@@ -161,8 +162,8 @@ public class SwimRabbitMQPublisherFactory
                     return thread;
                 },
                 (runnable, exec) -> {
-                    if (runnable instanceof final SwimRabbitMQPublisher.PublishRunnable publishRunnable) {
-                        LOGGER.error("AMQP publish queue full; skipping publish for <{}>", publishRunnable.getLoggingContext());
+                    if (runnable instanceof final AbstractRetryingPostAction<?>.RetryingRunnable retryingRunnable) {
+                        LOGGER.error("AMQP publish queue full; skipping publish for <{}>", retryingRunnable.getLoggingContext());
                     } else {
                         LOGGER.error("AMQP publish queue full; skipping publish task");
                     }
@@ -240,10 +241,16 @@ public class SwimRabbitMQPublisherFactory
     }
 
     @VisibleForTesting
-    SwimRabbitMQPublisher newSwimRabbitMQPublisher(final Publisher publisher, final ThreadPoolExecutor publishExecutor,
-                                                   final Duration publishTimeout, final RetryTemplate amqpPublishRetryTemplate,
-                                                   final Consumer<Publisher.Context> publisherHealthIndicator) {
-        return new SwimRabbitMQPublisher(publisher, publishExecutor, publishTimeout, amqpPublishRetryTemplate, publisherHealthIndicator);
+    SwimRabbitMQPublisher newSwimRabbitMQPublisher(
+            final Publisher publisher,
+            final ThreadPoolExecutor publishExecutor,
+            final Duration publishTimeout,
+            final RetryTemplate amqpPublishRetryTemplate,
+            final Consumer<Publisher.Context> publisherHealthIndicator) {
+        return new SwimRabbitMQPublisher(
+                new AbstractRetryingPostAction.RetryParams(publishExecutor, publishTimeout, amqpPublishRetryTemplate),
+                publisher,
+                publisherHealthIndicator);
     }
 
     private <T extends AutoCloseable> T registerCloseable(final T closeableResource) {
