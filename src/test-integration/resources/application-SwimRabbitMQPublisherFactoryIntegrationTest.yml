@@ -3,6 +3,7 @@ production-line:
     - name: SwimRabbitMQPublisher
       config:
         id: default
+        publisher-queue-capacity: 50
         connection:
           uri: amqp://localhost:5672/%2f
           username: user
@@ -24,3 +25,5 @@ production-line:
             - type: TAF
               priority: 5
             - priority: 0
+        retry:
+          timeout: PT2M

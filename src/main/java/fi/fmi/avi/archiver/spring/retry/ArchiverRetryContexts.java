@@ -1,13 +1,14 @@
 package fi.fmi.avi.archiver.spring.retry;
 
-import static fi.fmi.avi.archiver.spring.retry.RetryContextAttributeAccessor.builder;
-
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.logging.model.NoOpLoggingContext;
 import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
 
+import static fi.fmi.avi.archiver.spring.retry.RetryContextAttributeAccessor.builder;
+
 public final class ArchiverRetryContexts {
     public static final String RETRY_COUNT_LOGNAME = "retryCount";
+    public static final String RETRY_ACTION = "retryAction";
     public static final RetryContextAttributeAccessor<ReadableLoggingContext> LOGGING_CONTEXT = builder(ReadableLoggingContext.class)//
             .setNameFromType()//
             .setDefaultValue(NoOpLoggingContext.getInstance())//

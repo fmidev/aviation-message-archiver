@@ -16,16 +16,19 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.zip.GZIPOutputStream;
 
 import static java.util.Objects.requireNonNull;
 
-public class SwimRabbitMQPublisher implements PostAction {
+public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.Context> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisher.class);
     private static final String CONTENT_TYPE = "application/xml";
     private static final ContentEncoding FALLBACK_ENCODING = ContentEncoding.IDENTITY;
 
+    private final String instanceId;
     private final Publisher amqpPublisher;
     private final Consumer<Publisher.Context> healthIndicator;
     private final Clock clock;
@@ -34,18 +37,27 @@ public class SwimRabbitMQPublisher implements PostAction {
     private final MessageConfig messageConfig;
 
     public SwimRabbitMQPublisher(
+            final RetryParams retryParams,
+            final String instanceId,
             final Publisher amqpPublisher,
             final Consumer<Publisher.Context> healthIndicator,
             final Clock clock,
             final int iwxxmFormatId,
             final Map<Integer, String> subjectByMessageTypeId,
             final MessageConfig messageConfig) {
+        super(retryParams);
+        this.instanceId = requireNonNull(instanceId, "instanceId");
         this.amqpPublisher = requireNonNull(amqpPublisher, "amqpPublisher");
         this.healthIndicator = requireNonNull(healthIndicator, "healthIndicator");
         this.clock = requireNonNull(clock, "clock");
         this.iwxxmFormatId = iwxxmFormatId;
         this.subjectByMessageTypeId = requireNonNull(subjectByMessageTypeId, "subjectByMessageTypeId");
         this.messageConfig = requireNonNull(messageConfig, "messageConfig");
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + '(' + instanceId + ')';
     }
 
     private static AviationWeatherMessage.ReportStatus getReportStatus(final ArchiveAviationMessage archiveAviationMessage) {
@@ -57,6 +69,31 @@ public class SwimRabbitMQPublisher implements PostAction {
         } else {
             return AviationWeatherMessage.ReportStatus.NORMAL;
         }
+    }
+
+    @Override
+    public Future<Publisher.Context> runAsynchronously(final MessageProcessorContext context, final ArchiveAviationMessage message) {
+        requireNonNull(context, "context");
+        requireNonNull(message, "message");
+
+        final Message amqpMessage = amqpPublisher
+                .message(message.getMessage().getBytes(StandardCharsets.UTF_8))
+                .messageId(1L);
+
+        final CompletableFuture<Publisher.Context> future = new CompletableFuture<>();
+        amqpPublisher.publish(amqpMessage, publisherContext -> {
+            try {
+                healthIndicator.accept(publisherContext);
+            } catch (final RuntimeException runtimeException) {
+                LOGGER.error("Health indicator threw while updating message <{}> status", context.getLoggingContext(), runtimeException);
+            } catch (final Error error) {
+                LOGGER.error("Fatal error in health indicator while updating message <{}> status", context.getLoggingContext(), error);
+                throw error;
+            } finally {
+                future.complete(publisherContext);
+            }
+        });
+        return future;
     }
 
     @Override
@@ -123,6 +160,27 @@ public class SwimRabbitMQPublisher implements PostAction {
                 LOGGER.error("Failed to publish message <{}> with status: <{}>.", loggingContext, publisherContext.status());
             }
         });
+        return future;
+    }
+
+    @Override
+    public void checkResult(final Publisher.Context result, final ReadableLoggingContext loggingContext) throws Exception {
+        requireNonNull(result, "result");
+        requireNonNull(loggingContext, "loggingContext");
+
+        if (result.status() == Publisher.Status.ACCEPTED) {
+            LOGGER.info("Published message <{}>.", loggingContext);
+            return;
+        }
+
+        final Throwable failure = result.failureCause();
+        if (failure instanceof final Exception exception) {
+            throw exception;
+        }
+        if (failure instanceof final Error error) {
+            throw error;
+        }
+        throw new IllegalStateException("AMQP publish failed with status " + result.status());
     }
 
     public enum ContentEncoding {
