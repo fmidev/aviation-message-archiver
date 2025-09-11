@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.config.factory.postaction;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.amqp.*;
 import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
 import fi.fmi.avi.archiver.config.model.PostActionFactory;
@@ -23,10 +24,10 @@ import java.lang.reflect.Proxy;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
@@ -35,16 +36,33 @@ import static java.util.Objects.requireNonNull;
 public class SwimRabbitMQPublisherFactory
         extends AbstractTypedConfigObjectFactory<SwimRabbitMQPublisher, SwimRabbitMQPublisherFactory.Config>
         implements PostActionFactory<SwimRabbitMQPublisher>, AutoCloseable {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisherFactory.class);
-    private static final Map<MessageType, String> SUBJECT_BY_MESSAGE_TYPE = Map.of(
-            MessageType.METAR, "weather.aviation.metar",
-            MessageType.SPECI, "weather.aviation.metar",
-            MessageType.TAF, "weather.aviation.taf",
-            MessageType.SIGMET, "weather.aviation.sigmet"
-    );
-    /**
-     * Default message priorities as specified in the specification document example.
-     */
+
+    private static final Map<MessageType, SwimRabbitMQPublisher.StaticApplicationProperties> APPLICATION_PROPERTY_DESCRIPTORS =
+            Map.of(
+                    MessageType.METAR, new SwimRabbitMQPublisher.StaticApplicationProperties(
+                            MessageType.METAR,
+                            "weather.aviation.metar",
+                            "https://eur-registry.swim.aero/services/eurocontrol-iwxxm-metar-speci-subscription-and-request-service-10",
+                            "AD"),
+                    MessageType.SPECI, new SwimRabbitMQPublisher.StaticApplicationProperties(
+                            MessageType.SPECI,
+                            "weather.aviation.metar",
+                            "https://eur-registry.swim.aero/services/eurocontrol-iwxxm-metar-speci-subscription-and-request-service-10",
+                            "AD"),
+                    MessageType.TAF, new SwimRabbitMQPublisher.StaticApplicationProperties(
+                            MessageType.TAF,
+                            "weather.aviation.taf",
+                            "https://eur-registry.swim.aero/services/eurocontrol-iwxxm-taf-subscription-and-request-service-10",
+                            "AD"),
+                    MessageType.SIGMET, new SwimRabbitMQPublisher.StaticApplicationProperties(
+                            MessageType.SIGMET,
+                            "weather.aviation.sigmet",
+                            "https://eur-registry.swim.aero/services/eurocontrol-iwxxm-sigmet-subscription-and-request-service-10",
+                            "FIR")
+            );
+
     private static final List<Config.PriorityDescriptor> DEFAULT_PRIORITIES = List.of(
             new ImmutablePriorityDescriptor(MessageType.SIGMET, 7),
             new ImmutablePriorityDescriptor(MessageType.SPECI, 6),
@@ -55,10 +73,10 @@ public class SwimRabbitMQPublisherFactory
 
     private final SwimRabbitMQConnectionHealthContributor healthContributorRegistry;
     private final Clock clock;
-    private final List<AutoCloseable> closeableResources = new ArrayList<>();
+    private final List<AutoCloseable> closeableResources = new CopyOnWriteArrayList<>();
     private final int iwxxmFormatId;
     private final BiMap<MessageType, Integer> messageTypeIds;
-    private final Map<Integer, String> subjectByMessageTypeId;
+    private final Map<Integer, SwimRabbitMQPublisher.StaticApplicationProperties> staticAppPropsByTypeId;
 
     public SwimRabbitMQPublisherFactory(
             final ObjectFactoryConfigFactory configFactory,
@@ -72,11 +90,12 @@ public class SwimRabbitMQPublisherFactory
         this.iwxxmFormatId = iwxxmFormatId;
         this.messageTypeIds = requireNonNull(messageTypeIds, "messageTypeIds");
 
-        subjectByMessageTypeId = SUBJECT_BY_MESSAGE_TYPE.entrySet().stream()
-                .filter(entry -> messageTypeIds.containsKey(entry.getKey()))
-                .collect(Collectors.toUnmodifiableMap(
-                        entry -> requireNonNull(messageTypeIds.get(entry.getKey())),
-                        Map.Entry::getValue));
+        this.staticAppPropsByTypeId = messageTypeIds.entrySet().stream()
+                .filter(entry -> APPLICATION_PROPERTY_DESCRIPTORS.containsKey(entry.getKey()))
+                .collect(ImmutableMap.toImmutableMap(
+                        entry -> requireNonNull(entry).getValue(),
+                        entry -> APPLICATION_PROPERTY_DESCRIPTORS.get(requireNonNull(entry).getKey())
+                ));
     }
 
     private static <T extends AutoCloseable> T createLazyForwardingProxy(
@@ -205,7 +224,7 @@ public class SwimRabbitMQPublisherFactory
         final SwimRabbitMQPublisher action = registerCloseable(newSwimRabbitMQPublisher(
                 RetryingPostActionFactories.retryParams(config.getRetry(), getInstanceName(config.getId()),
                         config.getPublishTimeout().orElse(Duration.ofSeconds(30)), config.getPublisherQueueCapacity()),
-                config.getId(), publisher, publisherHealthIndicator),  toPublisherMessageConfig(config.getId(), config.getMessage()));
+                config.getId(), publisher, publisherHealthIndicator, toPublisherMessageConfig(config.getId(), config.getMessage())));
         healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
         return action;
     }
@@ -270,8 +289,7 @@ public class SwimRabbitMQPublisherFactory
             final AbstractRetryingPostAction.RetryParams retryParams, final String instanceId, final Publisher publisher,
             final Consumer<Publisher.Context> publisherHealthIndicator, final SwimRabbitMQPublisher.MessageConfig messageConfig) {
         return new SwimRabbitMQPublisher(retryParams, instanceId, publisher, publisherHealthIndicator, clock, iwxxmFormatId,
-                subjectByMessageTypeId,
-                messageConfig);
+                staticAppPropsByTypeId, messageConfig);
     }
 
     private <T extends AutoCloseable> T registerCloseable(final T closeableResource) {

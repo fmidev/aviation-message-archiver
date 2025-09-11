@@ -15,6 +15,8 @@ production-line:
           queue:
             name: aviation-message-archiver
           routing-key: aviation-message-archiver
+        retry:
+          timeout: PT2M
         message:
           encoding: GZIP
           expiry-time: PT12H
@@ -25,5 +27,3 @@ production-line:
             - type: TAF
               priority: 5
             - priority: 0
-        retry:
-          timeout: PT2M

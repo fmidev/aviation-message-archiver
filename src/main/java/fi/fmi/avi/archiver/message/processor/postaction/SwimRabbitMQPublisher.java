@@ -1,20 +1,25 @@
 package fi.fmi.avi.archiver.message.processor.postaction;
 
+import com.google.common.collect.ImmutableSet;
 import com.rabbitmq.client.amqp.Message;
 import com.rabbitmq.client.amqp.Publisher;
 import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
 import fi.fmi.avi.model.AviationWeatherMessage;
+import fi.fmi.avi.model.MessageType;
 import org.inferred.freebuilder.FreeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -27,13 +32,14 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisher.class);
     private static final String CONTENT_TYPE = "application/xml";
     private static final ContentEncoding FALLBACK_ENCODING = ContentEncoding.IDENTITY;
+    private static final DateTimeFormatter RFC_3339_FORMAT = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
 
     private final String instanceId;
     private final Publisher amqpPublisher;
     private final Consumer<Publisher.Context> healthIndicator;
     private final Clock clock;
     private final int iwxxmFormatId;
-    private final Map<Integer, String> subjectByMessageTypeId;
+    private final Map<Integer, StaticApplicationProperties> staticAppPropsByTypeId;
     private final MessageConfig messageConfig;
 
     public SwimRabbitMQPublisher(
@@ -43,7 +49,7 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
             final Consumer<Publisher.Context> healthIndicator,
             final Clock clock,
             final int iwxxmFormatId,
-            final Map<Integer, String> subjectByMessageTypeId,
+            final Map<Integer, StaticApplicationProperties> staticAppPropsByTypeId,
             final MessageConfig messageConfig) {
         super(retryParams);
         this.instanceId = requireNonNull(instanceId, "instanceId");
@@ -51,13 +57,8 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
         this.healthIndicator = requireNonNull(healthIndicator, "healthIndicator");
         this.clock = requireNonNull(clock, "clock");
         this.iwxxmFormatId = iwxxmFormatId;
-        this.subjectByMessageTypeId = requireNonNull(subjectByMessageTypeId, "subjectByMessageTypeId");
+        this.staticAppPropsByTypeId = requireNonNull(staticAppPropsByTypeId, "staticAppPropsByTypeId");
         this.messageConfig = requireNonNull(messageConfig, "messageConfig");
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + '(' + instanceId + ')';
     }
 
     private static AviationWeatherMessage.ReportStatus getReportStatus(final ArchiveAviationMessage archiveAviationMessage) {
@@ -72,14 +73,27 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
     }
 
     @Override
+    public String toString() {
+        return getClass().getSimpleName() + '(' + instanceId + ')';
+    }
+
+    @Override
     public Future<Publisher.Context> runAsynchronously(final MessageProcessorContext context, final ArchiveAviationMessage message) {
         requireNonNull(context, "context");
         requireNonNull(message, "message");
 
-        final Message amqpMessage = amqpPublisher
-                .message(message.getMessage().getBytes(StandardCharsets.UTF_8))
-                .messageId(1L);
+        final ReadableLoggingContext loggingContext = context.getLoggingContext();
+        if (message.getFormat() != iwxxmFormatId) {
+            LOGGER.debug("Message <{}> is not in IWXXM format, format=<{}>. Skipping.", loggingContext, message.getFormat());
+            return CompletableFuture.completedFuture(null);
+        }
 
+        if (!staticAppPropsByTypeId.containsKey(message.getType())) {
+            LOGGER.debug("Message <{}> of type <{}> is not any of supported types. Skipping.", loggingContext, message.getType());
+            return CompletableFuture.completedFuture(null);
+        }
+
+        final Message amqpMessage = constructAmqpMessage(message, context);
         final CompletableFuture<Publisher.Context> future = new CompletableFuture<>();
         amqpPublisher.publish(amqpMessage, publisherContext -> {
             try {
@@ -96,30 +110,14 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
         return future;
     }
 
-    @Override
-    public void run(final MessageProcessorContext context, final ArchiveAviationMessage message) {
-        final ReadableLoggingContext loggingContext = context.getLoggingContext();
-
-        if (message.getFormat() != iwxxmFormatId) {
-            LOGGER.debug("Message <{}> is not in IWXXM format, format=<{}>. Skipping.", loggingContext, message.getFormat());
-            return;
-        }
-        if (!subjectByMessageTypeId.containsKey(message.getType())) {
-            LOGGER.debug("Message <{}> of type <{}> is not any of supported types. Skipping.", loggingContext, message.getType());
-            return;
-        }
-
-        final Message amqpMessage = constructAmqpMessage(message, loggingContext);
-        publishAmqpMessage(amqpMessage, loggingContext);
-    }
-
-    private Message constructAmqpMessage(final ArchiveAviationMessage archiveMessage, final ReadableLoggingContext loggingContext) {
-        final Message amqpMessage = initMessage(archiveMessage.getMessage(), loggingContext)
+    private Message constructAmqpMessage(final ArchiveAviationMessage archiveMessage, final MessageProcessorContext context) {
+        final StaticApplicationProperties staticProps = staticAppPropsByTypeId.get(archiveMessage.getType());
+        final Message amqpMessage = initMessage(archiveMessage.getMessage(), context.getLoggingContext())
                 .priority(messageConfig.getPriority(archiveMessage.getType(), getReportStatus(archiveMessage)))
-                .subject(requireNonNull(subjectByMessageTypeId.get(archiveMessage.getType())));
+                .subject(staticProps.subject());
         messageConfig.getAbsoluteExpiryTime(amqpMessage.creationTime())
                 .ifPresent(amqpMessage::absoluteExpiryTime);
-        return amqpMessage;
+        return setApplicationProperties(amqpMessage, archiveMessage, context, staticProps);
     }
 
     private Message initMessage(final String message, final ReadableLoggingContext loggingContext) {
@@ -147,32 +145,42 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
                 .creationTime(clock.millis());
     }
 
-    private void publishAmqpMessage(final Message amqpMessage, final ReadableLoggingContext loggingContext) {
-        amqpPublisher.publish(amqpMessage, publisherContext -> {
-            healthIndicator.accept(publisherContext);
-            if (publisherContext.status() == Publisher.Status.ACCEPTED) {
-                LOGGER.debug("Published message <{}>.", loggingContext);
-            } else if (publisherContext.failureCause() != null) {
-                final Throwable failureCause = publisherContext.failureCause();
-                LOGGER.error("Failed to publish message <{}> with status: <{}>: {}", loggingContext, publisherContext.status(),
-                        failureCause.getMessage(), failureCause);
-            } else {
-                LOGGER.error("Failed to publish message <{}> with status: <{}>.", loggingContext, publisherContext.status());
-            }
-        });
-        return future;
+    private Message setApplicationProperties(final Message amqpMessage,
+                                             final ArchiveAviationMessage archiveMessage,
+                                             final MessageProcessorContext context,
+                                             final StaticApplicationProperties staticApplicationProperties) {
+        final ReadableLoggingContext loggingContext = context.getLoggingContext();
+        final MessageType messageType = staticApplicationProperties.type();
+
+        ApplicationProperty.REPORT_STATUS.set(amqpMessage, getReportStatus(archiveMessage).toString(), messageType, loggingContext);
+        ApplicationProperty.ICAO_LOCATION_IDENTIFIER.set(amqpMessage, archiveMessage.getStationIcaoCode(), messageType, loggingContext);
+        ApplicationProperty.ISSUE_DATETIME.set(amqpMessage, RFC_3339_FORMAT.format(archiveMessage.getMessageTime()), messageType, loggingContext);
+        ApplicationProperty.ICAO_LOCATION_TYPE.set(amqpMessage, staticApplicationProperties.icaoLocationType(), messageType, loggingContext);
+        ApplicationProperty.CONFORMS_TO.set(amqpMessage, staticApplicationProperties.conformsTo(), messageType, loggingContext);
+
+        ApplicationProperty.OBSERVATION_DATETIME.set(amqpMessage,
+                context.getInputMessage().getIwxxmObservationTime().map(RFC_3339_FORMAT::format).orElse(null),
+                messageType, loggingContext);
+        ApplicationProperty.START_DATETIME.set(amqpMessage,
+                archiveMessage.getValidFrom().map(RFC_3339_FORMAT::format).orElse(null),
+                messageType, loggingContext);
+        ApplicationProperty.END_DATETIME.set(amqpMessage,
+                archiveMessage.getValidTo().map(RFC_3339_FORMAT::format).orElse(null),
+                messageType, loggingContext);
+
+        return amqpMessage;
     }
 
     @Override
-    public void checkResult(final Publisher.Context result, final ReadableLoggingContext loggingContext) throws Exception {
-        requireNonNull(result, "result");
+    public void checkResult(@Nullable final Publisher.Context result, final ReadableLoggingContext loggingContext) throws Exception {
         requireNonNull(loggingContext, "loggingContext");
-
+        if (result == null) {
+            return;
+        }
         if (result.status() == Publisher.Status.ACCEPTED) {
             LOGGER.info("Published message <{}>.", loggingContext);
             return;
         }
-
         final Throwable failure = result.failureCause();
         if (failure instanceof final Exception exception) {
             throw exception;
@@ -181,6 +189,44 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
             throw error;
         }
         throw new IllegalStateException("AMQP publish failed with status " + result.status());
+    }
+
+    public enum ApplicationProperty {
+        REPORT_STATUS("properties.report_status", Category.MANDATORY),
+        ICAO_LOCATION_IDENTIFIER("properties.icao_location_identifier", Category.MANDATORY),
+        ICAO_LOCATION_TYPE("properties.icao_location_type", Category.OPTIONAL),
+        CONFORMS_TO("conformsTo", Category.CONDITIONAL),
+        ISSUE_DATETIME("properties.issue_datetime", Category.MANDATORY),
+        OBSERVATION_DATETIME("properties.datetime", Category.CONDITIONAL, ImmutableSet.of(MessageType.METAR, MessageType.SPECI)),
+        START_DATETIME("properties.start_datetime", Category.CONDITIONAL, ImmutableSet.of(MessageType.TAF, MessageType.SIGMET)),
+        END_DATETIME("properties.end_datetime", Category.CONDITIONAL, ImmutableSet.of(MessageType.TAF, MessageType.SIGMET));
+
+        private final String key;
+        private final Category category;
+        private final Set<MessageType> requiredForTypes;
+
+        ApplicationProperty(final String key, final Category category) {
+            this(key, category, Collections.emptySet());
+        }
+
+        ApplicationProperty(final String key, final Category category, final Set<MessageType> requiredForTypes) {
+            this.key = key;
+            this.category = category;
+            this.requiredForTypes = requiredForTypes;
+        }
+
+        public void set(final Message message,
+                        @Nullable final String value,
+                        final MessageType messageType,
+                        final ReadableLoggingContext loggingContext) {
+            final boolean required = category == Category.MANDATORY || (category == Category.CONDITIONAL && requiredForTypes.contains(messageType));
+            if (value == null && required) {
+                throw new IllegalArgumentException("Missing required property '" + key + "' for type " + messageType + " <" + loggingContext + '>');
+            }
+            message.property(key, value);
+        }
+
+        public enum Category {MANDATORY, OPTIONAL, CONDITIONAL}
     }
 
     public enum ContentEncoding {
@@ -214,6 +260,16 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
         }
 
         abstract byte[] encode(final String content) throws IOException;
+    }
+
+    public record StaticApplicationProperties(MessageType type, String subject, String conformsTo,
+                                              String icaoLocationType) {
+        public StaticApplicationProperties {
+            requireNonNull(type, "type");
+            requireNonNull(subject, "subject");
+            requireNonNull(conformsTo, "conformsTo");
+            requireNonNull(icaoLocationType, "icaoLocationType");
+        }
     }
 
     @FreeBuilder
@@ -278,5 +334,4 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
             }
         }
     }
-
 }
