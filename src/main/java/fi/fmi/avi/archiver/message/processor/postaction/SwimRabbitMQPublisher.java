@@ -9,38 +9,76 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
 
-public class SwimRabbitMQPublisher implements PostAction {
+public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.Context> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisher.class);
-
+    private final String instanceId;
     private final Publisher amqpPublisher;
     private final Consumer<Publisher.Context> healthIndicator;
 
-    public SwimRabbitMQPublisher(final Publisher amqpPublisher, final Consumer<Publisher.Context> healthIndicator) {
+    public SwimRabbitMQPublisher(
+            final RetryParams retryParams,
+            final String instanceId,
+            final Publisher amqpPublisher,
+            final Consumer<Publisher.Context> healthIndicator) {
+        super(retryParams);
+        this.instanceId = requireNonNull(instanceId, "instanceId");
         this.amqpPublisher = requireNonNull(amqpPublisher, "amqpPublisher");
         this.healthIndicator = requireNonNull(healthIndicator, "healthIndicator");
     }
 
     @Override
-    public void run(final MessageProcessorContext context, final ArchiveAviationMessage message) {
-        final ReadableLoggingContext loggingContext = context.getLoggingContext();
+    public String toString() {
+        return getClass().getSimpleName() + '(' + instanceId + ')';
+    }
+
+    @Override
+    public Future<Publisher.Context> runAsynchronously(final MessageProcessorContext context, final ArchiveAviationMessage message) {
+        requireNonNull(context, "context");
+        requireNonNull(message, "message");
+
         final Message amqpMessage = amqpPublisher
                 .message(message.getMessage().getBytes(StandardCharsets.UTF_8))
                 .messageId(1L);
+
+        final CompletableFuture<Publisher.Context> future = new CompletableFuture<>();
         amqpPublisher.publish(amqpMessage, publisherContext -> {
-            healthIndicator.accept(publisherContext);
-            if (publisherContext.status() == Publisher.Status.ACCEPTED) {
-                LOGGER.debug("Published message <{}>.", loggingContext);
-            } else if (publisherContext.failureCause() != null) {
-                final Throwable failureCause = publisherContext.failureCause();
-                LOGGER.error("Failed to publish message <{}> with status: <{}>: {}", loggingContext, publisherContext.status(),
-                        failureCause.getMessage(), failureCause);
-            } else {
-                LOGGER.error("Failed to publish message <{}> with status: <{}>.", loggingContext, publisherContext.status());
+            try {
+                healthIndicator.accept(publisherContext);
+            } catch (final RuntimeException runtimeException) {
+                LOGGER.error("Health indicator threw while updating message <{}> status", context.getLoggingContext(), runtimeException);
+            } catch (final Error error) {
+                LOGGER.error("Fatal error in health indicator while updating message <{}> status", context.getLoggingContext(), error);
+                throw error;
+            } finally {
+                future.complete(publisherContext);
             }
         });
+        return future;
+    }
+
+    @Override
+    public void checkResult(final Publisher.Context result, final ReadableLoggingContext loggingContext) throws Exception {
+        requireNonNull(result, "result");
+        requireNonNull(loggingContext, "loggingContext");
+
+        if (result.status() == Publisher.Status.ACCEPTED) {
+            LOGGER.info("Published message <{}>.", loggingContext);
+            return;
+        }
+
+        final Throwable failure = result.failureCause();
+        if (failure instanceof final Exception exception) {
+            throw exception;
+        }
+        if (failure instanceof final Error error) {
+            throw error;
+        }
+        throw new IllegalStateException("AMQP publish failed with status " + result.status());
     }
 }

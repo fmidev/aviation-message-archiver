@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.rabbitmq.client.amqp.*;
 import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
 import fi.fmi.avi.archiver.config.model.PostActionFactory;
+import fi.fmi.avi.archiver.message.processor.postaction.AbstractRetryingPostAction;
 import fi.fmi.avi.archiver.message.processor.postaction.SwimRabbitMQPublisher;
 import fi.fmi.avi.archiver.spring.healthcontributor.RabbitMQConnectionHealthIndicator;
 import fi.fmi.avi.archiver.spring.healthcontributor.RabbitMQPublisherHealthIndicator;
@@ -14,8 +15,10 @@ import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -51,7 +54,7 @@ public class SwimRabbitMQPublisherFactory
                 (proxy, method, args) -> {
                     T instance = instanceRef.get();
                     while (instance == null) {
-                        T newInstance = factory.get();
+                        final T newInstance = factory.get();
                         if (instanceRef.compareAndSet(null, newInstance)) {
                             instance = newInstance;
                         } else {
@@ -63,7 +66,11 @@ public class SwimRabbitMQPublisherFactory
                             instance = instanceRef.get();
                         }
                     }
-                    return method.invoke(instance, args);
+                    try {
+                        return method.invoke(instance, args);
+                    } catch (final InvocationTargetException ite) {
+                        throw ite.getTargetException();
+                    }
                 }
         ));
     }
@@ -126,8 +133,8 @@ public class SwimRabbitMQPublisherFactory
     public SwimRabbitMQPublisher newInstance(final Config config) {
         requireNonNull(config, "config");
         final Config.ConnectionConfig connectionConfig = config.getConnection();
-        final RabbitMQConnectionHealthIndicator connectionHealthIndicator = newConnectionHealthIndicator();
-        final RabbitMQPublisherHealthIndicator publisherHealthIndicator = newPublisherHealthIndicator();
+        final RabbitMQConnectionHealthIndicator connectionHealthIndicator = newConnectionHealthIndicator(clock);
+        final RabbitMQPublisherHealthIndicator publisherHealthIndicator = newPublisherHealthIndicator(clock);
         final Environment environment = registerCloseable(newAmqpEnvironmentBuilder().build());
 
         final AtomicReference<Connection> connectionRef = new AtomicReference<>();
@@ -148,21 +155,28 @@ public class SwimRabbitMQPublisherFactory
             }
 
             return registerCloseable(connection.publisherBuilder()
-                .exchange(topologyConfig.getExchange().getName())
-                .key(topologyConfig.getRoutingKey())
-                .listeners(context -> {
-                    if (context.currentState() == Resource.State.CLOSED && context.failureCause() != null) {
-                        LOGGER.error("AMQP publisher closed unexpectedly - connection and publisher will be recreated on next publish attempt");
-                        unregisterAndClose(connectionRef, "connection");
-                        unregisterAndClose(publisherRef, "publisher");
-                    }
-                })
-                .build());
+                    .exchange(topologyConfig.getExchange().getName())
+                    .key(topologyConfig.getRoutingKey())
+                    .listeners(context -> {
+                        if (context.currentState() == Resource.State.CLOSED && context.failureCause() != null) {
+                            LOGGER.error("AMQP publisher closed unexpectedly - connection and publisher will be recreated on next publish attempt");
+                            unregisterAndClose(connectionRef, "connection");
+                            unregisterAndClose(publisherRef, "publisher");
+                        }
+                    })
+                    .build());
         }, publisherRef);
 
-        final SwimRabbitMQPublisher action = newSwimRabbitMQPublisher(publisher, publisherHealthIndicator);
+        final SwimRabbitMQPublisher action = registerCloseable(newSwimRabbitMQPublisher(
+                RetryingPostActionFactories.retryParams(config.getRetry(), getInstanceName(config.getId()),
+                        config.getPublishTimeout().orElse(Duration.ofSeconds(30)), config.getPublisherQueueCapacity()),
+                config.getId(), publisher, publisherHealthIndicator));
         healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
         return action;
+    }
+
+    private String getInstanceName(final String instanceId) {
+        return getName() + '(' + instanceId + ')';
     }
 
     @VisibleForTesting
@@ -171,18 +185,20 @@ public class SwimRabbitMQPublisherFactory
     }
 
     @VisibleForTesting
-    RabbitMQConnectionHealthIndicator newConnectionHealthIndicator() {
+    RabbitMQConnectionHealthIndicator newConnectionHealthIndicator(final Clock clock) {
         return new RabbitMQConnectionHealthIndicator(clock);
     }
 
     @VisibleForTesting
-    RabbitMQPublisherHealthIndicator newPublisherHealthIndicator() {
+    RabbitMQPublisherHealthIndicator newPublisherHealthIndicator(final Clock clock) {
         return new RabbitMQPublisherHealthIndicator(clock);
     }
 
     @VisibleForTesting
-    SwimRabbitMQPublisher newSwimRabbitMQPublisher(final Publisher publisher, final Consumer<Publisher.Context> publisherHealthIndicator) {
-        return new SwimRabbitMQPublisher(publisher, publisherHealthIndicator);
+    SwimRabbitMQPublisher newSwimRabbitMQPublisher(
+            final AbstractRetryingPostAction.RetryParams retryParams, final String instanceId, final Publisher publisher,
+            final Consumer<Publisher.Context> publisherHealthIndicator) {
+        return new SwimRabbitMQPublisher(retryParams, instanceId, publisher, publisherHealthIndicator);
     }
 
     private <T extends AutoCloseable> T registerCloseable(final T closeableResource) {
@@ -227,9 +243,15 @@ public class SwimRabbitMQPublisherFactory
     public interface Config extends ObjectFactoryConfig {
         String getId();
 
+        int getPublisherQueueCapacity();
+
+        Optional<Duration> getPublishTimeout();
+
         ConnectionConfig getConnection();
 
         TopologyConfig getTopology();
+
+        RetryingPostActionFactories.RetryConfig getRetry();
 
         interface ConnectionConfig extends ObjectFactoryConfig {
             String getUri();
