@@ -221,8 +221,11 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
                         final MessageType messageType,
                         final ReadableLoggingContext loggingContext) {
             final boolean required = category == Category.MANDATORY || (category == Category.CONDITIONAL && requiredForTypes.contains(messageType));
-            if (value == null && required) {
-                throw new IllegalArgumentException("Missing required property '" + key + "' for type " + messageType + " <" + loggingContext + '>');
+            if (value == null) {
+                if (required) {
+                    throw new IllegalArgumentException("Missing required property '" + key + "' for type " + messageType + " <" + loggingContext + '>');
+                }
+                return;
             }
             message.property(key, value);
         }
