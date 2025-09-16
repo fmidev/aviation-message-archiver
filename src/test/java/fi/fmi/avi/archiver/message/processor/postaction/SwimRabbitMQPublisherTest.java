@@ -75,6 +75,8 @@ class SwimRabbitMQPublisherTest {
                     MESSAGE_TYPE_SIGMET, new SwimRabbitMQPublisher.StaticApplicationProperties(MessageType.SIGMET, "weather.aviation.sigmet", SIGMET_SPEC, "FIR")
             );
 
+    private static final String RABBITMQ_EXCHANGE = "test-exchange";
+
     private static final String KEY_REPORT_STATUS = "properties.report_status";
     private static final String KEY_ICAO_LOCATION_IDENTIFIER = "properties.icao_location_identifier";
     private static final String KEY_ISSUE_DATETIME = "properties.issue_datetime";
@@ -267,6 +269,7 @@ class SwimRabbitMQPublisherTest {
     private static SwimRabbitMQPublisher.MessageConfig createMessageConfig(
             final SwimRabbitMQPublisher.ContentEncoding encoding, final Duration expiryTime) {
         return SwimRabbitMQPublisher.MessageConfig.builder()
+                .setExchange(RABBITMQ_EXCHANGE)
                 .addPriorities(
                         SwimRabbitMQPublisher.MessageConfig.PriorityDescriptor.builder()
                                 .setMessageType(MESSAGE_TYPE_SPECI)
@@ -318,6 +321,12 @@ class SwimRabbitMQPublisherTest {
         when(publisher.message(any())).thenReturn(amqpMessage);
         when(publisherContext.status()).thenReturn(Publisher.Status.ACCEPTED);
         when(publisherContext.failureCause()).thenReturn(null);
+
+        final Message.MessageAddressBuilder addressBuilder =
+                mock(Message.MessageAddressBuilder.class, Answers.RETURNS_SELF);
+        when(amqpMessage.toAddress()).thenReturn(addressBuilder);
+        when(addressBuilder.message()).thenReturn(amqpMessage);
+
         doAnswer(invocation -> {
             final Publisher.Callback callback = invocation.getArgument(1);
             callback.handle(publisherContext);
@@ -338,7 +347,7 @@ class SwimRabbitMQPublisherTest {
         try (final SwimRabbitMQPublisher publisher = newPublisher(Clock.systemUTC(), SwimRabbitMQPublisher.MessageConfig.builder().buildPartial())) {
             publisher.run(newContext(), archiveAviationMessage);
         }
-        verifyNoInteractions(this.publisher);
+        verifyNoInteractions(publisher);
     }
 
     @ParameterizedTest
@@ -346,7 +355,7 @@ class SwimRabbitMQPublisherTest {
     void test_content_encoding(final SwimRabbitMQPublisher.ContentEncoding encoding) throws Exception {
         final String content = readResource("taf-message.xml");
         try (final SwimRabbitMQPublisher publisher = newPublisher(Clock.systemUTC(),
-                SwimRabbitMQPublisher.MessageConfig.builder().setEncoding(encoding).build())) {
+                SwimRabbitMQPublisher.MessageConfig.builder().setEncoding(encoding).setExchange(RABBITMQ_EXCHANGE).build())) {
             publisher.run(newContext(), newMessage(MESSAGE_TYPE_TAF, content, NOW));
         }
 
@@ -414,7 +423,8 @@ class SwimRabbitMQPublisherTest {
             return null;
         }).when(publisher).publish(any(Message.class), any(Publisher.Callback.class));
 
-        try (final SwimRabbitMQPublisher publisher = newPublisher(Clock.systemUTC(), SwimRabbitMQPublisher.MessageConfig.builder().build())) {
+        try (final SwimRabbitMQPublisher publisher = newPublisher(Clock.systemUTC(),
+                SwimRabbitMQPublisher.MessageConfig.builder().setExchange(RABBITMQ_EXCHANGE).build())) {
             publisher.run(newContext(), newMessage(MESSAGE_TYPE_TAF, content, NOW));
         }
 
@@ -437,7 +447,8 @@ class SwimRabbitMQPublisherTest {
             return null;
         }).when(publisher).publish(any(Message.class), any(Publisher.Callback.class));
 
-        try (final SwimRabbitMQPublisher publisher = newPublisher(Clock.systemUTC(), SwimRabbitMQPublisher.MessageConfig.builder().build(), retryParams)) {
+        try (final SwimRabbitMQPublisher publisher = newPublisher(Clock.systemUTC(),
+                SwimRabbitMQPublisher.MessageConfig.builder().setExchange(RABBITMQ_EXCHANGE).build(), retryParams)) {
             publisher.run(newContext(), newMessage(MESSAGE_TYPE_TAF, content, NOW));
         }
 

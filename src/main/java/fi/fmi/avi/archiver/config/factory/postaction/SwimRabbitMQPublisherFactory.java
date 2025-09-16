@@ -209,8 +209,6 @@ public class SwimRabbitMQPublisherFactory
             }
 
             return registerCloseable(connection.publisherBuilder()
-                    .exchange(topologyConfig.getExchange().getName())
-                    .key(topologyConfig.getRoutingKey())
                     .listeners(context -> {
                         if (context.currentState() == Resource.State.CLOSED && context.failureCause() != null) {
                             LOGGER.error("AMQP publisher closed unexpectedly - connection and publisher will be recreated on next publish attempt");
@@ -224,7 +222,8 @@ public class SwimRabbitMQPublisherFactory
         final SwimRabbitMQPublisher action = registerCloseable(newSwimRabbitMQPublisher(
                 RetryingPostActionFactories.retryParams(config.getRetry(), getInstanceName(config.getId()),
                         config.getPublishTimeout().orElse(Duration.ofSeconds(30)), config.getPublisherQueueCapacity()),
-                config.getId(), publisher, publisherHealthIndicator, toPublisherMessageConfig(config.getId(), config.getMessage())));
+                config.getId(), publisher, publisherHealthIndicator,
+                toPublisherMessageConfig(config.getId(), config.getTopology().getExchange().getName(), config.getMessage())));
         healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
         return action;
     }
@@ -233,8 +232,10 @@ public class SwimRabbitMQPublisherFactory
         return getName() + '(' + instanceId + ')';
     }
 
-    private SwimRabbitMQPublisher.MessageConfig toPublisherMessageConfig(final String configId, final Config.MessageConfig factoryConfig) {
-        final SwimRabbitMQPublisher.MessageConfig.Builder builder = SwimRabbitMQPublisher.MessageConfig.builder();
+    private SwimRabbitMQPublisher.MessageConfig toPublisherMessageConfig(final String configId, final String exchangeName,
+                                                                         final Config.MessageConfig factoryConfig) {
+        final SwimRabbitMQPublisher.MessageConfig.Builder builder = SwimRabbitMQPublisher.MessageConfig.builder()
+                .setExchange(exchangeName);
         factoryConfig.getEncoding().ifPresent(builder::setEncoding);
         factoryConfig.getExpiryTime().ifPresent(builder::setExpiryTime);
         final SwimRabbitMQPublisher.MessageConfig publisherConfig = builder

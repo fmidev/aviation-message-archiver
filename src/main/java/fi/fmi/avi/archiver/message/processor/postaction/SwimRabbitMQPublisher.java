@@ -114,7 +114,8 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
         final StaticApplicationProperties staticProps = staticAppPropsByTypeId.get(archiveMessage.getType());
         final Message amqpMessage = initMessage(archiveMessage.getMessage(), context.getLoggingContext())
                 .priority(messageConfig.getPriority(archiveMessage.getType(), getReportStatus(archiveMessage)))
-                .subject(staticProps.subject());
+                .subject(staticProps.subject())
+                .toAddress().exchange(messageConfig.getExchange()).key(staticProps.subject()).message();
         messageConfig.getAbsoluteExpiryTime(amqpMessage.creationTime())
                 .ifPresent(amqpMessage::absoluteExpiryTime);
         return setApplicationProperties(amqpMessage, archiveMessage, context, staticProps);
@@ -280,6 +281,8 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
             return new Builder()
                     .setEncoding(ContentEncoding.IDENTITY);
         }
+
+        public abstract String getExchange();
 
         public abstract List<PriorityDescriptor> getPriorities();
 
