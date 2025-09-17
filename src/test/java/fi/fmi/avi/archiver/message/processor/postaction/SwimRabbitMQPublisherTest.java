@@ -13,6 +13,7 @@ import fi.fmi.avi.archiver.message.ProcessingResult;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
 import fi.fmi.avi.archiver.message.processor.TestMessageProcessorContext;
 import fi.fmi.avi.model.AviationWeatherMessage;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -311,8 +312,18 @@ class SwimRabbitMQPublisherTest {
         return msgBuilder.buildPartial();
     }
 
+    private static MessageProcessorContext newContext(final AviationWeatherMessage.ReportStatus reportStatus) {
+        final GenericAviationWeatherMessage message = mock(GenericAviationWeatherMessage.class);
+        when(message.getReportStatus()).thenReturn(reportStatus);
+        final InputAviationMessage input =
+                InputAviationMessage.builder()
+                        .setMessage(message)
+                        .buildPartial();
+        return TestMessageProcessorContext.create(input);
+    }
+
     private static MessageProcessorContext newContext() {
-        return TestMessageProcessorContext.create(InputAviationMessage.builder().buildPartial());
+        return newContext(AviationWeatherMessage.ReportStatus.NORMAL);
     }
 
     @BeforeEach

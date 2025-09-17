@@ -3,6 +3,7 @@ package fi.fmi.avi.archiver.message.processor.postaction;
 import com.google.common.collect.ImmutableSet;
 import com.rabbitmq.client.amqp.Message;
 import com.rabbitmq.client.amqp.Publisher;
+import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
@@ -61,7 +62,11 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
         this.messageConfig = requireNonNull(messageConfig, "messageConfig");
     }
 
-    private static AviationWeatherMessage.ReportStatus getReportStatus(final ArchiveAviationMessage archiveAviationMessage) {
+    private static AviationWeatherMessage.ReportStatus getReportStatus(final ArchiveAviationMessage archiveAviationMessage,
+                                                                       final InputAviationMessage inputAviationMessage) {
+        if (archiveAviationMessage.getVersion().isEmpty()) {
+            return inputAviationMessage.getMessage().getReportStatus();
+        }
         final String version = archiveAviationMessage.getVersion().orElse("");
         if (version.startsWith("AA")) {
             return AviationWeatherMessage.ReportStatus.AMENDMENT;
@@ -113,7 +118,7 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
     private Message constructAmqpMessage(final ArchiveAviationMessage archiveMessage, final MessageProcessorContext context) {
         final StaticApplicationProperties staticProps = staticAppPropsByTypeId.get(archiveMessage.getType());
         final Message amqpMessage = initMessage(archiveMessage.getMessage(), context.getLoggingContext())
-                .priority(messageConfig.getPriority(archiveMessage.getType(), getReportStatus(archiveMessage)))
+                .priority(messageConfig.getPriority(archiveMessage.getType(), getReportStatus(archiveMessage, context.getInputMessage())))
                 .subject(staticProps.subject())
                 .toAddress().exchange(messageConfig.getExchange()).key(staticProps.subject()).message();
         messageConfig.getAbsoluteExpiryTime(amqpMessage.creationTime())
@@ -153,7 +158,7 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
         final ReadableLoggingContext loggingContext = context.getLoggingContext();
         final MessageType messageType = staticApplicationProperties.type();
 
-        ApplicationProperty.REPORT_STATUS.set(amqpMessage, getReportStatus(archiveMessage).toString(), messageType, loggingContext);
+        ApplicationProperty.REPORT_STATUS.set(amqpMessage, getReportStatus(archiveMessage, context.getInputMessage()).toString(), messageType, loggingContext);
         ApplicationProperty.ICAO_LOCATION_IDENTIFIER.set(amqpMessage, archiveMessage.getStationIcaoCode(), messageType, loggingContext);
         ApplicationProperty.ISSUE_DATETIME.set(amqpMessage, RFC_3339_FORMAT.format(archiveMessage.getMessageTime()), messageType, loggingContext);
         ApplicationProperty.ICAO_LOCATION_TYPE.set(amqpMessage, staticApplicationProperties.icaoLocationType(), messageType, loggingContext);
