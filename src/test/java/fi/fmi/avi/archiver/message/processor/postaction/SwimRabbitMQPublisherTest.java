@@ -15,6 +15,7 @@ import fi.fmi.avi.archiver.message.processor.TestMessageProcessorContext;
 import fi.fmi.avi.model.AviationWeatherMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
+import org.inferred.freebuilder.FreeBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -116,130 +118,92 @@ class SwimRabbitMQPublisherTest {
     static Stream<AppPropScenario> app_property_scenarios() {
         return Stream.of(
                 // METAR
-                new AppPropScenario(
-                        MESSAGE_TYPE_METAR,
-                        "metar-message.xml",
-                        "",
-                        SwimRabbitMQPublisher.ContentEncoding.IDENTITY,
-                        AviationWeatherMessage.ReportStatus.NORMAL,
-                        4,
-                        NOW.minusSeconds(300).atOffset(ZoneOffset.UTC),
-                        null,
-                        null,
-                        Map.of(KEY_OBSERVATION_DATETIME, NOW.minusSeconds(300).toString()),
-                        Set.of(KEY_START_DATETIME, KEY_END_DATETIME),
-                        "weather.aviation.metar",
-                        "AD",
-                        null
-                ),
+                AppPropScenario.builder()
+                        .messageType(MESSAGE_TYPE_METAR)
+                        .resourceFile("metar-message.xml")
+                        .encoding(SwimRabbitMQPublisher.ContentEncoding.IDENTITY)
+                        .expectedReportStatus(AviationWeatherMessage.ReportStatus.NORMAL)
+                        .expectedPriority(4)
+                        .observationTime(NOW.minusSeconds(300).atOffset(ZoneOffset.UTC))
+                        .putExpectedOptionalProps(KEY_OBSERVATION_DATETIME, NOW.minusSeconds(300).toString())
+                        .addExpectedAbsentProps(KEY_START_DATETIME, KEY_END_DATETIME)
+                        .build(),
+
                 // METAR without observation time
-                new AppPropScenario(
-                        MESSAGE_TYPE_METAR,
-                        "metar-message.xml",
-                        "",
-                        SwimRabbitMQPublisher.ContentEncoding.IDENTITY,
-                        AviationWeatherMessage.ReportStatus.NORMAL,
-                        4,
-                        null,
-                        null,
-                        null,
-                        Map.of(),
-                        Set.of(KEY_OBSERVATION_DATETIME, KEY_START_DATETIME, KEY_END_DATETIME),
-                        "weather.aviation.metar",
-                        "AD",
-                        IllegalArgumentException.class
-                ),
+                AppPropScenario.builder()
+                        .messageType(MESSAGE_TYPE_METAR)
+                        .resourceFile("metar-message.xml")
+                        .encoding(SwimRabbitMQPublisher.ContentEncoding.IDENTITY)
+                        .expectedReportStatus(AviationWeatherMessage.ReportStatus.NORMAL)
+                        .expectedPriority(4)
+                        .addExpectedAbsentProps(KEY_OBSERVATION_DATETIME, KEY_START_DATETIME, KEY_END_DATETIME)
+                        .expectedException(IllegalArgumentException.class)
+                        .build(),
+
                 // SPECI
-                new AppPropScenario(
-                        MESSAGE_TYPE_SPECI,
-                        "speci-message.xml",
-                        "",
-                        SwimRabbitMQPublisher.ContentEncoding.IDENTITY,
-                        AviationWeatherMessage.ReportStatus.NORMAL,
-                        7,
-                        NOW.minusSeconds(120).atOffset(ZoneOffset.UTC),
-                        null,
-                        null,
-                        Map.of(KEY_OBSERVATION_DATETIME, NOW.minusSeconds(120).toString()),
-                        Set.of(KEY_START_DATETIME, KEY_END_DATETIME),
-                        "weather.aviation.metar",
-                        "AD",
-                        null
-                ),
+                AppPropScenario.builder()
+                        .messageType(MESSAGE_TYPE_SPECI)
+                        .resourceFile("speci-message.xml")
+                        .encoding(SwimRabbitMQPublisher.ContentEncoding.IDENTITY)
+                        .expectedReportStatus(AviationWeatherMessage.ReportStatus.NORMAL)
+                        .expectedPriority(7)
+                        .observationTime(NOW.minusSeconds(120).atOffset(ZoneOffset.UTC))
+                        .putExpectedOptionalProps(KEY_OBSERVATION_DATETIME, NOW.minusSeconds(120).toString())
+                        .addExpectedAbsentProps(KEY_START_DATETIME, KEY_END_DATETIME)
+                        .build(),
+
                 // TAF without valid time
-                new AppPropScenario(
-                        MESSAGE_TYPE_TAF,
-                        "taf-message.xml",
-                        "",
-                        SwimRabbitMQPublisher.ContentEncoding.GZIP,
-                        AviationWeatherMessage.ReportStatus.NORMAL,
-                        5,
-                        null,
-                        null,
-                        null,
-                        Map.of(),
-                        Set.of(KEY_OBSERVATION_DATETIME, KEY_START_DATETIME, KEY_END_DATETIME),
-                        "weather.aviation.taf",
-                        "AD",
-                        IllegalArgumentException.class
-                ),
+                AppPropScenario.builder()
+                        .messageType(MESSAGE_TYPE_TAF)
+                        .resourceFile("taf-message.xml")
+                        .encoding(SwimRabbitMQPublisher.ContentEncoding.GZIP)
+                        .expectedReportStatus(AviationWeatherMessage.ReportStatus.NORMAL)
+                        .expectedPriority(5)
+                        .addExpectedAbsentProps(KEY_OBSERVATION_DATETIME, KEY_START_DATETIME, KEY_END_DATETIME)
+                        .expectedException(IllegalArgumentException.class)
+                        .build(),
+
                 // AMD TAF
-                new AppPropScenario(
-                        MESSAGE_TYPE_TAF,
-                        "taf-message.xml",
-                        "AAC",
-                        SwimRabbitMQPublisher.ContentEncoding.GZIP,
-                        AviationWeatherMessage.ReportStatus.AMENDMENT,
-                        6,
-                        null,
-                        NOW.plusSeconds(3600).atOffset(ZoneOffset.UTC),
-                        NOW.plusSeconds(3600 * 6).atOffset(ZoneOffset.UTC),
-                        Map.of(
-                                KEY_START_DATETIME, NOW.plusSeconds(3600).toString(),
-                                KEY_END_DATETIME, NOW.plusSeconds(3600 * 6).toString()
-                        ),
-                        Set.of(KEY_OBSERVATION_DATETIME),
-                        "weather.aviation.taf",
-                        "AD",
-                        null
-                ),
+                AppPropScenario.builder()
+                        .messageType(MESSAGE_TYPE_TAF)
+                        .resourceFile("taf-message.xml")
+                        .version("AAC")
+                        .encoding(SwimRabbitMQPublisher.ContentEncoding.GZIP)
+                        .expectedReportStatus(AviationWeatherMessage.ReportStatus.AMENDMENT)
+                        .expectedPriority(6)
+                        .validFrom(NOW.plusSeconds(3600).atOffset(ZoneOffset.UTC))
+                        .validTo(NOW.plusSeconds(3600 * 6).atOffset(ZoneOffset.UTC))
+                        .putExpectedOptionalProps(KEY_START_DATETIME, NOW.plusSeconds(3600).toString())
+                        .putExpectedOptionalProps(KEY_END_DATETIME, NOW.plusSeconds(3600 * 6).toString())
+                        .addExpectedAbsentProps(KEY_OBSERVATION_DATETIME)
+                        .build(),
+
                 // SIGMET
-                new AppPropScenario(
-                        MESSAGE_TYPE_SIGMET,
-                        "sigmet-message.xml",
-                        "",
-                        SwimRabbitMQPublisher.ContentEncoding.IDENTITY,
-                        AviationWeatherMessage.ReportStatus.NORMAL,
-                        0,
-                        null,
-                        NOW.minusSeconds(600).atOffset(ZoneOffset.UTC),
-                        NOW.plusSeconds(1800).atOffset(ZoneOffset.UTC),
-                        Map.of(
-                                KEY_START_DATETIME, NOW.minusSeconds(600).toString(),
-                                KEY_END_DATETIME, NOW.plusSeconds(1800).toString()
-                        ),
-                        Set.of(KEY_OBSERVATION_DATETIME),
-                        "weather.aviation.sigmet",
-                        "FIR",
-                        null
-                ),
+                AppPropScenario.builder()
+                        .messageType(MESSAGE_TYPE_SIGMET)
+                        .resourceFile("sigmet-message.xml")
+                        .encoding(SwimRabbitMQPublisher.ContentEncoding.IDENTITY)
+                        .expectedReportStatus(AviationWeatherMessage.ReportStatus.NORMAL)
+                        .expectedPriority(0)
+                        .validFrom(NOW.minusSeconds(600).atOffset(ZoneOffset.UTC))
+                        .validTo(NOW.plusSeconds(1800).atOffset(ZoneOffset.UTC))
+                        .putExpectedOptionalProps(KEY_START_DATETIME, NOW.minusSeconds(600).toString())
+                        .putExpectedOptionalProps(KEY_END_DATETIME, NOW.plusSeconds(1800).toString())
+                        .addExpectedAbsentProps(KEY_OBSERVATION_DATETIME)
+                        .build(),
+
                 // SIGMET without valid end
-                new AppPropScenario(
-                        MESSAGE_TYPE_SIGMET,
-                        "sigmet-message.xml",
-                        "",
-                        SwimRabbitMQPublisher.ContentEncoding.IDENTITY,
-                        AviationWeatherMessage.ReportStatus.NORMAL,
-                        0,
-                        null,
-                        NOW.minusSeconds(900).atOffset(ZoneOffset.UTC),
-                        null,
-                        Map.of(KEY_START_DATETIME, NOW.minusSeconds(900).toString()),
-                        Set.of(KEY_OBSERVATION_DATETIME, KEY_END_DATETIME),
-                        "weather.aviation.sigmet",
-                        "FIR",
-                        IllegalArgumentException.class
-                )
+                AppPropScenario.builder()
+                        .messageType(MESSAGE_TYPE_SIGMET)
+                        .resourceFile("sigmet-message.xml")
+                        .encoding(SwimRabbitMQPublisher.ContentEncoding.IDENTITY)
+                        .expectedReportStatus(AviationWeatherMessage.ReportStatus.NORMAL)
+                        .expectedPriority(0)
+                        .validFrom(NOW.minusSeconds(900).atOffset(ZoneOffset.UTC))
+                        .putExpectedOptionalProps(KEY_START_DATETIME, NOW.minusSeconds(900).toString())
+                        .addExpectedAbsentProps(KEY_OBSERVATION_DATETIME, KEY_END_DATETIME)
+                        .expectedException(IllegalArgumentException.class)
+                        .build()
         );
     }
 
@@ -300,15 +264,13 @@ class SwimRabbitMQPublisherTest {
                 .setFormat(FORMAT_IWXXM)
                 .setType(scenario.messageType())
                 .setStationIcaoCode(STATION_ICAO_CODE)
-                .setVersion(scenario.version())
+                .setVersion(scenario.version().orElse(""))
                 .setMessageTime(NOW)
                 .setMessage(messageContent);
-        if (scenario.validFrom() != null) {
-            msgBuilder.setValidFrom(scenario.validFrom().toInstant());
-        }
-        if (scenario.validTo() != null) {
-            msgBuilder.setValidTo(scenario.validTo().toInstant());
-        }
+
+        scenario.validFrom().ifPresent(time -> msgBuilder.setValidFrom(time.toInstant()));
+        scenario.validTo().ifPresent(time -> msgBuilder.setValidTo(time.toInstant()));
+
         return msgBuilder.buildPartial();
     }
 
@@ -393,14 +355,12 @@ class SwimRabbitMQPublisherTest {
         final ArchiveAviationMessage archiveAviationMessage = createArchiveAviationMessage(scenario, content);
 
         final InputAviationMessage.Builder inputBuilder = InputAviationMessage.builder();
-        if (scenario.observationTime() != null) {
-            inputBuilder.setIwxxmObservationTime(scenario.observationTime());
-        }
+        scenario.observationTime().ifPresent(inputBuilder::setIwxxmObservationTime);
         final MessageProcessorContext context = TestMessageProcessorContext.create(inputBuilder.buildPartial());
 
-        if (scenario.expectedException() != null) {
+        if (scenario.expectedException().isPresent()) {
             try (final SwimRabbitMQPublisher publisher = newPublisher(clock, config)) {
-                assertThrows(scenario.expectedException(), () -> publisher.runAsynchronously(context, archiveAviationMessage));
+                assertThrows(scenario.expectedException().get(), () -> publisher.runAsynchronously(context, archiveAviationMessage));
             }
             verify(publisher, never()).publish(any(Message.class), any(Publisher.Callback.class));
             return;
@@ -555,22 +515,49 @@ class SwimRabbitMQPublisherTest {
         abstract String decode(final byte[] encodedContent) throws IOException;
     }
 
-    private record AppPropScenario(
-            int messageType,
-            String resourceFile,
-            String version,
-            SwimRabbitMQPublisher.ContentEncoding encoding,
-            AviationWeatherMessage.ReportStatus expectedReportStatus,
-            int expectedPriority,
-            @Nullable OffsetDateTime observationTime,
-            @Nullable OffsetDateTime validFrom,
-            @Nullable OffsetDateTime validTo,
-            Map<String, String> expectedOptionalProps,
-            Set<String> expectedAbsentProps,
-            String expectedSubject,
-            String expectedIcaoLocationType,
-            @Nullable Class<? extends Throwable> expectedException
-    ) {
+    @FreeBuilder
+    interface AppPropScenario {
+        static Builder builder() {
+            return new Builder()
+                    .version("")
+                    .putAllExpectedOptionalProps(Map.of())
+                    .addAllExpectedAbsentProps(Set.of());
+        }
+
+        int messageType();
+
+        String resourceFile();
+
+        Optional<String> version();
+
+        SwimRabbitMQPublisher.ContentEncoding encoding();
+
+        AviationWeatherMessage.ReportStatus expectedReportStatus();
+
+        int expectedPriority();
+
+        Optional<OffsetDateTime> observationTime();
+
+        Optional<OffsetDateTime> validFrom();
+
+        Optional<OffsetDateTime> validTo();
+
+        Map<String, String> expectedOptionalProps();
+
+        Set<String> expectedAbsentProps();
+
+        Optional<Class<? extends Throwable>> expectedException();
+
+        default String expectedSubject() {
+            return APPLICATION_PROPERTIES_BY_MESSAGE_TYPE.get(messageType()).subject();
+        }
+
+        default String expectedIcaoLocationType() {
+            return APPLICATION_PROPERTIES_BY_MESSAGE_TYPE.get(messageType()).icaoLocationType();
+        }
+
+        class Builder extends SwimRabbitMQPublisherTest_AppPropScenario_Builder {
+        }
     }
 
     record TestPublisherContext(Message message, Publisher.Status status,
