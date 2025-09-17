@@ -2,7 +2,7 @@ production-line:
   post-actions:
     - name: SwimRabbitMQPublisher
       config:
-        id: default
+        id: test-id
         publisher-queue-capacity: 50
         connection:
           uri: amqp://localhost:5672/%2f
