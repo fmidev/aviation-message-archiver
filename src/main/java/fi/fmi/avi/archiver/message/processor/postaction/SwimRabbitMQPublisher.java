@@ -62,18 +62,31 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
         this.messageConfig = requireNonNull(messageConfig, "messageConfig");
     }
 
+    /**
+     * Determine the report status for the message to be published.
+     * <p>
+     * If the input message's report status is {@link fi.fmi.avi.model.AviationWeatherMessage.ReportStatus#NORMAL},
+     * we check the version string parsed from the bulletin heading. This fallback covers the cases where we are publishing
+     * an IWXXM message with an IWXXM version that the conversion library does not yet support. In these cases the
+     * input message's report status will be NORMAL regardless of the actual value in the IWXXM XML content.
+     *
+     * @param archiveAviationMessage archive message
+     * @param inputAviationMessage   input message
+     * @return report status
+     */
     private static AviationWeatherMessage.ReportStatus getReportStatus(final ArchiveAviationMessage archiveAviationMessage,
                                                                        final InputAviationMessage inputAviationMessage) {
-        if (archiveAviationMessage.getVersion().isEmpty()) {
-            return inputAviationMessage.getMessage().getReportStatus();
-        }
-        final String version = archiveAviationMessage.getVersion().orElse("");
-        if (version.startsWith("AA")) {
-            return AviationWeatherMessage.ReportStatus.AMENDMENT;
-        } else if (version.startsWith("CC")) {
-            return AviationWeatherMessage.ReportStatus.CORRECTION;
+        if (inputAviationMessage.getMessage().getReportStatus() == AviationWeatherMessage.ReportStatus.NORMAL) {
+            final String version = archiveAviationMessage.getVersion().orElse("");
+            if (version.startsWith("AA")) {
+                return AviationWeatherMessage.ReportStatus.AMENDMENT;
+            } else if (version.startsWith("CC")) {
+                return AviationWeatherMessage.ReportStatus.CORRECTION;
+            } else {
+                return AviationWeatherMessage.ReportStatus.NORMAL;
+            }
         } else {
-            return AviationWeatherMessage.ReportStatus.NORMAL;
+            return inputAviationMessage.getMessage().getReportStatus();
         }
     }
 

@@ -274,18 +274,20 @@ class SwimRabbitMQPublisherTest {
         return msgBuilder.buildPartial();
     }
 
-    private static MessageProcessorContext newContext(final AviationWeatherMessage.ReportStatus reportStatus) {
+    private static MessageProcessorContext newContext(final AviationWeatherMessage.ReportStatus reportStatus,
+                                                      @Nullable final OffsetDateTime observationTime) {
         final GenericAviationWeatherMessage message = mock(GenericAviationWeatherMessage.class);
         when(message.getReportStatus()).thenReturn(reportStatus);
         final InputAviationMessage input =
                 InputAviationMessage.builder()
+                        .setNullableIwxxmObservationTime(observationTime)
                         .setMessage(message)
                         .buildPartial();
         return TestMessageProcessorContext.create(input);
     }
 
     private static MessageProcessorContext newContext() {
-        return newContext(AviationWeatherMessage.ReportStatus.NORMAL);
+        return newContext(AviationWeatherMessage.ReportStatus.NORMAL, null);
     }
 
     @BeforeEach
@@ -353,10 +355,8 @@ class SwimRabbitMQPublisherTest {
         final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
         final SwimRabbitMQPublisher.MessageConfig config = createMessageConfig(scenario.encoding(), expiryTime);
         final ArchiveAviationMessage archiveAviationMessage = createArchiveAviationMessage(scenario, content);
-
-        final InputAviationMessage.Builder inputBuilder = InputAviationMessage.builder();
-        scenario.observationTime().ifPresent(inputBuilder::setIwxxmObservationTime);
-        final MessageProcessorContext context = TestMessageProcessorContext.create(inputBuilder.buildPartial());
+        final MessageProcessorContext context = newContext(AviationWeatherMessage.ReportStatus.NORMAL,
+                scenario.observationTime().orElse(null));
 
         if (scenario.expectedException().isPresent()) {
             try (final SwimRabbitMQPublisher publisher = newPublisher(clock, config)) {
