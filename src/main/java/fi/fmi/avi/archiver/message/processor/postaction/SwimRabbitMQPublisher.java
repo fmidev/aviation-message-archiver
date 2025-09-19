@@ -63,12 +63,13 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
     }
 
     /**
-     * Determine the report status for the message to be published.
+     * Determine the report status of the message to be published.
      * <p>
      * If the input message's report status is {@link fi.fmi.avi.model.AviationWeatherMessage.ReportStatus#NORMAL},
      * we check the version string parsed from the bulletin heading. This fallback covers the cases where we are publishing
      * an IWXXM message with an IWXXM version that the conversion library does not yet support. In these cases the
      * input message's report status will be NORMAL regardless of the actual value in the IWXXM XML content.
+     * </p>
      *
      * @param archiveAviationMessage archive message
      * @param inputAviationMessage   input message
