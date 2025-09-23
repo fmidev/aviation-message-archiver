@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.config.factory.postaction;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.amqp.*;
 import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
@@ -24,9 +25,9 @@ import java.lang.reflect.Proxy;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -39,24 +40,24 @@ public class SwimRabbitMQPublisherFactory
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisherFactory.class);
 
-    private static final Map<MessageType, SwimRabbitMQPublisher.StaticApplicationProperties> APPLICATION_PROPERTY_DESCRIPTORS =
-            Map.of(
-                    MessageType.METAR, new SwimRabbitMQPublisher.StaticApplicationProperties(
+    private static final List<SwimRabbitMQPublisher.StaticApplicationProperties> APPLICATION_PROPERTY_DESCRIPTORS =
+            ImmutableList.of(
+                    new SwimRabbitMQPublisher.StaticApplicationProperties(
                             MessageType.METAR,
                             "weather.aviation.metar",
                             "https://eur-registry.swim.aero/services/eurocontrol-iwxxm-metar-speci-subscription-and-request-service-10",
                             "AD"),
-                    MessageType.SPECI, new SwimRabbitMQPublisher.StaticApplicationProperties(
+                    new SwimRabbitMQPublisher.StaticApplicationProperties(
                             MessageType.SPECI,
                             "weather.aviation.metar",
                             "https://eur-registry.swim.aero/services/eurocontrol-iwxxm-metar-speci-subscription-and-request-service-10",
                             "AD"),
-                    MessageType.TAF, new SwimRabbitMQPublisher.StaticApplicationProperties(
+                    new SwimRabbitMQPublisher.StaticApplicationProperties(
                             MessageType.TAF,
                             "weather.aviation.taf",
                             "https://eur-registry.swim.aero/services/eurocontrol-iwxxm-taf-subscription-and-request-service-10",
                             "AD"),
-                    MessageType.SIGMET, new SwimRabbitMQPublisher.StaticApplicationProperties(
+                    new SwimRabbitMQPublisher.StaticApplicationProperties(
                             MessageType.SIGMET,
                             "weather.aviation.sigmet",
                             "https://eur-registry.swim.aero/services/eurocontrol-iwxxm-sigmet-subscription-and-request-service-10",
@@ -73,7 +74,7 @@ public class SwimRabbitMQPublisherFactory
 
     private final SwimRabbitMQConnectionHealthContributor healthContributorRegistry;
     private final Clock clock;
-    private final List<AutoCloseable> closeableResources = new CopyOnWriteArrayList<>();
+    private final List<AutoCloseable> closeableResources = new ArrayList<>();
     private final int iwxxmFormatId;
     private final BiMap<MessageType, Integer> messageTypeIds;
     private final Map<Integer, SwimRabbitMQPublisher.StaticApplicationProperties> staticAppPropsByTypeId;
@@ -90,11 +91,11 @@ public class SwimRabbitMQPublisherFactory
         this.iwxxmFormatId = iwxxmFormatId;
         this.messageTypeIds = requireNonNull(messageTypeIds, "messageTypeIds");
 
-        this.staticAppPropsByTypeId = messageTypeIds.entrySet().stream()
-                .filter(entry -> APPLICATION_PROPERTY_DESCRIPTORS.containsKey(entry.getKey()))
+        this.staticAppPropsByTypeId = APPLICATION_PROPERTY_DESCRIPTORS.stream()
+                .filter(applicationProperties -> messageTypeIds.containsKey(applicationProperties.type()))
                 .collect(ImmutableMap.toImmutableMap(
-                        entry -> requireNonNull(entry).getValue(),
-                        entry -> APPLICATION_PROPERTY_DESCRIPTORS.get(requireNonNull(entry).getKey())
+                        applicationProperties -> requireNonNull(messageTypeIds.get(requireNonNull(applicationProperties).type())),
+                        Function.identity()
                 ));
     }
 

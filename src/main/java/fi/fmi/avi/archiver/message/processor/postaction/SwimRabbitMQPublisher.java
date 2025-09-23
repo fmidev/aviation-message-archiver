@@ -172,7 +172,7 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
         final ReadableLoggingContext loggingContext = context.getLoggingContext();
         final MessageType messageType = staticApplicationProperties.type();
 
-        ApplicationProperty.REPORT_STATUS.set(amqpMessage, getReportStatus(archiveMessage, context.getInputMessage()).toString(), messageType, loggingContext);
+        ApplicationProperty.REPORT_STATUS.set(amqpMessage, getReportStatus(archiveMessage, context.getInputMessage()).name(), messageType, loggingContext);
         ApplicationProperty.ICAO_LOCATION_IDENTIFIER.set(amqpMessage, archiveMessage.getStationIcaoCode(), messageType, loggingContext);
         ApplicationProperty.ISSUE_DATETIME.set(amqpMessage, RFC_3339_FORMAT.format(archiveMessage.getMessageTime()), messageType, loggingContext);
         ApplicationProperty.ICAO_LOCATION_TYPE.set(amqpMessage, staticApplicationProperties.icaoLocationType(), messageType, loggingContext);

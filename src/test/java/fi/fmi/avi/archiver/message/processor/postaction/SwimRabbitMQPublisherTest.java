@@ -117,8 +117,8 @@ class SwimRabbitMQPublisherTest {
 
     static Stream<AppPropScenario> app_property_scenarios() {
         return Stream.of(
-                // METAR
                 AppPropScenario.builder()
+                        .title("METAR")
                         .messageType(MESSAGE_TYPE_METAR)
                         .resourceFile("metar-message.xml")
                         .encoding(SwimRabbitMQPublisher.ContentEncoding.IDENTITY)
@@ -129,8 +129,8 @@ class SwimRabbitMQPublisherTest {
                         .addExpectedAbsentProps(KEY_START_DATETIME, KEY_END_DATETIME)
                         .build(),
 
-                // METAR without observation time
                 AppPropScenario.builder()
+                        .title("METAR without observation time")
                         .messageType(MESSAGE_TYPE_METAR)
                         .resourceFile("metar-message.xml")
                         .encoding(SwimRabbitMQPublisher.ContentEncoding.IDENTITY)
@@ -140,8 +140,8 @@ class SwimRabbitMQPublisherTest {
                         .expectedException(IllegalArgumentException.class)
                         .build(),
 
-                // SPECI
                 AppPropScenario.builder()
+                        .title("SPECI")
                         .messageType(MESSAGE_TYPE_SPECI)
                         .resourceFile("speci-message.xml")
                         .encoding(SwimRabbitMQPublisher.ContentEncoding.IDENTITY)
@@ -152,8 +152,8 @@ class SwimRabbitMQPublisherTest {
                         .addExpectedAbsentProps(KEY_START_DATETIME, KEY_END_DATETIME)
                         .build(),
 
-                // TAF without valid time
                 AppPropScenario.builder()
+                        .title("TAF without valid time")
                         .messageType(MESSAGE_TYPE_TAF)
                         .resourceFile("taf-message.xml")
                         .encoding(SwimRabbitMQPublisher.ContentEncoding.GZIP)
@@ -163,8 +163,8 @@ class SwimRabbitMQPublisherTest {
                         .expectedException(IllegalArgumentException.class)
                         .build(),
 
-                // AMD TAF
                 AppPropScenario.builder()
+                        .title("AMD TAF")
                         .messageType(MESSAGE_TYPE_TAF)
                         .resourceFile("taf-message.xml")
                         .version("AAC")
@@ -178,8 +178,8 @@ class SwimRabbitMQPublisherTest {
                         .addExpectedAbsentProps(KEY_OBSERVATION_DATETIME)
                         .build(),
 
-                // SIGMET
                 AppPropScenario.builder()
+                        .title("SIGMET")
                         .messageType(MESSAGE_TYPE_SIGMET)
                         .resourceFile("sigmet-message.xml")
                         .encoding(SwimRabbitMQPublisher.ContentEncoding.IDENTITY)
@@ -192,8 +192,8 @@ class SwimRabbitMQPublisherTest {
                         .addExpectedAbsentProps(KEY_OBSERVATION_DATETIME)
                         .build(),
 
-                // SIGMET without valid end
                 AppPropScenario.builder()
+                        .title("SIGMET without valid end")
                         .messageType(MESSAGE_TYPE_SIGMET)
                         .resourceFile("sigmet-message.xml")
                         .encoding(SwimRabbitMQPublisher.ContentEncoding.IDENTITY)
@@ -209,20 +209,6 @@ class SwimRabbitMQPublisherTest {
 
     private static String readResource(final String filename) throws IOException {
         return Resources.toString(requireNonNull(SwimRabbitMQPublisherTest.class.getResource(filename)), StandardCharsets.UTF_8);
-    }
-
-    private static ArchiveAviationMessage newMessage(final int type, final String content, final Instant messageTime) {
-        return ArchiveAviationMessage.builder()
-                .setProcessingResult(ProcessingResult.OK)
-                .setArchivalStatus(ArchivalStatus.ARCHIVED)
-                .setFormat(FORMAT_IWXXM)
-                .setType(type)
-                .setStationIcaoCode(STATION_ICAO_CODE)
-                .setMessageTime(messageTime)
-                .setValidFrom(messageTime)
-                .setValidTo(messageTime.plusSeconds(1800))
-                .setMessage(content)
-                .buildPartial();
     }
 
     private static AbstractRetryingPostAction.RetryParams retryParams(final int maxAttempts) {
@@ -272,6 +258,21 @@ class SwimRabbitMQPublisherTest {
         scenario.validTo().ifPresent(time -> msgBuilder.setValidTo(time.toInstant()));
 
         return msgBuilder.buildPartial();
+    }
+
+
+    private static ArchiveAviationMessage createArchiveAviationMessage(final int type, final String content, final Instant messageTime) {
+        return ArchiveAviationMessage.builder()
+                .setProcessingResult(ProcessingResult.OK)
+                .setArchivalStatus(ArchivalStatus.ARCHIVED)
+                .setFormat(FORMAT_IWXXM)
+                .setType(type)
+                .setStationIcaoCode(STATION_ICAO_CODE)
+                .setMessageTime(messageTime)
+                .setValidFrom(messageTime)
+                .setValidTo(messageTime.plusSeconds(1800))
+                .setMessage(content)
+                .buildPartial();
     }
 
     private static MessageProcessorContext newContext(final AviationWeatherMessage.ReportStatus reportStatus,
@@ -331,7 +332,7 @@ class SwimRabbitMQPublisherTest {
         final String content = readResource("taf-message.xml");
         try (final SwimRabbitMQPublisher publisher = newPublisher(Clock.systemUTC(),
                 SwimRabbitMQPublisher.MessageConfig.builder().setEncoding(encoding).setExchange(RABBITMQ_EXCHANGE).build())) {
-            publisher.run(newContext(), newMessage(MESSAGE_TYPE_TAF, content, NOW));
+            publisher.run(newContext(), createArchiveAviationMessage(MESSAGE_TYPE_TAF, content, NOW));
         }
 
         verify(amqpMessage).contentEncoding(encoding.value());
@@ -396,7 +397,7 @@ class SwimRabbitMQPublisherTest {
 
         try (final SwimRabbitMQPublisher publisher = newPublisher(Clock.systemUTC(),
                 SwimRabbitMQPublisher.MessageConfig.builder().setExchange(RABBITMQ_EXCHANGE).build())) {
-            publisher.run(newContext(), newMessage(MESSAGE_TYPE_TAF, content, NOW));
+            publisher.run(newContext(), createArchiveAviationMessage(MESSAGE_TYPE_TAF, content, NOW));
         }
 
         verify(publisher, times(succeedOn)).publish(any(Message.class), any(Publisher.Callback.class));
@@ -420,7 +421,7 @@ class SwimRabbitMQPublisherTest {
 
         try (final SwimRabbitMQPublisher publisher = newPublisher(Clock.systemUTC(),
                 SwimRabbitMQPublisher.MessageConfig.builder().setExchange(RABBITMQ_EXCHANGE).build(), retryParams)) {
-            publisher.run(newContext(), newMessage(MESSAGE_TYPE_TAF, content, NOW));
+            publisher.run(newContext(), createArchiveAviationMessage(MESSAGE_TYPE_TAF, content, NOW));
         }
 
         verify(publisher, times(maxAttempts)).publish(any(Message.class), any(Publisher.Callback.class));
@@ -523,6 +524,8 @@ class SwimRabbitMQPublisherTest {
                     .putAllExpectedOptionalProps(Map.of())
                     .addAllExpectedAbsentProps(Set.of());
         }
+
+        String title();
 
         int messageType();
 
