@@ -47,14 +47,21 @@ class SwimRabbitMQPublisherFactoryIntegrationTest {
     @Test
     void test_config_instantiation() {
         @SuppressWarnings("unchecked") final ArgumentCaptor<Map<String, Object>> configCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(factory, times(1)).newInstance(configCaptor.capture());
+        //noinspection resource
+        verify(factory, times(2)).newInstance(configCaptor.capture());
 
-        final Map<String, Object> config = configCaptor.getValue();
-        assertThat(config.get("id")).isEqualTo("test-id");
+        assertThat(configCaptor.getAllValues())
+                .map(config -> config.get("id"))
+                .containsExactly("swim-test-id1", "swim-test-id2");
 
-        assertThat(postActions).hasSize(1);
-        final PostAction postAction = postActions.getFirst();
-        assertThat(postAction).isInstanceOf(SwimRabbitMQPublisher.class);
-        assertThat(postAction.toString()).isEqualTo("SwimRabbitMQPublisher(test-id)");
+        assertThat(postActions).hasSize(2);
+        assertThat(postActions).allSatisfy(postAction ->
+                assertThat(postAction).isInstanceOf(SwimRabbitMQPublisher.class));
+        assertThat(postActions)
+                .map(Object::toString)
+                .containsExactlyInAnyOrder(
+                        "SwimRabbitMQPublisher(swim-test-id1)",
+                        "SwimRabbitMQPublisher(swim-test-id2)"
+                );
     }
 }
