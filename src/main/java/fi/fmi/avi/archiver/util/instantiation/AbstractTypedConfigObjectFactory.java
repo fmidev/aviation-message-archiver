@@ -15,7 +15,7 @@ public abstract class AbstractTypedConfigObjectFactory<T, C extends ObjectFactor
     public abstract Class<C> getConfigType();
 
     @Override
-    public T newInstance(final Map<String, Object> config) {
+    public final T newInstance(final Map<String, Object> config) {
         requireNonNull(config, "config");
         return newInstance(configFactory.create(getConfigType(), config));
     }
