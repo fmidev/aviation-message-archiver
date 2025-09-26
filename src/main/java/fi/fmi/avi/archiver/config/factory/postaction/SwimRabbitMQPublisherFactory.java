@@ -20,6 +20,7 @@ import fi.fmi.avi.model.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.time.Clock;
@@ -224,7 +225,8 @@ public class SwimRabbitMQPublisherFactory
                 RetryingPostActionFactories.retryParams(config.getRetry(), getInstanceName(config.getId()),
                         config.getPublishTimeout().orElse(Duration.ofSeconds(30)), config.getPublisherQueueCapacity()),
                 config.getId(), publisher, publisherHealthIndicator,
-                toPublisherMessageConfig(config.getId(), config.getTopology().getExchange().getName(), config.getMessage())));
+                toPublisherMessageConfig(config.getId(), config.getTopology().getExchange().getName(),
+                        config.getMessage().orElse(null))));
         healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
         return action;
     }
@@ -233,18 +235,22 @@ public class SwimRabbitMQPublisherFactory
         return getName() + '(' + instanceId + ')';
     }
 
-    private SwimRabbitMQPublisher.MessageConfig toPublisherMessageConfig(final String configId, final String exchangeName,
-                                                                         final Config.MessageConfig factoryConfig) {
+    private SwimRabbitMQPublisher.MessageConfig toPublisherMessageConfig(
+            final String configId, final String exchangeName, @Nullable final Config.MessageConfig factoryConfig) {
         final SwimRabbitMQPublisher.MessageConfig.Builder builder = SwimRabbitMQPublisher.MessageConfig.builder()
                 .setExchange(exchangeName);
-        factoryConfig.getEncoding().ifPresent(builder::setEncoding);
-        factoryConfig.getExpiryTime().ifPresent(builder::setExpiryTime);
-        final SwimRabbitMQPublisher.MessageConfig publisherConfig = builder
-                .addAllPriorities(factoryConfig.getPriorities()
-                        .map(List::stream)
-                        .orElseGet(this::getDefaultPriorities)
-                        .map(this::toPublisherPriorityDescriptor))
-                .build();
+        if (factoryConfig == null) {
+            builder.addAllPriorities(getDefaultPriorities()
+                    .map(this::toPublisherPriorityDescriptor));
+        } else {
+            factoryConfig.getEncoding().ifPresent(builder::setEncoding);
+            factoryConfig.getExpiryTime().ifPresent(builder::setExpiryTime);
+            builder.addAllPriorities(factoryConfig.getPriorities()
+                    .map(List::stream)
+                    .orElseGet(this::getDefaultPriorities)
+                    .map(this::toPublisherPriorityDescriptor));
+        }
+        final SwimRabbitMQPublisher.MessageConfig publisherConfig = builder.build();
         if (publisherConfig.getPriorities().isEmpty()) {
             LOGGER.warn("Publisher <{}> priorities is empty. Using default priority <{}> for all messages.",
                     loggableValue("postActionId", configId), SwimRabbitMQPublisher.MessageConfig.DEFAULT_PRIORITY);
@@ -346,7 +352,7 @@ public class SwimRabbitMQPublisherFactory
 
         RetryingPostActionFactories.RetryConfig getRetry();
 
-        MessageConfig getMessage();
+        Optional<MessageConfig> getMessage();
 
         interface ConnectionConfig extends ObjectFactoryConfig {
             String getUri();
@@ -386,6 +392,14 @@ public class SwimRabbitMQPublisherFactory
             Optional<Map<String, Object>> getArguments();
         }
 
+        /**
+         * Message configuration.
+         *
+         * <p>
+         * Currently, all properties are {@code Optional}. In case any mandatory properties are introduced,
+         * {@link Config#getMessage()} must also be made mandatory, and this note may be removed.
+         * </p>
+         */
         interface MessageConfig extends ObjectFactoryConfig {
             Optional<List<PriorityDescriptor>> getPriorities();
 
