@@ -186,6 +186,7 @@ public class SwimRabbitMQPublisherFactory
         return Config.class;
     }
 
+    @Override
     public SwimRabbitMQPublisher newInstance(final Config config) {
         requireNonNull(config, "config");
         final Config.ConnectionConfig connectionConfig = config.getConnection();
