@@ -44,14 +44,14 @@ final class RetryingPostActionFactories {
 
     private static RetryTemplate retryTemplate(final RetryConfig retryConfig, final String actionName) {
         final ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
-        backOffPolicy.setInitialInterval(retryConfig.getInitialInterval().orElse(Duration.ofMillis(500)).toMillis());
-        backOffPolicy.setMultiplier(retryConfig.getMultiplier().orElse(2));
-        backOffPolicy.setMaxInterval(retryConfig.getMaxInterval().orElse(Duration.ofMinutes(1)).toMillis());
+        backOffPolicy.setInitialInterval(retryConfig.initialInterval().orElse(Duration.ofMillis(500)).toMillis());
+        backOffPolicy.setMultiplier(retryConfig.multiplier().orElse(2));
+        backOffPolicy.setMaxInterval(retryConfig.maxInterval().orElse(Duration.ofMinutes(1)).toMillis());
 
         final RetryTemplateBuilder retryTemplateBuilder = new RetryTemplateBuilder();
         retryTemplateBuilder.customBackoff(backOffPolicy);
-        if (retryConfig.getTimeout().isPositive()) {
-            retryTemplateBuilder.withinMillis(retryConfig.getTimeout().toMillis());
+        if (retryConfig.timeout().isPositive()) {
+            retryTemplateBuilder.withinMillis(retryConfig.timeout().toMillis());
         } else {
             retryTemplateBuilder.infiniteRetry();
         }
@@ -82,13 +82,13 @@ final class RetryingPostActionFactories {
     }
 
     public interface RetryConfig extends ObjectFactoryConfig {
-        Optional<Duration> getInitialInterval();
+        Optional<Duration> initialInterval();
 
-        Optional<Integer> getMultiplier();
+        Optional<Integer> multiplier();
 
-        Optional<Duration> getMaxInterval();
+        Optional<Duration> maxInterval();
 
-        Duration getTimeout();
+        Duration timeout();
     }
 
     private static final class RetryLogger extends RetryListenerSupport {
