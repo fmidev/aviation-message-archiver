@@ -73,6 +73,7 @@ public class SwimRabbitMQPublisherFactory
             new ImmutablePriorityDescriptor(MessageType.METAR, 4)
     );
 
+    private final RetryingPostActionFactories.RetryParamsFactory retryParamsFactory;
     private final SwimRabbitMQConnectionHealthContributor healthContributorRegistry;
     private final Clock clock;
     private final List<AutoCloseable> closeableResources = new ArrayList<>();
@@ -82,11 +83,13 @@ public class SwimRabbitMQPublisherFactory
 
     public SwimRabbitMQPublisherFactory(
             final ObjectFactoryConfigFactory configFactory,
+            final RetryingPostActionFactories.RetryParamsFactory retryParamsFactory,
             final SwimRabbitMQConnectionHealthContributor healthContributorRegistry,
             final Clock clock,
             final int iwxxmFormatId,
             final BiMap<MessageType, Integer> messageTypeIds) {
         super(configFactory);
+        this.retryParamsFactory = requireNonNull(retryParamsFactory, "retryParamsFactory");
         this.healthContributorRegistry = requireNonNull(healthContributorRegistry, "healthContributorRegistry");
         this.clock = requireNonNull(clock, "clock");
         this.iwxxmFormatId = iwxxmFormatId;
@@ -223,7 +226,7 @@ public class SwimRabbitMQPublisherFactory
         }, publisherRef);
 
         final SwimRabbitMQPublisher action = registerCloseable(newSwimRabbitMQPublisher(
-                RetryingPostActionFactories.retryParams(config.retry(), getInstanceName(config.id()),
+                retryParamsFactory.retryParams(config.retry(), getInstanceName(config.id()),
                         config.publishTimeout().orElse(Duration.ofSeconds(30)), config.publisherQueueCapacity()),
                 config.id(), publisher, publisherHealthIndicator,
                 toPublisherMessageConfig(config.id(), config.topology().exchange().name(),

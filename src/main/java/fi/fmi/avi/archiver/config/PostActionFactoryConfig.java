@@ -1,6 +1,8 @@
 package fi.fmi.avi.archiver.config;
 
 import com.google.common.collect.BiMap;
+import fi.fmi.avi.archiver.config.factory.postaction.DefaultRetryParamsFactory;
+import fi.fmi.avi.archiver.config.factory.postaction.RetryingPostActionFactories;
 import fi.fmi.avi.archiver.config.factory.postaction.SwimRabbitMQPublisherFactory;
 import fi.fmi.avi.archiver.config.model.PostActionFactory;
 import fi.fmi.avi.archiver.message.processor.postaction.ResultLogger;
@@ -30,8 +32,14 @@ public class PostActionFactoryConfig extends AbstractPostActionFactoryConfig {
     }
 
     @Bean
+    RetryingPostActionFactories.RetryParamsFactory retryParamsFactory() {
+        return new DefaultRetryParamsFactory();
+    }
+
+    @Bean
     PostActionFactory<SwimRabbitMQPublisher> swimRabbitMQPublisherPostActionFactory(
             final ObjectFactoryConfigFactory objectFactoryConfigFactory,
+            final RetryingPostActionFactories.RetryParamsFactory retryParamsFactory,
             final SwimRabbitMQConnectionHealthContributor swimRabbitMQConnectionHealthContributor,
             final Clock clock,
             final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds,
@@ -39,6 +47,7 @@ public class PostActionFactoryConfig extends AbstractPostActionFactoryConfig {
     ) {
         return decorateAutoCloseable(new SwimRabbitMQPublisherFactory(
                 objectFactoryConfigFactory,
+                retryParamsFactory,
                 swimRabbitMQConnectionHealthContributor,
                 clock,
                 messageFormatIds.get(GenericAviationWeatherMessage.Format.IWXXM),
