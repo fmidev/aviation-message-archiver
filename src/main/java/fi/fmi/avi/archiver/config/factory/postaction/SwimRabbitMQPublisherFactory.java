@@ -20,6 +20,7 @@ import fi.fmi.avi.model.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.time.Clock;
@@ -72,6 +73,7 @@ public class SwimRabbitMQPublisherFactory
             new ImmutablePriorityDescriptor(MessageType.METAR, 4)
     );
 
+    private final RetryingPostActionFactories.RetryParamsFactory retryParamsFactory;
     private final SwimRabbitMQConnectionHealthContributor healthContributorRegistry;
     private final Clock clock;
     private final List<AutoCloseable> closeableResources = new ArrayList<>();
@@ -81,11 +83,13 @@ public class SwimRabbitMQPublisherFactory
 
     public SwimRabbitMQPublisherFactory(
             final ObjectFactoryConfigFactory configFactory,
+            final RetryingPostActionFactories.RetryParamsFactory retryParamsFactory,
             final SwimRabbitMQConnectionHealthContributor healthContributorRegistry,
             final Clock clock,
             final int iwxxmFormatId,
             final BiMap<MessageType, Integer> messageTypeIds) {
         super(configFactory);
+        this.retryParamsFactory = requireNonNull(retryParamsFactory, "retryParamsFactory");
         this.healthContributorRegistry = requireNonNull(healthContributorRegistry, "healthContributorRegistry");
         this.clock = requireNonNull(clock, "clock");
         this.iwxxmFormatId = iwxxmFormatId;
@@ -149,28 +153,28 @@ public class SwimRabbitMQPublisherFactory
 
     private static void createTopology(final Connection connection, final Config.TopologyConfig config) {
         try (final Management management = connection.management()) {
-            final Config.ExchangeConfig exchangeConfig = config.getExchange();
-            final Config.QueueConfig queueConfig = config.getQueue();
+            final Config.ExchangeConfig exchangeConfig = config.exchange();
+            final Config.QueueConfig queueConfig = config.queue();
             management.exchange()
-                    .name(exchangeConfig.getName())
-                    .type(exchangeConfig.getType().orElse(Management.ExchangeType.DIRECT))
+                    .name(exchangeConfig.name())
+                    .type(exchangeConfig.type().orElse(Management.ExchangeType.DIRECT))
                     .autoDelete(exchangeConfig.autoDelete().orElse(false))
-                    .arguments(exchangeConfig.getArguments().orElse(Collections.emptyMap()))
+                    .arguments(exchangeConfig.arguments().orElse(Collections.emptyMap()))
                     .declare();
             management.queue()
-                    .name(queueConfig.getName())
-                    .type(queueConfig.getType().orElse(Management.QueueType.CLASSIC))
+                    .name(queueConfig.name())
+                    .type(queueConfig.type().orElse(Management.QueueType.CLASSIC))
                     .autoDelete(queueConfig.autoDelete().orElse(false))
-                    .arguments(queueConfig.getArguments().orElse(Collections.emptyMap()))
+                    .arguments(queueConfig.arguments().orElse(Collections.emptyMap()))
                     .declare();
             management.binding()
-                    .sourceExchange(exchangeConfig.getName())
-                    .destinationQueue(queueConfig.getName())
-                    .key(config.getRoutingKey())
+                    .sourceExchange(exchangeConfig.name())
+                    .destinationQueue(queueConfig.name())
+                    .key(config.routingKey())
                     .bind();
         } catch (final Exception e) {
             LOGGER.error("Failed to create AMQP topology for exchange '{}', queue '{}', routing key '{}'",
-                    config.getExchange(), config.getQueue(), config.getRoutingKey(), e);
+                    config.exchange(), config.queue(), config.routingKey(), e);
             throw e;
         }
     }
@@ -185,9 +189,10 @@ public class SwimRabbitMQPublisherFactory
         return Config.class;
     }
 
+    @Override
     public SwimRabbitMQPublisher newInstance(final Config config) {
         requireNonNull(config, "config");
-        final Config.ConnectionConfig connectionConfig = config.getConnection();
+        final Config.ConnectionConfig connectionConfig = config.connection();
         final RabbitMQConnectionHealthIndicator connectionHealthIndicator = newConnectionHealthIndicator(clock);
         final RabbitMQPublisherHealthIndicator publisherHealthIndicator = newPublisherHealthIndicator(clock);
         final Environment environment = registerCloseable(newAmqpEnvironmentBuilder().build());
@@ -197,14 +202,14 @@ public class SwimRabbitMQPublisherFactory
 
         final Connection connection = createLazyForwardingProxy(Connection.class, () -> registerCloseable(environment
                 .connectionBuilder()
-                .username(connectionConfig.getUsername())
-                .password(connectionConfig.getPassword())
-                .uri(connectionConfig.getUri())
+                .username(connectionConfig.username())
+                .password(connectionConfig.password())
+                .uri(connectionConfig.uri())
                 .listeners(SwimRabbitMQPublisherFactory::log, connectionHealthIndicator)
                 .build()), connectionRef);
 
         final Publisher publisher = createLazyForwardingProxy(Publisher.class, () -> {
-            final Config.TopologyConfig topologyConfig = config.getTopology();
+            final Config.TopologyConfig topologyConfig = config.topology();
             if (topologyConfig.create()) {
                 createTopology(connection, topologyConfig);
             }
@@ -221,11 +226,12 @@ public class SwimRabbitMQPublisherFactory
         }, publisherRef);
 
         final SwimRabbitMQPublisher action = registerCloseable(newSwimRabbitMQPublisher(
-                RetryingPostActionFactories.retryParams(config.getRetry(), getInstanceName(config.getId()),
-                        config.getPublishTimeout().orElse(Duration.ofSeconds(30)), config.getPublisherQueueCapacity()),
-                config.getId(), publisher, publisherHealthIndicator,
-                toPublisherMessageConfig(config.getId(), config.getTopology().getExchange().getName(), config.getMessage())));
-        healthContributorRegistry.registerIndicators(config.getId(), connectionHealthIndicator, publisherHealthIndicator);
+                retryParamsFactory.retryParams(config.retry(), getInstanceName(config.id()),
+                        config.publishTimeout().orElse(Duration.ofSeconds(30)), config.publisherQueueCapacity()),
+                config.id(), publisher, publisherHealthIndicator,
+                toPublisherMessageConfig(config.id(), config.topology().exchange().name(),
+                        config.message().orElse(null))));
+        healthContributorRegistry.registerIndicators(config.id(), connectionHealthIndicator, publisherHealthIndicator);
         return action;
     }
 
@@ -233,18 +239,22 @@ public class SwimRabbitMQPublisherFactory
         return getName() + '(' + instanceId + ')';
     }
 
-    private SwimRabbitMQPublisher.MessageConfig toPublisherMessageConfig(final String configId, final String exchangeName,
-                                                                         final Config.MessageConfig factoryConfig) {
+    private SwimRabbitMQPublisher.MessageConfig toPublisherMessageConfig(
+            final String configId, final String exchangeName, @Nullable final Config.MessageConfig factoryConfig) {
         final SwimRabbitMQPublisher.MessageConfig.Builder builder = SwimRabbitMQPublisher.MessageConfig.builder()
                 .setExchange(exchangeName);
-        factoryConfig.getEncoding().ifPresent(builder::setEncoding);
-        factoryConfig.getExpiryTime().ifPresent(builder::setExpiryTime);
-        final SwimRabbitMQPublisher.MessageConfig publisherConfig = builder
-                .addAllPriorities(factoryConfig.getPriorities()
-                        .map(List::stream)
-                        .orElseGet(this::getDefaultPriorities)
-                        .map(this::toPublisherPriorityDescriptor))
-                .build();
+        if (factoryConfig == null) {
+            builder.addAllPriorities(getDefaultPriorities()
+                    .map(this::toPublisherPriorityDescriptor));
+        } else {
+            factoryConfig.encoding().ifPresent(builder::setEncoding);
+            factoryConfig.expiryTime().ifPresent(builder::setExpiryTime);
+            builder.addAllPriorities(factoryConfig.priorities()
+                    .map(List::stream)
+                    .orElseGet(this::getDefaultPriorities)
+                    .map(this::toPublisherPriorityDescriptor));
+        }
+        final SwimRabbitMQPublisher.MessageConfig publisherConfig = builder.build();
         if (publisherConfig.getPriorities().isEmpty()) {
             LOGGER.warn("Publisher <{}> priorities is empty. Using default priority <{}> for all messages.",
                     loggableValue("postActionId", configId), SwimRabbitMQPublisher.MessageConfig.DEFAULT_PRIORITY);
@@ -255,19 +265,19 @@ public class SwimRabbitMQPublisherFactory
     private Stream<Config.PriorityDescriptor> getDefaultPriorities() {
         return DEFAULT_PRIORITIES.stream()
                 // Omit priority descriptors for message types not declared in config
-                .filter(priorityDescriptor -> priorityDescriptor.getType()
+                .filter(priorityDescriptor -> priorityDescriptor.type()
                         .map(messageTypeIds::containsKey)
                         .orElse(true));
     }
 
     private SwimRabbitMQPublisher.MessageConfig.PriorityDescriptor toPublisherPriorityDescriptor(final Config.PriorityDescriptor factoryDescriptor) {
         return SwimRabbitMQPublisher.MessageConfig.PriorityDescriptor.builder()
-                .setMessageType(factoryDescriptor.getType()
+                .setMessageType(factoryDescriptor.type()
                         .map(messageTypeIds::get)
                         .map(OptionalInt::of)
                         .orElseGet(OptionalInt::empty))
-                .setReportStatus(factoryDescriptor.getStatus())
-                .setPriority(factoryDescriptor.getPriority())
+                .setReportStatus(factoryDescriptor.status())
+                .setPriority(factoryDescriptor.priority())
                 .build();
     }
 
@@ -334,79 +344,87 @@ public class SwimRabbitMQPublisherFactory
     }
 
     public interface Config extends ObjectFactoryConfig {
-        String getId();
+        String id();
 
-        int getPublisherQueueCapacity();
+        int publisherQueueCapacity();
 
-        Optional<Duration> getPublishTimeout();
+        Optional<Duration> publishTimeout();
 
-        ConnectionConfig getConnection();
+        ConnectionConfig connection();
 
-        TopologyConfig getTopology();
+        TopologyConfig topology();
 
-        RetryingPostActionFactories.RetryConfig getRetry();
+        RetryingPostActionFactories.RetryConfig retry();
 
-        MessageConfig getMessage();
+        Optional<MessageConfig> message();
 
         interface ConnectionConfig extends ObjectFactoryConfig {
-            String getUri();
+            String uri();
 
-            String getUsername();
+            String username();
 
-            String getPassword();
+            String password();
         }
 
         interface TopologyConfig extends ObjectFactoryConfig {
             boolean create();
 
-            String getRoutingKey();
+            String routingKey();
 
-            ExchangeConfig getExchange();
+            ExchangeConfig exchange();
 
-            QueueConfig getQueue();
+            QueueConfig queue();
         }
 
         interface ExchangeConfig extends ObjectFactoryConfig {
-            String getName();
+            String name();
 
-            Optional<Management.ExchangeType> getType();
+            Optional<Management.ExchangeType> type();
 
             Optional<Boolean> autoDelete();
 
-            Optional<Map<String, Object>> getArguments();
+            Optional<Map<String, Object>> arguments();
         }
 
         interface QueueConfig extends ObjectFactoryConfig {
-            String getName();
+            String name();
 
-            Optional<Management.QueueType> getType();
+            Optional<Management.QueueType> type();
 
             Optional<Boolean> autoDelete();
 
-            Optional<Map<String, Object>> getArguments();
+            Optional<Map<String, Object>> arguments();
         }
 
+        /**
+         * Message configuration.
+         *
+         * <p>
+         * Currently, all properties are {@code Optional}. In case any mandatory properties are introduced,
+         * {@link Config#message()} must also be made mandatory, and this note may be removed.
+         * </p>
+         */
         interface MessageConfig extends ObjectFactoryConfig {
-            Optional<List<PriorityDescriptor>> getPriorities();
+            Optional<List<PriorityDescriptor>> priorities();
 
-            Optional<SwimRabbitMQPublisher.ContentEncoding> getEncoding();
+            Optional<SwimRabbitMQPublisher.ContentEncoding> encoding();
 
-            Optional<Duration> getExpiryTime();
+            Optional<Duration> expiryTime();
         }
 
         interface PriorityDescriptor extends ObjectFactoryConfig {
-            Optional<MessageType> getType();
+            Optional<MessageType> type();
 
-            Optional<AviationWeatherMessage.ReportStatus> getStatus();
+            Optional<AviationWeatherMessage.ReportStatus> status();
 
-            int getPriority();
+            int priority();
         }
     }
 
     private record ImmutablePriorityDescriptor(
             MessageType nullableType,
             AviationWeatherMessage.ReportStatus nullableStatus,
-            int getPriority)
+            int priority)
             implements Config.PriorityDescriptor {
 
         ImmutablePriorityDescriptor(final MessageType type, final int priority) {
@@ -414,12 +432,12 @@ public class SwimRabbitMQPublisherFactory
         }
 
         @Override
-        public Optional<MessageType> getType() {
+        public Optional<MessageType> type() {
             return Optional.ofNullable(nullableType);
         }
 
         @Override
-        public Optional<AviationWeatherMessage.ReportStatus> getStatus() {
+        public Optional<AviationWeatherMessage.ReportStatus> status() {
             return Optional.ofNullable(nullableStatus);
         }
     }

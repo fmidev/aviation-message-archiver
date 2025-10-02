@@ -2,130 +2,32 @@ package fi.fmi.avi.archiver.config.factory.postaction;
 
 import fi.fmi.avi.archiver.message.processor.postaction.AbstractRetryingPostAction;
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.retry.RetryCallback;
-import org.springframework.retry.RetryContext;
-import org.springframework.retry.backoff.ExponentialBackOffPolicy;
-import org.springframework.retry.listener.RetryListenerSupport;
-import org.springframework.retry.support.RetryTemplate;
-import org.springframework.retry.support.RetryTemplateBuilder;
 
-import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
-import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
-import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.*;
-import static java.util.Objects.requireNonNull;
-
-final class RetryingPostActionFactories {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RetryingPostActionFactories.class);
-    private static final String WORKER_THREAD_SUFFIX = "-Worker";
+public final class RetryingPostActionFactories {
 
     private RetryingPostActionFactories() {
         throw new AssertionError();
     }
 
-    public static AbstractRetryingPostAction.RetryParams retryParams(
-            final RetryConfig config, final String actionName, final Duration actionTimeout, final int actionQueueCapacity) {
-        requireNonNull(config, "config");
-        requireNonNull(actionName, "actionName");
-        requireNonNull(actionTimeout, "actionTimeout");
-
-        return new AbstractRetryingPostAction.RetryParams(
-                actionExecutor(actionQueueCapacity, actionName),
-                actionTimeout,
-                retryTemplate(config, actionName));
-    }
-
-    private static RetryTemplate retryTemplate(final RetryConfig retryConfig, final String actionName) {
-        final ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
-        backOffPolicy.setInitialInterval(retryConfig.getInitialInterval().orElse(Duration.ofMillis(500)).toMillis());
-        backOffPolicy.setMultiplier(retryConfig.getMultiplier().orElse(2));
-        backOffPolicy.setMaxInterval(retryConfig.getMaxInterval().orElse(Duration.ofMinutes(1)).toMillis());
-
-        final RetryTemplateBuilder retryTemplateBuilder = new RetryTemplateBuilder();
-        retryTemplateBuilder.customBackoff(backOffPolicy);
-        if (retryConfig.getTimeout().isPositive()) {
-            retryTemplateBuilder.withinMillis(retryConfig.getTimeout().toMillis());
-        } else {
-            retryTemplateBuilder.infiniteRetry();
-        }
-        retryTemplateBuilder.withListener(new RetryLogger(actionName));
-        return retryTemplateBuilder.build();
-    }
-
-    private static ThreadPoolExecutor actionExecutor(final int actionQueueCapacity, final String actionName) {
-        final String workerThreadName = actionName + WORKER_THREAD_SUFFIX;
-        return new ThreadPoolExecutor(
-                1, 1,
-                0L, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(actionQueueCapacity),
-                runnable -> {
-                    final Thread thread = new Thread(runnable, workerThreadName);
-                    thread.setDaemon(true);
-                    return thread;
-                },
-                (runnable, exec) -> {
-                    if (runnable instanceof final AbstractRetryingPostAction<?>.RetryingRunnable retryingRunnable) {
-                        LOGGER.error("{} queue full; skipping action for <{}>",
-                                loggableValue(RETRY_ACTION, actionName), retryingRunnable.getLoggingContext());
-                    } else {
-                        LOGGER.error("{} queue full; skipping action task", loggableValue(RETRY_ACTION, actionName));
-                    }
-                }
-        );
-    }
-
     public interface RetryConfig extends ObjectFactoryConfig {
-        Optional<Duration> getInitialInterval();
+        Optional<Duration> initialInterval();
 
-        Optional<Integer> getMultiplier();
+        Optional<Integer> multiplier();
 
-        Optional<Duration> getMaxInterval();
+        Optional<Duration> maxInterval();
 
-        Duration getTimeout();
+        Duration timeout();
     }
 
-    private static final class RetryLogger extends RetryListenerSupport {
-        private static final Logger LOGGER = LoggerFactory.getLogger(RetryLogger.class);
-
-        private final String actionName;
-
-        private RetryLogger(final String actionName) {
-            this.actionName = requireNonNull(actionName, "actionName");
-        }
-
-        @Override
-        public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, @Nullable final Throwable throwable) {
-            super.close(context, callback, throwable);
-            final int retryCount = context.getRetryCount();
-            if (retryCount > 0) {
-                if (throwable == null) {
-                    LOGGER.info("{} attempt {} succeeded for <{}>.",
-                            loggableValue(RETRY_ACTION, actionName),
-                            loggableValue(RETRY_COUNT_LOGNAME, retryCount + 1),
-                            LOGGING_CONTEXT.get(context));
-                } else {
-                    LOGGER.error("{} attempts (total {}) exhausted for <{}>.",
-                            loggableValue(RETRY_ACTION, actionName),
-                            loggableValue(RETRY_COUNT_LOGNAME, retryCount),
-                            LOGGING_CONTEXT.get(context));
-                }
-            }
-        }
-
-        @Override
-        public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
-            super.onError(context, callback, throwable);
-            LOGGER.warn("{}} failed on attempt {} for <{}>. Retrying.",
-                    loggableValue(RETRY_ACTION, actionName),
-                    loggableValue(RETRY_COUNT_LOGNAME, context.getRetryCount()),
-                    LOGGING_CONTEXT.get(context), throwable);
-        }
+    public interface RetryParamsFactory {
+        AbstractRetryingPostAction.RetryParams retryParams(
+                final RetryConfig config,
+                final String actionName,
+                final Duration actionTimeout,
+                final int actionQueueCapacity);
     }
+
 }

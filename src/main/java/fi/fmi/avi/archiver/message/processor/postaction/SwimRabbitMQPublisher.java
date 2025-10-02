@@ -328,6 +328,8 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
                     .orElse(OptionalLong.empty());
         }
 
+        public abstract Builder toBuilder();
+
         public static class Builder extends SwimRabbitMQPublisher_MessageConfig_Builder {
             Builder() {
             }
@@ -339,11 +341,13 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
                 return new Builder();
             }
 
-            abstract OptionalInt getMessageType();
+            public abstract OptionalInt getMessageType();
 
-            abstract Optional<AviationWeatherMessage.ReportStatus> getReportStatus();
+            public abstract Optional<AviationWeatherMessage.ReportStatus> getReportStatus();
 
-            abstract int getPriority();
+            public abstract int getPriority();
+
+            public abstract Builder toBuilder();
 
             public static class Builder extends SwimRabbitMQPublisher_MessageConfig_PriorityDescriptor_Builder {
                 Builder() {
