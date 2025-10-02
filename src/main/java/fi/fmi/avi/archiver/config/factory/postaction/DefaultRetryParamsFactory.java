@@ -107,7 +107,7 @@ public class DefaultRetryParamsFactory implements RetryingPostActionFactories.Re
         @Override
         public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
             super.onError(context, callback, throwable);
-            LOGGER.warn("{}} failed on attempt {} for <{}>. Retrying.",
+            LOGGER.warn("{} failed on attempt {} for <{}>. Retrying.",
                     loggableValue(RETRY_ACTION, actionName),
                     loggableValue(RETRY_COUNT_LOGNAME, context.getRetryCount()),
                     LOGGING_CONTEXT.get(context), throwable);

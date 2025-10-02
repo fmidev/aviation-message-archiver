@@ -114,7 +114,7 @@ class SwimRabbitMQPublisherFactoryTest {
     private Publisher.Callback amqpMessageCallback;
     private AutoCloseable openMocks;
 
-    private static <T> Answer<?> deletageAnswer(final T delegate) {
+    private static <T> Answer<?> delegateAnswer(final T delegate) {
         return invocation -> invocation.getMethod().invoke(delegate, invocation.getArguments());
     }
 
@@ -158,7 +158,7 @@ class SwimRabbitMQPublisherFactoryTest {
         )
                 .thenAnswer(invocation ->
                 {
-                    final ExecutorService executorService = mock(ExecutorService.class, deletageAnswer(MoreExecutors.newDirectExecutorService()));
+                    final ExecutorService executorService = mock(ExecutorService.class, delegateAnswer(MoreExecutors.newDirectExecutorService()));
                     final AbstractRetryingPostAction.RetryParams newRetryParams = new AbstractRetryingPostAction.RetryParams(
                             executorService,
                             invocation.getArgument(2),
@@ -267,7 +267,23 @@ class SwimRabbitMQPublisherFactoryTest {
     }
 
     @Test
-    void creates_topology() throws Exception {
+    void does_not_create_topology_when_not_requested() throws Exception {
+        final TestConfig config = MINIMAL_CONFIG.toBuilder()
+                .mapTopology(topology -> topology.toBuilder()
+                        .create(false)
+                        .build())
+                .build();
+        try (final TestSwimRabbitMQPublisherFactory factory = newSwimRabbitMQPublisherFactory()) {
+            final SwimRabbitMQPublisher publisher = factory.newInstance(config);
+            final Publisher amqpPublisher = verifySwimRabbitMQPublisherInitialization(publisher, factory, config, SwimRabbitMQPublisherFactoryTest.EXPECTED_MESSAGE_CONFIG);
+            amqpPublisher.publish(amqpMessage, amqpMessageCallback);
+
+            verifyNoInteractions(factory.exchangeSpecification, factory.queueSpecification, factory.bindingSpecification);
+        }
+    }
+
+    @Test
+    void creates_topology_when_requested() throws Exception {
         final TestConfig config = MINIMAL_CONFIG.toBuilder()
                 .id("test-id-topology")
                 .topology(TestTopologyConfig.builder()
