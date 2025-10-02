@@ -10,6 +10,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import static org.mockito.Mockito.mock;
 
+import java.time.Clock;
+
+import static org.mockito.Mockito.mock;
+
 @SuppressWarnings("UnstableApiUsage")
 public class PackageSanityTest extends AbstractPackageSanityTests {
 
@@ -22,6 +26,8 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
         setDefault(AbstractRetryingPostAction.RetryParams.class, new AbstractRetryingPostAction.RetryParams(
                 mock(ThreadPoolExecutor.class), Duration.ZERO, RetryTemplate.defaultInstance()));
         setDefault(ArchiveAviationMessage.class, ArchiveAviationMessage.builder().buildPartial());
+        setDefault(Clock.class, Clock.systemUTC());
+        setDefault(SwimRabbitMQPublisher.MessageConfig.class, mock(SwimRabbitMQPublisher.MessageConfig.class));
     }
 
 }

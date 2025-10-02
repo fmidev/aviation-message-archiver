@@ -9,18 +9,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.support.RetryTemplate;
 
+import javax.annotation.Nullable;
 import java.time.Duration;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractRetryingPostAction<T> implements PostAction, AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRetryingPostAction.class);
 
-    private final ThreadPoolExecutor executor;
+    private final ExecutorService executor;
     private final Duration postActionTimeout;
     private final RetryTemplate retryTemplate;
 
@@ -78,10 +76,10 @@ public abstract class AbstractRetryingPostAction<T> implements PostAction, AutoC
      * @param loggingContext logging context
      * @throws Exception if retry is required
      */
-    protected abstract void checkResult(T result, ReadableLoggingContext loggingContext) throws Exception;
+    protected abstract void checkResult(@Nullable T result, ReadableLoggingContext loggingContext) throws Exception;
 
     public record RetryParams(
-            ThreadPoolExecutor executor,
+            ExecutorService executor,
             Duration postActionTimeout,
             RetryTemplate retryTemplate) {
         public RetryParams {

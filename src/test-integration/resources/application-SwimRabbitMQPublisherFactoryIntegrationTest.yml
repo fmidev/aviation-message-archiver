@@ -2,7 +2,8 @@ production-line:
   post-actions:
     - name: SwimRabbitMQPublisher
       config:
-        id: default
+        # set only mandatory config properties
+        id: swim-test-id1
         publisher-queue-capacity: 50
         connection:
           uri: amqp://localhost:5672/%2f
@@ -10,10 +11,52 @@ production-line:
           password: pass
         topology:
           create: false
+          routing-key: aviation-message-archiver-test-routing1
           exchange:
-            name: aviation-message-archiver
+            name: aviation-message-archiver-test-exchange1
           queue:
-            name: aviation-message-archiver
-          routing-key: aviation-message-archiver
+            name: aviation-message-archiver-test-queue1
         retry:
           timeout: PT2M
+    - name: SwimRabbitMQPublisher
+      config:
+        # explicitly set all config properties
+        id: swim-test-id2
+        publisher-queue-capacity: 50
+        publish-timeout: PT30S
+        connection:
+          uri: amqp://localhost:5672/%2f
+          username: user
+          password: pass
+        topology:
+          create: false
+          routing-key: aviation-message-archiver-test-routing2
+          exchange:
+            name: aviation-message-archiver-test-exchange2
+            type: TOPIC
+            autoDelete: true
+            arguments:
+              e-testarg-1: e-testarg-1-value
+              e-testarg-2: e-testarg-2-value
+          queue:
+            name: aviation-message-archiver-test-queue2
+            type: CLASSIC
+            autoDelete: true
+            arguments:
+              q-testarg-1: q-testarg-1-value
+              q-testarg-2: q-testarg-2-value
+        retry:
+          initialInterval: PT0.1S
+          multiplier: 2
+          maxInterval: PT30S
+          timeout: PT2M
+        message:
+          priorities:
+            - type: TAF
+              status: AMENDMENT
+              priority: 6
+            - type: TAF
+              priority: 5
+            - priority: 0
+          encoding: GZIP
+          expiry-time: PT12H

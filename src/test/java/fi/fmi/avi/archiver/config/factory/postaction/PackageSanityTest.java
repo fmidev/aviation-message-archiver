@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.config.factory.postaction;
 
 import com.google.common.testing.AbstractPackageSanityTests;
 import fi.fmi.avi.archiver.message.processor.postaction.AbstractRetryingPostAction;
+import fi.fmi.avi.archiver.message.processor.postaction.SwimRabbitMQPublisher;
 import fi.fmi.avi.archiver.util.GeneratedClasses;
 import org.springframework.retry.support.RetryTemplate;
 
@@ -22,5 +23,6 @@ public class PackageSanityTest extends AbstractPackageSanityTests {
         setDefault(AbstractRetryingPostAction.RetryParams.class, new AbstractRetryingPostAction.RetryParams(
                 mock(ThreadPoolExecutor.class), Duration.ZERO, RetryTemplate.defaultInstance()));
         setDefault(Clock.class, Clock.systemUTC());
+        setDefault(SwimRabbitMQPublisher.MessageConfig.class, mock(SwimRabbitMQPublisher.MessageConfig.class));
     }
 }
