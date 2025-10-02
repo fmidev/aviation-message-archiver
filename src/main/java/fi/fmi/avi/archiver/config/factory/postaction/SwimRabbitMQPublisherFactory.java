@@ -155,23 +155,27 @@ public class SwimRabbitMQPublisherFactory
         try (final Management management = connection.management()) {
             final Config.ExchangeConfig exchangeConfig = config.exchange();
             final Config.QueueConfig queueConfig = config.queue();
-            management.exchange()
-                    .name(exchangeConfig.name())
-                    .type(exchangeConfig.type().orElse(Management.ExchangeType.DIRECT))
-                    .autoDelete(exchangeConfig.autoDelete().orElse(false))
-                    .arguments(exchangeConfig.arguments().orElse(Collections.emptyMap()))
-                    .declare();
-            management.queue()
-                    .name(queueConfig.name())
-                    .type(queueConfig.type().orElse(Management.QueueType.CLASSIC))
-                    .autoDelete(queueConfig.autoDelete().orElse(false))
-                    .arguments(queueConfig.arguments().orElse(Collections.emptyMap()))
-                    .declare();
-            management.binding()
-                    .sourceExchange(exchangeConfig.name())
-                    .destinationQueue(queueConfig.name())
-                    .key(config.routingKey())
-                    .bind();
+            if (config.exchange().create()) {
+                management.exchange()
+                        .name(exchangeConfig.name())
+                        .type(exchangeConfig.type().orElse(Management.ExchangeType.DIRECT))
+                        .autoDelete(exchangeConfig.autoDelete().orElse(false))
+                        .arguments(exchangeConfig.arguments().orElse(Collections.emptyMap()))
+                        .declare();
+            }
+            if (config.queue().create()) {
+                management.queue()
+                        .name(queueConfig.name())
+                        .type(queueConfig.type().orElse(Management.QueueType.CLASSIC))
+                        .autoDelete(queueConfig.autoDelete().orElse(false))
+                        .arguments(queueConfig.arguments().orElse(Collections.emptyMap()))
+                        .declare();
+                management.binding()
+                        .sourceExchange(exchangeConfig.name())
+                        .destinationQueue(queueConfig.name())
+                        .key(config.routingKey())
+                        .bind();
+            }
         } catch (final Exception e) {
             LOGGER.error("Failed to create AMQP topology for exchange '{}', queue '{}', routing key '{}'",
                     config.exchange(), config.queue(), config.routingKey(), e);
@@ -210,7 +214,7 @@ public class SwimRabbitMQPublisherFactory
 
         final Publisher publisher = createLazyForwardingProxy(Publisher.class, () -> {
             final Config.TopologyConfig topologyConfig = config.topology();
-            if (topologyConfig.create()) {
+            if (topologyConfig.exchange().create() || topologyConfig.queue().create()) {
                 createTopology(connection, topologyConfig);
             }
 
@@ -367,8 +371,6 @@ public class SwimRabbitMQPublisherFactory
         }
 
         interface TopologyConfig extends ObjectFactoryConfig {
-            boolean create();
-
             String routingKey();
 
             ExchangeConfig exchange();
@@ -384,6 +386,8 @@ public class SwimRabbitMQPublisherFactory
             Optional<Boolean> autoDelete();
 
             Optional<Map<String, Object>> arguments();
+
+            boolean create();
         }
 
         interface QueueConfig extends ObjectFactoryConfig {
@@ -394,6 +398,8 @@ public class SwimRabbitMQPublisherFactory
             Optional<Boolean> autoDelete();
 
             Optional<Map<String, Object>> arguments();
+
+            boolean create();
         }
 
         /**

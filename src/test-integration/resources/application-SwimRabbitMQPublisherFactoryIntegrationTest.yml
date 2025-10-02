@@ -10,12 +10,13 @@ production-line:
           username: user
           password: pass
         topology:
-          create: false
           routing-key: aviation-message-archiver-test-routing1
           exchange:
             name: aviation-message-archiver-test-exchange1
+            create: false
           queue:
             name: aviation-message-archiver-test-queue1
+            create: false
         retry:
           timeout: PT2M
     - name: SwimRabbitMQPublisher
@@ -29,7 +30,6 @@ production-line:
           username: user
           password: pass
         topology:
-          create: false
           routing-key: aviation-message-archiver-test-routing2
           exchange:
             name: aviation-message-archiver-test-exchange2
@@ -38,6 +38,7 @@ production-line:
             arguments:
               e-testarg-1: e-testarg-1-value
               e-testarg-2: e-testarg-2-value
+            create: false
           queue:
             name: aviation-message-archiver-test-queue2
             type: CLASSIC
@@ -45,6 +46,7 @@ production-line:
             arguments:
               q-testarg-1: q-testarg-1-value
               q-testarg-2: q-testarg-2-value
+            create: false
         retry:
           initialInterval: PT0.1S
           multiplier: 2
