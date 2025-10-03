@@ -10,7 +10,7 @@ production-line:
           username: user
           password: pass
         topology:
-          create: false
+          create: NONE
           routing-key: aviation-message-archiver-test-routing1
           exchange:
             name: aviation-message-archiver-test-exchange1
@@ -29,7 +29,7 @@ production-line:
           username: user
           password: pass
         topology:
-          create: false
+          create: NONE
           routing-key: aviation-message-archiver-test-routing2
           exchange:
             name: aviation-message-archiver-test-exchange2

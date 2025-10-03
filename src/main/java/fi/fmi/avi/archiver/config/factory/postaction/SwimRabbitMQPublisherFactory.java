@@ -153,25 +153,34 @@ public class SwimRabbitMQPublisherFactory
 
     private static void createTopology(final Connection connection, final Config.TopologyConfig config) {
         try (final Management management = connection.management()) {
+            final TopologyElements elements = config.create();
             final Config.ExchangeConfig exchangeConfig = config.exchange();
             final Config.QueueConfig queueConfig = config.queue();
-            management.exchange()
-                    .name(exchangeConfig.name())
-                    .type(exchangeConfig.type().orElse(Management.ExchangeType.DIRECT))
-                    .autoDelete(exchangeConfig.autoDelete().orElse(false))
-                    .arguments(exchangeConfig.arguments().orElse(Collections.emptyMap()))
-                    .declare();
-            management.queue()
-                    .name(queueConfig.name())
-                    .type(queueConfig.type().orElse(Management.QueueType.CLASSIC))
-                    .autoDelete(queueConfig.autoDelete().orElse(false))
-                    .arguments(queueConfig.arguments().orElse(Collections.emptyMap()))
-                    .declare();
-            management.binding()
-                    .sourceExchange(exchangeConfig.name())
-                    .destinationQueue(queueConfig.name())
-                    .key(config.routingKey())
-                    .bind();
+
+            if (elements == TopologyElements.ALL || elements == TopologyElements.EXCHANGE) {
+                management.exchange()
+                        .name(exchangeConfig.name())
+                        .type(exchangeConfig.type().orElse(Management.ExchangeType.DIRECT))
+                        .autoDelete(exchangeConfig.autoDelete().orElse(false))
+                        .arguments(exchangeConfig.arguments().orElse(Collections.emptyMap()))
+                        .declare();
+            }
+            if (elements == TopologyElements.ALL || elements == TopologyElements.QUEUE_AND_BINDING) {
+                management.queue()
+                        .name(queueConfig.name())
+                        .type(queueConfig.type().orElse(Management.QueueType.CLASSIC))
+                        .autoDelete(queueConfig.autoDelete().orElse(false))
+                        .arguments(queueConfig.arguments().orElse(Collections.emptyMap()))
+                        .declare();
+            }
+            if (elements == TopologyElements.ALL || elements == TopologyElements.QUEUE_AND_BINDING
+                    || elements == TopologyElements.BINDING) {
+                management.binding()
+                        .sourceExchange(exchangeConfig.name())
+                        .destinationQueue(queueConfig.name())
+                        .key(config.routingKey())
+                        .bind();
+            }
         } catch (final Exception e) {
             LOGGER.error("Failed to create AMQP topology for exchange '{}', queue '{}', routing key '{}'",
                     config.exchange(), config.queue(), config.routingKey(), e);
@@ -210,7 +219,7 @@ public class SwimRabbitMQPublisherFactory
 
         final Publisher publisher = createLazyForwardingProxy(Publisher.class, () -> {
             final Config.TopologyConfig topologyConfig = config.topology();
-            if (topologyConfig.create()) {
+            if (topologyConfig.create() != TopologyElements.NONE) {
                 createTopology(connection, topologyConfig);
             }
 
@@ -343,6 +352,8 @@ public class SwimRabbitMQPublisherFactory
         }
     }
 
+    public enum TopologyElements {ALL, EXCHANGE, QUEUE_AND_BINDING, BINDING, NONE}
+
     public interface Config extends ObjectFactoryConfig {
         String id();
 
@@ -367,13 +378,13 @@ public class SwimRabbitMQPublisherFactory
         }
 
         interface TopologyConfig extends ObjectFactoryConfig {
-            boolean create();
-
             String routingKey();
 
             ExchangeConfig exchange();
 
             QueueConfig queue();
+
+            TopologyElements create();
         }
 
         interface ExchangeConfig extends ObjectFactoryConfig {
