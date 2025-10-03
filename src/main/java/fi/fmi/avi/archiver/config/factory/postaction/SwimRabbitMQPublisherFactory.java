@@ -153,9 +153,11 @@ public class SwimRabbitMQPublisherFactory
 
     private static void createTopology(final Connection connection, final Config.TopologyConfig config) {
         try (final Management management = connection.management()) {
+            final TopologyElements elements = config.create();
             final Config.ExchangeConfig exchangeConfig = config.exchange();
             final Config.QueueConfig queueConfig = config.queue();
-            if (config.exchange().create()) {
+
+            if (elements == TopologyElements.ALL || elements == TopologyElements.EXCHANGE) {
                 management.exchange()
                         .name(exchangeConfig.name())
                         .type(exchangeConfig.type().orElse(Management.ExchangeType.DIRECT))
@@ -163,13 +165,16 @@ public class SwimRabbitMQPublisherFactory
                         .arguments(exchangeConfig.arguments().orElse(Collections.emptyMap()))
                         .declare();
             }
-            if (config.queue().create()) {
+            if (elements == TopologyElements.ALL || elements == TopologyElements.QUEUE_AND_BINDING) {
                 management.queue()
                         .name(queueConfig.name())
                         .type(queueConfig.type().orElse(Management.QueueType.CLASSIC))
                         .autoDelete(queueConfig.autoDelete().orElse(false))
                         .arguments(queueConfig.arguments().orElse(Collections.emptyMap()))
                         .declare();
+            }
+            if (elements == TopologyElements.ALL || elements == TopologyElements.QUEUE_AND_BINDING
+                    || elements == TopologyElements.BINDING) {
                 management.binding()
                         .sourceExchange(exchangeConfig.name())
                         .destinationQueue(queueConfig.name())
@@ -214,7 +219,7 @@ public class SwimRabbitMQPublisherFactory
 
         final Publisher publisher = createLazyForwardingProxy(Publisher.class, () -> {
             final Config.TopologyConfig topologyConfig = config.topology();
-            if (topologyConfig.exchange().create() || topologyConfig.queue().create()) {
+            if (topologyConfig.create() != TopologyElements.NONE) {
                 createTopology(connection, topologyConfig);
             }
 
@@ -347,6 +352,8 @@ public class SwimRabbitMQPublisherFactory
         }
     }
 
+    public enum TopologyElements {ALL, EXCHANGE, QUEUE_AND_BINDING, BINDING, NONE}
+
     public interface Config extends ObjectFactoryConfig {
         String id();
 
@@ -376,6 +383,8 @@ public class SwimRabbitMQPublisherFactory
             ExchangeConfig exchange();
 
             QueueConfig queue();
+
+            TopologyElements create();
         }
 
         interface ExchangeConfig extends ObjectFactoryConfig {
@@ -386,8 +395,6 @@ public class SwimRabbitMQPublisherFactory
             Optional<Boolean> autoDelete();
 
             Optional<Map<String, Object>> arguments();
-
-            boolean create();
         }
 
         interface QueueConfig extends ObjectFactoryConfig {
@@ -398,8 +405,6 @@ public class SwimRabbitMQPublisherFactory
             Optional<Boolean> autoDelete();
 
             Optional<Map<String, Object>> arguments();
-
-            boolean create();
         }
 
         /**

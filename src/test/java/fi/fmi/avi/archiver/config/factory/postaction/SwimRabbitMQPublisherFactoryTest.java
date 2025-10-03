@@ -47,6 +47,9 @@ class SwimRabbitMQPublisherFactoryTest {
             .put(MessageType.SIGMET, 5)
             .put(MessageType.SPACE_WEATHER_ADVISORY, 6)
             .build();
+    private static final String EXCHANGE = "aviation-message-archiver-test-exchange1";
+    private static final String QUEUE = "aviation-message-archiver-test-queue1";
+    private static final String ROUTING_KEY = "aviation-message-archiver-test-routing1";
     private static final TestConfig MINIMAL_CONFIG = TestConfig.builder()
             .id("test-id-minimal")
             .publisherQueueCapacity(50)
@@ -56,14 +59,13 @@ class SwimRabbitMQPublisherFactoryTest {
                     .password("pass")
                     .build())
             .topology(TestTopologyConfig.builder()
-                    .routingKey("aviation-message-archiver-test-routing1")
+                    .routingKey(ROUTING_KEY)
+                    .create(SwimRabbitMQPublisherFactory.TopologyElements.NONE)
                     .exchange(TestExchangeConfig.builder()
-                            .name("aviation-message-archiver-test-exchange1")
-                            .create(false)
+                            .name(EXCHANGE)
                             .build())
                     .queue(TestQueueConfig.builder()
-                            .name("aviation-message-archiver-test-queue1")
-                            .create(false)
+                            .name(QUEUE)
                             .build())
                     .build())
             .retry(TestRetryConfig.builder()
@@ -147,6 +149,36 @@ class SwimRabbitMQPublisherFactoryTest {
         verify(connection, times(1)).publisherBuilder();
         verify(publisherBuilder, times(publisherBuilderInvocations)).build();
     }
+
+    private static void verifyDefaultExchangeConfig(final TestSwimRabbitMQPublisherFactory factory) {
+        verify(factory.exchangeSpecification).name(EXCHANGE);
+        verify(factory.exchangeSpecification).type(Management.ExchangeType.DIRECT);
+        verify(factory.exchangeSpecification).autoDelete(false);
+        verify(factory.exchangeSpecification).arguments(Map.of());
+        final InOrder exchangeSpecInOrder = inOrder(factory.exchangeSpecification);
+        exchangeSpecInOrder.verify(factory.exchangeSpecification).declare();
+        exchangeSpecInOrder.verifyNoMoreInteractions();
+    }
+
+    private static void verifyDefaultQueueConfig(final TestSwimRabbitMQPublisherFactory factory) {
+        verify(factory.queueSpecification).name(QUEUE);
+        verify(factory.queueSpecification).type(Management.QueueType.CLASSIC);
+        verify(factory.queueSpecification).autoDelete(false);
+        verify(factory.queueSpecification).arguments(Map.of());
+        final InOrder queueSpecInOrder = inOrder(factory.queueSpecification);
+        queueSpecInOrder.verify(factory.queueSpecification).declare();
+        queueSpecInOrder.verifyNoMoreInteractions();
+    }
+
+    private static void verifyDefaultBindingConfig(final TestSwimRabbitMQPublisherFactory factory) {
+        verify(factory.bindingSpecification).sourceExchange(EXCHANGE);
+        verify(factory.bindingSpecification).destinationQueue(QUEUE);
+        verify(factory.bindingSpecification).key(ROUTING_KEY);
+        final InOrder bindingSpecInOrder = inOrder(factory.bindingSpecification);
+        bindingSpecInOrder.verify(factory.bindingSpecification).bind();
+        bindingSpecInOrder.verifyNoMoreInteractions();
+    }
+
 
     @BeforeEach
     void setUp() {
@@ -270,9 +302,7 @@ class SwimRabbitMQPublisherFactoryTest {
     @Test
     void does_not_create_topology_when_not_requested() throws Exception {
         final TestConfig config = MINIMAL_CONFIG.toBuilder()
-                .mapTopology(topology -> topology.toBuilder()
-                        .mapExchange(exchange -> exchange.toBuilder().create(false).build())
-                        .mapQueue(queue -> queue.toBuilder().create(false).build())
+                .mapTopology(topology -> topology.toBuilder().create(SwimRabbitMQPublisherFactory.TopologyElements.NONE)
                         .build())
                 .build();
         try (final TestSwimRabbitMQPublisherFactory factory = newSwimRabbitMQPublisherFactory()) {
@@ -285,11 +315,10 @@ class SwimRabbitMQPublisherFactoryTest {
     }
 
     @Test
-    void creates_only_queue_and_binding_when_requested() throws Exception {
+    void creates_only_exchange_when_requested() throws Exception {
         final TestConfig config = MINIMAL_CONFIG.toBuilder()
                 .mapTopology(topology -> topology.toBuilder()
-                        .mapExchange(exchange -> exchange.toBuilder().create(false).build())
-                        .mapQueue(queue -> queue.toBuilder().create(true).build())
+                        .create(SwimRabbitMQPublisherFactory.TopologyElements.EXCHANGE)
                         .build())
                 .build();
         try (final TestSwimRabbitMQPublisherFactory factory = newSwimRabbitMQPublisherFactory()) {
@@ -297,33 +326,34 @@ class SwimRabbitMQPublisherFactoryTest {
             final Publisher amqpPublisher = verifySwimRabbitMQPublisherInitialization(publisher, factory, config, SwimRabbitMQPublisherFactoryTest.EXPECTED_MESSAGE_CONFIG);
             amqpPublisher.publish(amqpMessage, amqpMessageCallback);
 
-            final Config.QueueConfig queueConfig = config.topology().queue();
-            verify(factory.queueSpecification).name(queueConfig.name());
-            verify(factory.queueSpecification).type(Management.QueueType.CLASSIC);
-            verify(factory.queueSpecification).autoDelete(false);
-            verify(factory.queueSpecification).arguments(Map.of());
-            final InOrder queueSpecInOrder = inOrder(factory.queueSpecification);
-            queueSpecInOrder.verify(factory.queueSpecification).declare();
-            queueSpecInOrder.verifyNoMoreInteractions();
+            verifyDefaultExchangeConfig(factory);
+            verifyNoInteractions(factory.queueSpecification, factory.bindingSpecification);
+        }
+    }
 
-            final Config.ExchangeConfig exchangeConfig = config.topology().exchange();
-            verify(factory.bindingSpecification).sourceExchange(exchangeConfig.name());
-            verify(factory.bindingSpecification).destinationQueue(queueConfig.name());
-            verify(factory.bindingSpecification).key(config.topology().routingKey());
-            final InOrder bindingSpecInOrder = inOrder(factory.bindingSpecification);
-            bindingSpecInOrder.verify(factory.bindingSpecification).bind();
-            bindingSpecInOrder.verifyNoMoreInteractions();
+    @Test
+    void creates_only_queue_and_binding_when_requested() throws Exception {
+        final TestConfig config = MINIMAL_CONFIG.toBuilder()
+                .mapTopology(topology -> topology.toBuilder()
+                        .create(SwimRabbitMQPublisherFactory.TopologyElements.QUEUE_AND_BINDING)
+                        .build())
+                .build();
+        try (final TestSwimRabbitMQPublisherFactory factory = newSwimRabbitMQPublisherFactory()) {
+            final SwimRabbitMQPublisher publisher = factory.newInstance(config);
+            final Publisher amqpPublisher = verifySwimRabbitMQPublisherInitialization(publisher, factory, config, SwimRabbitMQPublisherFactoryTest.EXPECTED_MESSAGE_CONFIG);
+            amqpPublisher.publish(amqpMessage, amqpMessageCallback);
 
+            verifyDefaultQueueConfig(factory);
+            verifyDefaultBindingConfig(factory);
             verifyNoInteractions(factory.exchangeSpecification);
         }
     }
 
     @Test
-    void creates_only_exchange_when_requested() throws Exception {
+    void creates_only_binding_requested() throws Exception {
         final TestConfig config = MINIMAL_CONFIG.toBuilder()
                 .mapTopology(topology -> topology.toBuilder()
-                        .mapExchange(exchange -> exchange.toBuilder().create(true).build())
-                        .mapQueue(queue -> queue.toBuilder().create(false).build())
+                        .create(SwimRabbitMQPublisherFactory.TopologyElements.BINDING)
                         .build())
                 .build();
         try (final TestSwimRabbitMQPublisherFactory factory = newSwimRabbitMQPublisherFactory()) {
@@ -331,16 +361,8 @@ class SwimRabbitMQPublisherFactoryTest {
             final Publisher amqpPublisher = verifySwimRabbitMQPublisherInitialization(publisher, factory, config, SwimRabbitMQPublisherFactoryTest.EXPECTED_MESSAGE_CONFIG);
             amqpPublisher.publish(amqpMessage, amqpMessageCallback);
 
-            final Config.ExchangeConfig exchangeConfig = config.topology().exchange();
-            verify(factory.exchangeSpecification).name(exchangeConfig.name());
-            verify(factory.exchangeSpecification).type(Management.ExchangeType.DIRECT);
-            verify(factory.exchangeSpecification).autoDelete(false);
-            verify(factory.exchangeSpecification).arguments(Map.of());
-            final InOrder exchangeSpecInOrder = inOrder(factory.exchangeSpecification);
-            exchangeSpecInOrder.verify(factory.exchangeSpecification).declare();
-            exchangeSpecInOrder.verifyNoMoreInteractions();
-
-            verifyNoInteractions(factory.queueSpecification, factory.bindingSpecification);
+            verifyDefaultBindingConfig(factory);
+            verifyNoInteractions(factory.exchangeSpecification, factory.queueSpecification);
         }
     }
 
@@ -349,6 +371,7 @@ class SwimRabbitMQPublisherFactoryTest {
         final TestConfig config = MINIMAL_CONFIG.toBuilder()
                 .id("test-id-topology")
                 .topology(TestTopologyConfig.builder()
+                        .create(SwimRabbitMQPublisherFactory.TopologyElements.ALL)
                         .routingKey("aviation-message-archiver-test-routing1")
                         .exchange(TestExchangeConfig.builder()
                                 .name("aviation-message-archiver-test-exchange1")
@@ -357,7 +380,6 @@ class SwimRabbitMQPublisherFactoryTest {
                                 .arguments(Map.of(
                                         "e-testarg-1", "e-testarg-1-value",
                                         "e-testarg-2", "e-testarg-2-value"))
-                                .create(true)
                                 .build())
                         .queue(TestQueueConfig.builder()
                                 .name("aviation-message-archiver-test-queue1")
@@ -367,7 +389,6 @@ class SwimRabbitMQPublisherFactoryTest {
                                         "q-testarg-1", "q-testarg-1-value",
                                         "q-testarg-2", "q-testarg-2-value"
                                 ))
-                                .create(true)
                                 .build())
                         .build())
                 .build();
@@ -408,8 +429,7 @@ class SwimRabbitMQPublisherFactoryTest {
     void creates_topology_with_defaults() throws Exception {
         final TestConfig config = MINIMAL_CONFIG.toBuilder()
                 .mapTopology(topology -> topology.toBuilder()
-                        .mapExchange(exchange -> exchange.toBuilder().create(true).build())
-                        .mapQueue(queue -> queue.toBuilder().create(true).build())
+                        .create(SwimRabbitMQPublisherFactory.TopologyElements.ALL)
                         .build())
                 .build();
         try (final TestSwimRabbitMQPublisherFactory factory = newSwimRabbitMQPublisherFactory()) {
@@ -417,30 +437,9 @@ class SwimRabbitMQPublisherFactoryTest {
             final Publisher amqpPublisher = verifySwimRabbitMQPublisherInitialization(publisher, factory, config, SwimRabbitMQPublisherFactoryTest.EXPECTED_MESSAGE_CONFIG);
             amqpPublisher.publish(amqpMessage, amqpMessageCallback);
 
-            final Config.ExchangeConfig exchangeConfig = config.topology().exchange();
-            verify(factory.exchangeSpecification).name(exchangeConfig.name());
-            verify(factory.exchangeSpecification).type(Management.ExchangeType.DIRECT);
-            verify(factory.exchangeSpecification).autoDelete(false);
-            verify(factory.exchangeSpecification).arguments(Map.of());
-            final InOrder exchangeSpecInOrder = inOrder(factory.exchangeSpecification);
-            exchangeSpecInOrder.verify(factory.exchangeSpecification).declare();
-            exchangeSpecInOrder.verifyNoMoreInteractions();
-
-            final Config.QueueConfig queueConfig = config.topology().queue();
-            verify(factory.queueSpecification).name(queueConfig.name());
-            verify(factory.queueSpecification).type(Management.QueueType.CLASSIC);
-            verify(factory.queueSpecification).autoDelete(false);
-            verify(factory.queueSpecification).arguments(Map.of());
-            final InOrder queueSpecInOrder = inOrder(factory.queueSpecification);
-            queueSpecInOrder.verify(factory.queueSpecification).declare();
-            queueSpecInOrder.verifyNoMoreInteractions();
-
-            verify(factory.bindingSpecification).sourceExchange(exchangeConfig.name());
-            verify(factory.bindingSpecification).destinationQueue(queueConfig.name());
-            verify(factory.bindingSpecification).key(config.topology().routingKey());
-            final InOrder bindingSpecInOrder = inOrder(factory.bindingSpecification);
-            bindingSpecInOrder.verify(factory.bindingSpecification).bind();
-            bindingSpecInOrder.verifyNoMoreInteractions();
+            verifyDefaultExchangeConfig(factory);
+            verifyDefaultQueueConfig(factory);
+            verifyDefaultBindingConfig(factory);
         }
     }
 
