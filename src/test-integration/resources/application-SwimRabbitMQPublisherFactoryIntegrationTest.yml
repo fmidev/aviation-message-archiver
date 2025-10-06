@@ -47,7 +47,7 @@ production-line:
               q-testarg-2: q-testarg-2-value
         retry:
           initialInterval: PT0.1S
-          multiplier: 2
+          multiplier: 2.0
           maxInterval: PT30S
           timeout: PT2M
         message:

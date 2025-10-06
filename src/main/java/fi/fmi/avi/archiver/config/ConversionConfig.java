@@ -15,6 +15,7 @@ public class ConversionConfig {
 
         conversionService.addConverter(new EmptyStringToEmptyMapConverter());
         conversionService.addConverter(new MapValuesToCollectionConverter(conversionService));
+        conversionService.addConverter(new NumberToOptionalDoubleConverter());
         conversionService.addConverter(new StringToDurationConverter());
         conversionService.addConverter(new StringToInstantConverter());
         conversionService.addConverter(new StringToPatternConverter());
