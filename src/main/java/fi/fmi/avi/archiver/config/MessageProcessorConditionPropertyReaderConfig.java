@@ -38,6 +38,11 @@ public class MessageProcessorConditionPropertyReaderConfig {
     }
 
     @Bean
+    ProcessingResultPropertyReader processingResultPropertyReader() {
+        return new ProcessingResultPropertyReader();
+    }
+
+    @Bean
     ProductIdPropertyReader productIdentifierPropertyReader(final Map<String, AviationProduct> aviationProducts) {
         return new ProductIdPropertyReader(aviationProducts);
     }
