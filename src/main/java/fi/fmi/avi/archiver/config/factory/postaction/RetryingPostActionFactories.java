@@ -5,6 +5,7 @@ import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfig;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.OptionalDouble;
 
 public final class RetryingPostActionFactories {
 
@@ -15,7 +16,7 @@ public final class RetryingPostActionFactories {
     public interface RetryConfig extends ObjectFactoryConfig {
         Optional<Duration> initialInterval();
 
-        Optional<Integer> multiplier();
+        OptionalDouble multiplier();
 
         Optional<Duration> maxInterval();
 
