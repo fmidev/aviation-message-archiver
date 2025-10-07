@@ -4,7 +4,7 @@
   mvn validate resources:copy-resources@readme
 -->
 
-# Aviation Message Archiver
+# Aviation Message Archiver <!-- omit from toc -->
 
 An application that reads aviation message files, parses some basic properties and stores messages along with parsed
 metadata in a database.
@@ -16,14 +16,9 @@ message files. Whenever new files appear, it scans for messages in files, parses
 (issued) time, validity period (when applicable), station / location indicator. It stores each message in a PostGIS
 (PostgreSQL) database.
 
-## Contents
-
-<!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
-
-TODO: Update
+## Contents <!-- omit from toc -->
 
 - [Overview](#overview)
-- [Contents](#contents)
 - [Feature overview](#feature-overview)
     - [Supported message types and formats](#supported-message-types-and-formats)
 - [Getting started](#getting-started)
@@ -34,6 +29,7 @@ TODO: Update
     - [Structured logging](#structured-logging)
 - [Application configuration](#application-configuration)
     - [Products](#products)
+  - [Message processors](#message-processors)
     - [Message populators](#message-populators)
         - [Bundled message populators](#bundled-message-populators)
             - [BulletinHeadingDataPopulator](#bulletinheadingdatapopulator)
@@ -51,14 +47,16 @@ TODO: Update
             - [ProductMessageTypesValidator](#productmessagetypesvalidator)
             - [StationIcaoCodeReplacer](#stationicaocodereplacer)
             - [StationIdPopulator](#stationidpopulator)
-        - [Conditional message popular activation](#conditional-message-popular-activation)
-            - [Activation property](#activation-property)
-            - [Activation operator and operand](#activation-operator-and-operand)
+  - [Post-actions](#post-actions)
+      - [Bundled post-actions](#bundled-post-actions)
+          - [ResultLogger](#resultlogger)
+          - [SwimRabbitMQPublisher](#swimrabbitmqpublisher)
+  - [Conditional message processor activation](#conditional-message-processor-activation)
+      - [Activation property](#activation-property)
+      - [Activation operator and operand](#activation-operator-and-operand)
     - [Identifier mappings](#identifier-mappings)
     - [Spring Boot configuration properties](#spring-boot-configuration-properties)
 - [License](#license)
-
-<!-- /TOC -->
 
 ## Feature overview
 
