@@ -20,6 +20,8 @@ message files. Whenever new files appear, it scans for messages in files, parses
 
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
+TODO: Update
+
 - [Overview](#overview)
 - [Contents](#contents)
 - [Feature overview](#feature-overview)
@@ -323,13 +325,22 @@ production-line:
 See [application.yml] file for a documented configuration example. More detailed documentation on individual properties
 can be found in the [AviationProduct](src/main/java/fi/fmi/avi/archiver/config/model/AviationProduct.java) model class.
 
+### Message processors
+
+[Message processor](src/main/java/fi/fmi/avi/archiver/message/processor/MessageProcessor.java) is a concept of small
+components that are designed to do a single action on each message at a certain phase of the archival execution chain.
+The message processor instances used in the archival process are configurable in the application configuration, and
+their activation may be [conditional](#conditional-message-processor-activation) based on message properties.
+
+Currently, the application supports two kind of message processors: [message populators](#message-populators) and
+[post-actions](#post-actions). See corresponding chapters for more details.
+
 ### Message populators
 
 [Message populators](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessagePopulator.java) are small
-classes that
-are responsible for populating the archive data object with message data parsed from the input file. Each message
-populator focuses on a single responsibility, and together all configured populators construct the complete message
-entity to be archived. Message populators also decide whether a message is considered
+components that are responsible for populating the archive data object with message data parsed from the input file.
+Each message populator focuses on a single responsibility, and together all configured populators construct the complete
+message entity to be archived. Message populators also decide whether a message is considered
 
 - **eligible for archival**, thus will be stored in the message database table after all populators are executed,
 - **rejected**, thus will be stored in the rejected message database table after all populators are executed,
@@ -338,7 +349,7 @@ entity to be archived. Message populators also decide whether a message is consi
 
 Message populator configuration specifies which populators are executed and in which order. A message populator executed
 later in the execution chain may then override values set by previously executed populators. The configuration applies
-to all [products](#products). Any populator may be configured to execute conditionally.
+to all [products](#products).
 
 Template of message populators configuration:
 
@@ -375,10 +386,10 @@ like [MessageDataPopulator](#messagedatapopulator), play an essential role in th
 provided [application.yml] has an example configuration of these. Others,
 like [FixedProcessingResultPopulator](#fixedprocessingresultpopulator)
 or [StationIcaoCodeReplacer](#stationicaocodereplacer), are provided for customized message handling, along with the
-possibility for [conditional activation](#conditional-message-popular-activation). One message
+possibility for [conditional activation](#conditional-message-processor-activation). One message
 populator, [StationIdPopulator](#stationidpopulator), cannot be configured, but is implicitly active.
 
-Available populators are listed below (in alphabetic order by name). These are declared for use in
+Available populators are listed below in alphabetic order by name. These are declared for use in
 the [MessagePopulatorFactoryConfig](src/main/java/fi/fmi/avi/archiver/config/MessagePopulatorFactoryConfig.java) class.
 
 ##### BulletinHeadingDataPopulator
@@ -389,7 +400,7 @@ Populate properties parsed from input bulletin heading.
   [BulletinHeadingDataPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/BulletinHeadingDataPopulator.java)
 - **config:**
     - `bulletin-heading-sources` (optional) - List of bulletin heading sources in preferred order.  
-      Available values are specified
+      Possible values are specified
       in [BulletinHeadingSource](src/main/java/fi/fmi/avi/archiver/message/processor/populator/BulletinHeadingSource.java)
       enum.  
       Example:
@@ -422,7 +433,7 @@ Set validity period to a fixed duration period starting from message time.
 - **name:**
   [FixedDurationValidityPeriodPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedDurationValidityPeriodPopulator.java)
 - **config:**
-    - `validity-end-offset` (mandatory) - Validity period length from message time as ISO 8601
+    - `validity-end-offset` (mandatory) - Validity period length from message time as an ISO 8601
       duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).  
       Example:
       ```yaml
@@ -436,7 +447,8 @@ Set processing result to specified value.
 - **name:**
   [FixedProcessingResultPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedProcessingResultPopulator.java)
 - **config:**
-    - `result` (mandatory) - Processing result code name. Available values are specified
+    - `result` (mandatory) - Processing result code name.  
+      Possible values are specified
       in [ProcessingResult](src/main/java/fi/fmi/avi/archiver/message/ProcessingResult.java) enum.  
       Example:
       ```yaml
@@ -451,7 +463,7 @@ Set route to specified value.
   [FixedRoutePopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedRoutePopulator.java)
 - **config:**
     - `route` (mandatory) - Route name.  
-      Available values are specified in the `production-line.route-ids` [identifier mapping](#identifier-mappings)
+      Possible values are specified in the `production-line.route-ids` [identifier mapping](#identifier-mappings)
       property.  
       Example:
       ```yaml
@@ -466,7 +478,7 @@ Set message type to specified value.
   [FixedTypePopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedTypePopulator.java)
 - **config:**
     - `type` (mandatory) - Message type name.  
-      Available values are specified in the `production-line.type-ids` [identifier mapping](#identifier-mappings)
+      Possible values are specified in the `production-line.type-ids` [identifier mapping](#identifier-mappings)
       property.  
       Example:
       ```yaml
@@ -533,12 +545,24 @@ Discard message.
 
 ##### MessageFutureTimeValidator
 
+**Deprecated** and will be removed in a future release. Instead, use `FixedProcessingResultPopulator` with a negative
+`message-age` condition operand value:
+
+```yaml
+- name: FixedProcessingResultPopulator
+  activate-on:
+    message-age:
+      is-less-than: -PT12H
+  config:
+    result: MESSAGE_TIME_IN_FUTURE
+```
+
 Reject message if message time is too far in the future.
 
 - **name:**
   [MessageFutureTimeValidator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageFutureTimeValidator.java)
 - **config:**
-    - `accept-in-future` (mandatory) - Maximum duration as ISO 8601
+    - `accept-in-future` (mandatory) - Maximum duration as an ISO 8601
       duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)) from current
       time to accepted message time.  
       Example:
@@ -548,14 +572,24 @@ Reject message if message time is too far in the future.
 
 ##### MessageMaximumAgeValidator
 
-**Deprecated** and will be removed in a future release.
+**Deprecated** and will be removed in a future release. Instead, use `FixedProcessingResultPopulator` with `message-age`
+condition:
+
+```yaml
+- name: FixedProcessingResultPopulator
+  activate-on:
+    message-age:
+      is-greater-than: PT36H
+  config:
+    result: MESSAGE_TOO_OLD
+```
 
 Reject message if message time is too far in the past.
 
 - **name:**
   [MessageMaximumAgeValidator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageMaximumAgeValidator.java)
 - **config:**
-    - `confname` (mandatory) - Maximum duration as ISO 8601
+    - `confname` (mandatory) - Maximum duration as an ISO 8601
       duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)) until current
       time to accepted message time.  
       Example:
@@ -624,14 +658,293 @@ chain.
 - **name:** ~
 - **config:** ~
 
-#### Conditional message popular activation
+### Post-actions
 
-Message populator configuration may include an _activation condition_, in which case the populator is executed only when
-the provided condition is satisfied. An activation condition consists of one or more _activation expressions_, that
-consist of [_activation property_](#activation-property) and one or more [_activation operator_ and _activation
+[Post-actions](src/main/java/fi/fmi/avi/archiver/message/processor/postaction/PostAction.java) are components that
+execute single action after the message has been archived in the database. Post-actions are **not** applied on messages
+that were _discarded_ or _failed_ in an earlier message processing phase
+(e.g. [message population phase](#message-populators)). In other words, only messages that have been stored successfully
+in the database either as _archived_ or _rejected_ will be processed by post-actions. The input file is marked as
+finished only after all post-actions have been finished (either successfully or having failed) on all messages of the
+file. Post-actions cannot change the final processing status (_archived_, _rejected_, _failed_) of an input file.
+
+The following characteristics are unspecified, and current implementation may change any time without a prior notice.
+
+- processing order of messages
+- execution order of post-actions
+- sequential or parallel execution
+
+Post-action configuration specifies which actions are executed. The configuration applies to all [products](#products).
+The execution of each post-action is isolated, and any failing post-action will not affect other post-actions.
+
+#### Bundled post-actions
+
+This application comes with some bundled post-actions. In addition to post-action configuration, you may want to set
+up [conditional activation](#conditional-message-processor-activation) to, for example, restrict execution to messages
+that have been archived successfully, skipping rejected messages.
+
+Available populators are listed below in alphabetic order by name. These are declared for use in
+the [PostActionFactoryConfig](src/main/java/fi/fmi/avi/archiver/config/PostActionFactoryConfig.java) class.
+
+##### ResultLogger
+
+A simple example post-action, that outputs a static info-level log message suffixed by message context information.
+
+- **name:**
+  [ResultLogger](src/main/java/fi/fmi/avi/archiver/message/processor/postaction/ResultLogger.java)
+- **config:**
+    - `message` (mandatory) - The log message.  
+      Example:
+      ```yaml
+      message: Message archiving process finished.
+      ```
+
+##### SwimRabbitMQPublisher
+
+This post-action publishes messages to a [RabbitMQ](https://www.rabbitmq.com/) broker, complying with the MET-SWIM
+(Meteorological System Wide Information Management) guidelines. Currently, this post-action implements the MET-SWIM CP1
+requirements.
+
+- **name:**
+  [SwimRabbitMQPublisher](src/main/java/fi/fmi/avi/archiver/message/processor/postaction/SwimRabbitMQPublisher.java)
+- **config:**
+    - `id` (mandatory) - An unique identifier string of the instance to distinguish it from other instances.  
+      Example:
+      ```yaml
+      id: swim-example
+      ```
+    - `publisher-queue-capacity` (mandatory) - Number of messages accepted in the processing queue.  
+      In case of broker disruptions, the incoming messages are held in a queue, until they are sent to the broker.
+      When the queue is full, all subsequent incoming messages will be silently dropped. The queue is not persisted.  
+      Example:
+      ```yaml
+      publisher-queue-capacity: 50000
+      ```
+    - `publish-timeout` (optional) - Timeout for a single post-action run on a single message as an ISO 8601
+      duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).  
+      When this timeout is reached, the publishing action is considered as failed and eligible for retry.  
+      Default value: `PT30S`  
+      Example:
+      ```yaml
+      publish-timeout: PT30S
+      ```
+    - `connection` (mandatory) - Connection configuration section.  
+      The connection is established lazily upon first message to be published to the broker. In case the connection has
+      been closed since publishing the last message, it will be automatically re-established.
+
+      For connection properties, a recommended convention is to use indirect values. Recommended format for
+      properties
+      is `post-action.<post-action-name>.<post-action-id>.<property-name>`.  
+      Example:
+      ```yaml
+      post-action:
+        SwimRabbitMQPublisher:
+          swim-example:
+            uri: amqp://example.rabbitmq.host:5672/%2f
+            username: exampleuser
+            password: examplepassword
+      ```
+      The examples under the connection configuration properties documentation below refer to the properties of the
+      example above.
+        - `connection.uri` (mandatory) - RabbitMQ service uri.  
+          Example:
+          ```yaml
+          connection:
+            uri: ${post-action.SwimRabbitMQPublisher.swim-example.uri}
+          ```
+        - `connection.username` (mandatory) - Connection username.  
+          Example:
+          ```yaml
+          connection:
+            username: ${post-action.SwimRabbitMQPublisher.swim-example.username}
+          ```
+        - `connection.password` (mandatory) - Connection password.  
+          Example:
+          ```yaml
+          connection:
+            password: ${post-action.SwimRabbitMQPublisher.swim-example.password}
+          ```
+    - `topology` (mandatory) - Topology configuration section.  
+      Please refer to the [RabbitMQ documentation](https://www.rabbitmq.com/docs/use-rabbitmq) on details of the
+      configuration properties.
+        - `create` (mandatory) - Specifies whether the application should create any of topology elements when
+          (re-)establishing the connection.  
+          The account used to connect to the broker must have privileges to create such topology elements. When
+          the value is set to `NONE`, no topology elements will be created, and all of them must exist on the broker
+          when connecting.  
+          Possible values: `ALL`, `EXCHANGE`, `QUEUE_AND_BINDING`, `BINDING`, `NONE`  
+          Example:
+          ```yaml
+          topology:
+            create: ALL
+          ```
+        - `routing-key` (mandatory) - Routing key to be used on publication.  
+          Example:
+          ```yaml
+          topology:
+            routing-key: aviation-message-archiver-example-routing
+          ```
+        - `exchange` (mandatory) - Exchange configuration section.
+            - `name` (mandatory) - Exchange name.  
+              Example:
+              ```yaml
+              topology:
+                exchange:
+                  name: x.aviation-message-archiver
+              ```
+            - `type` (optional) - Exchange type.  
+              Possible values: `DIRECT` (default), `FANOUT`, `TOPIC`, `HEADERS`  
+              Example:
+              ```yaml
+              topology:
+                exchange:
+                  type: TOPIC
+              ```
+            - `auto-delete` (optional) - Defines whether the exchange is deleted when last queue is unbound from
+              it.  
+              Possible values: `true`, `false` (default)  
+              Example:
+              ```yaml
+              topology:
+                exchange:
+                  auto-delete: false
+              ```
+            - `arguments` (optional) - Exchange arguments.  
+              Example:
+              ```yaml
+              topology:
+                exchange:
+                  arguments:
+                    x-example-arg-1: x-example-arg-1-value
+                    x-example-arg-2: x-example-arg-2-value
+              ```
+        - `queue` (mandatory) - Queue configuration section.
+            - `name` (mandatory) - Queue name.  
+              Example:
+              ```yaml
+              topology:
+                queue:
+                  name: q.aviation-message-archiver
+              ```
+            - `type` (optional) - Queue type.  
+              Possible values: `QUORUM`, `CLASSIC` (default), `STREAM`  
+              Example:
+              ```yaml
+              topology:
+                queue:
+                  type: QUORUM
+              ```
+            - `auto-delete` (optional) - Defines whether the queue get automatically deleted when its last
+              consumer unsubscribes.  
+              Possible values: `true`, `false` (default)  
+              Example:
+              ```yaml
+              topology:
+                queue:
+                  auto-delete: false
+              ```
+            - `arguments` (optional) - Queue arguments.  
+              Example:
+              ```yaml
+              topology:
+                queue:
+                  arguments:
+                    q-example-arg-1: q-example-arg-1-value
+                    q-example-arg-2: q-example-arg-2-value
+              ```
+    - `retry` (mandatory) - Retry configuration section.
+        - `initial-interval` (optional) - Initial delay before first retry is attempted as an ISO 8601
+          duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).  
+          Default value: `PT0.5S`  
+          Example:
+          ```yaml
+          retry:
+            initial-interval: PT0.5S
+          ```
+        - `multiplier` (optional) - The back off time multiplier as a decimal number.  
+          Default value: `2.0`  
+          Example:
+          ```yaml
+          retry:
+            multiplier: 2.0
+          ```
+        - `max-interval` (optional) - The maximum back off delay as an ISO 8601
+          duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).  
+          Default value: `PT1M`  
+          Example:
+          ```yaml
+          retry:
+            max-interval: PT1M
+          ```
+        - `timeout` (mandatory) - The maximum time to retry since first attempt as an ISO 8601
+          duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).  
+          Use zero duration (`PT0S`) for infinite retry.  
+          Example:
+          ```yaml
+          retry:
+            initial-interval: PT3H
+          ```
+    - `message` (optional) - Message configuration section.  
+      Please refer to the MET-SWIM guidance on details of the configuration properties.
+        - `priorities` (optional) - List of message _priority descriptors_.  
+          The priority of the message is determined by the first priority descriptor in order matching the message. If
+          none of the descriptors match, the message will have the default priority `0`. This is also the situation in
+          case the `priorities` list is empty. If the `priorities` section is omitted, then the default priority
+          descriptors are used (see the example below).  
+          Example - the default priority descriptors:
+          ```yaml
+          message:
+            priorities:
+            - type: SIGMET
+              priority: 7
+            - type: SPECI
+              priority: 6
+            - type: TAF
+              status: AMENDMENT
+              priority: 6
+            - type: TAF
+              priority: 5
+            - type: METAR
+              priority: 4
+            - priority: 0
+          ```
+          A _priority descriptor_ consists of condition properties and the priority value that is given to messages
+          matching all the conditions.
+            - `type` (optional) - Message type condition.  
+              When omitted, messages of any type matches this condition.  
+              Possible values are specified in the `production-line.type-ids` [identifier mapping](#identifier-mappings)
+              property.
+            - `status` (optional) - Report status condition.  
+              When omitted, messages of any report status matches this condition.  
+              Possible values: `NORMAL`, `AMENDMENT`, `CORRECTION`
+            - `priority` (mandatory) - The priority a matching message will have.  
+              Possible values: an integer between `0`-`9` (inclusive)
+        - `encoding` (optional) - Message encoding.  
+          Possible values: `IDENTITY` (default), `GZIP`  
+          Example:
+          ```yaml
+          message:
+            encoding: GZIP
+          ```
+        - `expiry-time` (optional) - Message expiry time.  
+          This property value is an ISO 8601
+          duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)) from the
+          AMQP message creation time. It is used to set the `absolute-expiry-time` AMQP property.   
+          When omitted, the `absolute-expiry-time` property is omitted from the message.  
+          Example:
+          ```yaml
+          message:
+            expiry-time: PT12H
+          ```
+
+### Conditional message processor activation
+
+Message processor configuration may include an _activation condition_, in which case the message processor is executed
+only when the provided condition is satisfied. An activation condition consists of one or more _activation expressions_,
+that consist of [_activation property_](#activation-property) and one or more [_activation operator_ and _activation
 operand_](#activation-operator-and-operand) pairs. When multiple activation expressions and/or operator-operand pairs
 are specified, they are combined with AND operator, thus all of them must be satisfied to activate the message
-populator.
+processor.
 
 Template for activation condition configuration:
 
@@ -644,19 +957,27 @@ activate-on:
 ```
 
 Conditional execution is provided
-by [ConditionalMessagePopulator](src/main/java/fi/fmi/avi/archiver/message/processor/conditional/ConditionalMessagePopulator.java)
-class.
+by [ConditionalMessagePopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/ConditionalMessagePopulator.java)
+and [ConditionalPostAction](src/main/java/fi/fmi/avi/archiver/message/processor/postaction/ConditionalPostAction.java)
+classes.
 
-##### Activation property
+#### Activation property
 
 Activation property is the name of the aviation message data property that is applied as the first operand
 of [activation operator](#activation-operator-and-operand).
 
 The following activation properties are declared
-in [MessagePopulatorConditionPropertyReaderConfig](src/main/java/fi/fmi/avi/archiver/config/MessagePopulatorConditionPropertyReaderConfig.java):
+in [MessageProcessorConditionPropertyReaderConfig](src/main/java/fi/fmi/avi/archiver/config/MessageProcessorConditionPropertyReaderConfig.java):
 
+- `archival-status`: status of message archival to database.
+  See [ArchivalStatus](src/main/java/fi/fmi/avi/archiver/message/ArchivalStatus.java) for available states.
 - `format`: populated message format name. See `format-ids` in [Identifier mappings](#identifier-mappings).
-- `productId`: identifier of the product this file belongs to.
+- `message-age`: duration between populated message time and current processing time in ISO 8601
+  format ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)). The value can be
+  negative, which allows referring to the future.
+- `processing-result`: populated result code of message processing.
+  See [ProcessingResult](src/main/java/fi/fmi/avi/archiver/message/ProcessingResult.java) for available codes.
+- `product-id`: identifier of the product this file belongs to.
 - `route`: populated route name. See `route-ids` in [Identifier mappings](#identifier-mappings).
 - `station`: populated station ICAO code.
 - `type`: populated message type name. See `type-ids` in [Identifier mappings](#identifier-mappings).
@@ -672,7 +993,7 @@ The `<heading>` specifies whether to read GTS or COLLECT heading. It may be one 
 
 E.g. `gts-or-collect-data-designator`.
 
-##### Activation operator and operand
+#### Activation operator and operand
 
 In an activation expression, the activation operator is applied to the [activation property](#activation-property)
 value (as first operand for the operator) and specified activation operand (as second operand for the operator).
@@ -748,6 +1069,40 @@ Activation operator may be one of:
   activate-on:
     gts-or-collect-originator:
       does-not-match: 'XX[A-Z]{2}'
+  ```
+- `is-greater-than`: test whether a comparable activation property is greater than provided activation operand value.
+
+  For example, following activation condition is satisfied when message age is greater than 24 hours:
+  ```yaml
+  activate-on:
+    message-age:
+      is-greater-than: PT24H
+  ```
+- `is-greater-or-equal-to`: test whether a comparable activation property is greater or equal to provided activation
+  operand value.
+
+  For example, following activation condition is satisfied when message age is greater or equal to 24 hours:
+  ```yaml
+  activate-on:
+    message-age:
+      is-greater-or-equal-to: PT24H
+  ```
+- `is-less-than`: test whether a comparable activation property is less than provided activation operand value.
+
+  For example, following activation condition is satisfied when message age is less than 24 hours:
+  ```yaml
+  activate-on:
+    message-age:
+      is-less-than: PT24H
+  ```
+- `is-less-or-equal-to`: test whether a comparable activation property is less or equal to provided activation operand
+  value.
+
+  For example, following activation condition is satisfied when message age is less or equal to 24 hours:
+  ```yaml
+  activate-on:
+    message-age:
+      is-less-or-equal-to: PT24H
   ```
 
 Activation operators are provided
