@@ -116,11 +116,12 @@ using H2 (in-memory) or PostGIS database engine.
 
 1. After cloning the code repository, build the application with [Maven](https://maven.apache.org/).
 
-  ```shell
-  mvn package
-  ```
+   ```shell
+   mvn package
+   ```
 
 2. Set up the database engine.
+
     - **H2:** is automatically set up at application startup, no actions needed.
     - **PostGIS:** Database is easily set up with Docker or Podman. Use credentials specified by `spring.datasource.*`
       properties in the [application.yml] configuration for profile `local & postgresql & !openshift`.
@@ -139,6 +140,7 @@ using H2 (in-memory) or PostGIS database engine.
 
 3. Prepare an SQL script to populate the `avidb_stations` table. This is optional for testing the application, but all
    messages will be rejected without a matching location indicator in the `icao` column of `avidb_stations` table.
+
     - **H2:**
       See [schema-h2.sql](https://github.com/fmidev/avidb-schema/blob/${avidb-schema.branch-name}/h2/schema-h2.sql)
       for the schema, and [h2-data/example/avidb_stations.sql](src/main/resources/h2-data/example/avidb_stations.sql)
@@ -150,6 +152,7 @@ using H2 (in-memory) or PostGIS database engine.
       for an insertion template.
 
 4. Start the application. Replace
+
     - `$AVIDB_STATIONS_SQL` with a path to the file created in previous step, or omit
       the `spring.sql.init.data-locations` property.
     - `$DB_ENGINE` with `h2` or `postgresql`.
@@ -164,6 +167,7 @@ using H2 (in-memory) or PostGIS database engine.
 5. Check
    some [actuator endpoints](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/actuator.html#actuator.endpoints)
    to see that the application is running and healthy.
+
     - info: <http://localhost:8080/actuator/info>
     - health: <http://localhost:8080/actuator/health>
 
@@ -175,23 +179,24 @@ using H2 (in-memory) or PostGIS database engine.
    the [application.yml] configuration file. The processing identifier is appended to the file name.
 
 8. Connect to the database.
+
     - **H2:** You can access the H2 database console at <http://localhost:8080/h2-console/login.jsp> with default
       connection settings and credentials.
     - **PostGIS:** Use `psql` or any appropriate client with connection information provided in the database setup step.
 
    Look at the archived and rejected message tables in the database for any messages. E.g.
 
-  ```sql
-SELECT *
-FROM avidb_messages AS messages
-         LEFT JOIN avidb_message_iwxxm_details AS iwxxm ON iwxxm.message_id = messages.message_id
-ORDER BY message_time DESC;
-SELECT *
-FROM avidb_rejected_messages AS r_messages
-         LEFT JOIN avidb_rejected_message_iwxxm_details as r_iwxxm
-                   ON r_iwxxm.rejected_message_id = r_messages.rejected_message_id
-ORDER BY message_time DESC;
-  ```
+   ```sql
+   SELECT *
+   FROM avidb_messages AS messages
+            LEFT JOIN avidb_message_iwxxm_details AS iwxxm ON iwxxm.message_id = messages.message_id
+   ORDER BY message_time DESC;
+   SELECT *
+   FROM avidb_rejected_messages AS r_messages
+            LEFT JOIN avidb_rejected_message_iwxxm_details as r_iwxxm
+                      ON r_iwxxm.rejected_message_id = r_messages.rejected_message_id
+   ORDER BY message_time DESC;
+   ```
 
 ## Logging
 
@@ -397,11 +402,15 @@ Populate properties parsed from input bulletin heading.
 - **name:**
   [BulletinHeadingDataPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/BulletinHeadingDataPopulator.java)
 - **config:**
-    - `bulletin-heading-sources` (optional) - List of bulletin heading sources in preferred order.  
+
+    - `bulletin-heading-sources` (optional) - List of bulletin heading sources in preferred order.
+
       Possible values are specified
       in [BulletinHeadingSource](src/main/java/fi/fmi/avi/archiver/message/processor/populator/BulletinHeadingSource.java)
-      enum.  
+      enum.
+
       Example:
+
       ```yaml
       bulletin-heading-sources:
         - GTS_BULLETIN_HEADING
@@ -431,9 +440,12 @@ Set validity period to a fixed duration period starting from message time.
 - **name:**
   [FixedDurationValidityPeriodPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedDurationValidityPeriodPopulator.java)
 - **config:**
+
     - `validity-end-offset` (mandatory) - Validity period length from message time as an ISO 8601
-      duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).  
+      duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).
+
       Example:
+
       ```yaml
       validity-end-offset: PT24H
       ```
@@ -445,10 +457,14 @@ Set processing result to specified value.
 - **name:**
   [FixedProcessingResultPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedProcessingResultPopulator.java)
 - **config:**
-    - `result` (mandatory) - Processing result code name.  
+
+    - `result` (mandatory) - Processing result code name.
+
       Possible values are specified
-      in [ProcessingResult](src/main/java/fi/fmi/avi/archiver/message/ProcessingResult.java) enum.  
+      in [ProcessingResult](src/main/java/fi/fmi/avi/archiver/message/ProcessingResult.java) enum.
+
       Example:
+
       ```yaml
       result: FORBIDDEN_MESSAGE_STATION_ICAO_CODE
       ```
@@ -460,10 +476,14 @@ Set route to specified value.
 - **name:**
   [FixedRoutePopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedRoutePopulator.java)
 - **config:**
-    - `route` (mandatory) - Route name.  
+
+    - `route` (mandatory) - Route name.
+
       Possible values are specified in the `production-line.route-ids` [identifier mapping](#identifier-mappings)
-      property.  
+      property.
+
       Example:
+
       ```yaml
       route: DEFAULT
       ```
@@ -475,10 +495,14 @@ Set message type to specified value.
 - **name:**
   [FixedTypePopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedTypePopulator.java)
 - **config:**
-    - `type` (mandatory) - Message type name.  
+
+    - `type` (mandatory) - Message type name.
+
       Possible values are specified in the `production-line.type-ids` [identifier mapping](#identifier-mappings)
-      property.  
+      property.
+
       Example:
+
       ```yaml
       type: METAR
       ```
@@ -498,13 +522,17 @@ Populate properties parsed from message content.
 - **name:**
   [MessageDataPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageDataPopulator.java)
 - **config:**
+
     - `message-type-location-indicator-types` (optional) - Message type-specific list of location indicator types in
-      order of preference for reading the station ICAO code.  
+      order of preference for reading the station ICAO code.
+
       Available message types are specified in the map property `production-line.type-ids`. Available location indicator
       types are specified
       in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/${fmi-avi-messageconverter.branch-name}/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
-      enum.  
+      enum.
+
       Example:
+
       ```yaml
       message-type-location-indicator-types:
         - AIRMET:
@@ -515,18 +543,22 @@ Populate properties parsed from message content.
             - ISSUING_AIR_TRAFFIC_SERVICES_REGION
         - SPECI:
             - AERODROME
-        - SPACE_WEATHER_ADVISORY: [ ]
+        - SPACE_WEATHER_ADVISORY: []
         - TAF:
             - AERODROME
-        - TROPICAL_CYCLONE_ADVISORY: [ ]
-        - VOLCANIC_ASH_ADVISORY: [ ]
+        - TROPICAL_CYCLONE_ADVISORY: []
+        - VOLCANIC_ASH_ADVISORY: []
       ```
+
     - `default-location-indicator-types` (optional) - Default list of location indicator types in order of preference
-      for reading the station ICAO code.  
+      for reading the station ICAO code.
+
       Only used when the message type-specific list is not configured. Available location indicator types are specified
       in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/${fmi-avi-messageconverter.branch-name}/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
-      enum.  
+      enum.
+
       Example:
+
       ```yaml
       default-location-indicator-types:
         - AERODROME
@@ -560,10 +592,13 @@ Reject message if message time is too far in the future.
 - **name:**
   [MessageFutureTimeValidator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageFutureTimeValidator.java)
 - **config:**
+
     - `accept-in-future` (mandatory) - Maximum duration as an ISO 8601
       duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)) from current
-      time to accepted message time.  
+      time to accepted message time.
+
       Example:
+
       ```yaml
       accept-in-future: PT12H
       ```
@@ -587,10 +622,13 @@ Reject message if message time is too far in the past.
 - **name:**
   [MessageMaximumAgeValidator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageMaximumAgeValidator.java)
 - **config:**
+
     - `confname` (mandatory) - Maximum duration as an ISO 8601
       duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)) until current
-      time to accepted message time.  
+      time to accepted message time.
+
       Example:
+
       ```yaml
       maximum-age: PT36H
       ```
@@ -602,10 +640,14 @@ Reject message if message type is not one of the valid types configured for the 
 - **name:**
   [ProductMessageTypesValidator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/ProductMessageTypesValidator.java)
 - **config:**
-    - `confname` (mandatory) - Product-specific list of valid message types.  
+
+    - `confname` (mandatory) - Product-specific list of valid message types.
+
       Available products are specified under list property `production-line.products`. Available message types are
-      specified in map property `production-line.type-ids`.  
+      specified in map property `production-line.type-ids`.
+
       Example:
+
       ```yaml
       product-message-types:
         example1:
@@ -627,20 +669,28 @@ Replace all occurrences of regular expression pattern in the station ICAO code w
 - **name:**
   [StationIcaoCodeReplacer](src/main/java/fi/fmi/avi/archiver/message/processor/populator/StationIcaoCodeReplacer.java)
 - **config:**
-    - `pattern` (mandatory) - Pattern to find in station ICAO code.  
+
+    - `pattern` (mandatory) - Pattern to find in station ICAO code.
+
       Pattern syntax is specified
-      in [java.util.regex.Pattern](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html) class.  
+      in [java.util.regex.Pattern](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html) class.
+
       Example:
+
       ```yaml
-      pattern: '^XY([A-Z]{2})$'
+      pattern: "^XY([A-Z]{2})$"
       ```
-    - `replacement` (mandatory) - Replacement string.  
+
+    - `replacement` (mandatory) - Replacement string.
+
       Replacement syntax is specified
       in [java.util.regex.Matcher.replaceAll(java.lang.String)](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Matcher.html#replaceAll-java.lang.String-)
-      method.  
+      method.
+
       Example:
+
       ```yaml
-      replacement: 'XX$1'
+      replacement: "XX$1"
       ```
 
 ##### StationIdPopulator
@@ -691,8 +741,11 @@ A simple example post-action, that outputs a static info-level log message suffi
 - **name:**
   [ResultLogger](src/main/java/fi/fmi/avi/archiver/message/processor/postaction/ResultLogger.java)
 - **config:**
-    - `message` (mandatory) - The log message.  
+
+    - `message` (mandatory) - The log message.
+
       Example:
+
       ```yaml
       message: Message archiving process finished.
       ```
@@ -706,34 +759,50 @@ requirements.
 - **name:**
   [SwimRabbitMQPublisher](src/main/java/fi/fmi/avi/archiver/message/processor/postaction/SwimRabbitMQPublisher.java)
 - **config:**
-    - `id` (mandatory) - An unique identifier string of the instance to distinguish it from other instances.  
+
+    - `id` (mandatory) - An unique identifier string of the instance to distinguish it from other instances.
+
       Example:
+
       ```yaml
       id: swim-example
       ```
-    - `publisher-queue-capacity` (mandatory) - Number of messages accepted in the processing queue.  
+
+    - `publisher-queue-capacity` (mandatory) - Number of messages accepted in the processing queue.
+
       In case of broker disruptions, the incoming messages are held in a queue, until they are sent to the broker.
-      When the queue is full, all subsequent incoming messages will be silently dropped. The queue is not persisted.  
+      When the queue is full, all subsequent incoming messages will be silently dropped. The queue is not persisted.
+
       Example:
+
       ```yaml
       publisher-queue-capacity: 50000
       ```
+
     - `publish-timeout` (optional) - Timeout for a single post-action run on a single message as an ISO 8601
-      duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).  
-      When this timeout is reached, the publishing action is considered as failed and eligible for retry.  
-      Default value: `PT30S`  
+      duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).
+
+      When this timeout is reached, the publishing action is considered as failed and eligible for retry.
+
+      Default value: `PT30S`
+
       Example:
+
       ```yaml
       publish-timeout: PT30S
       ```
-    - `connection` (mandatory) - Connection configuration section.  
+
+    - `connection` (mandatory) - Connection configuration section.
+
       The connection is established lazily upon first message to be published to the broker. In case the connection has
       been closed since publishing the last message, it will be automatically re-established.
 
       For connection properties, a recommended convention is to use indirect values. Recommended format for
       properties
-      is `post-action.<post-action-name>.<post-action-id>.<property-name>`.  
+      is `post-action.<post-action-name>.<post-action-id>.<property-name>`.
+
       Example:
+
       ```yaml
       post-action:
         SwimRabbitMQPublisher:
@@ -742,73 +811,107 @@ requirements.
             username: exampleuser
             password: examplepassword
       ```
+
       The examples under the connection configuration properties documentation below refer to the properties of the
       example above.
-        - `connection.uri` (mandatory) - RabbitMQ service uri.  
+
+        - `connection.uri` (mandatory) - RabbitMQ service uri.
+
           Example:
+
           ```yaml
           connection:
             uri: ${post-action.SwimRabbitMQPublisher.swim-example.uri}
           ```
-        - `connection.username` (mandatory) - Connection username.  
+
+        - `connection.username` (mandatory) - Connection username.
+
           Example:
+
           ```yaml
           connection:
             username: ${post-action.SwimRabbitMQPublisher.swim-example.username}
           ```
-        - `connection.password` (mandatory) - Connection password.  
+
+        - `connection.password` (mandatory) - Connection password.
+
           Example:
+
           ```yaml
           connection:
             password: ${post-action.SwimRabbitMQPublisher.swim-example.password}
           ```
-    - `topology` (mandatory) - Topology configuration section.  
+
+    - `topology` (mandatory) - Topology configuration section.
+
       Please refer to the [RabbitMQ documentation](https://www.rabbitmq.com/docs/use-rabbitmq) on details of the
       configuration properties.
+
         - `create` (mandatory) - Specifies whether the application should create any of topology elements when
-          (re-)establishing the connection.  
+          (re-)establishing the connection.
+
           The account used to connect to the broker must have privileges to create such topology elements. When
           the value is set to `NONE`, no topology elements will be created, and all of them must exist on the broker
-          when connecting.  
-          Possible values: `ALL`, `EXCHANGE`, `QUEUE_AND_BINDING`, `BINDING`, `NONE`  
+          when connecting.
+
+          Possible values: `ALL`, `EXCHANGE`, `QUEUE_AND_BINDING`, `BINDING`, `NONE`
+
           Example:
+
           ```yaml
           topology:
             create: ALL
           ```
-        - `routing-key` (mandatory) - Routing key to be used on publication.  
+
+        - `routing-key` (mandatory) - Routing key to be used on publication.
+
           Example:
+
           ```yaml
           topology:
             routing-key: aviation-message-archiver-example-routing
           ```
+
         - `exchange` (mandatory) - Exchange configuration section.
-            - `name` (mandatory) - Exchange name.  
+
+            - `name` (mandatory) - Exchange name.
+
               Example:
+
               ```yaml
               topology:
                 exchange:
                   name: x.aviation-message-archiver
               ```
-            - `type` (optional) - Exchange type.  
-              Possible values: `DIRECT` (default), `FANOUT`, `TOPIC`, `HEADERS`  
+
+            - `type` (optional) - Exchange type.
+
+              Possible values: `DIRECT` (default), `FANOUT`, `TOPIC`, `HEADERS`
+
               Example:
+
               ```yaml
               topology:
                 exchange:
                   type: TOPIC
               ```
-            - `auto-delete` (optional) - Defines whether the exchange is deleted when last queue is unbound from
-              it.  
-              Possible values: `true`, `false` (default)  
+
+            - `auto-delete` (optional) - Defines whether the exchange is deleted when last queue is unbound from it.
+
+              Possible values: `true`, `false` (default)
+
               Example:
+
               ```yaml
               topology:
                 exchange:
                   auto-delete: false
               ```
-            - `arguments` (optional) - Exchange arguments.  
+
+            - `arguments` (optional) - Exchange arguments.
+
               Example:
+
               ```yaml
               topology:
                 exchange:
@@ -816,33 +919,48 @@ requirements.
                     x-example-arg-1: x-example-arg-1-value
                     x-example-arg-2: x-example-arg-2-value
               ```
+
         - `queue` (mandatory) - Queue configuration section.
-            - `name` (mandatory) - Queue name.  
+
+            - `name` (mandatory) - Queue name.
+
               Example:
+
               ```yaml
               topology:
                 queue:
                   name: q.aviation-message-archiver
               ```
-            - `type` (optional) - Queue type.  
-              Possible values: `QUORUM`, `CLASSIC` (default), `STREAM`  
+
+            - `type` (optional) - Queue type.
+
+              Possible values: `QUORUM`, `CLASSIC` (default), `STREAM`
+
               Example:
+
               ```yaml
               topology:
                 queue:
                   type: QUORUM
               ```
-            - `auto-delete` (optional) - Defines whether the queue get automatically deleted when its last
-              consumer unsubscribes.  
-              Possible values: `true`, `false` (default)  
+
+            - `auto-delete` (optional) - Defines whether the queue get automatically deleted when its last consumer
+              unsubscribes.
+
+              Possible values: `true`, `false` (default)
+
               Example:
+
               ```yaml
               topology:
                 queue:
                   auto-delete: false
               ```
-            - `arguments` (optional) - Queue arguments.  
+
+            - `arguments` (optional) - Queue arguments.
+
               Example:
+
               ```yaml
               topology:
                 queue:
@@ -850,86 +968,127 @@ requirements.
                     q-example-arg-1: q-example-arg-1-value
                     q-example-arg-2: q-example-arg-2-value
               ```
+
     - `retry` (mandatory) - Retry configuration section.
+
         - `initial-interval` (optional) - Initial delay before first retry is attempted as an ISO 8601
-          duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).  
-          Default value: `PT0.5S`  
+          duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).
+
+          Default value: `PT0.5S`
+
           Example:
+
           ```yaml
           retry:
             initial-interval: PT0.5S
           ```
-        - `multiplier` (optional) - The back off time multiplier as a decimal number.  
-          Default value: `2.0`  
+
+        - `multiplier` (optional) - The back off time multiplier as a decimal number.
+
+          Default value: `2.0`
+
           Example:
+
           ```yaml
           retry:
             multiplier: 2.0
           ```
+
         - `max-interval` (optional) - The maximum back off delay as an ISO 8601
-          duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).  
-          Default value: `PT1M`  
+          duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).
+
+          Default value: `PT1M`
+
           Example:
+
           ```yaml
           retry:
             max-interval: PT1M
           ```
+
         - `timeout` (mandatory) - The maximum time to retry since first attempt as an ISO 8601
-          duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).  
-          Use zero duration (`PT0S`) for infinite retry.  
+          duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).
+
+          Use zero duration (`PT0S`) for infinite retry.
+
           Example:
+
           ```yaml
           retry:
             initial-interval: PT3H
           ```
-    - `message` (optional) - Message configuration section.  
+
+    - `message` (optional) - Message configuration section.
+
       Please refer to the MET-SWIM guidance on details of the configuration properties.
-        - `priorities` (optional) - List of message _priority descriptors_.  
+
+        - `priorities` (optional) - List of message _priority descriptors_.
+
           The priority of the message is determined by the first priority descriptor in order matching the message. If
           none of the descriptors match, the message will have the default priority `0`. This is also the situation in
           case the `priorities` list is empty. If the `priorities` section is omitted, then the default priority
-          descriptors are used (see the example below).  
+          descriptors are used (see the example below).
+
           Example - the default priority descriptors:
+
           ```yaml
           message:
             priorities:
-            - type: SIGMET
-              priority: 7
-            - type: SPECI
-              priority: 6
-            - type: TAF
-              status: AMENDMENT
-              priority: 6
-            - type: TAF
-              priority: 5
-            - type: METAR
-              priority: 4
-            - priority: 0
+              - type: SIGMET
+                priority: 7
+              - type: SPECI
+                priority: 6
+              - type: TAF
+                status: AMENDMENT
+                priority: 6
+              - type: TAF
+                priority: 5
+              - type: METAR
+                priority: 4
+              - priority: 0
           ```
+
           A _priority descriptor_ consists of condition properties and the priority value that is given to messages
           matching all the conditions.
-            - `type` (optional) - Message type condition.  
-              When omitted, messages of any type matches this condition.  
+
+            - `type` (optional) - Message type condition.
+
+              When omitted, messages of any type matches this condition.
+
               Possible values are specified in the `production-line.type-ids` [identifier mapping](#identifier-mappings)
               property.
-            - `status` (optional) - Report status condition.  
-              When omitted, messages of any report status matches this condition.  
+
+            - `status` (optional) - Report status condition.
+
+              When omitted, messages of any report status matches this condition.
+
               Possible values: `NORMAL`, `AMENDMENT`, `CORRECTION`
-            - `priority` (mandatory) - The priority a matching message will have.  
+
+            - `priority` (mandatory) - The priority a matching message will have.
+
               Possible values: an integer between `0`-`9` (inclusive)
-        - `encoding` (optional) - Message encoding.  
-          Possible values: `IDENTITY` (default), `GZIP`  
+
+        - `encoding` (optional) - Message encoding.
+
+          Possible values: `IDENTITY` (default), `GZIP`
+
           Example:
+
           ```yaml
           message:
             encoding: GZIP
           ```
-        - `expiry-time` (optional) - Message expiry time.  
+
+        - `expiry-time` (optional) - Message expiry time.
+
           This property value is an ISO 8601
           duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)) from the
-          AMQP message creation time. It is used to set the `absolute-expiry-time` AMQP property.   
-          When omitted, the `absolute-expiry-time` property is omitted from the message.  
+          AMQP message creation time. It is used to set the `absolute-expiry-time` AMQP property.
+
+          When omitted, the `absolute-expiry-time` property is omitted from the message.
+
           Example:
+
           ```yaml
           message:
             expiry-time: PT12H
@@ -999,30 +1158,41 @@ Activation operand type and possible values depend on the activation operator an
 
 Activation operator may be one of:
 
-- `presence`: test for presence of activation property.  
+- `presence`: test for presence of activation property.
+
   Activation operand is one of:
-    - `PRESENT`: activation property value must be present. This is the default when `presence` is omitted.  
+
+    - `PRESENT`: activation property value must be present. This is the default when `presence` is omitted.
+
       For example, omitting `presence` is equivalent to:
+
       ```yaml
       activate-on:
         type:
           presence: PRESENT
       ```
-    - `EMPTY`: activation property value must not be present
+
+      - `EMPTY`: activation property value must not be present
     - `OPTIONAL`: activation property value may or may not be present, aka presence condition is always satisfied
-- `is`: test whether activation property is equal to activation operand.  
+
+- `is`: test whether activation property is equal to activation operand.
+
   This is mutually exclusive with `is-any-of`.
 
   For example, following activation condition is satisfied when message format is IWXXM.
+
   ```yaml
   activate-on:
     format:
       is: IWXXM
   ```
-- `is-any-of`: test whether activation property is equal to any of activation operand list.  
+
+- `is-any-of`: test whether activation property is equal to any of activation operand list.
+
   This is mutually exclusive with `is`.
 
   For example, following activation condition is satisfied when message type is either METAR or SPECI.
+
   ```yaml
   activate-on:
     type:
@@ -1030,19 +1200,25 @@ Activation operator may be one of:
         - METAR
         - SPECI
   ```
-- `is-not`: test whether activation property is not equal to activation operand.  
+
+- `is-not`: test whether activation property is not equal to activation operand.
+
   This is mutually exclusive with `is-none-of`.
 
   For example, following activation condition is satisfied when message format is not IWXXM.
+
   ```yaml
   activate-on:
     format:
       is-not: IWXXM
   ```
-- `is-none-of`: test whether activation property is not equal to any of activation operand list.  
+
+- `is-none-of`: test whether activation property is not equal to any of activation operand list.
+
   This is mutually exclusive with `is-not`.
 
   For example, following activation condition is satisfied when message type is neither METAR nor SPECI.
+
   ```yaml
   activate-on:
     type:
@@ -1050,53 +1226,65 @@ Activation operator may be one of:
         - METAR
         - SPECI
   ```
+
 - `matches`: test whether activation property matches regular expression provided as activation operand.
 
   For example, following activation condition is satisfied when originator parsed from GTS bulletin heading, or collect
   identifier when GTS heading is not present, starts with 'XX':
+
   ```yaml
   activate-on:
     gts-or-collect-originator:
-      matches: 'XX[A-Z]{2}'
+      matches: "XX[A-Z]{2}"
   ```
+
 - `does-not-match`: test whether activation property does not match regular expression provided as activation operand.
 
   For example, following activation condition is satisfied when originator parsed from GTS bulletin heading, or collect
   identifier when GTS heading is not present, does not start with 'XX':
+
   ```yaml
   activate-on:
     gts-or-collect-originator:
-      does-not-match: 'XX[A-Z]{2}'
+      does-not-match: "XX[A-Z]{2}"
   ```
+
 - `is-greater-than`: test whether a comparable activation property is greater than provided activation operand value.
 
   For example, following activation condition is satisfied when message age is greater than 24 hours:
+
   ```yaml
   activate-on:
     message-age:
       is-greater-than: PT24H
   ```
+
 - `is-greater-or-equal-to`: test whether a comparable activation property is greater or equal to provided activation
   operand value.
 
   For example, following activation condition is satisfied when message age is greater or equal to 24 hours:
+
   ```yaml
   activate-on:
     message-age:
       is-greater-or-equal-to: PT24H
   ```
+
 - `is-less-than`: test whether a comparable activation property is less than provided activation operand value.
 
   For example, following activation condition is satisfied when message age is less than 24 hours:
+
   ```yaml
   activate-on:
     message-age:
       is-less-than: PT24H
   ```
+
 - `is-less-or-equal-to`: test whether a comparable activation property is less or equal to provided activation operand
   value.
 
   For example, following activation condition is satisfied when message age is less or equal to 24 hours:
+
   ```yaml
   activate-on:
     message-age:
@@ -1148,6 +1336,5 @@ for more information on these. Some of related sections are:
 ## License
 
 MIT License. See [LICENSE](LICENSE).
-
 
 [application.yml]: src/main/resources/application.yml
