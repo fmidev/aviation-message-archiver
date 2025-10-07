@@ -34,21 +34,21 @@ production-line:
           exchange:
             name: aviation-message-archiver-test-exchange2
             type: TOPIC
-            autoDelete: true
+            auto-delete: true
             arguments:
               e-testarg-1: e-testarg-1-value
               e-testarg-2: e-testarg-2-value
           queue:
             name: aviation-message-archiver-test-queue2
             type: CLASSIC
-            autoDelete: true
+            auto-delete: true
             arguments:
               q-testarg-1: q-testarg-1-value
               q-testarg-2: q-testarg-2-value
         retry:
-          initialInterval: PT0.1S
+          initial-interval: PT0.1S
           multiplier: 2.0
-          maxInterval: PT30S
+          max-interval: PT30S
           timeout: PT2M
         message:
           priorities:
