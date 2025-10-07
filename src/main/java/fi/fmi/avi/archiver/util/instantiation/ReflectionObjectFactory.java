@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A {@code ObjectFactory} constructing and injecting any config properties using Java reflection API.
+ * An {@code ObjectFactory} constructing and injecting any config properties using Java reflection API.
  *
  * <p>
  * A new factory instance is built with a {@link Builder}, storing constant constructor parameter values, called <em>dependency args</em>, and names and
