@@ -60,36 +60,38 @@ message files. Whenever new files appear, it scans for messages in files, parses
 
 ## Feature overview
 
-* [Configurable](#application-configuration) archival process.
-* Automatic [message type](#supported-message-types-and-formats) recognition.
-* Supports TAC (experimental) and IWXXM [message formats](#supported-message-types-and-formats).
-* Supported file formats:
-    * WMO GTS meteorological message as specified
+- [Configurable](#application-configuration) archival process.
+- Automatic [message type](#supported-message-types-and-formats) recognition.
+- Supports TAC (experimental) and IWXXM [message formats](#supported-message-types-and-formats).
+- Supported file formats:
+    - WMO GTS meteorological message as specified
       by [WMO Doc. 386](https://library.wmo.int/index.php?lvl=notice_display&id=21811).
-        * Multiple meteorological messages may be included in a file.
-        * A supported COLLECT document is also supported as message content.
-    * [COLLECT 1.2](https://schemas.wmo.int/collect/1.2/) document
-    * A meteorological bulletin starting with a WMO GTS abbreviated heading line, followed by messages or a COLLECT
+        - Multiple meteorological messages may be included in a file.
+        - A supported COLLECT document is also supported as message content.
+    - [COLLECT 1.2](https://schemas.wmo.int/collect/1.2/) document
+    - A meteorological bulletin starting with a WMO GTS abbreviated heading line, followed by messages or a COLLECT
       document
-    * A single message (not recommended for TAC messages)
-* Supported database engines:
-    * [PostGIS](https://postgis.net/) ([PostgreSQL](https://www.postgresql.org/))
-    * [H2](https://h2database.com/) (for testing)
-* Traceable [logging](#logging). Support for structured JSON logging.
-* Built on [Spring Boot](https://spring.io/projects/spring-boot)
+    - A single message (not recommended for TAC messages)
+- Supported database engines:
+    - [PostGIS](https://postgis.net/) ([PostgreSQL](https://www.postgresql.org/))
+    - [H2](https://h2database.com/) (for testing)
+- Traceable [logging](#logging). Support for structured JSON logging.
+- Built on [Spring Boot](https://spring.io/projects/spring-boot)
   and [Spring Integration](https://spring.io/projects/spring-integration).
 
 ### Supported message types and formats
 
 Supported message types and formats are listed in the table below. Generally, this application supports all
 
-* TAC format message types that are supported
+- TAC format message types that are supported
   by [fmi-avi-messageconverter-tac](https://github.com/fmidev/fmi-avi-messageconverter-tac)
-  library [`TAC_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-tac/blob/${fmi-avi-messageconverter-tac.branch-name}/src/main/java/fi/fmi/avi/converter/tac/conf/TACConverter.java)
+  library [
+  `TAC_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-tac/blob/${fmi-avi-messageconverter-tac.branch-name}/src/main/java/fi/fmi/avi/converter/tac/conf/TACConverter.java)
   conversion and
-* IWXXM format message types that are supported
+- IWXXM format message types that are supported
   by [fmi-avi-messageconverter-iwxxm](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm)
-  library [`IWXXM_STRING_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm/blob/${fmi-avi-messageconverter-iwxxm.branch-name}/src/main/java/fi/fmi/avi/converter/iwxxm/conf/IWXXMConverter.java)
+  library [
+  `IWXXM_STRING_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm/blob/${fmi-avi-messageconverter-iwxxm.branch-name}/src/main/java/fi/fmi/avi/converter/iwxxm/conf/IWXXMConverter.java)
   conversion.
 
 | Message type              | TAC | IWXXM 2.1 | IWXXM 3.0 | IWXXM 2023-1 |
@@ -119,8 +121,8 @@ using H2 (in-memory) or PostGIS database engine.
   ```
 
 2. Set up the database engine.
-    * **H2:** is automatically set up at application startup, no actions needed.
-    * **PostGIS:** Database is easily set up with Docker or Podman. Use credentials specified by `spring.datasource.*`
+    - **H2:** is automatically set up at application startup, no actions needed.
+    - **PostGIS:** Database is easily set up with Docker or Podman. Use credentials specified by `spring.datasource.*`
       properties in the [application.yml] configuration for profile `local & postgresql & !openshift`.
       ```shell
       docker run \
@@ -137,20 +139,20 @@ using H2 (in-memory) or PostGIS database engine.
 
 3. Prepare an SQL script to populate the `avidb_stations` table. This is optional for testing the application, but all
    messages will be rejected without a matching location indicator in the `icao` column of `avidb_stations` table.
-    * **H2:**
+    - **H2:**
       See [schema-h2.sql](https://github.com/fmidev/avidb-schema/blob/${avidb-schema.branch-name}/h2/schema-h2.sql)
       for the schema, and [h2-data/example/avidb_stations.sql](src/main/resources/h2-data/example/avidb_stations.sql)
       for an insertion template.
-    * **PostGIS:**
+    - **PostGIS:**
       See [schema-postgresql.sql](https://github.com/fmidev/avidb-schema/blob/${avidb-schema.branch-name}/postgresql/schema-postgresql.sql)
       for the schema,
       and [postgresql-data/example/avidb_stations.sql](src/main/resources/postgresql-data/example/avidb_stations.sql)
       for an insertion template.
 
 4. Start the application. Replace
-    * `$AVIDB_STATIONS_SQL` with a path to the file created in previous step, or omit
+    - `$AVIDB_STATIONS_SQL` with a path to the file created in previous step, or omit
       the `spring.sql.init.data-locations` property.
-    * `$DB_ENGINE` with `h2` or `postgresql`.
+    - `$DB_ENGINE` with `h2` or `postgresql`.
 
    ```shell
    java \
@@ -162,8 +164,8 @@ using H2 (in-memory) or PostGIS database engine.
 5. Check
    some [actuator endpoints](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/actuator.html#actuator.endpoints)
    to see that the application is running and healthy.
-    * info: <http://localhost:8080/actuator/info>
-    * health: <http://localhost:8080/actuator/health>
+    - info: <http://localhost:8080/actuator/info>
+    - health: <http://localhost:8080/actuator/health>
 
 6. Copy some message files in the input directories specified by the `production-line.products[n].input-dir` properties
    in the [application.yml] configuration file.
@@ -173,9 +175,9 @@ using H2 (in-memory) or PostGIS database engine.
    the [application.yml] configuration file. The processing identifier is appended to the file name.
 
 8. Connect to the database.
-    * **H2:** You can access the H2 database console at <http://localhost:8080/h2-console/login.jsp> with default
+    - **H2:** You can access the H2 database console at <http://localhost:8080/h2-console/login.jsp> with default
       connection settings and credentials.
-    * **PostGIS:** Use `psql` or any appropriate client with connection information provided in the database setup step.
+    - **PostGIS:** Use `psql` or any appropriate client with connection information provided in the database setup step.
 
    Look at the archived and rejected message tables in the database for any messages. E.g.
 
@@ -230,13 +232,13 @@ which can be extracted to:
 
 where
 
-* **productId:** identifier of the [product](#products) specifying the file under processing
-* **fileName:** name of the file under processing
-* **bulletinIndex:** index of bulletin within file, starting from 0
-* **bulletinHeading:** heading (GTS or collect identifier) of the bulletin under processing
-* **bulletinCharIndex:** character index of bulletin within file, starting from 0
-* **messageIndex:** index of message within bulletin, starting from 0
-* **messageExcerpt:** excerpt from beginning of a TAC message, or IWXXM message `gml:id`
+- **productId:** identifier of the [product](#products) specifying the file under processing
+- **fileName:** name of the file under processing
+- **bulletinIndex:** index of bulletin within file, starting from 0
+- **bulletinHeading:** heading (GTS or collect identifier) of the bulletin under processing
+- **bulletinCharIndex:** character index of bulletin within file, starting from 0
+- **messageIndex:** index of message within bulletin, starting from 0
+- **messageExcerpt:** excerpt from beginning of a TAC message, or IWXXM message `gml:id`
 
 Unavailable or inapplicable fields and separators are omitted.
 
@@ -253,16 +255,16 @@ M{X:n,...,T:n} B{X:1,...,T:n} F{X}
 
 where
 
-* `M{}` contains statistics counted as messages within the file.
-* `B{}` contains statistics counted as bulletins within the file.
-* `F{}` contains the overall result of the file processing.
-* `X:n` contains the count of items having the specified processing result. Any processing results with zero (`0`) count
+- `M{}` contains statistics counted as messages within the file.
+- `B{}` contains statistics counted as bulletins within the file.
+- `F{}` contains the overall result of the file processing.
+- `X:n` contains the count of items having the specified processing result. Any processing results with zero (`0`) count
   are omitted.
-    * `X` is the abbreviated one-letter name of the processing result.
+    - `X` is the abbreviated one-letter name of the processing result.
       See [ReadableFileProcessingStatistics.ProcessingResult](src/main/java/fi/fmi/avi/archiver/logging/model/ReadableFileProcessingStatistics.java)
       enum for possible values.
-    * `n` is the count of items resulting with the preceding processing result.
-* `T:n` contains the total count `n` of processed items.
+    - `n` is the count of items resulting with the preceding processing result.
+- `T:n` contains the total count `n` of processed items.
 
 Aggregated results denote the worst processing result of a message within the aggregation context. E.g. a bulletin is
 considered rejected when it contains at least one rejected message, but no failed messages.
@@ -329,10 +331,10 @@ are responsible for populating the archive data object with message data parsed 
 populator focuses on a single responsibility, and together all configured populators construct the complete message
 entity to be archived. Message populators also decide whether a message is considered
 
-* **eligible for archival**, thus will be stored in the message database table after all populators are executed,
-* **rejected**, thus will be stored in the rejected message database table after all populators are executed,
-* **discarded**, thus will be ignored immediately and logged at info level,
-* **failed**, thus will be ignored immediately and logged at error level.
+- **eligible for archival**, thus will be stored in the message database table after all populators are executed,
+- **rejected**, thus will be stored in the rejected message database table after all populators are executed,
+- **discarded**, thus will be ignored immediately and logged at info level,
+- **failed**, thus will be ignored immediately and logged at error level.
 
 Message populator configuration specifies which populators are executed and in which order. A message populator executed
 later in the execution chain may then override values set by previously executed populators. The configuration applies
@@ -383,10 +385,10 @@ the [MessagePopulatorFactoryConfig](src/main/java/fi/fmi/avi/archiver/config/Mes
 
 Populate properties parsed from input bulletin heading.
 
-* **name:**
+- **name:**
   [BulletinHeadingDataPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/BulletinHeadingDataPopulator.java)
-* **config:**
-    * `bulletin-heading-sources` (optional) - List of bulletin heading sources in preferred order.  
+- **config:**
+    - `bulletin-heading-sources` (optional) - List of bulletin heading sources in preferred order.  
       Available values are specified
       in [BulletinHeadingSource](src/main/java/fi/fmi/avi/archiver/message/processor/populator/BulletinHeadingSource.java)
       enum.  
@@ -401,26 +403,26 @@ Populate properties parsed from input bulletin heading.
 
 Populate properties available in input file metadata.
 
-* **name:**
+- **name:**
   [FileMetadataPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FileMetadataPopulator.java)
-* **config:** ~
+- **config:** ~
 
 ##### FileNameDataPopulator
 
 Populate properties parsed from file name.
 
-* **name:**
+- **name:**
   [FileNameDataPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FileNameDataPopulator.java)
-* **config:** ~
+- **config:** ~
 
 ##### FixedDurationValidityPeriodPopulator
 
 Set validity period to a fixed duration period starting from message time.
 
-* **name:**
+- **name:**
   [FixedDurationValidityPeriodPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedDurationValidityPeriodPopulator.java)
-* **config:**
-    * `validity-end-offset` (mandatory) - Validity period length from message time as ISO 8601
+- **config:**
+    - `validity-end-offset` (mandatory) - Validity period length from message time as ISO 8601
       duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)).  
       Example:
       ```yaml
@@ -431,10 +433,10 @@ Set validity period to a fixed duration period starting from message time.
 
 Set processing result to specified value.
 
-* **name:**
+- **name:**
   [FixedProcessingResultPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedProcessingResultPopulator.java)
-* **config:**
-    * `result` (mandatory) - Processing result code name. Available values are specified
+- **config:**
+    - `result` (mandatory) - Processing result code name. Available values are specified
       in [ProcessingResult](src/main/java/fi/fmi/avi/archiver/message/ProcessingResult.java) enum.  
       Example:
       ```yaml
@@ -445,10 +447,10 @@ Set processing result to specified value.
 
 Set route to specified value.
 
-* **name:**
+- **name:**
   [FixedRoutePopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedRoutePopulator.java)
-* **config:**
-    * `route` (mandatory) - Route name.  
+- **config:**
+    - `route` (mandatory) - Route name.  
       Available values are specified in the `production-line.route-ids` [identifier mapping](#identifier-mappings)
       property.  
       Example:
@@ -460,10 +462,10 @@ Set route to specified value.
 
 Set message type to specified value.
 
-* **name:**
+- **name:**
   [FixedTypePopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/FixedTypePopulator.java)
-* **config:**
-    * `type` (mandatory) - Message type name.  
+- **config:**
+    - `type` (mandatory) - Message type name.  
       Available values are specified in the `production-line.type-ids` [identifier mapping](#identifier-mappings)
       property.  
       Example:
@@ -475,18 +477,18 @@ Set message type to specified value.
 
 Trim whitespaces around message content.
 
-* **name:**
+- **name:**
   [MessageContentTrimmer](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageContentTrimmer.java)
-* **config:** ~
+- **config:** ~
 
 ##### MessageDataPopulator
 
 Populate properties parsed from message content.
 
-* **name:**
+- **name:**
   [MessageDataPopulator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageDataPopulator.java)
-* **config:**
-    * `message-type-location-indicator-types` (optional) - Message type-specific list of location indicator types in
+- **config:**
+    - `message-type-location-indicator-types` (optional) - Message type-specific list of location indicator types in
       order of preference for reading the station ICAO code.  
       Available message types are specified in the map property `production-line.type-ids`. Available location indicator
       types are specified
@@ -509,7 +511,7 @@ Populate properties parsed from message content.
         - TROPICAL_CYCLONE_ADVISORY: [ ]
         - VOLCANIC_ASH_ADVISORY: [ ]
       ```
-    * `default-location-indicator-types` (optional) - Default list of location indicator types in order of preference
+    - `default-location-indicator-types` (optional) - Default list of location indicator types in order of preference
       for reading the station ICAO code.  
       Only used when the message type-specific list is not configured. Available location indicator types are specified
       in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/${fmi-avi-messageconverter.branch-name}/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
@@ -525,18 +527,18 @@ Populate properties parsed from message content.
 
 Discard message.
 
-* **name:**
+- **name:**
   [MessageDiscarder](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageDiscarder.java)
-* **config:** ~
+- **config:** ~
 
 ##### MessageFutureTimeValidator
 
 Reject message if message time is too far in the future.
 
-* **name:**
+- **name:**
   [MessageFutureTimeValidator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageFutureTimeValidator.java)
-* **config:**
-    * `accept-in-future` (mandatory) - Maximum duration as ISO 8601
+- **config:**
+    - `accept-in-future` (mandatory) - Maximum duration as ISO 8601
       duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)) from current
       time to accepted message time.  
       Example:
@@ -550,10 +552,10 @@ Reject message if message time is too far in the future.
 
 Reject message if message time is too far in the past.
 
-* **name:**
+- **name:**
   [MessageMaximumAgeValidator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/MessageMaximumAgeValidator.java)
-* **config:**
-    * `confname` (mandatory) - Maximum duration as ISO 8601
+- **config:**
+    - `confname` (mandatory) - Maximum duration as ISO 8601
       duration ([java.time.Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html)) until current
       time to accepted message time.  
       Example:
@@ -565,10 +567,10 @@ Reject message if message time is too far in the past.
 
 Reject message if message type is not one of the valid types configured for the product.
 
-* **name:**
+- **name:**
   [ProductMessageTypesValidator](src/main/java/fi/fmi/avi/archiver/message/processor/populator/ProductMessageTypesValidator.java)
-* **config:**
-    * `confname` (mandatory) - Product-specific list of valid message types.  
+- **config:**
+    - `confname` (mandatory) - Product-specific list of valid message types.  
       Available products are specified under list property `production-line.products`. Available message types are
       specified in map property `production-line.type-ids`.  
       Example:
@@ -590,17 +592,17 @@ Reject message if message type is not one of the valid types configured for the 
 
 Replace all occurrences of regular expression pattern in the station ICAO code with the provided replacement.
 
-* **name:**
+- **name:**
   [StationIcaoCodeReplacer](src/main/java/fi/fmi/avi/archiver/message/processor/populator/StationIcaoCodeReplacer.java)
-* **config:**
-    * `pattern` (mandatory) - Pattern to find in station ICAO code.  
+- **config:**
+    - `pattern` (mandatory) - Pattern to find in station ICAO code.  
       Pattern syntax is specified
       in [java.util.regex.Pattern](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html) class.  
       Example:
       ```yaml
       pattern: '^XY([A-Z]{2})$'
       ```
-    * `replacement` (mandatory) - Replacement string.  
+    - `replacement` (mandatory) - Replacement string.  
       Replacement syntax is specified
       in [java.util.regex.Matcher.replaceAll(java.lang.String)](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Matcher.html#replaceAll-java.lang.String-)
       method.  
@@ -619,8 +621,8 @@ implicitly added in
 the end of the message populator execution chain, and it cannot be omitted nor configured in the middle of the execution
 chain.
 
-* **name:** ~
-* **config:** ~
+- **name:** ~
+- **config:** ~
 
 #### Conditional message popular activation
 
@@ -653,20 +655,20 @@ of [activation operator](#activation-operator-and-operand).
 The following activation properties are declared
 in [MessagePopulatorConditionPropertyReaderConfig](src/main/java/fi/fmi/avi/archiver/config/MessagePopulatorConditionPropertyReaderConfig.java):
 
-* `format`: populated message format name. See `format-ids` in [Identifier mappings](#identifier-mappings).
-* `productId`: identifier of the product this file belongs to.
-* `route`: populated route name. See `route-ids` in [Identifier mappings](#identifier-mappings).
-* `station`: populated station ICAO code.
-* `type`: populated message type name. See `type-ids` in [Identifier mappings](#identifier-mappings).
-* `<heading>-data-designator`: input bulletin heading data designators (TTAAii).
-* `<heading>-originator`: input bulletin heading location indicator / originator (CCCC).
+- `format`: populated message format name. See `format-ids` in [Identifier mappings](#identifier-mappings).
+- `productId`: identifier of the product this file belongs to.
+- `route`: populated route name. See `route-ids` in [Identifier mappings](#identifier-mappings).
+- `station`: populated station ICAO code.
+- `type`: populated message type name. See `type-ids` in [Identifier mappings](#identifier-mappings).
+- `<heading>-data-designator`: input bulletin heading data designators (TTAAii).
+- `<heading>-originator`: input bulletin heading location indicator / originator (CCCC).
 
 The `<heading>` specifies whether to read GTS or COLLECT heading. It may be one of:
 
-* `gts`: GTS heading
-* `collect`: collect identifier
-* `gts-or-collect`: GTS heading, or if not present, collect identifier
-* `collect-or-gts`: collect identifier, or if not present, GTS heading
+- `gts`: GTS heading
+- `collect`: collect identifier
+- `gts-or-collect`: GTS heading, or if not present, collect identifier
+- `collect-or-gts`: collect identifier, or if not present, GTS heading
 
 E.g. `gts-or-collect-data-designator`.
 
@@ -678,18 +680,18 @@ Activation operand type and possible values depend on the activation operator an
 
 Activation operator may be one of:
 
-* `presence`: test for presence of activation property.  
+- `presence`: test for presence of activation property.  
   Activation operand is one of:
-    * `PRESENT`: activation property value must be present. This is the default when `presence` is omitted.  
+    - `PRESENT`: activation property value must be present. This is the default when `presence` is omitted.  
       For example, omitting `presence` is equivalent to:
       ```yaml
       activate-on:
         type:
           presence: PRESENT
       ```
-    * `EMPTY`: activation property value must not be present
-    * `OPTIONAL`: activation property value may or may not be present, aka presence condition is always satisfied
-* `is`: test whether activation property is equal to activation operand.  
+    - `EMPTY`: activation property value must not be present
+    - `OPTIONAL`: activation property value may or may not be present, aka presence condition is always satisfied
+- `is`: test whether activation property is equal to activation operand.  
   This is mutually exclusive with `is-any-of`.
 
   For example, following activation condition is satisfied when message format is IWXXM.
@@ -698,7 +700,7 @@ Activation operator may be one of:
     format:
       is: IWXXM
   ```
-* `is-any-of`: test whether activation property is equal to any of activation operand list.  
+- `is-any-of`: test whether activation property is equal to any of activation operand list.  
   This is mutually exclusive with `is`.
 
   For example, following activation condition is satisfied when message type is either METAR or SPECI.
@@ -709,7 +711,7 @@ Activation operator may be one of:
         - METAR
         - SPECI
   ```
-* `is-not`: test whether activation property is not equal to activation operand.  
+- `is-not`: test whether activation property is not equal to activation operand.  
   This is mutually exclusive with `is-none-of`.
 
   For example, following activation condition is satisfied when message format is not IWXXM.
@@ -718,7 +720,7 @@ Activation operator may be one of:
     format:
       is-not: IWXXM
   ```
-* `is-none-of`: test whether activation property is not equal to any of activation operand list.  
+- `is-none-of`: test whether activation property is not equal to any of activation operand list.  
   This is mutually exclusive with `is-not`.
 
   For example, following activation condition is satisfied when message type is neither METAR nor SPECI.
@@ -729,7 +731,7 @@ Activation operator may be one of:
         - METAR
         - SPECI
   ```
-* `matches`: test whether activation property matches regular expression provided as activation operand.
+- `matches`: test whether activation property matches regular expression provided as activation operand.
 
   For example, following activation condition is satisfied when originator parsed from GTS bulletin heading, or collect
   identifier when GTS heading is not present, starts with 'XX':
@@ -738,7 +740,7 @@ Activation operator may be one of:
     gts-or-collect-originator:
       matches: 'XX[A-Z]{2}'
   ```
-* `does-not-match`: test whether activation property does not match regular expression provided as activation operand.
+- `does-not-match`: test whether activation property does not match regular expression provided as activation operand.
 
   For example, following activation condition is satisfied when originator parsed from GTS bulletin heading, or collect
   identifier when GTS heading is not present, does not start with 'XX':
@@ -762,13 +764,15 @@ consistency with other similar properties.
 
 The following mappings must exist under `production-line` application configuration property:
 
-* `route-ids`: Map route name, preferably same as database column `avidb_message_routes.name`, to database
+- `route-ids`: Map route name, preferably same as database column `avidb_message_routes.name`, to database
   column `avidb_message_routes.route_id`.
-* `format-ids`:
-  Map [`GenericAviationWeatherMessage.Format.name()`](https://github.com/fmidev/fmi-avi-messageconverter/blob/${fmi-avi-messageconverter.branch-name}/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
+- `format-ids`:
+  Map [
+  `GenericAviationWeatherMessage.Format.name()`](https://github.com/fmidev/fmi-avi-messageconverter/blob/${fmi-avi-messageconverter.branch-name}/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
   to database column `avidb_message_format.format_id`.
-* `type-ids`:
-  Map [`MessageType.name()`](https://github.com/fmidev/fmi-avi-messageconverter/blob/${fmi-avi-messageconverter.branch-name}/src/main/java/fi/fmi/avi/model/MessageType.java)
+- `type-ids`:
+  Map [
+  `MessageType.name()`](https://github.com/fmidev/fmi-avi-messageconverter/blob/${fmi-avi-messageconverter.branch-name}/src/main/java/fi/fmi/avi/model/MessageType.java)
   to database column `avidb_message_types.type_id`.
 
 See the provided [application.yml] for an example.
@@ -779,14 +783,14 @@ Many of the properties in [application.yml] configuration file control the behav
 the [Spring Boot Reference Documentation](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/)
 for more information on these. Some of related sections are:
 
-* [Profiles](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.profiles)
-* [Logging](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.logging)
-* [Data](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/data.html)
-    * [Data Properties](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/application-properties.html#appendix.application-properties.data)
-    * [Data Migration Properties](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/application-properties.html#appendix.application-properties.data-migration)
-* [Graceful Shutdown](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/web.html#web.graceful-shutdown)
-    * [Timeout property](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase)
-* [Actuator Endpoints](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/actuator.html#actuator.endpoints)
+- [Profiles](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.profiles)
+- [Logging](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.logging)
+- [Data](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/data.html)
+    - [Data Properties](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/application-properties.html#appendix.application-properties.data)
+    - [Data Migration Properties](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/application-properties.html#appendix.application-properties.data-migration)
+- [Graceful Shutdown](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/web.html#web.graceful-shutdown)
+    - [Timeout property](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase)
+- [Actuator Endpoints](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/actuator.html#actuator.endpoints)
 
 ## License
 
