@@ -9,8 +9,8 @@ import java.util.OptionalLong;
  * A marker interface for a typed configuration definition to be instantiated by an {@link ObjectFactoryConfigFactory}.
  *
  * <p>
- * Following rules apply to types implementing this interface, and all {@link ObjectFactoryConfigFactory}
- * implementations must support these rules.
+ * The following rules apply to types implementing this interface, and all {@link ObjectFactoryConfigFactory}
+ * implementations must adhere to these rules.
  * </p>
  *
  * <ul>
@@ -31,7 +31,7 @@ import java.util.OptionalLong;
  *
  *     <li>
  *         Methods with parameters are forbidden, unless a method body (implementation) is provided. These methods are
- *         not considered as configuration properties.
+ *         not considered configuration properties.
  *     </li>
  *
  *     <li>

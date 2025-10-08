@@ -27,8 +27,7 @@ import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
  *
  * <ul>
  *     <li>
- *         Post-actions must be thread-safe. There is no guarantee whether an action is executed sequentially or in
- *         parallel.
+ *         Post-actions must be thread-safe. Their execution order is not guaranteed and may be sequential or parallel.
  *     </li>
  *     <li>
  *         Design your {@code PostAction} to be configurable. For simple post-actions constructed by
@@ -38,8 +37,8 @@ import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
  *         factory extending {@link AbstractTypedConfigObjectFactory}, which supports typed configuration interfaces.
  *     </li>
  *     <li>
- *         Execution of post-actions for each message is isolated. If the post-action throws an exception, it will not
- *         affect processing of any other message or any other post-action.
+ *         Execution of post-actions for each message is isolated. If a post-action throws an exception, it will not
+ *         affect the processing of any other message or any other post-action.
  *     </li>
  *     <li>
  *         The post-action should typically run unconditionally for reusability. When conditional execution is needed,

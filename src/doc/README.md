@@ -392,7 +392,7 @@ or [StationIcaoCodeReplacer](#stationicaocodereplacer), are provided for customi
 possibility for [conditional activation](#conditional-message-processor-activation). One message
 populator, [StationIdPopulator](#stationidpopulator), cannot be configured, but is implicitly active.
 
-Available populators are listed below in alphabetic order by name. These are declared for use in
+Available populators are listed below in alphabetical order by name. These are declared for use in
 the [MessagePopulatorFactoryConfig](src/main/java/fi/fmi/avi/archiver/config/MessagePopulatorFactoryConfig.java) class.
 
 ##### BulletinHeadingDataPopulator
@@ -709,12 +709,12 @@ chain.
 ### Post-actions
 
 [Post-actions](src/main/java/fi/fmi/avi/archiver/message/processor/postaction/PostAction.java) are components that
-execute single action after the message has been archived in the database. Post-actions are **not** applied on messages
-that were _discarded_ or _failed_ in an earlier message processing phase
+execute a single action after the message has been archived in the database. Post-actions are **not** applied on 
+messages that were _discarded_ or _failed_ in an earlier message processing phase 
 (e.g. [message population phase](#message-populators)). In other words, only messages that have been stored successfully
 in the database either as _archived_ or _rejected_ will be processed by post-actions. The input file is marked as
-finished only after all post-actions have been finished (either successfully or having failed) on all messages of the
-file. Post-actions cannot change the final processing status (_archived_, _rejected_, _failed_) of an input file.
+finished only after all post-actions have finished (with success or failure) on all messages of the file. Post-actions 
+cannot change the final processing status (_archived_, _rejected_, _failed_) of an input file.
 
 The following characteristics are unspecified, and current implementation may change any time without a prior notice.
 
@@ -723,7 +723,7 @@ The following characteristics are unspecified, and current implementation may ch
 - sequential or parallel execution
 
 Post-action configuration specifies which actions are executed. The configuration applies to all [products](#products).
-The execution of each post-action is isolated, and any failing post-action will not affect other post-actions.
+The execution of each post-action is isolated, and a failing post-action will not affect other post-actions.
 
 #### Bundled post-actions
 
@@ -731,7 +731,7 @@ This application comes with some bundled post-actions. In addition to post-actio
 up [conditional activation](#conditional-message-processor-activation) to, for example, restrict execution to messages
 that have been archived successfully, skipping rejected messages.
 
-Available populators are listed below in alphabetic order by name. These are declared for use in
+Available populators are listed below in alphabetical order by name. These are declared for use in
 the [PostActionFactoryConfig](src/main/java/fi/fmi/avi/archiver/config/PostActionFactoryConfig.java) class.
 
 ##### ResultLogger
@@ -794,7 +794,7 @@ requirements.
 
     - `connection` (mandatory) - Connection configuration section.
 
-      The connection is established lazily upon first message to be published to the broker. In case the connection has
+      The connection is established lazily upon publishing the first message to the broker. In case the connection has
       been closed since publishing the last message, it will be automatically re-established.
 
       For connection properties, a recommended convention is to use indirect values. Recommended format for
@@ -851,8 +851,11 @@ requirements.
           (re-)establishing the connection.
 
           The account used to connect to the broker must have privileges to create such topology elements. When
-          the value is set to `NONE`, no topology elements will be created, and all of them must exist on the broker
-          when connecting.
+          the value is set to `NONE`, no topology elements will be created. In this case the configured exchange must 
+          exist for publishing to succeed. The broker must also route the message to at least one queue, otherwise the
+          broker will respond with [RELEASED status](https://www.rabbitmq.com/docs/amqp#outcomes), which is considered
+          a publication failure leading to retries. An easy way to always have a queue to route to is to configure a
+          debug queue and set this value to `ALL` or `QUEUE_AND_BINDING`.
 
           Possible values: `ALL`, `EXCHANGE`, `QUEUE_AND_BINDING`, `BINDING`, `NONE`
 
@@ -1024,9 +1027,9 @@ requirements.
 
         - `priorities` (optional) - List of message _priority descriptors_.
 
-          The priority of the message is determined by the first priority descriptor in order matching the message. If
+          The priority of the message is determined by the first priority descriptor matching the message. If
           none of the descriptors match, the message will have the default priority `0`. This is also the situation in
-          case the `priorities` list is empty. If the `priorities` section is omitted, then the default priority
+          case the `priorities` list is empty. If the `priorities` section is omitted, the default priority
           descriptors are used (see the example below).
 
           Example - the default priority descriptors:
