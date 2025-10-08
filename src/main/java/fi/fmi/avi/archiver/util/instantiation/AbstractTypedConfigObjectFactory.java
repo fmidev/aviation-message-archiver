@@ -4,6 +4,13 @@ import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * An abstract {@code ObjectFactory} that provides support for typed configuration interfaces with
+ * {@link ObjectFactoryConfigFactory}.
+ *
+ * @param <T> type of instances this factory creates
+ * @param <C> configuration type
+ */
 public abstract class AbstractTypedConfigObjectFactory<T, C extends ObjectFactoryConfig> implements ObjectFactory<T> {
 
     private final ObjectFactoryConfigFactory configFactory;

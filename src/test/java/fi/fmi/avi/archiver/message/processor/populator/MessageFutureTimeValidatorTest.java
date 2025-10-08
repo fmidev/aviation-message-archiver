@@ -17,6 +17,12 @@ import java.time.temporal.ChronoUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * MessageFutureTimeValidatorTest.
+ *
+ * @deprecated {@link MessageFutureTimeValidator} is deprecated.
+ */
+@Deprecated
 public class MessageFutureTimeValidatorTest {
 
     private static final Clock clock = Clock.fixed(Instant.parse("2019-05-10T00:00:00Z"), ZoneId.of("UTC"));

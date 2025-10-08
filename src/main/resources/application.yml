@@ -395,10 +395,13 @@ production-line:
     - # Trim whitespaces around message content.
       name: MessageContentTrimmer
     - # Reject message if message time is too far in the future.
-      name: MessageFutureTimeValidator
+      name: FixedProcessingResultPopulator
+      activate-on:
+        message-age:
+          # Accept messages at less than 12 hours in the future. Do note the negative message age value.
+          is-less-than: -PT12H
       config:
-        # Accept messages at less than 12 hours in the future
-        accept-in-future: PT12H
+        result: MESSAGE_TIME_IN_FUTURE
   # List of post-action instance specifications, that determine what actions are run after message has been archived.
   # Post-action instance specification consists of
   # - name: name of post-action to run (mandatory)
