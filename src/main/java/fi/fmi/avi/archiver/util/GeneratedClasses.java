@@ -8,11 +8,15 @@ public final class GeneratedClasses {
     }
 
     public static boolean isKnownGenerated(@Nullable final Class<?> cls) {
-        return cls != null && isKnownGenerated(cls.getName());
+        return cls != null && (isKnownGeneratedByName(cls.getName()) || isNativeGenerated(cls));
     }
 
-    private static boolean isKnownGenerated(@Nullable final String className) {
+    private static boolean isKnownGeneratedByName(@Nullable final String className) {
         return isAutoValueGenerated(className) || isFreeBuilderGenerated(className);
+    }
+
+    public static boolean isNativeGenerated(@Nullable final Class<?> cls) {
+        return cls != null && cls.isRecord();
     }
 
     public static boolean isAutoValueGenerated(@Nullable final Class<?> cls) {

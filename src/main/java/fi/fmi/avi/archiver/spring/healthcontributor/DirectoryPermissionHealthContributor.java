@@ -1,78 +1,40 @@
 package fi.fmi.avi.archiver.spring.healthcontributor;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import org.springframework.boot.actuate.health.*;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.boot.actuate.health.AbstractHealthIndicator;
-import org.springframework.boot.actuate.health.CompositeHealthContributor;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthContributor;
-import org.springframework.boot.actuate.health.NamedContributor;
+import static java.util.Objects.requireNonNull;
 
-import com.google.common.collect.ImmutableMap;
+public class DirectoryPermissionHealthContributor extends AbstractMapCompositeHealthContributor {
 
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-
-public class DirectoryPermissionHealthContributor implements CompositeHealthContributor {
-
-    private final Map<String, HealthContributor> healthContributors;
+    private final Map<String, NamedContributor<HealthContributor>> healthContributors;
     private final String tempFilePrefix;
     private final String tempFileSuffix;
 
     public DirectoryPermissionHealthContributor(final Map<String, AviationProduct> aviationProducts, final String tempFilePrefix, final String tempFileSuffix) {
         this.tempFilePrefix = requireNonNull(tempFilePrefix, "tempFilePrefix");
         this.tempFileSuffix = requireNonNull(tempFileSuffix, "tempFileSuffix");
-        healthContributors = aviationProducts.entrySet()
+        healthContributors = aviationProducts.values()
                 .stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ProductDirectoryPermissionHealthContributor(entry.getValue())));
+                .collect(Collectors.toMap(AviationProduct::getId, product -> NamedContributor.of(
+                        product.getId(),
+                        CompositeHealthContributor.fromMap(Map.of(//
+                                "input", new DirectoryPermissionHealthIndicator(product.getInputDir()), //
+                                "archive", new DirectoryPermissionHealthIndicator(product.getArchiveDir()), //
+                                "fail", new DirectoryPermissionHealthIndicator(product.getFailDir())//
+                        )))));
     }
 
     @Override
-    public HealthContributor getContributor(final String name) {
-        requireNonNull(name, "name");
-        return healthContributors.get(name);
-    }
-
-    @Override
-    public Iterator<NamedContributor<HealthContributor>> iterator() {
-        return healthContributors.entrySet().stream()//
-                .map((entry) -> NamedContributor.of(entry.getKey(), entry.getValue()))//
-                .iterator();
-    }
-
-    private class ProductDirectoryPermissionHealthContributor implements CompositeHealthContributor {
-
-        private final Map<String, HealthContributor> contributors;
-
-        public ProductDirectoryPermissionHealthContributor(final AviationProduct product) {
-            requireNonNull(product, "product");
-            contributors = ImmutableMap.of(//
-                    "input (" + product.getInputDir() + ")", new DirectoryPermissionHealthIndicator(product.getInputDir()), //
-                    "archive (" + product.getArchiveDir() + ")", new DirectoryPermissionHealthIndicator(product.getArchiveDir()), //
-                    "fail (" + product.getFailDir() + ")", new DirectoryPermissionHealthIndicator(product.getFailDir())//
-            );
-        }
-
-        @Override
-        public HealthContributor getContributor(final String name) {
-            requireNonNull(name, "name");
-            return contributors.get(name);
-        }
-
-        @Override
-        public Iterator<NamedContributor<HealthContributor>> iterator() {
-            return contributors.entrySet().stream()//
-                    .map((entry) -> NamedContributor.of(entry.getKey(), entry.getValue()))//
-                    .iterator();
-        }
-
+    protected Map<String, NamedContributor<HealthContributor>> contributors() {
+        return healthContributors;
     }
 
     private class DirectoryPermissionHealthIndicator extends AbstractHealthIndicator {
@@ -85,6 +47,7 @@ public class DirectoryPermissionHealthContributor implements CompositeHealthCont
 
         @Override
         protected void doHealthCheck(final Health.Builder builder) {
+            builder.withDetail("path", path);
             Path tempFile = null;
             try {
                 tempFile = Files.createTempFile(path, tempFilePrefix, tempFileSuffix);

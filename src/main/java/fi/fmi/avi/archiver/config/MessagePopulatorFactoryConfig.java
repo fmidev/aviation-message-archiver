@@ -1,51 +1,29 @@
 package fi.fmi.avi.archiver.config;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
+import fi.fmi.avi.archiver.message.ProcessingResult;
+import fi.fmi.avi.archiver.message.processor.populator.*;
+import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import fi.fmi.avi.model.MessageType;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.ConversionService;
-
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.config.model.MessagePopulatorFactory;
-import fi.fmi.avi.archiver.message.ProcessingResult;
-import fi.fmi.avi.archiver.message.populator.BulletinHeadingDataPopulator;
-import fi.fmi.avi.archiver.message.populator.FileMetadataPopulator;
-import fi.fmi.avi.archiver.message.populator.FileNameDataPopulator;
-import fi.fmi.avi.archiver.message.populator.FixedDurationValidityPeriodPopulator;
-import fi.fmi.avi.archiver.message.populator.FixedProcessingResultPopulator;
-import fi.fmi.avi.archiver.message.populator.FixedRoutePopulator;
-import fi.fmi.avi.archiver.message.populator.FixedTypePopulator;
-import fi.fmi.avi.archiver.message.populator.MessageContentTrimmer;
-import fi.fmi.avi.archiver.message.populator.MessageDataPopulator;
-import fi.fmi.avi.archiver.message.populator.MessageDiscarder;
-import fi.fmi.avi.archiver.message.populator.MessageFutureTimeValidator;
-import fi.fmi.avi.archiver.message.populator.MessageMaximumAgeValidator;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatorHelper;
-import fi.fmi.avi.archiver.message.populator.ProductMessageTypesValidator;
-import fi.fmi.avi.archiver.message.populator.StationIcaoCodeReplacer;
-import fi.fmi.avi.archiver.util.StringCaseFormat;
-import fi.fmi.avi.archiver.util.instantiation.ConfigValueConverter;
-import fi.fmi.avi.archiver.util.instantiation.PropertyRenamingObjectFactory;
-import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
-import fi.fmi.avi.archiver.util.instantiation.SpringConversionServiceConfigValueConverter;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import fi.fmi.avi.model.MessageType;
+import static java.util.Objects.requireNonNull;
 
 @Configuration
-public class MessagePopulatorFactoryConfig {
+public class MessagePopulatorFactoryConfig extends AbstractMessagePopulatorFactoryConfig {
 
-    private final ConversionService conversionService;
     private final Clock clock;
 
-    MessagePopulatorFactoryConfig(final ConversionService conversionService, final Clock clock) {
-        this.conversionService = requireNonNull(conversionService, "conversionService");
+    MessagePopulatorFactoryConfig(final ConfigValueConverter configValueConverter, final Clock clock) {
+        super(configValueConverter);
         this.clock = requireNonNull(clock, "clock");
     }
 
@@ -55,28 +33,15 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
-    ConfigValueConverter messagePopulatorConfigValueConverter() {
-        return new SpringConversionServiceConfigValueConverter(conversionService);
-    }
-
-    private <T extends MessagePopulator> ReflectionObjectFactory.Builder<T> builder(final Class<T> type) {
-        return ReflectionObjectFactory.builder(type, messagePopulatorConfigValueConverter());
-    }
-
-    private <T extends MessagePopulator> MessagePopulatorFactory<T> build(final ReflectionObjectFactory.Builder<T> builder) {
-        return new MessagePopulatorFactory<>(new PropertyRenamingObjectFactory<>(builder.build(), StringCaseFormat::dashToCamel));
-    }
-
-    @Bean
     MessagePopulatorFactory<FileMetadataPopulator> fileMetadataPopulatorFactory(final Map<String, AviationProduct> aviationProducts) {
         return build(builder(FileMetadataPopulator.class)//
                 .addDependencyArg(aviationProducts));
     }
 
     @Bean
-    MessagePopulatorFactory<FileNameDataPopulator> fileNameDataPopulatorFactory() {
+    MessagePopulatorFactory<FileNameDataPopulator> fileNameDataPopulatorFactory(final MessagePopulatorHelper messagePopulatorHelper) {
         return build(builder(FileNameDataPopulator.class)//
-                .addDependencyArg(messagePopulatorHelper())//
+                .addDependencyArg(messagePopulatorHelper)//
                 .addDependencyArg(clock));
     }
 
@@ -87,17 +52,21 @@ public class MessagePopulatorFactoryConfig {
     }
 
     @Bean
-    MessagePopulatorFactory<BulletinHeadingDataPopulator> bulletinHeadingDataPopulatorFactory(final Map<MessageType, Integer> messageTypeIds,
+    MessagePopulatorFactory<BulletinHeadingDataPopulator> bulletinHeadingDataPopulatorFactory(
+            final MessagePopulatorHelper messagePopulatorHelper,
+            final Map<MessageType, Integer> messageTypeIds,
             final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
         return build(builder(BulletinHeadingDataPopulator.class)//
-                .addDependencyArgs(messagePopulatorHelper(), messageFormatIds, messageTypeIds));
+                .addDependencyArgs(messagePopulatorHelper, messageFormatIds, messageTypeIds));
     }
 
     @Bean
-    MessagePopulatorFactory<MessageDataPopulator> messageDataPopulatorFactory(final Map<MessageType, Integer> messageTypeIds,
+    MessagePopulatorFactory<MessageDataPopulator> messageDataPopulatorFactory(
+            final MessagePopulatorHelper messagePopulatorHelper,
+            final Map<MessageType, Integer> messageTypeIds,
             final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
         return build(builder(MessageDataPopulator.class)//
-                .addDependencyArgs(messagePopulatorHelper(), messageFormatIds, messageTypeIds));
+                .addDependencyArgs(messagePopulatorHelper, messageFormatIds, messageTypeIds));
     }
 
     @Bean
@@ -120,6 +89,7 @@ public class MessagePopulatorFactoryConfig {
                 .addConfigArg("acceptInFuture", Duration.class));
     }
 
+    @Deprecated(forRemoval = true)
     @Bean
     MessagePopulatorFactory<MessageMaximumAgeValidator> messageMaximumAgeValidatorFactory() {
         return build(builder(MessageMaximumAgeValidator.class)//
@@ -136,7 +106,7 @@ public class MessagePopulatorFactoryConfig {
 
     @Bean
     MessagePopulatorFactory<ProductMessageTypesValidator> productMessageTypesValidatorFactory(final Map<MessageType, Integer> messageTypeIds,
-            final Map<String, AviationProduct> aviationProducts) {
+                                                                                              final Map<String, AviationProduct> aviationProducts) {
         return build(builder(ProductMessageTypesValidator.class)//
                 .addDependencyArg(messageTypeIds)//
                 .addDependencyArg(aviationProducts)//

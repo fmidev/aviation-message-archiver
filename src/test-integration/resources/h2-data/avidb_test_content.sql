@@ -1,15 +1,15 @@
--- Values shall be kept in sync with fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.FormatId
+-- Values shall be kept in sync with fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper.FormatId
 INSERT INTO public.avidb_message_format
 VALUES (1, 'TAC', '2021-06-03 00:00:00');
 INSERT INTO public.avidb_message_format
 VALUES (2, 'IWXXM', '2021-06-03 00:00:00');
 
--- Values shall be kept in sync with fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.RouteId
+-- Values shall be kept in sync with fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper.RouteId
 INSERT INTO public.avidb_message_routes
 VALUES (1, 'TEST', 'Test Route', '2021-06-03 00:00:00');
 VALUES (2, 'TEST2', 'Test Route 2', '2021-06-03 00:00:00');
 
--- Values shall be kept in sync with fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.TypeId
+-- Values shall be kept in sync with fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper.TypeId
 INSERT INTO public.avidb_message_types
 VALUES (1, 'METAR', 'metar', '2021-06-03 00:00:00', 1);
 INSERT INTO public.avidb_message_types
@@ -27,7 +27,7 @@ VALUES (7, 'VAA', 'Volcanic Ash Advisory', '2021-06-03 00:00:00', 1);
 INSERT INTO public.avidb_message_types
 VALUES (8, 'SWX', 'Space Weather Advisory', '2021-06-03 00:00:00', 1);
 
--- Values shall be kept in sync with fi.fmi.avi.archiver.message.populator.MessagePopulatorTests.StationId
+-- Values shall be kept in sync with fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper.StationId
 INSERT INTO public.avidb_stations
 VALUES (1, 'EFXX', 'EFXX Test Airport', NULL, 1, '1700-01-01 00:00:00', '9999-12-31 00:00:00', '2021-06-03 00:00:00', NULL,
         'US');

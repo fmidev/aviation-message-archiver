@@ -1,45 +1,45 @@
 package fi.fmi.avi.archiver.config;
 
-import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
+import com.google.common.collect.*;
+import fi.fmi.avi.archiver.config.model.AviationProduct;
+import fi.fmi.avi.archiver.config.model.FileConfig;
+import fi.fmi.avi.archiver.config.model.MessagePopulatorInstanceSpec;
+import fi.fmi.avi.archiver.config.model.PostActionInstanceSpec;
+import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import fi.fmi.avi.model.MessageType;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
+import org.springframework.context.annotation.Bean;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
-import org.springframework.context.annotation.Bean;
-
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
-
-import fi.fmi.avi.archiver.config.model.AviationProduct;
-import fi.fmi.avi.archiver.config.model.FileConfig;
-import fi.fmi.avi.archiver.config.model.PopulatorInstanceSpec;
-import fi.fmi.avi.model.GenericAviationWeatherMessage;
-import fi.fmi.avi.model.MessageType;
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
 @ConfigurationProperties(prefix = "production-line")
 public class ProductionLineConfig {
     private final List<AviationProduct.Builder> aviationProductBuilders;
-    private final List<PopulatorInstanceSpec.Builder> messagePopulatorSpecBuilders;
+    private final List<MessagePopulatorInstanceSpec.Builder> messagePopulatorSpecBuilders;
+    private final List<PostActionInstanceSpec.Builder> postActionInstanceSpecBuilders;
     private final Map<String, Integer> routeIds;
     private final Map<GenericAviationWeatherMessage.Format, Integer> formatIds;
     private final Map<MessageType, Integer> typeIds;
 
     @ConstructorBinding
-    ProductionLineConfig(final List<AviationProduct.Builder> products, final List<PopulatorInstanceSpec.Builder> messagePopulators,
-            final Map<String, Integer> routeIds, final Map<GenericAviationWeatherMessage.Format, Integer> formatIds, final Map<MessageType, Integer> typeIds) {
+    ProductionLineConfig(final List<AviationProduct.Builder> products,
+                         final List<MessagePopulatorInstanceSpec.Builder> messagePopulators,
+                         @Nullable final List<PostActionInstanceSpec.Builder> postActions,
+                         final Map<String, Integer> routeIds,
+                         final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
+                         final Map<MessageType, Integer> typeIds) {
         this.aviationProductBuilders = requireNonNull(products, "products");
         this.messagePopulatorSpecBuilders = requireNonNull(messagePopulators, "messagePopulators");
+        this.postActionInstanceSpecBuilders = postActions == null ? List.of() : postActions;
         this.routeIds = requireNonNull(routeIds, "routeIds");
         this.formatIds = requireNonNull(formatIds, "formatIds");
         this.typeIds = requireNonNull(typeIds, "typeIds");
@@ -55,19 +55,6 @@ public class ProductionLineConfig {
             }
             i++;
         }
-    }
-
-    private static Map<String, AviationProduct> buildAviationProducts(final List<AviationProduct.Builder> productBuilders,
-            final Map<String, Integer> messageRouteIds, final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
-        validateAviationProducts(productBuilders);
-        final ImmutableMap.Builder<String, AviationProduct> builder = ImmutableMap.builder();
-        iterateProducts(productBuilders, productBuilder -> {
-            mapRouteToId(productBuilder, messageRouteIds);
-            mapFormatsToIds(productBuilder, messageFormatIds);
-            final AviationProduct product = productBuilder.build();
-            builder.put(product.getId(), product);
-        });
-        return builder.build();
     }
 
     private static void validateAviationProducts(final List<AviationProduct.Builder> productBuilders) {
@@ -133,22 +120,33 @@ public class ProductionLineConfig {
         }
     }
 
-    private static List<PopulatorInstanceSpec> buildMessagePopulatorSpecs(final List<PopulatorInstanceSpec.Builder> builders) {
-        checkState(!builders.isEmpty(), "Invalid message populators configuration: messagePopulators is empty");
-        final ImmutableList.Builder<PopulatorInstanceSpec> specs = ImmutableList.builder();
-        iterate("MessagePopulator specification", builders, builder -> specs.add(builder.build()));
+    @Bean
+    Map<String, AviationProduct> aviationProducts(final Map<String, Integer> messageRouteIds,
+                                                  final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
+        validateAviationProducts(aviationProductBuilders);
+        final ImmutableMap.Builder<String, AviationProduct> builder = ImmutableMap.builder();
+        iterateProducts(aviationProductBuilders, productBuilder -> {
+            mapRouteToId(productBuilder, messageRouteIds);
+            mapFormatsToIds(productBuilder, messageFormatIds);
+            final AviationProduct product = productBuilder.build();
+            builder.put(product.getId(), product);
+        });
+        return builder.build();
+    }
+
+    @Bean
+    List<MessagePopulatorInstanceSpec> messagePopulatorSpecs() {
+        checkState(!messagePopulatorSpecBuilders.isEmpty(), "Invalid message populators configuration: messagePopulators is empty");
+        final ImmutableList.Builder<MessagePopulatorInstanceSpec> specs = ImmutableList.builder();
+        iterate("MessagePopulator specification", messagePopulatorSpecBuilders, builder -> specs.add(builder.build()));
         return specs.build();
     }
 
     @Bean
-    Map<String, AviationProduct> aviationProducts(final Map<String, Integer> messageRouteIds,
-            final Map<GenericAviationWeatherMessage.Format, Integer> messageFormatIds) {
-        return buildAviationProducts(aviationProductBuilders, messageRouteIds, messageFormatIds);
-    }
-
-    @Bean
-    List<PopulatorInstanceSpec> messagePopulatorSpecs() {
-        return buildMessagePopulatorSpecs(messagePopulatorSpecBuilders);
+    List<PostActionInstanceSpec> postActionSpecs() {
+        final ImmutableList.Builder<PostActionInstanceSpec> specs = ImmutableList.builder();
+        iterate("PostAction specification", postActionInstanceSpecBuilders, builder -> specs.add(builder.build()));
+        return specs.build();
     }
 
     @Bean

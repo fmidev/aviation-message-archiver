@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iwxxm:SPECI
+  xmlns:iwxxm="http://icao.int/iwxxm/3.0"
+  xmlns:gml="http://www.opengis.net/gml/3.2"
+  gml:id="speci-1"
+  reportStatus="NORMAL"
+  permissibleUsage="OPERATIONAL">
+
+  <iwxxm:observationTime>
+    <gml:TimeInstant gml:id="ti-1">
+      <gml:timePosition>2025-09-04T12:34:56Z</gml:timePosition>
+    </gml:TimeInstant>
+  </iwxxm:observationTime>
+
+  <iwxxm:aerodrome>
+    <iwxxm:AerodromePoint gml:id="ad-efyy">
+      <gml:identifier codeSpace="urn:icao:doc7910:2013">EFYY</gml:identifier>
+    </iwxxm:AerodromePoint>
+  </iwxxm:aerodrome>
+</iwxxm:SPECI>

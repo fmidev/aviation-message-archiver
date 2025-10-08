@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iwxxm:METAR
+  xmlns:iwxxm="http://icao.int/iwxxm/3.0"
+  xmlns:gml="http://www.opengis.net/gml/3.2"
+  xmlns:aixm="http://www.aixm.aero/schema/5.1.1"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns:metce="http://def.wmo.int/metce/2013"
+  gml:id="metar-1"
+  reportStatus="NORMAL"
+  automatedStation="true"
+  permissibleUsage="OPERATIONAL">
+
+  <iwxxm:observationTime>
+    <gml:TimeInstant gml:id="ti-1">
+      <gml:timePosition>test</gml:timePosition>
+    </gml:TimeInstant>
+  </iwxxm:observationTime>
+
+  <iwxxm:aerodrome>
+    <iwxxm:AerodromePoint gml:id="ad-efxx">
+      <gml:identifier codeSpace="urn:icao:doc7910:2013">EFXX</gml:identifier>
+    </iwxxm:AerodromePoint>
+  </iwxxm:aerodrome>
+</iwxxm:METAR>

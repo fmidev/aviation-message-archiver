@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<collect:MeteorologicalBulletin
+  xmlns:collect="http://def.wmo.int/collect/2014"
+  xmlns:gml="http://www.opengis.net/gml/3.2"
+  xmlns:aixm="http://www.aixm.aero/schema/5.1.1"
+  xmlns:iwxxm="http://icao.int/iwxxm/3.0"
+  xmlns:metce="http://def.wmo.int/metce/2013"
+  xmlns:om="http://www.opengis.net/om/2.0"
+  xmlns:sam="http://www.opengis.net/sampling/2.0"
+  xmlns:sams="http://www.opengis.net/samplingSpatial/2.0"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  gml:id="bulletin-4d9a9a0a-7a7c-4c1a-9e5a-1234567890ab"
+  xsi:schemaLocation="
+        http://icao.int/iwxxm/3.0 http://schemas.wmo.int/iwxxm/3.0/iwxxm.xsd
+        http://def.wmo.int/collect/2014 http://schemas.wmo.int/collect/1.2/collect.xsd
+        http://www.opengis.net/samplingSpatial/2.0 http://schemas.opengis.net/samplingSpatial/2.0/spatialSamplingFeature.xsd">
+  <collect:meteorologicalInformation>
+    <iwxxm:METAR gml:id="metar-efhk-1"
+                 reportStatus="NORMAL"
+                 permissibleUsage="NON-OPERATIONAL"
+                 permissibleUsageReason="TEST"
+                 automatedStation="true">
+      <iwxxm:issueTime>
+        <gml:TimeInstant gml:id="issue-efhk-1">
+          <gml:timePosition>2025-09-04T10:01:00Z</gml:timePosition>
+        </gml:TimeInstant>
+      </iwxxm:issueTime>
+      <iwxxm:observationTime>
+        <gml:TimeInstant gml:id="obs-efhk-1">
+          <gml:timePosition>2025-09-04T10:00:00Z</gml:timePosition>
+        </gml:TimeInstant>
+      </iwxxm:observationTime>
+      <iwxxm:aerodrome>
+        <aixm:AirportHeliport gml:id="ad-efhk">
+          <aixm:timeSlice>
+            <aixm:AirportHeliportTimeSlice gml:id="adts-efhk">
+              <gml:validTime/>
+              <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+              <aixm:designator>EFHK</aixm:designator>
+              <aixm:name>HELSINKI-VANTAA</aixm:name>
+              <aixm:locationIndicatorICAO>EFHK</aixm:locationIndicatorICAO>
+            </aixm:AirportHeliportTimeSlice>
+          </aixm:timeSlice>
+        </aixm:AirportHeliport>
+      </iwxxm:aerodrome>
+    </iwxxm:METAR>
+  </collect:meteorologicalInformation>
+
+  <collect:meteorologicalInformation>
+    <iwxxm:METAR gml:id="metar-eftu-1"
+                 reportStatus="NORMAL"
+                 permissibleUsage="NON-OPERATIONAL"
+                 permissibleUsageReason="TEST"
+                 automatedStation="true">
+      <iwxxm:issueTime>
+        <gml:TimeInstant gml:id="issue-eftu-1">
+          <gml:timePosition>2025-09-04T10:31:00Z</gml:timePosition>
+        </gml:TimeInstant>
+      </iwxxm:issueTime>
+      <iwxxm:observationTime>
+        <gml:TimeInstant gml:id="obs-eftu-1">
+          <gml:timePosition>2025-09-04T10:30:00Z</gml:timePosition>
+        </gml:TimeInstant>
+      </iwxxm:observationTime>
+      <iwxxm:aerodrome>
+        <aixm:AirportHeliport gml:id="ad-eftu">
+          <aixm:timeSlice>
+            <aixm:AirportHeliportTimeSlice gml:id="adts-eftu">
+              <gml:validTime/>
+              <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+              <aixm:designator>EFTU</aixm:designator>
+              <aixm:name>TURKU AIRPORT</aixm:name>
+              <aixm:locationIndicatorICAO>EFTU</aixm:locationIndicatorICAO>
+            </aixm:AirportHeliportTimeSlice>
+          </aixm:timeSlice>
+        </aixm:AirportHeliport>
+      </iwxxm:aerodrome>
+    </iwxxm:METAR>
+  </collect:meteorologicalInformation>
+
+  <collect:meteorologicalInformation>
+    <iwxxm:METAR gml:id="metar-efet-1"
+                 reportStatus="NORMAL"
+                 permissibleUsage="NON-OPERATIONAL"
+                 permissibleUsageReason="TEST"
+                 automatedStation="true">
+      <iwxxm:issueTime>
+        <gml:TimeInstant gml:id="issue-efet-1">
+          <gml:timePosition>2025-09-04T11:01:00Z</gml:timePosition>
+        </gml:TimeInstant>
+      </iwxxm:issueTime>
+      <iwxxm:observationTime>
+        <gml:TimeInstant gml:id="obs-efet-1">
+          <gml:timePosition>2025-09-04T11:00:00Z</gml:timePosition>
+        </gml:TimeInstant>
+      </iwxxm:observationTime>
+      <iwxxm:aerodrome>
+        <aixm:AirportHeliport gml:id="ad-efet">
+          <aixm:timeSlice>
+            <aixm:AirportHeliportTimeSlice gml:id="adts-efet">
+              <gml:validTime/>
+              <aixm:interpretation>SNAPSHOT</aixm:interpretation>
+              <aixm:designator>EFET</aixm:designator>
+              <aixm:name>ENONTEKIÖ AIRPORT</aixm:name>
+              <aixm:locationIndicatorICAO>EFET</aixm:locationIndicatorICAO>
+            </aixm:AirportHeliportTimeSlice>
+          </aixm:timeSlice>
+        </aixm:AirportHeliport>
+      </iwxxm:aerodrome>
+    </iwxxm:METAR>
+  </collect:meteorologicalInformation>
+
+  <collect:bulletinIdentifier>A_LTFI31EFKL301115_C_EFKL_201902011315--.xml</collect:bulletinIdentifier>
+</collect:MeteorologicalBulletin>

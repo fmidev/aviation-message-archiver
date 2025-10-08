@@ -8,6 +8,7 @@ public enum ProcessingPhase implements StructuredLoggable {
     PARSE, //
     POPULATE, //
     STORE, //
+    POST_ACTIONS, //
     SUCCESS, //
     FAIL, //
     FINISH, //

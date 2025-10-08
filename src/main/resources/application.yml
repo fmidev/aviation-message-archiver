@@ -365,9 +365,9 @@ production-line:
   # List of message populator instance specifications, that determine how parsed data is archived, in execution order.
   # Message populator instance specification consists of
   # - name: name of message populator to execute (mandatory)
-  # - config: map of populator-specific configuration options. Some of them may be mandatory. May be omitted, when no configuration options are given.
   # - activate-on: optional activation conditions. The specified populator is executed only when all of provided activation conditions are satisfied.
   #   Omit to execute unconditionally.
+  # - config: map of populator-specific configuration options. Some of them may be mandatory. May be omitted, when no configuration options are given.
   # For more info on message populator configuration in general, see README.md in the project root directory.
   message-populators:
     - # Populate properties available in input file metadata
@@ -395,10 +395,24 @@ production-line:
     - # Trim whitespaces around message content.
       name: MessageContentTrimmer
     - # Reject message if message time is too far in the future.
-      name: MessageFutureTimeValidator
+      name: FixedProcessingResultPopulator
+      activate-on:
+        message-age:
+          # Accept messages at less than 12 hours in the future. Do note the negative message age value.
+          is-less-than: -PT12H
       config:
-        # Accept messages at less than 12 hours in the future
-        accept-in-future: PT12H
+        result: MESSAGE_TIME_IN_FUTURE
+  # List of post-action instance specifications, that determine what actions are run after message has been archived.
+  # Post-action instance specification consists of
+  # - name: name of post-action to run (mandatory)
+  # - activate-on: optional activation conditions. The specified action is run only when all of provided activation conditions are satisfied.
+  #   Omit to run unconditionally.
+  # - config: map of action-specific configuration options. Some of them may be mandatory. May be omitted, when no configuration options are given.
+  # For more info on post-action configuration in general, see README.md in the project root directory.
+  post-actions:
+    - name: ResultLogger
+      config:
+        message: Message archiving process finished.
   # Map route name to numeric identifier.
   # Name is preferably same as 'avidb_message_routes.name' value in the database.
   # Numeric identifier must be equal to 'avidb_message_routes.route_id' in the database.

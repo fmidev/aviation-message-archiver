@@ -1,0 +1,72 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+testclass:
+  name: fi.fmi.avi.archiver.config.InvalidConfigDetectionTest
+---
+spring.config.activate.on-profile: testProductOk
+
+production-line:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          name-time-zone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testEqualArchiveAndFailDirsInMultipleProducts
+
+production-line:
+  products:
+    - id: product1
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/output
+      fail-dir: ${testclass.workdir.path}/output
+      files:
+        - pattern: ^.*\.txt$
+          name-time-zone: Z
+          format: TAC
+    - id: product2
+      route: TEST
+      input-dir: ${testclass.workdir.path}/input
+      archive-dir: ${testclass.workdir.path}/output
+      fail-dir: ${testclass.workdir.path}/output
+      files:
+        - pattern: ^.*\.txt2$
+          name-time-zone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: testMessagePopulatorWithEmptyConfigSection
+
+production-line:
+  message-populators:
+    - name: FileMetadataPopulator
+      config:
+---
+spring.config.activate.on-profile: testMessagePopulatorWithEmptyActivateOnSection
+
+production-line:
+  message-populators:
+    - name: FileMetadataPopulator
+      activate-on:
+---
+spring.config.activate.on-profile: testPostActionWithEmptyConfigSection
+
+production-line:
+  post-actions:
+    - name: NoOp
+      config:
+---
+spring.config.activate.on-profile: testPostActionWithEmptyActivateOnSection
+
+production-line:
+  post-actions:
+    - name: NoOp
+      activate-on:
+---
+spring.config.activate.on-profile: testMissingPostActionExecutionChain

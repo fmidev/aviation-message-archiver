@@ -1,35 +1,29 @@
 package fi.fmi.avi.archiver.util.instantiation;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import com.google.common.testing.NullPointerTester;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
+import fi.fmi.avi.archiver.message.processor.populator.MessagePopulator;
+import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory.Builder;
+import org.junit.jupiter.api.Test;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
-import org.junit.jupiter.api.Test;
-
-import com.google.common.testing.NullPointerTester;
-
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.populator.MessagePopulatingContext;
-import fi.fmi.avi.archiver.message.populator.MessagePopulator;
-import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory.Builder;
+import static org.assertj.core.api.Assertions.*;
 
 class ReflectionObjectFactoryTest {
     private static Builder<TestPopulator> builder() {
-        return ReflectionObjectFactory.builder(TestPopulator.class, AbstractObjectFactoryTest.TestConverter.INSTANCE);
+        return ReflectionObjectFactory.builder(TestPopulator.class, TestConfigValueConverter.INSTANCE);
     }
 
     @SuppressWarnings("UnstableApiUsage")
     @Test
     public void testNulls() {
         final NullPointerTester tester = new NullPointerTester();
-        @SuppressWarnings("rawtypes")
-        final Class<ReflectionObjectFactory> classUnderTest = ReflectionObjectFactory.class;
+        @SuppressWarnings("rawtypes") final Class<ReflectionObjectFactory> classUnderTest = ReflectionObjectFactory.class;
         final NullPointerTester.Visibility minimalVisibility = NullPointerTester.Visibility.PACKAGE;
         tester.testStaticMethods(classUnderTest, minimalVisibility);
         tester.testConstructors(classUnderTest, minimalVisibility);
@@ -52,7 +46,7 @@ class ReflectionObjectFactoryTest {
     @Test
     void default_name_is_class_simple_name() {
         final ReflectionObjectFactory<TestPopulator> factory = builder().build();
-        assertThat(factory.getName()).isEqualTo(AbstractObjectFactoryTest.TestPopulator.class.getSimpleName());
+        assertThat(factory.getName()).isEqualTo(AbstractReflectionObjectFactoryTest.TestPopulator.class.getSimpleName());
     }
 
     @Test
@@ -68,7 +62,7 @@ class ReflectionObjectFactoryTest {
                 .setName("CustomName")//
                 .clearName()//
                 .build();
-        assertThat(factory.getName()).isEqualTo(AbstractObjectFactoryTest.TestPopulator.class.getSimpleName());
+        assertThat(factory.getName()).isEqualTo(AbstractReflectionObjectFactoryTest.TestPopulator.class.getSimpleName());
     }
 
     @Test
@@ -77,7 +71,7 @@ class ReflectionObjectFactoryTest {
                 .setName("CustomName")//
                 .setNullableName(null)//
                 .build();
-        assertThat(factory.getName()).isEqualTo(AbstractObjectFactoryTest.TestPopulator.class.getSimpleName());
+        assertThat(factory.getName()).isEqualTo(AbstractReflectionObjectFactoryTest.TestPopulator.class.getSimpleName());
     }
 
     @Test
@@ -282,7 +276,7 @@ class ReflectionObjectFactoryTest {
         }
 
         @Override
-        public void populate(final MessagePopulatingContext context, final ArchiveAviationMessage.Builder target) {
+        public void populate(final MessageProcessorContext context, final ArchiveAviationMessage.Builder target) {
             throw unexpectedInvocation();
         }
 

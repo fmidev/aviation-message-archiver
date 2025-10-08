@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.database;
 
+import fi.fmi.avi.archiver.message.ArchivalStatus;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
 import fi.fmi.avi.archiver.message.ProcessingResult;
@@ -100,6 +101,7 @@ public class DatabaseAccessTestUtil {
         return databaseAccess.getJdbcTemplate()
                 .query(SELECT_AVIATION_MESSAGES_WITH_STATION_ICAO_CODE, Collections.emptyMap(), (rs, rowNum) ->
                         ArchiveAviationMessage.builder()
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
                                 .setMessageTime(toInstant(rs.getObject(1, OffsetDateTime.class)))
                                 .setStationId(rs.getInt(2))
                                 .setType(rs.getInt(3))
@@ -122,6 +124,7 @@ public class DatabaseAccessTestUtil {
         return databaseAccess.getJdbcTemplate()
                 .query(SELECT_REJECTED_MESSAGES, Collections.emptyMap(), (rs, rowNum) ->
                         ArchiveAviationMessage.builder()
+                                .setArchivalStatus(ArchivalStatus.REJECTED)
                                 .setStationIcaoCode(rs.getString(1))
                                 .setMessageTime(toInstant(rs.getObject(2, OffsetDateTime.class)))
                                 .setType(rs.getInt(3))

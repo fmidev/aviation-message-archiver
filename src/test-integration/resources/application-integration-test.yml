@@ -1,0 +1,139 @@
+##############################################
+#
+#  Test-specific properties
+#
+##############################################
+# START SNIPPET: tests
+testclass:
+  #  Set name correctly in each test class
+  name: ~
+  workdir:
+    parent: ${java.io.tmpdir}
+    path: ${testclass.workdir.parent}/${testclass.name}
+# END SNIPPET: tests
+---
+
+##############################################
+#
+#  Shutdown config
+#
+##############################################
+# START SNIPPET: shutdown
+processing-flow:
+  graceful-shutdown:
+    # Time to wait for all file processing to finish upon shutdown
+    timeout: PT5S
+---
+# END SNIPPET: shutdown
+
+##############################################
+#
+#  Production line configuration
+#
+##############################################
+# START SNIPPET: production-line
+polling:
+  delay: PT0.050S
+
+production-line:
+  products:
+    - id: test_taf
+      route: TEST
+      input-dir: ${testclass.workdir.path}/src
+      archive-dir: ${testclass.workdir.path}/dst
+      fail-dir: ${testclass.workdir.path}/failed
+      files:
+        - pattern: ^.*\.txt$
+          name-time-zone: Z
+          format: TAC
+        - pattern: ^.*\.txt2$
+          name-time-zone: Z
+          format: TAC
+    - id: test_taf_2
+      route: TEST
+      input-dir: ${testclass.workdir.path}/src2
+      archive-dir: ${testclass.workdir.path}/dst2
+      fail-dir: ${testclass.workdir.path}/failed2
+      files:
+        - pattern: ^.*\.another$
+          name-time-zone: Z
+          format: TAC
+    - id: test_iwxxm
+      route: TEST
+      input-dir: ${testclass.workdir.path}/src_iwxxm
+      archive-dir: ${testclass.workdir.path}/dst_iwxxm
+      fail-dir: ${testclass.workdir.path}/failed_iwxxm
+      files:
+        - pattern: ^.*\.xml$
+          name-time-zone: Z
+          format: IWXXM
+    - id: test_taf_bulletin
+      route: TEST
+      input-dir: ${testclass.workdir.path}/src_taf_bulletin
+      archive-dir: ${testclass.workdir.path}/dst_taf_bulletin
+      fail-dir: ${testclass.workdir.path}/failed_taf_bulletin
+      files:
+        - pattern: ^.*\.bul$
+          name-time-zone: Z
+          format: TAC
+---
+spring.config.activate.on-profile: (!testMissingMessagePopulatorExecutionChain)
+
+production-line:
+  message-populators:
+    - name: MessageDiscarder
+      activate-on:
+        gts-or-collect-data-designator:
+          matches: '^....99$'
+    - name: FileMetadataPopulator
+    - name: FileNameDataPopulator
+    - name: BulletinHeadingDataPopulator
+      config:
+        bulletin-heading-sources:
+          - GTS_BULLETIN_HEADING
+          - COLLECT_IDENTIFIER
+    - name: MessageDataPopulator
+    - name: MessageContentTrimmer
+    - name: FixedDurationValidityPeriodPopulator
+      activate-on:
+        type:
+          is: SPACE_WEATHER_ADVISORY
+      config:
+        validity-end-offset: PT24H
+---
+spring.config.activate.on-profile: (!testMissingPostActionExecutionChain)
+
+production-line:
+  post-actions:
+    - name: TestPostAction
+      config:
+        id: test
+---
+spring.config.activate.on-profile: (!testMissingStaticRouteIds & !testEmptyStaticRouteIds)
+
+production-line:
+  route-ids:
+    TEST: 1
+    TEST2: 2
+---
+spring.config.activate.on-profile: (!testMissingStaticFormatIds & !testEmptyStaticFormatIds)
+
+production-line:
+  format-ids:
+    TAC: 1
+    IWXXM: 2
+---
+spring.config.activate.on-profile: (!testMissingStaticTypeIds & !testEmptyStaticTypeIds)
+
+production-line:
+  type-ids:
+    METAR: 1
+    SPECI: 2
+    TAF: 3
+    SIGMET: 4
+    AIRMET: 5
+    VOLCANIC_ASH_ADVISORY: 6
+    TROPICAL_CYCLONE_ADVISORY: 7
+    SPACE_WEATHER_ADVISORY: 8
+# END SNIPPET: production-line
+---

@@ -1,14 +1,10 @@
 package fi.fmi.avi.archiver.config;
 
+import fi.fmi.avi.archiver.spring.convert.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
-
-import fi.fmi.avi.archiver.spring.convert.MapValuesToCollectionConverter;
-import fi.fmi.avi.archiver.spring.convert.StringToDurationConverter;
-import fi.fmi.avi.archiver.spring.convert.StringToInstantConverter;
-import fi.fmi.avi.archiver.spring.convert.StringToPatternConverter;
 
 @Configuration
 public class ConversionConfig {
@@ -17,10 +13,13 @@ public class ConversionConfig {
     ConversionService conversionService() {
         final DefaultConversionService conversionService = new DefaultConversionService();
 
+        conversionService.addConverter(new EmptyStringToEmptyMapConverter());
         conversionService.addConverter(new MapValuesToCollectionConverter(conversionService));
+        conversionService.addConverter(new NumberToOptionalDoubleConverter());
         conversionService.addConverter(new StringToDurationConverter());
         conversionService.addConverter(new StringToInstantConverter());
         conversionService.addConverter(new StringToPatternConverter());
+        conversionService.addConverter(new StringToZonedDateTimeConverter());
 
         return conversionService;
     }

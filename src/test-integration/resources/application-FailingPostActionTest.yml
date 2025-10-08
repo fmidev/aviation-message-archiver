@@ -1,0 +1,5 @@
+production-line:
+  post-actions:
+    - name: FailingPostAction
+      config:
+        id: failing
