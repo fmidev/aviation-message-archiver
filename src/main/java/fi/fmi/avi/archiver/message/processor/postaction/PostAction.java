@@ -33,7 +33,7 @@ import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory;
  *     <li>
  *         Design your {@code PostAction} to be configurable. For simple post-actions constructed by
  *         {@link ReflectionObjectFactory}, inject mandatory configuration values as constructor parameters, ordered
- *         after mandatory dependencies of populator. Inject optional configuration values, that have a decent default
+ *         after mandatory dependencies of post-action. Inject optional configuration values, that have a decent default
  *         value, through Java bean setter methods. For post actions that require a more complex setup, implement your
  *         factory extending {@link AbstractTypedConfigObjectFactory}, which supports typed configuration interfaces.
  *     </li>
