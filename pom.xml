@@ -431,6 +431,7 @@
             <configuration>
               <classifier>${spring-boot.repackage.classifier}</classifier>
               <mainClass>fi.fmi.avi.archiver.AviationMessageArchiver</mainClass>
+              <attach>false</attach>
             </configuration>
           </execution>
         </executions>
