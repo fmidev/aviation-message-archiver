@@ -6,6 +6,8 @@ import fi.fmi.avi.archiver.message.processor.conditional.*;
 import fi.fmi.avi.archiver.message.processor.populator.BulletinHeadingSource;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +18,8 @@ import java.util.Map;
 
 @Configuration
 public class MessageProcessorConditionPropertyReaderConfig {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageProcessorConditionPropertyReaderConfig.class);
+
     private final ConfigurableApplicationContext applicationContext;
 
     public MessageProcessorConditionPropertyReaderConfig(final ConfigurableApplicationContext applicationContext) {
@@ -72,6 +76,7 @@ public class MessageProcessorConditionPropertyReaderConfig {
 
     private void register(final ConditionPropertyReader<?> conditionPropertyReader) {
         final String beanName = conditionPropertyReader.getClass().getSimpleName() + "." + conditionPropertyReader.getPropertyName();
+        LOGGER.debug("Registering singleton bean <{}>", beanName);
         applicationContext.getBeanFactory().registerSingleton(beanName, conditionPropertyReader);
     }
 }
