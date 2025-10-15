@@ -31,6 +31,18 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - ...
 
+## [v1.2.1] - 2025-10-13
+
+### Fixed
+
+- Spring configuration issues [c416349]
+
+## [v1.2.0] - 2025-10-09
+
+### Added
+
+- Ability to publish IWXXM messages to RabbitMQ AMQP 1.0 broker using a customizable post-action framework [#124]
+
 ## [v1.1.0] - 2024-02-07
 
 ### Added
@@ -73,3 +85,7 @@ Initial release.
 [#119]: https://github.com/fmidev/aviation-message-archiver/pull/119
 
 [#123]: https://github.com/fmidev/aviation-message-archiver/pull/123
+
+[#124]: https://github.com/fmidev/aviation-message-archiver/pull/124
+
+[c416349]: https://github.com/fmidev/aviation-message-archiver/commit/c416349a5481414b99d1740de35940b4f9e0267d
