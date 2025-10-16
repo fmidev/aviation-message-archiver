@@ -163,6 +163,7 @@ class SwimRabbitMQPublisherFactoryTest {
     private static void verifyDefaultQueueConfig(final TestSwimRabbitMQPublisherFactory factory) {
         verify(factory.queueSpecification).name(QUEUE);
         verify(factory.queueSpecification).type(Management.QueueType.CLASSIC);
+        verify(factory.queueSpecification).exclusive(false);
         verify(factory.queueSpecification).autoDelete(false);
         verify(factory.queueSpecification).arguments(Map.of());
         final InOrder queueSpecInOrder = inOrder(factory.queueSpecification);
@@ -385,6 +386,7 @@ class SwimRabbitMQPublisherFactoryTest {
                                 .name("aviation-message-archiver-test-queue1")
                                 .type(Management.QueueType.QUORUM)
                                 .autoDelete(true)
+                                .exclusive(true)
                                 .arguments(Map.of(
                                         "q-testarg-1", "q-testarg-1-value",
                                         "q-testarg-2", "q-testarg-2-value"
@@ -411,6 +413,7 @@ class SwimRabbitMQPublisherFactoryTest {
             verify(factory.queueSpecification).name(queueConfig.name());
             verify(factory.queueSpecification).type(queueConfig.type().orElseThrow());
             verify(factory.queueSpecification).autoDelete(queueConfig.autoDelete().orElseThrow());
+            verify(factory.queueSpecification).exclusive(queueConfig.exclusive().orElseThrow());
             verify(factory.queueSpecification).arguments(queueConfig.arguments().orElseThrow());
             final InOrder queueSpecInOrder = inOrder(factory.queueSpecification);
             queueSpecInOrder.verify(factory.queueSpecification).declare();

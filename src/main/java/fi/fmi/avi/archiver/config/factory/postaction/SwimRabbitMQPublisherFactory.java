@@ -169,6 +169,7 @@ public class SwimRabbitMQPublisherFactory
                 management.queue()
                         .name(queueConfig.name())
                         .type(queueConfig.type().orElse(Management.QueueType.CLASSIC))
+                        .exclusive(queueConfig.exclusive().orElse(false))
                         .autoDelete(queueConfig.autoDelete().orElse(false))
                         .arguments(queueConfig.arguments().orElse(Collections.emptyMap()))
                         .declare();
@@ -401,6 +402,8 @@ public class SwimRabbitMQPublisherFactory
             String name();
 
             Optional<Management.QueueType> type();
+
+            Optional<Boolean> exclusive();
 
             Optional<Boolean> autoDelete();
 
