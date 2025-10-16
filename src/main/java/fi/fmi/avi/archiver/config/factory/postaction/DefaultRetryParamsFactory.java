@@ -12,6 +12,7 @@ import org.springframework.retry.support.RetryTemplateBuilder;
 
 import javax.annotation.Nullable;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +25,8 @@ public class DefaultRetryParamsFactory implements RetryingPostActionFactories.Re
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRetryParamsFactory.class);
     private static final String WORKER_THREAD_SUFFIX = "-Worker";
 
-    private static RetryTemplate retryTemplate(final RetryingPostActionFactories.RetryConfig retryConfig, final String actionName) {
+    private static RetryTemplate retryTemplate(final RetryingPostActionFactories.RetryConfig retryConfig, final String actionName,
+                                               final List<Class<? extends Throwable>> retryOn) {
         final ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
         backOffPolicy.setInitialInterval(retryConfig.initialInterval().orElse(Duration.ofMillis(500)).toMillis());
         backOffPolicy.setMultiplier(retryConfig.multiplier().orElse(2));
@@ -37,6 +39,11 @@ public class DefaultRetryParamsFactory implements RetryingPostActionFactories.Re
         } else {
             retryTemplateBuilder.infiniteRetry();
         }
+
+        if (!retryOn.isEmpty()) {
+            retryTemplateBuilder.retryOn(retryOn);
+        }
+
         retryTemplateBuilder.withListener(new RetryLogger(actionName));
         return retryTemplateBuilder.build();
     }
@@ -65,15 +72,17 @@ public class DefaultRetryParamsFactory implements RetryingPostActionFactories.Re
 
     @Override
     public AbstractRetryingPostAction.RetryParams retryParams(
-            final RetryingPostActionFactories.RetryConfig config, final String actionName, final Duration actionTimeout, final int actionQueueCapacity) {
+            final RetryingPostActionFactories.RetryConfig config, final String actionName, final Duration actionTimeout,
+            final int actionQueueCapacity, final java.util.List<Class<? extends Throwable>> retryOn) {
         requireNonNull(config, "config");
         requireNonNull(actionName, "actionName");
         requireNonNull(actionTimeout, "actionTimeout");
+        requireNonNull(retryOn, "retryOn");
 
         return new AbstractRetryingPostAction.RetryParams(
                 actionExecutor(actionQueueCapacity, actionName),
                 actionTimeout,
-                retryTemplate(config, actionName));
+                retryTemplate(config, actionName, retryOn));
     }
 
     private static final class RetryLogger extends RetryListenerSupport {

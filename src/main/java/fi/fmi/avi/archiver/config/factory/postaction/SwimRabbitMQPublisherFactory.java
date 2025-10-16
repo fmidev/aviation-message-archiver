@@ -236,7 +236,8 @@ public class SwimRabbitMQPublisherFactory
 
         final SwimRabbitMQPublisher action = registerCloseable(newSwimRabbitMQPublisher(
                 retryParamsFactory.retryParams(config.retry(), getInstanceName(config.id()),
-                        config.publishTimeout().orElse(Duration.ofSeconds(30)), config.publisherQueueCapacity()),
+                        config.publishTimeout().orElse(Duration.ofSeconds(30)), config.publisherQueueCapacity(),
+                        Collections.singletonList(AmqpException.class)),
                 config.id(), publisher, publisherHealthIndicator,
                 toPublisherMessageConfig(config.id(), config.topology().exchange().name(),
                         config.message().orElse(null))));

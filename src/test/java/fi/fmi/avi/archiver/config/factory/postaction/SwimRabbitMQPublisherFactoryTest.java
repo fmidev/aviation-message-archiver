@@ -179,7 +179,6 @@ class SwimRabbitMQPublisherFactoryTest {
         bindingSpecInOrder.verifyNoMoreInteractions();
     }
 
-
     @BeforeEach
     void setUp() {
         openMocks = MockitoAnnotations.openMocks(this);
@@ -187,7 +186,8 @@ class SwimRabbitMQPublisherFactoryTest {
                 any(RetryingPostActionFactories.RetryConfig.class),
                 anyString(),
                 any(Duration.class),
-                anyInt())
+                anyInt(),
+                anyList())
         )
                 .thenAnswer(invocation ->
                 {
