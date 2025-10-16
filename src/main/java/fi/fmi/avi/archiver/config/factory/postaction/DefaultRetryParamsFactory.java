@@ -73,7 +73,7 @@ public class DefaultRetryParamsFactory implements RetryingPostActionFactories.Re
     @Override
     public AbstractRetryingPostAction.RetryParams retryParams(
             final RetryingPostActionFactories.RetryConfig config, final String actionName, final Duration actionTimeout,
-            final int actionQueueCapacity, final java.util.List<Class<? extends Throwable>> retryOn) {
+            final int actionQueueCapacity, final List<Class<? extends Throwable>> retryOn) {
         requireNonNull(config, "config");
         requireNonNull(actionName, "actionName");
         requireNonNull(actionTimeout, "actionTimeout");
