@@ -42,6 +42,7 @@ production-line:
             name: aviation-message-archiver-test-queue2
             type: CLASSIC
             auto-delete: true
+            exclusive: true
             arguments:
               q-testarg-1: q-testarg-1-value
               q-testarg-2: q-testarg-2-value
