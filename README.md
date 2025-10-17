@@ -161,7 +161,7 @@ using H2 (in-memory) or PostGIS database engine.
    java \
      -Dspring.profiles.active="local,example,$DB_ENGINE" \
      -Dspring.sql.init.data-locations="\${example.spring.sql.init.data-locations.$DB_ENGINE},file://$AVIDB_STATIONS_SQL" \
-     -jar target/aviation-message-archiver-1.2.2-SNAPSHOT-bundle.jar
+     -jar target/aviation-message-archiver-1.2.2-bundle.jar
    ```
 
 5. Check

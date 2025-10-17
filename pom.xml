@@ -9,7 +9,7 @@
 
   <groupId>fi.fmi.avi.archiver</groupId>
   <artifactId>aviation-message-archiver</artifactId>
-  <version>1.2.2-SNAPSHOT</version>
+  <version>1.2.2</version>
   <packaging>jar</packaging>
 
   <name>Aviation message archiver</name>
@@ -54,7 +54,7 @@
     <connection>${scm-url}</connection>
     <developerConnection>${scm-url}</developerConnection>
     <url>${scm-web-url}</url>
-    <tag>HEAD</tag>
+    <tag>aviation-message-archiver-1.2.2</tag>
   </scm>
 
   <properties>
