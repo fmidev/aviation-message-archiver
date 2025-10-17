@@ -31,6 +31,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - ...
 
+## [v1.2.2] - 2025-10-17
+
+### Added
+
+- Option to set the declared RabbitMQ AMQP 1.0 queue exclusive [#157]
+
+### Fixed
+
+- Retrying logic on AMQP exceptions [#156]
+
 ## [v1.2.1] - 2025-10-13
 
 ### Fixed
@@ -89,3 +99,7 @@ Initial release.
 [#124]: https://github.com/fmidev/aviation-message-archiver/pull/124
 
 [c416349]: https://github.com/fmidev/aviation-message-archiver/commit/c416349a5481414b99d1740de35940b4f9e0267d
+
+[#156]: https://github.com/fmidev/aviation-message-archiver/pull/156
+
+[#157]: https://github.com/fmidev/aviation-message-archiver/pull/157
