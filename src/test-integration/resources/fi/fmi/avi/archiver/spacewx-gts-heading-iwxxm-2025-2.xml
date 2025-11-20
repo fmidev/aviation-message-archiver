@@ -1,5 +1,5 @@
 LNXX01 YUDO 110715
-  <?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <iwxxm:SpaceWeatherAdvisory
   xmlns:iwxxm="http://icao.int/iwxxm/2025-2"
   xmlns:aixm="http://www.aixm.aero/schema/5.1.1"
