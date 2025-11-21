@@ -866,6 +866,29 @@ class AviationMessageArchiverTest {
                                 .build())
                         .build(), //
                 AviationMessageArchiverTestCase.builder()//
+                        .setName("IWXXM 2025-2 Space Weather Advisory")//
+                        .setProductName("test_iwxxm")//
+                        .setInputFileName("spacewx-gts-heading-iwxxm-2025-2.xml")//
+                        .setFileModified(Instant.parse("2020-11-08T00:30:00Z"))
+                        .addArchivedMessages(ArchiveAviationMessage.builder()
+                                .setMessageTime(Instant.parse("2020-11-08T01:00:00Z"))
+                                .setStationId(2)
+                                .setStationIcaoCode("YUDO")
+                                .setFormat(2)
+                                .setType(8)
+                                .setRoute(1)
+                                .setMessage(readResourceToString("spacewx-gts-heading-iwxxm-2025-2-message-1.xml"))
+                                .setHeading("LNXX01 YUDO 110715")
+                                .setValidFrom(Instant.parse("2020-11-08T01:00:00Z"))
+                                .setValidTo(Instant.parse("2020-11-09T01:00:00Z"))
+                                .setFileModified(Instant.parse("2020-11-08T00:30:00Z"))
+                                .setIWXXMDetails(ArchiveAviationMessageIWXXMDetails.builder()//
+                                        .setXMLNamespace("http://icao.int/iwxxm/2025-2")//
+                                        .build())
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
+                                .build())
+                        .build(), //
+                AviationMessageArchiverTestCase.builder()//
                         .setName("Discarded TAF")
                         .setProductName("test_taf_bulletin")
                         .setInputFileName("taf-tac-bulletin-discarded.bul")
