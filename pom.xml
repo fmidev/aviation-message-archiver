@@ -62,7 +62,7 @@
 
     <spring-boot.version>2.7.18</spring-boot.version>
     <auto-value.version>1.9</auto-value.version>
-    <guava.version>31.1-jre</guava.version>
+    <guava.version>32.0.0-jre</guava.version>
     <avidb-schema.version>1.0.0</avidb-schema.version>
     <netty4.version>4.2.6.Final</netty4.version>
 
