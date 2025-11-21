@@ -31,6 +31,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - ...
 
+## [v1.3.0] - 2025-11-21
+
+### Added
+
+- Ability to archive IWXXM 2025-2 Space Weather Advisories [#158]
+
 ## [v1.2.2] - 2025-10-17
 
 ### Added
@@ -78,7 +84,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Initial release.
 
-[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.1.1...HEAD
+[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.3.0...HEAD
+
+[v1.3.0]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.3.0
+
+[v1.2.2]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.2.2
+
+[v1.2.1]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.2.1
+
+[v1.2.0]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.2.0
 
 [v1.1.0]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.1.0
 
@@ -103,3 +117,5 @@ Initial release.
 [#156]: https://github.com/fmidev/aviation-message-archiver/pull/156
 
 [#157]: https://github.com/fmidev/aviation-message-archiver/pull/157
+
+[#158]: https://github.com/fmidev/aviation-message-archiver/pull/158/
