@@ -9,6 +9,7 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
 import fi.fmi.avi.model.AviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
+import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import org.inferred.freebuilder.FreeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,7 +180,10 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
         ApplicationProperty.CONFORMS_TO.set(amqpMessage, staticApplicationProperties.conformsTo(), messageType, loggingContext);
 
         ApplicationProperty.OBSERVATION_DATETIME.set(amqpMessage,
-                context.getInputMessage().getIwxxmObservationTime().map(RFC_3339_FORMAT::format).orElse(null),
+                context.getInputMessage().getMessage().getObservationTime()
+                        .flatMap(PartialOrCompleteTimeInstant::getCompleteTime)
+                        .map(RFC_3339_FORMAT::format)
+                        .orElse(null),
                 messageType, loggingContext);
         ApplicationProperty.START_DATETIME.set(amqpMessage,
                 archiveMessage.getValidFrom().map(RFC_3339_FORMAT::format).orElse(null),
