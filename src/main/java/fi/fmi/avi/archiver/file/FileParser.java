@@ -123,8 +123,6 @@ public class FileParser {
         return Collections.unmodifiableList(resultBuilder);
     }
 
-
-
     private Optional<String> getCollectIdentifier(final Document collectDocument) {
         try {
             return Optional.of(collectIdentifierExpression.evaluate(collectDocument.getDocumentElement()));
@@ -288,7 +286,6 @@ public class FileParser {
             }
         }
     }
-
 
     private List<InputAviationMessage> parseIwxxmCollectDocument(
             final InputAviationMessage.Builder inputBuilder,
