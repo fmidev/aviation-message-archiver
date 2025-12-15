@@ -8,6 +8,7 @@ import fi.fmi.avi.archiver.logging.model.NoOpLoggingContext;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
+import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -70,6 +72,13 @@ public class FileParserTest {
             fail(e);
             return null;
         }
+    }
+
+    private static OffsetDateTime getObservationTime(final InputAviationMessage message) {
+        return message.getMessage().getObservationTime()
+                .flatMap(PartialOrCompleteTimeInstant::getCompleteTime)
+                .map(ZonedDateTime::toOffsetDateTime)
+                .orElse(null);
     }
 
     @BeforeEach
@@ -372,7 +381,7 @@ public class FileParserTest {
         assertThat(result).hasSize(1);
 
         final InputAviationMessage msg = result.getFirst();
-        assertThat(msg.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2012-08-22T16:30:00Z"));
+        assertThat(getObservationTime(msg)).isEqualTo(OffsetDateTime.parse("2012-08-22T16:30:00Z"));
     }
 
     @Test
@@ -389,7 +398,7 @@ public class FileParserTest {
         assertThat(result).hasSize(1);
 
         final InputAviationMessage msg = result.getFirst();
-        assertThat(msg.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2025-09-04T10:15:00Z"));
+        assertThat(getObservationTime(msg)).isEqualTo(OffsetDateTime.parse("2025-09-04T10:15:00Z"));
     }
 
     @Test
@@ -406,7 +415,7 @@ public class FileParserTest {
         assertThat(result).hasSize(1);
 
         final InputAviationMessage msg = result.getFirst();
-        assertThat(msg.getIwxxmObservationTime()).isEmpty();
+        assertThat(getObservationTime(msg)).isNull();
     }
 
     @Test
@@ -423,7 +432,7 @@ public class FileParserTest {
         assertThat(result).hasSize(1);
 
         final InputAviationMessage msg = result.getFirst();
-        assertThat(msg.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2025-09-04T12:34:56Z"));
+        assertThat(getObservationTime(msg)).isEqualTo(OffsetDateTime.parse("2025-09-04T12:34:56Z"));
     }
 
     @Test
@@ -440,7 +449,7 @@ public class FileParserTest {
         assertThat(processingServiceContext.isProcessingErrors()).isFalse();
         assertThat(result).hasSize(3);
         assertThat(result)
-                .extracting(message -> message.getIwxxmObservationTime().orElse(null))
+                .extracting(FileParserTest::getObservationTime)
                 .containsExactlyInAnyOrder(
                         OffsetDateTime.parse("2025-09-04T10:00:00Z"),
                         OffsetDateTime.parse("2025-09-04T10:30:00Z"),
@@ -472,9 +481,9 @@ public class FileParserTest {
                 .filter(m -> m.getMessage().getMessageType().orElse(null) == MessageType.TAF)
                 .findFirst().orElseThrow();
 
-        assertThat(metar.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2025-09-04T15:00:00Z"));
-        assertThat(speci.getIwxxmObservationTime()).contains(OffsetDateTime.parse("2025-09-04T15:20:00Z"));
-        assertThat(taf.getIwxxmObservationTime()).isEmpty();
+        assertThat(getObservationTime(metar)).isEqualTo(OffsetDateTime.parse("2025-09-04T15:00:00Z"));
+        assertThat(getObservationTime(speci)).isEqualTo(OffsetDateTime.parse("2025-09-04T15:20:00Z"));
+        assertThat(getObservationTime(taf)).isNull();
     }
 
 }

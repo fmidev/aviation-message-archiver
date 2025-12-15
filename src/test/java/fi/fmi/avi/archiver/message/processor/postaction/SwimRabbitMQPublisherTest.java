@@ -15,6 +15,7 @@ import fi.fmi.avi.archiver.message.processor.TestMessageProcessorContext;
 import fi.fmi.avi.model.AviationWeatherMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
+import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import org.inferred.freebuilder.FreeBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -287,7 +288,6 @@ class SwimRabbitMQPublisherTest {
         return msgBuilder.buildPartial();
     }
 
-
     private static ArchiveAviationMessage createArchiveAviationMessage(final int type, final String content, final Instant messageTime) {
         return ArchiveAviationMessage.builder()
                 .setProcessingResult(ProcessingResult.OK)
@@ -306,9 +306,12 @@ class SwimRabbitMQPublisherTest {
                                                       @Nullable final OffsetDateTime observationTime) {
         final GenericAviationWeatherMessage message = mock(GenericAviationWeatherMessage.class);
         when(message.getReportStatus()).thenReturn(reportStatus);
+        when(message.getObservationTime()).thenReturn(
+                Optional.ofNullable(observationTime)
+                        .map(OffsetDateTime::toZonedDateTime)
+                        .map(PartialOrCompleteTimeInstant::of));
         final InputAviationMessage input =
                 InputAviationMessage.builder()
-                        .setNullableIwxxmObservationTime(observationTime)
                         .setMessage(message)
                         .buildPartial();
         return TestMessageProcessorContext.create(input);
