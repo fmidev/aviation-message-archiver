@@ -4,9 +4,6 @@ import fi.fmi.avi.archiver.message.MessagePositionInFile;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import org.inferred.freebuilder.FreeBuilder;
 
-import java.time.OffsetDateTime;
-import java.util.Optional;
-
 /**
  * Model representing content and metadata parsed from a file per message.
  */
@@ -34,12 +31,6 @@ public abstract class InputAviationMessage {
      */
     public abstract InputBulletinHeading getCollectIdentifier();
 
-    /**
-     * METAR/SPECI specific observation time parsed from IWXXM, if available.
-     *
-     * @return observation time or empty if not available
-     */
-    public abstract Optional<OffsetDateTime> getIwxxmObservationTime();
 
     /**
      * Return metadata of the file this message belongs to.

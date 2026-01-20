@@ -36,10 +36,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.StringReader;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.function.BiConsumer;
 
 import static java.util.Objects.requireNonNull;
 
@@ -60,34 +57,11 @@ public class FileParser {
     private static final String BULLETIN_ELEMENT_NAME = "MeteorologicalBulletin";
     private static final ConversionHints CONVERSION_HINTS = ConversionHints.ALLOW_ERRORS;
     private static final MessageType UNKNOWN_MESSAGE_TYPE = new MessageType("UNKNOWN");
-    private static final String IWXXM_NS_PREFIX = "://icao.int/iwxxm/";
-    private static final String GML_NS_PREFIX = "://www.opengis.net/gml/";
-    private static final String XPATH_OBSERVATION_TIME = String.format("""
-            normalize-space((
-              /*[
-                contains(namespace-uri(),'%1$s')
-                and (local-name()='METAR' or local-name()='SPECI')
-              ]
-              /*[
-                contains(namespace-uri(),'%1$s')
-                and local-name()='observationTime'
-              ]
-              /*[
-                contains(namespace-uri(),'%2$s')
-                and local-name()='TimeInstant'
-              ]
-              /*[
-                contains(namespace-uri(),'%2$s')
-                and local-name()='timePosition'
-              ]
-            )[1])
-            """, IWXXM_NS_PREFIX, GML_NS_PREFIX);
     private static final String XPATH_BULLETIN_IDENTIFIER = "/collect:MeteorologicalBulletin/collect:bulletinIdentifier";
 
     private final AviMessageConverter aviMessageConverter;
     private final DocumentBuilderFactory documentBuilderFactory;
     private final XPathExpression collectIdentifierExpression;
-    private final XPathExpression observationTimeExpression;
 
     public FileParser(final AviMessageConverter aviMessageConverter) {
         this.aviMessageConverter = requireNonNull(aviMessageConverter, "aviMessageConverter");
@@ -101,7 +75,6 @@ public class FileParser {
             final XPath xPath = xPathFactory.newXPath();
             xPath.setNamespaceContext(new IWXXMNamespaceContext());
             this.collectIdentifierExpression = xPath.compile(XPATH_BULLETIN_IDENTIFIER);
-            this.observationTimeExpression = xPath.compile(XPATH_OBSERVATION_TIME);
         } catch (final ParserConfigurationException | XPathExpressionException e) {
             throw new IllegalStateException("Unable to initialize file parser", e);
         }
@@ -133,17 +106,6 @@ public class FileParser {
             final List<GenericAviationWeatherMessage> parsedMessages,
             final int bulletinIndex,
             final LoggingContext loggingContext) {
-        return toInputAviationMessages(
-                inputBuilder, parsedMessages, bulletinIndex, loggingContext, (builder, message) -> {
-                });
-    }
-
-    private static List<InputAviationMessage> toInputAviationMessages(
-            final InputAviationMessage.Builder inputBuilder,
-            final List<GenericAviationWeatherMessage> parsedMessages,
-            final int bulletinIndex,
-            final LoggingContext loggingContext,
-            final BiConsumer<InputAviationMessage.Builder, GenericAviationWeatherMessage> customizer) {
         final ArrayList<InputAviationMessage> resultBuilder = new ArrayList<>(parsedMessages.size());
         for (int messageIndex = 0, size = parsedMessages.size(); messageIndex < size; messageIndex++) {
             final GenericAviationWeatherMessage message = parsedMessages.get(messageIndex);
@@ -155,16 +117,10 @@ public class FileParser {
                     .mergeFrom(inputBuilder)
                     .setMessagePositionInFile(MessagePositionInFile.getInstance(bulletinIndex, messageIndex))
                     .setMessage(message);
-            customizer.accept(builder, message);
             resultBuilder.add(builder.build());
             loggingContext.leaveMessage();
         }
         return Collections.unmodifiableList(resultBuilder);
-    }
-
-    private static boolean looksLikeMetarOrSpeci(final String messageXML) {
-        final String head = messageXML.substring(0, Math.min(messageXML.length(), 256));
-        return head.contains("METAR") || head.contains("SPECI");
     }
 
     private Optional<String> getCollectIdentifier(final Document collectDocument) {
@@ -331,26 +287,6 @@ public class FileParser {
         }
     }
 
-    /**
-     * Get observation time from iwxxm:observationTime element for SPECIs and METARs.
-     *
-     * @param document       DOM of a single IWXXM message (METAR/SPECI)
-     * @param loggingContext logging context
-     * @return observation time if found and parsed, empty otherwise
-     */
-    private Optional<OffsetDateTime> getObservationTimeFromIwxxm(final Document document,
-                                                                 final LoggingContext loggingContext) {
-        try {
-            final String observationTime = observationTimeExpression.evaluate(document);
-            if (!observationTime.isBlank()) {
-                return Optional.of(OffsetDateTime.parse(observationTime));
-            }
-        } catch (final XPathExpressionException | DateTimeParseException e) {
-            LOGGER.warn("Failed to extract observationTime from <{}>", loggingContext, e);
-        }
-        return Optional.empty();
-    }
-
     private List<InputAviationMessage> parseIwxxmCollectDocument(
             final InputAviationMessage.Builder inputBuilder,
             final Document iwxxmDocument,
@@ -379,21 +315,7 @@ public class FileParser {
                     .setBulletinHeading(bulletin.getHeading())
                     .setBulletinHeadingString(collectIdentifier)
                     .build());
-            return toInputAviationMessages(
-                    inputBuilder,
-                    parsedMessages,
-                    bulletinIndex,
-                    loggingContext,
-                    (builder, message) -> {
-                        if (looksLikeMetarOrSpeci(message.getOriginalMessage())) {
-                            try {
-                                builder.setIwxxmObservationTime(getObservationTimeFromIwxxm(toDocument(message.getOriginalMessage()), loggingContext));
-                            } catch (final Exception e) {
-                                LOGGER.warn("Failed to create a DOM for extracting observationTime from <{}>", loggingContext, e);
-                            }
-                        }
-                    }
-            );
+            return toInputAviationMessages(inputBuilder, parsedMessages, bulletinIndex, loggingContext);
         } else {
             LOGGER.error("Unable to parse IWXXM collect document <{}>: {}", loggingContext, conversion.getConversionIssues());
             loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
@@ -417,17 +339,7 @@ public class FileParser {
             } else {
                 LOGGER.debug("Successfully parsed <{}> as IWXXM {} message.", loggingContext, message.getMessageType().orElse(UNKNOWN_MESSAGE_TYPE));
             }
-            return toInputAviationMessages(
-                    inputBuilder,
-                    Collections.singletonList(message),
-                    bulletinIndex,
-                    loggingContext,
-                    (builder, gm) -> {
-                        if (looksLikeMetarOrSpeci(message.getOriginalMessage())) {
-                            builder.setIwxxmObservationTime(getObservationTimeFromIwxxm(iwxxmDocument, loggingContext));
-                        }
-                    }
-            );
+            return toInputAviationMessages(inputBuilder, Collections.singletonList(message), bulletinIndex, loggingContext);
         } else {
             LOGGER.error("Unable to parse IWXXM message document <{}>: {}", loggingContext, conversion.getConversionIssues());
             loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
