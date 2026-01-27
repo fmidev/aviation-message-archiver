@@ -102,18 +102,30 @@ class SwimRabbitMQPublisherTest {
 
     static Stream<Arguments> ignores_message_cases() {
         return Stream.of(
-                arguments("Not IWXXM", ArchiveAviationMessage.builder()
-                        .setProcessingResult(ProcessingResult.OK)
-                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
-                        .setFormat(FORMAT_TAC)
-                        .setType(MESSAGE_TYPE_TAF)
-                        .buildPartial()),
-                arguments("Unsupported type", ArchiveAviationMessage.builder()
-                        .setProcessingResult(ProcessingResult.OK)
-                        .setArchivalStatus(ArchivalStatus.ARCHIVED)
-                        .setFormat(FORMAT_IWXXM)
-                        .setType(MESSAGE_TYPE_UNSUPPORTED)
-                        .buildPartial())
+                arguments("Not IWXXM",
+                        newContext(),
+                        ArchiveAviationMessage.builder()
+                                .setProcessingResult(ProcessingResult.OK)
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
+                                .setFormat(FORMAT_TAC)
+                                .setType(MESSAGE_TYPE_TAF)
+                                .buildPartial()),
+                arguments("Unsupported type",
+                        newContext(),
+                        ArchiveAviationMessage.builder()
+                                .setProcessingResult(ProcessingResult.OK)
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
+                                .setFormat(FORMAT_IWXXM)
+                                .setType(MESSAGE_TYPE_UNSUPPORTED)
+                                .buildPartial()),
+                arguments("Nil message",
+                        newContextWithNilMessage(),
+                        ArchiveAviationMessage.builder()
+                                .setProcessingResult(ProcessingResult.OK)
+                                .setArchivalStatus(ArchivalStatus.ARCHIVED)
+                                .setFormat(FORMAT_IWXXM)
+                                .setType(MESSAGE_TYPE_TAF)
+                                .buildPartial())
         );
     }
 
@@ -321,6 +333,17 @@ class SwimRabbitMQPublisherTest {
         return newContext(AviationWeatherMessage.ReportStatus.NORMAL, null);
     }
 
+    private static MessageProcessorContext newContextWithNilMessage() {
+        final GenericAviationWeatherMessage message = mock(GenericAviationWeatherMessage.class);
+        when(message.getReportStatus()).thenReturn(AviationWeatherMessage.ReportStatus.NORMAL);
+        when(message.isNil()).thenReturn(true);
+        final InputAviationMessage input =
+                InputAviationMessage.builder()
+                        .setMessage(message)
+                        .buildPartial();
+        return TestMessageProcessorContext.create(input);
+    }
+
     @BeforeEach
     void setUp() {
         openMocks = MockitoAnnotations.openMocks(this);
@@ -346,9 +369,10 @@ class SwimRabbitMQPublisherTest {
 
     @ParameterizedTest
     @MethodSource("ignores_message_cases")
-    void test_ignores_message(final String ignoredDescription, final ArchiveAviationMessage archiveAviationMessage) throws Exception {
+    void test_ignores_message(final String ignoredDescription, final MessageProcessorContext context,
+                              final ArchiveAviationMessage archiveAviationMessage) throws Exception {
         try (final SwimRabbitMQPublisher publisher = newPublisher(Clock.systemUTC(), SwimRabbitMQPublisher.MessageConfig.builder().buildPartial())) {
-            publisher.run(newContext(), archiveAviationMessage);
+            publisher.run(context, archiveAviationMessage);
         }
         verifyNoInteractions(publisher);
     }
