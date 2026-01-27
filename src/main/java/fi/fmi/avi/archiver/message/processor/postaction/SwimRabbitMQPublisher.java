@@ -113,6 +113,11 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
             return CompletableFuture.completedFuture(null);
         }
 
+        if (context.getInputMessage().getMessage().isNil()) {
+            LOGGER.debug("Message <{}> is a nil message. Skipping.", loggingContext);
+            return CompletableFuture.completedFuture(null);
+        }
+
         final Message amqpMessage = constructAmqpMessage(message, context);
         final CompletableFuture<Publisher.Context> future = new CompletableFuture<>();
         amqpPublisher.publish(amqpMessage, publisherContext -> {
