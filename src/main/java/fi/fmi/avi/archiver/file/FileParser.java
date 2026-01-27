@@ -9,11 +9,11 @@ import fi.fmi.avi.archiver.message.MessagePositionInFile;
 import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.converter.ConversionHints;
 import fi.fmi.avi.converter.ConversionResult;
-import fi.fmi.avi.converter.iwxxm.IWXXMNamespaceContext;
 import fi.fmi.avi.converter.iwxxm.conf.IWXXMConverter;
 import fi.fmi.avi.converter.tac.conf.TACConverter;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
+import fi.fmi.avi.model.bulletin.BulletinHeading;
 import fi.fmi.avi.model.bulletin.GenericMeteorologicalBulletin;
 import fi.fmi.avi.util.BulletinHeadingDecoder;
 import fi.fmi.avi.util.GTSDataExchangeTranscoder;
@@ -30,10 +30,6 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.*;
@@ -42,12 +38,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Parses raw aviation message file content into structured {@link InputAviationMessage} instances.
- *
- * <h4>Thread safety</h4>
- * <p>
- * This class is <strong>not thread-safe</strong>. It holds compiled {@link XPathExpression}s and calls evaluate on them.
- * Standard JAXP XPath implementations are not thread-safe.
- * </p>
  */
 public class FileParser {
 
@@ -57,11 +47,9 @@ public class FileParser {
     private static final String BULLETIN_ELEMENT_NAME = "MeteorologicalBulletin";
     private static final ConversionHints CONVERSION_HINTS = ConversionHints.ALLOW_ERRORS;
     private static final MessageType UNKNOWN_MESSAGE_TYPE = new MessageType("UNKNOWN");
-    private static final String XPATH_BULLETIN_IDENTIFIER = "/collect:MeteorologicalBulletin/collect:bulletinIdentifier";
 
     private final AviMessageConverter aviMessageConverter;
     private final DocumentBuilderFactory documentBuilderFactory;
-    private final XPathExpression collectIdentifierExpression;
 
     public FileParser(final AviMessageConverter aviMessageConverter) {
         this.aviMessageConverter = requireNonNull(aviMessageConverter, "aviMessageConverter");
@@ -70,12 +58,7 @@ public class FileParser {
             documentBuilderFactory.setNamespaceAware(true);
             documentBuilderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
             this.documentBuilderFactory = documentBuilderFactory;
-
-            final XPathFactory xPathFactory = XPathFactory.newInstance();
-            final XPath xPath = xPathFactory.newXPath();
-            xPath.setNamespaceContext(new IWXXMNamespaceContext());
-            this.collectIdentifierExpression = xPath.compile(XPATH_BULLETIN_IDENTIFIER);
-        } catch (final ParserConfigurationException | XPathExpressionException e) {
+        } catch (final ParserConfigurationException e) {
             throw new IllegalStateException("Unable to initialize file parser", e);
         }
     }
@@ -123,13 +106,6 @@ public class FileParser {
         return Collections.unmodifiableList(resultBuilder);
     }
 
-    private Optional<String> getCollectIdentifier(final Document collectDocument) {
-        try {
-            return Optional.of(collectIdentifierExpression.evaluate(collectDocument.getDocumentElement()));
-        } catch (final XPathExpressionException e) {
-            return Optional.empty();
-        }
-    }
 
     public List<InputAviationMessage> parse(final String fileContent, final FileMetadata fileMetadata, final ProcessingServiceContext context) {
         requireNonNull(fileContent, "fileContent");
@@ -304,7 +280,8 @@ public class FileParser {
             } else {
                 LOGGER.warn("Issues while parsing IWXXM collect document <{}>: {}", loggingContext, conversion.getConversionIssues());
             }
-            final Optional<String> collectIdentifier = getCollectIdentifier(iwxxmDocument);
+            final BulletinHeading heading = bulletin.getHeading();
+            final Optional<String> collectIdentifier = heading.getOriginalCollectIdentifier();
             if (collectIdentifier.isEmpty()) {
                 LOGGER.warn("IWXXM collect document <{}> is missing bulletinIdentifier.", loggingContext);
             } else if (inputBuilder.getGtsBulletinHeadingBuilder().getBulletinHeadingString().isEmpty()) {
@@ -312,7 +289,7 @@ public class FileParser {
             }
 
             inputBuilder.setCollectIdentifier(InputBulletinHeading.builder()
-                    .setBulletinHeading(bulletin.getHeading())
+                    .setBulletinHeading(heading)
                     .setBulletinHeadingString(collectIdentifier)
                     .build());
             return toInputAviationMessages(inputBuilder, parsedMessages, bulletinIndex, loggingContext);
