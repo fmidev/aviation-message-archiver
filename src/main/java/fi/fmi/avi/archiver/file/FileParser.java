@@ -13,7 +13,6 @@ import fi.fmi.avi.converter.iwxxm.conf.IWXXMConverter;
 import fi.fmi.avi.converter.tac.conf.TACConverter;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
-import fi.fmi.avi.model.bulletin.BulletinHeading;
 import fi.fmi.avi.model.bulletin.GenericMeteorologicalBulletin;
 import fi.fmi.avi.util.BulletinHeadingDecoder;
 import fi.fmi.avi.util.GTSDataExchangeTranscoder;
@@ -280,8 +279,7 @@ public class FileParser {
             } else {
                 LOGGER.warn("Issues while parsing IWXXM collect document <{}>: {}", loggingContext, conversion.getConversionIssues());
             }
-            final BulletinHeading heading = bulletin.getHeading();
-            final Optional<String> collectIdentifier = heading.getOriginalCollectIdentifier();
+            final Optional<String> collectIdentifier = bulletin.getCollectIdentifier();
             if (collectIdentifier.isEmpty()) {
                 LOGGER.warn("IWXXM collect document <{}> is missing bulletinIdentifier.", loggingContext);
             } else if (inputBuilder.getGtsBulletinHeadingBuilder().getBulletinHeadingString().isEmpty()) {
@@ -289,7 +287,7 @@ public class FileParser {
             }
 
             inputBuilder.setCollectIdentifier(InputBulletinHeading.builder()
-                    .setBulletinHeading(heading)
+                    .setBulletinHeading(bulletin.getHeading())
                     .setBulletinHeadingString(collectIdentifier)
                     .build());
             return toInputAviationMessages(inputBuilder, parsedMessages, bulletinIndex, loggingContext);
