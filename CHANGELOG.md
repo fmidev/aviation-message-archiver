@@ -31,6 +31,22 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - ...
 
+## [v1.4.0] - 2026-02-13
+
+### Added
+
+- Added support for archiving all IWXXM versions starting from 2.1.0. This enables support for future versions too, 
+  unless there are significant schema changes.
+
+### Changed
+
+- METAR/SPECI observation time is now obtained directly from the `GenericAviationWeatherMessage` model [#159]
+- Collect identifier is now obtained directly from the `MeteorologicalBulletin` model [#162]
+
+### Fixed
+
+- AMQP publication now ignores nil messages gracefully [#161]
+
 ## [v1.3.0] - 2025-11-21
 
 ### Added
@@ -84,7 +100,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Initial release.
 
-[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.3.0...HEAD
+[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.4.0...HEAD
+
+[v1.4.0]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.4.0
 
 [v1.3.0]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.3.0
 
@@ -118,4 +136,10 @@ Initial release.
 
 [#157]: https://github.com/fmidev/aviation-message-archiver/pull/157
 
-[#158]: https://github.com/fmidev/aviation-message-archiver/pull/158/
+[#158]: https://github.com/fmidev/aviation-message-archiver/pull/158
+
+[#159]: https://github.com/fmidev/aviation-message-archiver/pull/159
+
+[#161]: https://github.com/fmidev/aviation-message-archiver/pull/161
+
+[#162]: https://github.com/fmidev/aviation-message-archiver/pull/162
