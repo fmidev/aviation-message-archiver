@@ -187,8 +187,7 @@ class SwimRabbitMQPublisherFactoryTest {
                 any(RetryingPostActionFactories.RetryConfig.class),
                 anyString(),
                 any(Duration.class),
-                anyInt(),
-                anyList())
+                anyInt())
         )
                 .thenAnswer(invocation ->
                 {
