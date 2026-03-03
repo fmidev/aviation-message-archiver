@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.rabbitmq.client.amqp.AmqpException;
 import com.rabbitmq.client.amqp.Message;
 import com.rabbitmq.client.amqp.Publisher;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
@@ -31,7 +30,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
-import org.springframework.retry.support.RetryTemplateBuilder;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
@@ -259,14 +257,6 @@ class SwimRabbitMQPublisherTest {
         return new AbstractRetryingPostAction.RetryParams(MoreExecutors.newDirectExecutorService(), Duration.ofSeconds(30), retryTemplate);
     }
 
-    private static AbstractRetryingPostAction.RetryParams amqpExceptionRetryParams(final int maxAttempts) {
-        final RetryTemplate retryTemplate = new RetryTemplateBuilder()
-                .maxAttempts(maxAttempts)
-                .retryOn(AmqpException.class)
-                .build();
-        return new AbstractRetryingPostAction.RetryParams(MoreExecutors.newDirectExecutorService(), Duration.ofSeconds(30), retryTemplate);
-    }
-
     private static SwimRabbitMQPublisher.MessageConfig createMessageConfig(
             final SwimRabbitMQPublisher.ContentEncoding encoding, final Duration expiryTime) {
         return SwimRabbitMQPublisher.MessageConfig.builder()
@@ -491,7 +481,7 @@ class SwimRabbitMQPublisherTest {
     @Test
     void amqp_rejected_status_is_retried() throws Exception {
         final int succeedOn = 3;
-        final AbstractRetryingPostAction.RetryParams retryParams = amqpExceptionRetryParams(5);
+        final AbstractRetryingPostAction.RetryParams retryParams = retryParams(5);
         final String content = readResource("taf-message.xml");
 
         final AtomicInteger attempts = new AtomicInteger();
@@ -514,14 +504,18 @@ class SwimRabbitMQPublisherTest {
     }
 
     @Test
-    void amqp_released_status_is_not_retried() throws Exception {
-        final AbstractRetryingPostAction.RetryParams retryParams = amqpExceptionRetryParams(5);
+    void amqp_released_status_is_retried() throws Exception {
+        final int succeedOn = 2;
+        final AbstractRetryingPostAction.RetryParams retryParams = retryParams(5);
         final String content = readResource("taf-message.xml");
 
+        final AtomicInteger attempts = new AtomicInteger();
         when(publisher.message(any(byte[].class))).thenReturn(amqpMessage);
         doAnswer(invocation -> {
             final Publisher.Callback callback = invocation.getArgument(1);
-            callback.handle(new TestPublisherContext(amqpMessage, Publisher.Status.RELEASED, null));
+            callback.handle(attempts.incrementAndGet() < succeedOn
+                    ? new TestPublisherContext(amqpMessage, Publisher.Status.RELEASED, null)
+                    : new TestPublisherContext(amqpMessage, Publisher.Status.ACCEPTED, null));
             return null;
         }).when(publisher).publish(any(Message.class), any(Publisher.Callback.class));
 
@@ -530,7 +524,8 @@ class SwimRabbitMQPublisherTest {
             publisher.run(newContext(), createArchiveAviationMessage(MESSAGE_TYPE_TAF, content, NOW));
         }
 
-        verify(publisher, times(1)).publish(any(Message.class), any(Publisher.Callback.class));
+        verify(publisher, times(succeedOn)).publish(any(Message.class), any(Publisher.Callback.class));
+        assertThat(attempts.get()).isEqualTo(succeedOn);
     }
 
     private SwimRabbitMQPublisher newPublisher(final Clock clock, final SwimRabbitMQPublisher.MessageConfig config) {

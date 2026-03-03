@@ -1,7 +1,6 @@
 package fi.fmi.avi.archiver.message.processor.postaction;
 
 import com.google.common.collect.ImmutableSet;
-import com.rabbitmq.client.amqp.AmqpException;
 import com.rabbitmq.client.amqp.Message;
 import com.rabbitmq.client.amqp.Publisher;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
@@ -202,7 +201,7 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
     }
 
     @Override
-    public void checkResult(@Nullable final Publisher.Context result, final ReadableLoggingContext loggingContext) {
+    public void checkResult(@Nullable final Publisher.Context result, final ReadableLoggingContext loggingContext) throws Exception {
         requireNonNull(loggingContext, "loggingContext");
         if (result == null) {
             return;
@@ -212,16 +211,13 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
             return;
         }
         final Throwable failure = result.failureCause();
+        if (failure instanceof final Exception exception) {
+            throw exception;
+        }
         if (failure instanceof final Error error) {
             throw error;
         }
-        if (failure instanceof final AmqpException amqpException) {
-            throw amqpException;
-        }
-        if (result.status() == Publisher.Status.REJECTED) {
-            throw new AmqpException("AMQP publish failed with status REJECTED", failure);
-        }
-        throw new IllegalStateException("AMQP publish failed with status " + result.status(), failure);
+        throw new IllegalStateException("AMQP publish failed with status " + result.status());
     }
 
     public enum ApplicationProperty {
