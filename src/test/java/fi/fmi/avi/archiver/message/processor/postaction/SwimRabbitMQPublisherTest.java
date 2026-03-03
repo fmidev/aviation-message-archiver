@@ -478,6 +478,56 @@ class SwimRabbitMQPublisherTest {
         verify(publisher, times(maxAttempts)).publish(any(Message.class), any(Publisher.Callback.class));
     }
 
+    @Test
+    void amqp_rejected_status_is_retried() throws Exception {
+        final int succeedOn = 3;
+        final AbstractRetryingPostAction.RetryParams retryParams = retryParams(5);
+        final String content = readResource("taf-message.xml");
+
+        final AtomicInteger attempts = new AtomicInteger();
+        when(publisher.message(any(byte[].class))).thenReturn(amqpMessage);
+        doAnswer(invocation -> {
+            final Publisher.Callback callback = invocation.getArgument(1);
+            callback.handle(attempts.incrementAndGet() < succeedOn
+                    ? new TestPublisherContext(amqpMessage, Publisher.Status.REJECTED, new RuntimeException("fail"))
+                    : new TestPublisherContext(amqpMessage, Publisher.Status.ACCEPTED, null));
+            return null;
+        }).when(publisher).publish(any(Message.class), any(Publisher.Callback.class));
+
+        try (final SwimRabbitMQPublisher publisher = newPublisher(Clock.systemUTC(),
+                SwimRabbitMQPublisher.MessageConfig.builder().setExchange(RABBITMQ_EXCHANGE).build(), retryParams)) {
+            publisher.run(newContext(), createArchiveAviationMessage(MESSAGE_TYPE_TAF, content, NOW));
+        }
+
+        verify(publisher, times(succeedOn)).publish(any(Message.class), any(Publisher.Callback.class));
+        assertThat(attempts.get()).isEqualTo(succeedOn);
+    }
+
+    @Test
+    void amqp_released_status_is_retried() throws Exception {
+        final int succeedOn = 2;
+        final AbstractRetryingPostAction.RetryParams retryParams = retryParams(5);
+        final String content = readResource("taf-message.xml");
+
+        final AtomicInteger attempts = new AtomicInteger();
+        when(publisher.message(any(byte[].class))).thenReturn(amqpMessage);
+        doAnswer(invocation -> {
+            final Publisher.Callback callback = invocation.getArgument(1);
+            callback.handle(attempts.incrementAndGet() < succeedOn
+                    ? new TestPublisherContext(amqpMessage, Publisher.Status.RELEASED, null)
+                    : new TestPublisherContext(amqpMessage, Publisher.Status.ACCEPTED, null));
+            return null;
+        }).when(publisher).publish(any(Message.class), any(Publisher.Callback.class));
+
+        try (final SwimRabbitMQPublisher publisher = newPublisher(Clock.systemUTC(),
+                SwimRabbitMQPublisher.MessageConfig.builder().setExchange(RABBITMQ_EXCHANGE).build(), retryParams)) {
+            publisher.run(newContext(), createArchiveAviationMessage(MESSAGE_TYPE_TAF, content, NOW));
+        }
+
+        verify(publisher, times(succeedOn)).publish(any(Message.class), any(Publisher.Callback.class));
+        assertThat(attempts.get()).isEqualTo(succeedOn);
+    }
+
     private SwimRabbitMQPublisher newPublisher(final Clock clock, final SwimRabbitMQPublisher.MessageConfig config) {
         return newPublisher(clock, config, retryParams(10));
     }
