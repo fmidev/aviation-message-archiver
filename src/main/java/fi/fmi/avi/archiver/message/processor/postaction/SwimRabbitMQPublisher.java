@@ -215,6 +215,9 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
         if (failure instanceof final Error error) {
             throw error;
         }
+        if (failure instanceof final AmqpException amqpException) {
+            throw amqpException;
+        }
         if (result.status() == Publisher.Status.REJECTED) {
             throw new AmqpException("AMQP publish failed with status REJECTED", failure);
         }
