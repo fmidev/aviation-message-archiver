@@ -160,7 +160,8 @@ spring:
       # Maximum time in seconds to wait while connecting to a database.
       login-timeout: 40
       # Maximum time in milliseconds to wait for a connection from the pool.
-      connection-timeout: 20000
+      # Use zero to wait indefinitely (Integer.MAX_VALUE milliseconds in practice).
+      connection-timeout: 0
       # Maximum time in milliseconds that the pool will wait for an alive connection.
       validation-timeout: 5000
       # Pool initialization failure timeout in milliseconds.
