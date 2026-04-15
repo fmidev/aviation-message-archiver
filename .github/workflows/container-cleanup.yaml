@@ -20,15 +20,16 @@ jobs:
         uses: dataaxiom/ghcr-cleanup-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          package: ${{ github.event.repository.name }}
           delete-untagged: true
           delete-partial-images: true
           older-than: 7 days
           keep-n-tagged: 10
           use-regex: true
           exclude-tags: |
-            latest
-            main
-            \d+(\.\d+)*
+            ^latest$
+            ^main$
+            ^\d+(\.\d+)*$
 
   cleanup-old-releases:
     name: Delete old release container images
@@ -41,7 +42,8 @@ jobs:
         uses: dataaxiom/ghcr-cleanup-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          delete-tags: \d+(\.\d+)*
+          package: ${{ github.event.repository.name }}
+          delete-tags: ^\d+(\.\d+)*$
           use-regex: true
           keep-n-tagged: 20
 
