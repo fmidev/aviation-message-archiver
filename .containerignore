@@ -1,0 +1,23 @@
+# Ignore build output
+target/
+
+# Ignore IDE files
+*.iml
+.idea/
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# Ignore Git
+.git/
+.gitignore
+
+# Ignore documentation
+*.md
+LICENSE
+
+# Ignore local configuration
+*.local
+
