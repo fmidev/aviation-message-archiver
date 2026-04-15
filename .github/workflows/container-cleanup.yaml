@@ -1,0 +1,34 @@
+name: Clean up old container images
+
+on:
+  # TODO: Remove push trigger before merging to main
+  push:
+    branches: [ SDM-2796-containerization ]
+  schedule:
+    # Run weekly on Tuesday at 01:26 UTC
+    - cron: '26 1 * * 2'
+  workflow_dispatch:
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup:
+    name: Delete old pre-release container images
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Delete old pre-release container images
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          delete-untagged: true
+          delete-partial-images: true
+          older-than: 7 days
+          keep-n-tagged: 10
+          exclude-tags: |
+            latest
+            main
+
+
