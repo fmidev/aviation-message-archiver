@@ -10,8 +10,8 @@ permissions:
   packages: write
 
 jobs:
-  cleanup-pre-releases:
-    name: Delete old pre-release container images
+  cleanup-images:
+    name: Delete old container images
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -31,13 +31,6 @@ jobs:
             ^main$
             ^\d+(\.\d+)*$
 
-  cleanup-old-releases:
-    name: Delete old release container images
-    needs: cleanup-pre-releases
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
       - name: Delete old release container images
         uses: dataaxiom/ghcr-cleanup-action@v1
         with:
@@ -46,5 +39,3 @@ jobs:
           delete-tags: ^\d+(\.\d+)*$
           use-regex: true
           keep-n-tagged: 20
-
-
