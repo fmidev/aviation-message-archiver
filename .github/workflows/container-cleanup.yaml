@@ -1,0 +1,31 @@
+name: Clean up old container images
+
+on:
+  schedule:
+    # Run weekly on Tuesday at 01:26 UTC
+    - cron: '26 1 * * 2'
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup-images:
+    name: Delete old container images
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Delete old pre-release container images
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          package: ${{ github.event.repository.name }}
+          delete-untagged: true
+          delete-partial-images: true
+          older-than: 7 days
+          keep-n-tagged: 10
+          use-regex: true
+          exclude-tags: |
+            ^latest$
+            ^main$
+            ^\d+(\.\d+)*$
