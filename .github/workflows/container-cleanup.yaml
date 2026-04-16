@@ -29,12 +29,3 @@ jobs:
             ^latest$
             ^main$
             ^\d+(\.\d+)*$
-
-      - name: Delete old release container images
-        uses: dataaxiom/ghcr-cleanup-action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          package: ${{ github.event.repository.name }}
-          delete-tags: ^\d+(\.\d+)*$
-          use-regex: true
-          keep-n-tagged: 20
