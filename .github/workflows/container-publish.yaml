@@ -2,8 +2,7 @@ name: Build and publish container image
 
 on:
   push:
-    # TODO: Remove SDM-2796-containerization branch before merging to main
-    branches: [ main, SDM-2796-containerization ]
+    branches: [ main ]
     tags: [ 'v*' ]
 
 permissions:
