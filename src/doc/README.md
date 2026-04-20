@@ -56,6 +56,12 @@ message files. Whenever new files appear, it scans for messages in files, parses
         - [Activation operator and operand](#activation-operator-and-operand)
         - [Identifier mappings](#identifier-mappings)
         - [Spring Boot configuration properties](#spring-boot-configuration-properties)
+- [Container deployment](#container-deployment)
+    - [Container image](#container-image)
+    - [Containerfile](#containerfile)
+    - [Configuration mounting](#configuration-mounting)
+    - [Docker Compose / Podman Compose](#docker-compose--podman-compose)
+    - [Podman Quadlet (systemd, rootless)](#podman-quadlet-systemd-rootless)
 - [License](#license)
 
 ## Feature overview
@@ -709,11 +715,11 @@ chain.
 ### Post-actions
 
 [Post-actions](src/main/java/fi/fmi/avi/archiver/message/processor/postaction/PostAction.java) are components that
-execute a single action after the message has been archived in the database. Post-actions are **not** applied on 
-messages that were _discarded_ or _failed_ in an earlier message processing phase 
+execute a single action after the message has been archived in the database. Post-actions are **not** applied on
+messages that were _discarded_ or _failed_ in an earlier message processing phase
 (e.g. [message population phase](#message-populators)). In other words, only messages that have been stored successfully
 in the database either as _archived_ or _rejected_ will be processed by post-actions. The input file is marked as
-finished only after all post-actions have finished (with success or failure) on all messages of the file. Post-actions 
+finished only after all post-actions have finished (with success or failure) on all messages of the file. Post-actions
 cannot change the final processing status (_archived_, _rejected_, _failed_) of an input file.
 
 The following characteristics are unspecified, and current implementation may change any time without a prior notice.
@@ -851,7 +857,7 @@ requirements.
           (re-)establishing the connection.
 
           The account used to connect to the broker must have privileges to create such topology elements. When
-          the value is set to `NONE`, no topology elements will be created. In this case the configured exchange must 
+          the value is set to `NONE`, no topology elements will be created. In this case the configured exchange must
           exist for publishing to succeed. The broker must also route the message to at least one queue, otherwise the
           broker will respond with [RELEASED status](https://www.rabbitmq.com/docs/amqp#outcomes), which is considered
           a publication failure leading to retries. An easy way to always have a queue to route to is to configure a
@@ -1335,6 +1341,108 @@ for more information on these. Some of related sections are:
 - [Graceful Shutdown](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/web.html#web.graceful-shutdown)
     - [Timeout property](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase)
 - [Actuator Endpoints](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/actuator.html#actuator.endpoints)
+
+## Container deployment
+
+The application is distributed as a container image that can be run using Podman, Docker or a container orchestrator
+such as Kubernetes.
+
+### Container image
+
+Pre-built images are available at:
+
+```
+ghcr.io/fmidev/aviation-message-archiver
+```
+
+### Building the image
+
+```shell
+podman build -t aviation-message-archiver .
+```
+
+### Configuration mounting
+
+Spring Boot automatically loads configuration from a `config/` subdirectory relative to the working directory.
+Since the working directory is `/app`, mount your configuration files to `/app/config/`.
+
+### Docker/Podman Compose
+
+`compose.yaml`:
+
+```yaml
+services:
+  aviation-message-archiver:
+    image: ghcr.io/fmidev/aviation-message-archiver:${project.version}
+    container_name: aviation-message-archiver
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: "h2,example"
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
+    volumes:
+      # Application configuration
+      - ./config:/app/config:ro,z
+      # Data directory matching production-line.directory.root in application.yml
+      - ./archiver-data:/data:z
+    # Secrets can be provided via a profile-specific config file in the config mount:
+    #   config/application-example.yml
+    # Or via environment variables:
+    #   SPRING_DATASOURCE_URL: "jdbc:postgresql://db:5432/avidb"
+    #   SPRING_DATASOURCE_USERNAME: "avidb_agent"
+    #   SPRING_DATASOURCE_PASSWORD: "secret"
+```
+
+### Podman Quadlet (systemd, rootless)
+
+`~/.config/containers/systemd/aviation-message-archiver.container`:
+
+```ini
+# Podman Quadlet container unit for aviation-message-archiver (rootless).
+#
+# Installation:
+#   1. Copy this file to ~/.config/containers/systemd/
+#   2. Create configuration directory and add your application.yml:
+#      mkdir -p ~/.config/aviation-message-archiver/config
+#      cp your-application.yml ~/.config/aviation-message-archiver/config/application.yml
+#   3. Reload and start:
+#      systemctl --user daemon-reload
+#      systemctl --user start aviation-message-archiver
+
+[Unit]
+Description=Aviation Message Archiver
+
+[Container]
+Image=ghcr.io/fmidev/aviation-message-archiver:${project.version}
+ContainerName=aviation-message-archiver
+
+# Spring profiles and config location
+Environment=SPRING_PROFILES_ACTIVE=h2,example
+Environment=JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0
+
+# Application configuration
+Volume=%h/.config/aviation-message-archiver/config:/app/config:ro,z
+
+# Data directory matching production-line.directory.root in application.yml
+Volume=%h/.local/share/aviation-message-archiver/data:/data
+
+# Secrets can be provided via a profile-specific config file in the config mount:
+#   config/application-example.yml
+# Or via environment variables:
+# Environment=SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/avidb
+# Environment=SPRING_DATASOURCE_USERNAME=avidb_agent
+# Environment=SPRING_DATASOURCE_PASSWORD=secret
+
+PublishPort=8080:8080
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target
+```
 
 ## License
 
