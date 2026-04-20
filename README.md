@@ -60,8 +60,8 @@ message files. Whenever new files appear, it scans for messages in files, parses
     - [Container image](#container-image)
     - [Containerfile](#containerfile)
     - [Configuration mounting](#configuration-mounting)
-    - [Podman / Docker run](#podman--docker-run)
-    - [Docker Compose / Podman Compose](#docker-compose--podman-compose)
+    - [Docker/Podman run](#dockerpodman-run)
+    - [Docker/Podman Compose](#dockerpodman-compose)
     - [Podman Quadlet (systemd, rootless)](#podman-quadlet-systemd-rootless)
 - [License](#license)
 
@@ -1367,7 +1367,7 @@ podman build -t aviation-message-archiver .
 Spring Boot automatically loads configuration from a `config/` subdirectory relative to the working directory.
 Since the working directory is `/app`, mount your configuration files to `/app/config/`.
 
-### Podman / Docker run
+### Docker/Podman run
 
 ```shell
 podman run -d \
