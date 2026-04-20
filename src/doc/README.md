@@ -120,7 +120,7 @@ using H2 (in-memory) or PostGIS database engine.
     - **PostGIS:** Database is easily set up with Podman or Docker. Use credentials specified by `spring.datasource.*`
       properties in the [application.yml] configuration for profile `local & postgresql & !openshift`.
       ```shell
-      podman run --rm \
+      podman run \
         -p 127.0.0.1:5432:5432 \
         --env POSTGRES_USER=avidb_agent \
         --env POSTGRES_PASSWORD=secret \
