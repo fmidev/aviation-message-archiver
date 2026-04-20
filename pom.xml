@@ -309,6 +309,8 @@
                   <directory>src/doc</directory>
                   <includes>
                     <include>README.md</include>
+                    <include>compose.yaml</include>
+                    <include>aviation-message-archiver.container</include>
                   </includes>
                   <filtering>true</filtering>
                 </resource>
@@ -408,6 +410,13 @@
                   <replacement>main</replacement>
                   <failIfNoMatch>false</failIfNoMatch>
                 </regexPropertySetting>
+                <regexPropertySetting>
+                  <name>application.image.tag</name>
+                  <value>${project.version}</value>
+                  <regex>^.*-SNAPSHOT$</regex>
+                  <replacement>main</replacement>
+                  <failIfNoMatch>false</failIfNoMatch>
+                </regexPropertySetting>
               </regexPropertySettings>
             </configuration>
           </execution>
@@ -423,8 +432,8 @@
             Generate documentation and include it in SCM. Requires plugin version >=3.
             https://stackoverflow.com/a/68687685
           -->
-          <preparationGoals>validate resources:copy-resources@readme scm:add -Dincludes=README.md</preparationGoals>
-          <completionGoals>validate resources:copy-resources@readme scm:add -Dincludes=README.md</completionGoals>
+          <preparationGoals>validate resources:copy-resources@readme scm:add -Dincludes=README.md,compose.yaml,aviation-message-archiver.container</preparationGoals>
+          <completionGoals>validate resources:copy-resources@readme scm:add -Dincludes=README.md,compose.yaml,aviation-message-archiver.container</completionGoals>
         </configuration>
       </plugin>
 

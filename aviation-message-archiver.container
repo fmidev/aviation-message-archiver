@@ -1,0 +1,35 @@
+[Unit]
+Description=Aviation Message Archiver
+
+[Container]
+Image=ghcr.io/fmidev/aviation-message-archiver:main
+ContainerName=aviation-message-archiver
+
+# Spring profiles
+Environment=SPRING_PROFILES_ACTIVE=h2,local,example
+# Use JAVA_OPTS_APPEND to pass additional JVM options without overriding defaults:
+# Environment=JAVA_OPTS_APPEND=-Dsome.property=value
+
+# Application configuration
+Volume=%h/.config/aviation-message-archiver/config:/app/config:ro,z
+
+# Data directory matching production-line.directory.root in application.yml
+Volume=%h/.local/share/aviation-message-archiver/data:/data
+
+# Secrets can be provided via a profile-specific config file in the config mount:
+#   config/application-example.yml
+# Or via environment variables:
+# Environment=SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/avidb
+# Environment=SPRING_DATASOURCE_USERNAME=avidb_agent
+# Environment=SPRING_DATASOURCE_PASSWORD=secret
+
+PublishPort=8080:8080
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target
+
+

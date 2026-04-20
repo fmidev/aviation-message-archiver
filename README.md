@@ -56,13 +56,6 @@ message files. Whenever new files appear, it scans for messages in files, parses
         - [Activation operator and operand](#activation-operator-and-operand)
         - [Identifier mappings](#identifier-mappings)
         - [Spring Boot configuration properties](#spring-boot-configuration-properties)
-- [Container deployment](#container-deployment)
-    - [Container image](#container-image)
-    - [Containerfile](#containerfile)
-    - [Configuration mounting](#configuration-mounting)
-    - [Docker/Podman run](#dockerpodman-run)
-    - [Docker/Podman Compose](#dockerpodman-compose)
-    - [Podman Quadlet (systemd, rootless)](#podman-quadlet-systemd-rootless)
 - [License](#license)
 
 ## Feature overview
@@ -121,19 +114,13 @@ Supported message types and formats are listed in the table below. Generally, th
 The next steps guide you to test the application with example [configuration](#application-configuration)
 using H2 (in-memory) or PostGIS database engine.
 
-1. After cloning the code repository, build the application with [Maven](https://maven.apache.org/).
-
-   ```shell
-   mvn package
-   ```
-
-2. Set up the database engine.
+1. Set up the database engine.
 
     - **H2:** is automatically set up at application startup, no actions needed.
-    - **PostGIS:** Database is easily set up with Docker or Podman. Use credentials specified by `spring.datasource.*`
+    - **PostGIS:** Database is easily set up with Podman or Docker. Use credentials specified by `spring.datasource.*`
       properties in the [application.yml] configuration for profile `local & postgresql & !openshift`.
       ```shell
-      docker run \
+      podman run --rm \
         -p 127.0.0.1:5432:5432 \
         --env POSTGRES_USER=avidb_agent \
         --env POSTGRES_PASSWORD=secret \
@@ -158,34 +145,79 @@ using H2 (in-memory) or PostGIS database engine.
       and [postgresql-data/example/avidb_stations.sql](src/main/resources/postgresql-data/example/avidb_stations.sql)
       for an insertion template.
 
-4. Start the application. Replace
+3. Start the application.
 
-    - `$AVIDB_STATIONS_SQL` with a path to the file created in previous step, or omit
-      the `spring.sql.init.data-locations` property.
-    - `$DB_ENGINE` with `h2` or `postgresql`.
+   The recommended way to run the application is using a container. Pre-built images are available at
+   `ghcr.io/fmidev/aviation-message-archiver`. You can also build the image yourself:
 
    ```shell
+   podman build --omit-history -t aviation-message-archiver .
+   ```
+
+   Spring Boot automatically loads configuration from a `config/` subdirectory relative to the working directory. See
+   [Externalized Configuration](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/features.html#features.external-config)
+   for details. Since the container working directory is `/app`, mount your configuration files to `/app/config/`.
+
+   The container image sets `JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"` by default. To pass additional JVM options
+   without overriding this, you can use the `JAVA_OPTS_APPEND` environment variable.
+
+   **Docker/Podman run:**
+
+   ```shell
+   podman run -d \
+     --name aviation-message-archiver \
+     -p 8080:8080 \
+     -e SPRING_PROFILES_ACTIVE="h2,local,example" \
+     -v ./config:/app/config:ro,z \
+     -v ./archiver-data:/data:z \
+     ghcr.io/fmidev/aviation-message-archiver:main
+   ```
+
+   **Docker/Podman Compose:** see [compose.yaml] for an example Compose configuration.
+
+   **Podman Quadlet (systemd, rootless):** see [aviation-message-archiver.container] for an example unit descriptor.
+   To install it:
+
+   1. Copy the file to `~/.config/containers/systemd/`
+   2. Create configuration directory and add your `application.yml`:
+      ```shell
+      mkdir -p ~/.config/aviation-message-archiver/config
+      cp your-application.yml ~/.config/aviation-message-archiver/config/application.yml
+      ```
+   3. Reload and start:
+      ```shell
+      systemctl --user daemon-reload
+      systemctl --user start aviation-message-archiver
+      ```
+
+   **Running from source:** alternatively, you can build and run directly from source.
+   Build with [Maven](https://maven.apache.org/), then run the JAR. Replace `$AVIDB_STATIONS_SQL` with a path to
+   the file created in the previous step (or omit the `spring.sql.init.data-locations` property), and `$DB_ENGINE`
+   with `h2` or `postgresql`.
+
+   ```shell
+   mvn package
    java \
      -Dspring.profiles.active="local,example,$DB_ENGINE" \
      -Dspring.sql.init.data-locations="\${example.spring.sql.init.data-locations.$DB_ENGINE},file://$AVIDB_STATIONS_SQL" \
      -jar target/aviation-message-archiver-1.4.1-SNAPSHOT-bundle.jar
    ```
 
-5. Check
-   some [actuator endpoints](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/actuator.html#actuator.endpoints)
-   to see that the application is running and healthy.
+4. Check
+   the [actuator endpoints](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/actuator.html#actuator.endpoints)
+   to verify the application is running and healthy.
 
     - info: <http://localhost:8080/actuator/info>
     - health: <http://localhost:8080/actuator/health>
 
-6. Copy some message files in the input directories specified by the `production-line.products[n].input-dir` properties
+5. Copy some message files in the input directories specified by the `production-line.products[n].input-dir` properties
    in the [application.yml] configuration file.
 
-7. After an input file is processed, the application moves it to one of target directories specified by
+6. After an input file is processed, the application moves it to one of target directories specified by
    the `production-line.products[n].archive-dir` and `production-line.products[n].fail-dir` properties in
    the [application.yml] configuration file. The processing identifier is appended to the file name.
 
-8. Connect to the database.
+7. Connect to the database.
 
     - **H2:** You can access the H2 database console at <http://localhost:8080/h2-console/login.jsp> with default
       connection settings and credentials.
@@ -1343,123 +1375,11 @@ for more information on these. Some of related sections are:
     - [Timeout property](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase)
 - [Actuator Endpoints](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/actuator.html#actuator.endpoints)
 
-## Container deployment
-
-The application is distributed as a container image that can be run using Podman, Docker or a container orchestrator
-such as Kubernetes.
-
-### Container image
-
-Pre-built images are available at:
-
-```
-ghcr.io/fmidev/aviation-message-archiver
-```
-
-### Building the image
-
-```shell
-podman build --omit-history -t aviation-message-archiver .
-```
-
-### Configuration mounting
-
-Spring Boot automatically loads configuration from a `config/` subdirectory relative to the working directory.
-Since the working directory is `/app`, mount your configuration files to `/app/config/`.
-
-### Docker/Podman run
-
-```shell
-podman run -d \
-  --name aviation-message-archiver \
-  -p 8080:8080 \
-  -e SPRING_PROFILES_ACTIVE="h2,example" \
-  -e JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0" \
-  -v ./config:/app/config:ro,z \
-  -v ./archiver-data:/data:z \
-  ghcr.io/fmidev/aviation-message-archiver:1.4.1-SNAPSHOT
-```
-
-### Docker/Podman Compose
-
-`compose.yaml`:
-
-```yaml
-services:
-  aviation-message-archiver:
-    image: ghcr.io/fmidev/aviation-message-archiver:1.4.1-SNAPSHOT
-    container_name: aviation-message-archiver
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: "h2,example"
-      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75.0"
-    volumes:
-      # Application configuration
-      - ./config:/app/config:ro,z
-      # Data directory matching production-line.directory.root in application.yml
-      - ./archiver-data:/data:z
-    # Secrets can be provided via a profile-specific config file in the config mount:
-    #   config/application-example.yml
-    # Or via environment variables:
-    #   SPRING_DATASOURCE_URL: "jdbc:postgresql://db:5432/avidb"
-    #   SPRING_DATASOURCE_USERNAME: "avidb_agent"
-    #   SPRING_DATASOURCE_PASSWORD: "secret"
-```
-
-### Podman Quadlet (systemd, rootless)
-
-`~/.config/containers/systemd/aviation-message-archiver.container`:
-
-```ini
-# Podman Quadlet container unit for aviation-message-archiver (rootless).
-#
-# Installation:
-#   1. Copy this file to ~/.config/containers/systemd/
-#   2. Create configuration directory and add your application.yml:
-#      mkdir -p ~/.config/aviation-message-archiver/config
-#      cp your-application.yml ~/.config/aviation-message-archiver/config/application.yml
-#   3. Reload and start:
-#      systemctl --user daemon-reload
-#      systemctl --user start aviation-message-archiver
-
-[Unit]
-Description=Aviation Message Archiver
-
-[Container]
-Image=ghcr.io/fmidev/aviation-message-archiver:1.4.1-SNAPSHOT
-ContainerName=aviation-message-archiver
-
-# Spring profiles and config location
-Environment=SPRING_PROFILES_ACTIVE=h2,example
-Environment=JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0
-
-# Application configuration
-Volume=%h/.config/aviation-message-archiver/config:/app/config:ro,z
-
-# Data directory matching production-line.directory.root in application.yml
-Volume=%h/.local/share/aviation-message-archiver/data:/data
-
-# Secrets can be provided via a profile-specific config file in the config mount:
-#   config/application-example.yml
-# Or via environment variables:
-# Environment=SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/avidb
-# Environment=SPRING_DATASOURCE_USERNAME=avidb_agent
-# Environment=SPRING_DATASOURCE_PASSWORD=secret
-
-PublishPort=8080:8080
-
-[Service]
-Restart=on-failure
-TimeoutStartSec=120
-
-[Install]
-WantedBy=default.target
-```
 
 ## License
 
 MIT License. See [LICENSE](LICENSE).
 
 [application.yml]: src/main/resources/application.yml
+[compose.yaml]: compose.yaml
+[aviation-message-archiver.container]: aviation-message-archiver.container
