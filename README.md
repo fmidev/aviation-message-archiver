@@ -161,7 +161,7 @@ using H2 (in-memory) or PostGIS database engine.
    The container image sets `JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"` by default. To pass additional JVM options
    without overriding this, you can use the `JAVA_OPTS_APPEND` environment variable.
 
-   **Docker/Podman run:**
+   **Podman/Docker run:**
 
    ```shell
    podman run -d \
@@ -173,7 +173,7 @@ using H2 (in-memory) or PostGIS database engine.
      ghcr.io/fmidev/aviation-message-archiver:main
    ```
 
-   **Docker/Podman Compose:** see [compose.yaml] for an example Compose configuration.
+   **Compose:** see [compose.yaml] for an example Compose configuration.
 
    **Podman Quadlet (systemd, rootless):** see [aviation-message-archiver.container] for an example unit descriptor.
    To install it:
