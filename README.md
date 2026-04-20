@@ -1359,7 +1359,7 @@ ghcr.io/fmidev/aviation-message-archiver
 ### Building the image
 
 ```shell
-podman build -t aviation-message-archiver .
+podman build --omit-history -t aviation-message-archiver .
 ```
 
 ### Configuration mounting
