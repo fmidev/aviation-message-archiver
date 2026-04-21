@@ -132,7 +132,7 @@ using H2 (in-memory) or PostGIS database engine.
         --env POSTGRES_PASSWORD=secret \
         --env POSTGRES_DB=avidb \
         --name avidb \
-        docker.io/postgis/postgis:14-3.5
+        docker.io/postgis/postgis:latest
       ```
 
    In the `local` mode used in this guide, the application will automatically initialize
