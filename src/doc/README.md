@@ -22,6 +22,12 @@ message files. Whenever new files appear, it scans for messages in files, parses
 - [Feature overview](#feature-overview)
     - [Supported message types and formats](#supported-message-types-and-formats)
 - [Getting started](#getting-started)
+- [Running the application](#running-the-application)
+    - [Container image](#container-image)
+    - [Podman / Docker run](#podman--docker-run)
+    - [Compose](#compose)
+    - [Podman Quadlet (systemd)](#podman-quadlet-systemd)
+    - [Running from source](#running-from-source)
 - [Logging](#logging)
     - [Processing identifier and phase](#processing-identifier-and-phase)
     - [Processing context](#processing-context)
@@ -132,7 +138,7 @@ using H2 (in-memory) or PostGIS database engine.
    In the `local` mode used in this guide, the application will automatically initialize
    the [schema](https://github.com/fmidev/avidb-schema) at startup.
 
-3. Prepare an SQL script to populate the `avidb_stations` table. This is optional for testing the application, but all
+2. Prepare an SQL script to populate the `avidb_stations` table. This is optional for testing the application, but all
    messages will be rejected without a matching location indicator in the `icao` column of `avidb_stations` table.
 
     - **H2:**
@@ -145,63 +151,8 @@ using H2 (in-memory) or PostGIS database engine.
       and [postgresql-data/example/avidb_stations.sql](src/main/resources/postgresql-data/example/avidb_stations.sql)
       for an insertion template.
 
-3. Start the application.
-
-   The recommended way to run the application is using a container. Pre-built images are available at
-   `ghcr.io/fmidev/aviation-message-archiver`. You can also build the image yourself:
-
-   ```shell
-   podman build --omit-history -t aviation-message-archiver .
-   ```
-
-   Spring Boot automatically loads configuration from a `config/` subdirectory relative to the working directory. See
-   [Externalized Configuration](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.external-config)
-   for details. Since the container working directory is `/app`, mount your configuration files to `/app/config/`.
-
-   The container image sets `JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"` by default. To pass additional JVM options
-   without overriding this, you can use the `JAVA_OPTS_APPEND` environment variable.
-
-   **Podman/Docker run:**
-
-   ```shell
-   podman run \
-     --name aviation-message-archiver \
-     -p 8080:8080 \
-     -e SPRING_PROFILES_ACTIVE="h2,local,example" \
-     -v ./config:/app/config:ro,z \
-     -v ./data:/data:z \
-     ghcr.io/fmidev/aviation-message-archiver:${application.image.tag}
-   ```
-
-   **Compose:** see [compose.yaml] for an example Compose configuration.
-
-   **Podman Quadlet (systemd, rootless):** see [aviation-message-archiver.container] for an example unit descriptor.
-   To install it:
-
-   1. Copy the file to `~/.config/containers/systemd/`
-   2. Create configuration directory and add your `application.yml`:
-      ```shell
-      mkdir -p ~/.config/aviation-message-archiver/config
-      cp your-application.yml ~/.config/aviation-message-archiver/config/application.yml
-      ```
-   3. Reload and start:
-      ```shell
-      systemctl --user daemon-reload
-      systemctl --user start aviation-message-archiver
-      ```
-
-   **Running from source:** alternatively, you can build and run directly from source.
-   Build with [Maven](https://maven.apache.org/), then run the JAR. Replace `$AVIDB_STATIONS_SQL` with a path to
-   the file created in the previous step (or omit the `spring.sql.init.data-locations` property), and `$DB_ENGINE`
-   with `h2` or `postgresql`.
-
-   ```shell
-   mvn package
-   java \
-     -Dspring.profiles.active="local,example,$DB_ENGINE" \
-     -Dspring.sql.init.data-locations="\${example.spring.sql.init.data-locations.$DB_ENGINE},file://$AVIDB_STATIONS_SQL" \
-     -jar target/${project.build.finalName}-${spring-boot.repackage.classifier}.jar
-   ```
+3. Start the application. See [Running the application](#running-the-application) below for detailed instructions
+   on different deployment methods.
 
 4. Check
    the [actuator endpoints](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/actuator.html#actuator.endpoints)
@@ -236,6 +187,73 @@ using H2 (in-memory) or PostGIS database engine.
                       ON r_iwxxm.rejected_message_id = r_messages.rejected_message_id
    ORDER BY message_time DESC;
    ```
+
+## Running the application
+
+The recommended way to run the application is using a container. Pre-built images are available at
+`ghcr.io/fmidev/aviation-message-archiver`. Spring Boot automatically loads configuration from a `config/` subdirectory
+relative to the working directory. See
+[Externalized Configuration](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.external-config)
+for details. Since the container working directory is `/app`, mount your configuration files to `/app/config/`.
+
+The container image sets `JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"` by default. To pass additional JVM options
+without overriding this, you can use the `JAVA_OPTS_APPEND` environment variable.
+
+### Container image
+
+You can use the pre-built image from `ghcr.io/fmidev/aviation-message-archiver`, or build it yourself:
+
+```shell
+podman build --omit-history -t aviation-message-archiver .
+```
+
+### Podman / Docker run
+
+```shell
+podman run \
+  --name aviation-message-archiver \
+  -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE="h2,local,example" \
+  -v ./config:/app/config:ro,z \
+  -v ./data:/data:z \
+  ghcr.io/fmidev/aviation-message-archiver:${application.image.tag}
+```
+
+### Compose
+
+See [compose.yaml] for an example Compose configuration.
+
+### Podman Quadlet (systemd)
+
+See [aviation-message-archiver.container] for an example Podman Quadlet unit descriptor (rootless). To install it:
+
+1. Copy the file to `~/.config/containers/systemd/`
+2. Create configuration directory and add your `application.yml`:
+   ```shell
+   mkdir -p ~/.config/aviation-message-archiver/config
+   cp your-application.yml ~/.config/aviation-message-archiver/config/application.yml
+   ```
+3. Reload and start:
+   ```shell
+   systemctl --user daemon-reload
+   systemctl --user start aviation-message-archiver
+   ```
+
+### Running from source
+
+Alternatively, you can build and run directly from source. Build
+with [Maven](https://maven.apache.org/), then run the JAR. Replace `$AVIDB_STATIONS_SQL` with a path to the file
+created in the [Getting started](#getting-started) step (or omit the `spring.sql.init.data-locations` property),
+and `$DB_ENGINE` with `h2` or `postgresql`.
+
+```shell
+mvn package
+java \
+  -Dspring.profiles.active="local,example,$DB_ENGINE" \
+  -Dspring.sql.init.data-locations="\${example.spring.sql.init.data-locations.$DB_ENGINE},file://$AVIDB_STATIONS_SQL" \
+  -jar target/${project.build.finalName}-${spring-boot.repackage.classifier}.jar
+```
+
 
 ## Logging
 
