@@ -1,7 +1,7 @@
 <!-- Generated - DO NOT EDIT! Instead, edit sources under src/doc directory. -->
 <!--
   After editing the source file or changing pom.xml, run at project root:
-  mvn validate resources:copy-resources@readme
+  mvn validate resources:copy-resources@docs
 -->
 
 # Aviation Message Archiver <!-- omit from toc -->
@@ -126,7 +126,7 @@ using H2 (in-memory) or PostGIS database engine.
         --env POSTGRES_PASSWORD=secret \
         --env POSTGRES_DB=avidb \
         --name avidb \
-        docker.io/postgis/postgis:14-3.2
+        docker.io/postgis/postgis:14-3.5
       ```
 
    In the `local` mode used in this guide, the application will automatically initialize
@@ -164,12 +164,12 @@ using H2 (in-memory) or PostGIS database engine.
    **Podman/Docker run:**
 
    ```shell
-   podman run -d \
+   podman run \
      --name aviation-message-archiver \
      -p 8080:8080 \
      -e SPRING_PROFILES_ACTIVE="h2,local,example" \
      -v ./config:/app/config:ro,z \
-     -v ./archiver-data:/data:z \
+     -v ./data:/data:z \
      ghcr.io/fmidev/aviation-message-archiver:main
    ```
 

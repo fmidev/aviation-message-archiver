@@ -1,3 +1,8 @@
+# Generated - DO NOT EDIT! Instead, edit sources under src/doc directory.
+#
+# After editing the source file or changing pom.xml, run at project root:
+#   mvn validate resources:copy-resources@docs
+
 [Unit]
 Description=Aviation Message Archiver
 
@@ -14,10 +19,11 @@ Environment=SPRING_PROFILES_ACTIVE=h2,local,example
 Volume=%h/.config/aviation-message-archiver/config:/app/config:ro,z
 
 # Data directory matching production-line.directory.root in application.yml
-Volume=%h/.local/share/aviation-message-archiver/data:/data
+Volume=%h/.local/share/aviation-message-archiver/data:/data:z
 
-# Secrets can be provided via a profile-specific config file in the config mount:
+# Secrets can be provided via a profile-specific config file in the config mount
 #   config/application-example.yml
+#   config/secrets/application-example.yml
 # Or via environment variables:
 # Environment=SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/avidb
 # Environment=SPRING_DATASOURCE_USERNAME=avidb_agent

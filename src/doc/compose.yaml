@@ -1,3 +1,8 @@
+# ${doc.msg.generated}
+#
+# After editing the source file or changing pom.xml, run at project root:
+#   mvn validate resources:copy-resources@docs
+
 services:
   aviation-message-archiver:
     image: ghcr.io/fmidev/aviation-message-archiver:${application.image.tag}
@@ -16,6 +21,7 @@ services:
       - ./data:/data:z
     # Secrets can be provided via a profile-specific config file in the config mount:
     #   config/application-example.yml
+    #   config/secrets/application-example.yml
     # Or via environment variables:
     #   SPRING_DATASOURCE_URL: "jdbc:postgresql://localhost:5432/avidb"
     #   SPRING_DATASOURCE_USERNAME: "avidb_agent"
