@@ -132,7 +132,7 @@ using H2 (in-memory) or PostGIS database engine.
         --env POSTGRES_PASSWORD=secret \
         --env POSTGRES_DB=avidb \
         --name avidb \
-        docker.io/postgis/postgis:14-3.5
+        docker.io/postgis/postgis:latest
       ```
 
    In the `local` mode used in this guide, the application will automatically initialize
@@ -209,11 +209,16 @@ podman build --omit-history -t aviation-message-archiver .
 
 ### Podman / Docker run
 
+Replace `$DB_ENGINE` with `h2` or `postgresql`. To populate the `avidb_stations` table with custom data, mount
+the SQL file created in the [Getting started](#getting-started) step and add the `spring.sql.init.data-locations`
+property in the mounted [application.yml] configuration file. See the
+[Running from source](#running-from-source) example for the property value format.
+
 ```shell
 podman run \
   --name aviation-message-archiver \
   -p 8080:8080 \
-  -e SPRING_PROFILES_ACTIVE="h2,local,example" \
+  -e SPRING_PROFILES_ACTIVE="$DB_ENGINE,local,example" \
   -v ./config:/app/config:ro,z \
   -v ./data:/data:z \
   ghcr.io/fmidev/aviation-message-archiver:main
@@ -249,7 +254,7 @@ and `$DB_ENGINE` with `h2` or `postgresql`.
 ```shell
 mvn package
 java \
-  -Dspring.profiles.active="local,example,$DB_ENGINE" \
+  -Dspring.profiles.active="$DB_ENGINE,local,example" \
   -Dspring.sql.init.data-locations="\${example.spring.sql.init.data-locations.$DB_ENGINE},file://$AVIDB_STATIONS_SQL" \
   -jar target/aviation-message-archiver-1.4.1-SNAPSHOT-bundle.jar
 ```
