@@ -125,8 +125,6 @@ and a PostGIS database.
 1. Set up the database. Use credentials specified by `spring.datasource.*` properties in the [application.yml] 
    configuration for profile `local & postgresql & !openshift`.
 
-   <a id="getting-started-podman-run"></a>
-
    ```shell
    podman run \
      -p 127.0.0.1:5432:5432 \
