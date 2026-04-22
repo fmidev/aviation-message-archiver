@@ -11,7 +11,7 @@ Image=ghcr.io/fmidev/aviation-message-archiver:${application.image.tag}
 ContainerName=aviation-message-archiver
 
 # Spring profiles
-Environment=SPRING_PROFILES_ACTIVE=h2,local,example
+Environment=SPRING_PROFILES_ACTIVE=postgresql,local,example
 # Use JAVA_OPTS_APPEND to pass additional JVM options without overriding defaults:
 # Environment=JAVA_OPTS_APPEND=-Dsome.property=value
 

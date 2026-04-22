@@ -11,7 +11,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: "h2,local,example"
+      SPRING_PROFILES_ACTIVE: "postgresql,local,example"
       # Use JAVA_OPTS_APPEND to pass additional JVM options without overriding defaults:
       # JAVA_OPTS_APPEND: "-Dsome.property=value"
     volumes:
