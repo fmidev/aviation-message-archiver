@@ -196,7 +196,8 @@ and a PostGIS database.
 ## Running the application
 
 The recommended way to run the application is using a container. Pre-built images are available at
-`ghcr.io/fmidev/aviation-message-archiver`. Spring Boot automatically loads configuration from a `config/` subdirectory
+[`ghcr.io/fmidev/aviation-message-archiver`](https://ghcr.io/fmidev/aviation-message-archiver). Spring Boot 
+automatically loads configuration from a `config/` subdirectory
 relative to the working directory. See
 [Externalized Configuration](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.external-config)
 for details. Since the container working directory is `/app`, mount your configuration files to `/app/config/`.
@@ -206,7 +207,8 @@ without overriding this, you can use the `JAVA_OPTS_APPEND` environment variable
 
 ### Container image
 
-You can use the pre-built image from `ghcr.io/fmidev/aviation-message-archiver`, or build it yourself:
+You can use the pre-built image from [`ghcr.io/fmidev/aviation-message-archiver`](https://ghcr.io/fmidev/aviation-message-archiver), 
+or build it yourself:
 
 ```shell
 podman build --omit-history -t aviation-message-archiver .
