@@ -1,7 +1,7 @@
 <!-- Generated - DO NOT EDIT! Instead, edit sources under src/doc directory. -->
 <!--
   After editing the source file or changing pom.xml, run at project root:
-  mvn validate resources:copy-resources@readme
+  mvn validate resources:copy-resources@docs
 -->
 
 # Aviation Message Archiver <!-- omit from toc -->
@@ -22,6 +22,12 @@ message files. Whenever new files appear, it scans for messages in files, parses
 - [Feature overview](#feature-overview)
     - [Supported message types and formats](#supported-message-types-and-formats)
 - [Getting started](#getting-started)
+- [Running the application](#running-the-application)
+    - [Container image](#container-image)
+    - [Podman / Docker run](#podman--docker-run)
+    - [Compose](#compose)
+    - [Podman Quadlet (systemd)](#podman-quadlet-systemd)
+    - [Running from source](#running-from-source)
 - [Logging](#logging)
     - [Processing identifier and phase](#processing-identifier-and-phase)
     - [Processing context](#processing-context)
@@ -56,6 +62,8 @@ message files. Whenever new files appear, it scans for messages in files, parses
         - [Activation operator and operand](#activation-operator-and-operand)
         - [Identifier mappings](#identifier-mappings)
         - [Spring Boot configuration properties](#spring-boot-configuration-properties)
+- [Development](#development)
+    - [H2 database](#h2-database)
 - [License](#license)
 
 ## Feature overview
@@ -74,7 +82,7 @@ message files. Whenever new files appear, it scans for messages in files, parses
     - A single message (not recommended for TAC messages)
 - Supported database engines:
     - [PostGIS](https://postgis.net/) ([PostgreSQL](https://www.postgresql.org/))
-    - [H2](https://h2database.com/) (for testing)
+    - [H2](https://h2database.com/) (for development)
 - Traceable [logging](#logging). Support for structured JSON logging.
 - Built on [Spring Boot](https://spring.io/projects/spring-boot)
   and [Spring Integration](https://spring.io/projects/spring-integration).
@@ -111,80 +119,67 @@ Supported message types and formats are listed in the table below. Generally, th
 
 ## Getting started
 
-The next steps guide you to test the application with example [configuration](#application-configuration)
-using H2 (in-memory) or PostGIS database engine.
+The next steps guide you to test the application using containers with example [configuration](#application-configuration)
+and a PostGIS database.
 
-1. After cloning the code repository, build the application with [Maven](https://maven.apache.org/).
+1. Set up the database. Use credentials specified by `spring.datasource.*` properties in the [application.yml] 
+   configuration for profile `local & postgresql & !openshift`.
 
    ```shell
-   mvn package
+   podman run \
+     -p 127.0.0.1:5432:5432 \
+     --env POSTGRES_USER=avidb_agent \
+     --env POSTGRES_PASSWORD=secret \
+     --env POSTGRES_DB=avidb \
+     --name avidb \
+     docker.io/postgis/postgis:latest
    ```
-
-2. Set up the database engine.
-
-    - **H2:** is automatically set up at application startup, no actions needed.
-    - **PostGIS:** Database is easily set up with Docker or Podman. Use credentials specified by `spring.datasource.*`
-      properties in the [application.yml] configuration for profile `local & postgresql & !openshift`.
-      ```shell
-      docker run \
-        -p 127.0.0.1:5432:5432 \
-        --env POSTGRES_USER=avidb_agent \
-        --env POSTGRES_PASSWORD=secret \
-        --env POSTGRES_DB=avidb \
-        --name avidb \
-        docker.io/postgis/postgis:14-3.2
-      ```
 
    In the `local` mode used in this guide, the application will automatically initialize
    the [schema](https://github.com/fmidev/avidb-schema) at startup.
 
-3. Prepare an SQL script to populate the `avidb_stations` table. This is optional for testing the application, but all
+2. Prepare an SQL script to populate the `avidb_stations` table. This is optional for testing the application, but all
    messages will be rejected without a matching location indicator in the `icao` column of `avidb_stations` table.
 
-    - **H2:**
-      See [schema-h2.sql](https://github.com/fmidev/avidb-schema/blob/avidb-schema-1.0.0/h2/schema-h2.sql)
-      for the schema, and [h2-data/example/avidb_stations.sql](src/main/resources/h2-data/example/avidb_stations.sql)
-      for an insertion template.
-    - **PostGIS:**
-      See [schema-postgresql.sql](https://github.com/fmidev/avidb-schema/blob/avidb-schema-1.0.0/postgresql/schema-postgresql.sql)
-      for the schema,
-      and [postgresql-data/example/avidb_stations.sql](src/main/resources/postgresql-data/example/avidb_stations.sql)
-      for an insertion template.
+   See [schema-postgresql.sql](https://github.com/fmidev/avidb-schema/blob/avidb-schema-1.0.0/postgresql/schema-postgresql.sql)
+   for the schema,
+   and [postgresql-data/example/avidb_stations.sql](src/main/resources/postgresql-data/example/avidb_stations.sql)
+   for an insertion template.
 
-4. Start the application. Replace
-
-    - `$AVIDB_STATIONS_SQL` with a path to the file created in previous step, or omit
-      the `spring.sql.init.data-locations` property.
-    - `$DB_ENGINE` with `h2` or `postgresql`.
+3. Start the application. Replace `$AVIDB_STATIONS_SQL` with the path to the SQL file created in the previous step
+   (or omit the `SPRING_SQL_INIT_DATALOCATIONS` and `avidb_stations.sql` volume lines to skip station initialization).
 
    ```shell
-   java \
-     -Dspring.profiles.active="local,example,$DB_ENGINE" \
-     -Dspring.sql.init.data-locations="\${example.spring.sql.init.data-locations.$DB_ENGINE},file://$AVIDB_STATIONS_SQL" \
-     -jar target/aviation-message-archiver-1.4.1-SNAPSHOT-bundle.jar
+   podman run \
+     --name aviation-message-archiver \
+     -p 8080:8080 \
+     -e SPRING_PROFILES_ACTIVE="postgresql,local,example" \
+     -e SPRING_SQL_INIT_DATALOCATIONS="\${example.spring.sql.init.data-locations.postgresql},file:///app/sql/avidb_stations.sql" \
+     -v $AVIDB_STATIONS_SQL:/app/sql/avidb_stations.sql:ro,z \
+     -v ./config:/app/config:ro,z \
+     -v ./data:/data:z \
+     ghcr.io/fmidev/aviation-message-archiver:main
    ```
 
-5. Check
-   some [actuator endpoints](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/actuator.html#actuator.endpoints)
-   to see that the application is running and healthy.
+   See [Running the application](#running-the-application) below for other deployment methods, including
+   [Compose](#compose) and [Podman Quadlet (systemd)](#podman-quadlet-systemd).
+
+4. Check
+   the [actuator endpoints](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/actuator.html#actuator.endpoints)
+   to verify the application is running and healthy.
 
     - info: <http://localhost:8080/actuator/info>
     - health: <http://localhost:8080/actuator/health>
 
-6. Copy some message files in the input directories specified by the `production-line.products[n].input-dir` properties
+5. Copy some message files in the input directories specified by the `production-line.products[n].input-dir` properties
    in the [application.yml] configuration file.
 
-7. After an input file is processed, the application moves it to one of target directories specified by
+6. After an input file is processed, the application moves it to one of target directories specified by
    the `production-line.products[n].archive-dir` and `production-line.products[n].fail-dir` properties in
    the [application.yml] configuration file. The processing identifier is appended to the file name.
 
-8. Connect to the database.
-
-    - **H2:** You can access the H2 database console at <http://localhost:8080/h2-console/login.jsp> with default
-      connection settings and credentials.
-    - **PostGIS:** Use `psql` or any appropriate client with connection information provided in the database setup step.
-
-   Look at the archived and rejected message tables in the database for any messages. E.g.
+7. Connect to the database using `psql` or any appropriate client with connection information provided in the database
+   setup step. Look at the archived and rejected message tables in the database for any messages. E.g.
 
    ```sql
    SELECT *
@@ -197,6 +192,82 @@ using H2 (in-memory) or PostGIS database engine.
                       ON r_iwxxm.rejected_message_id = r_messages.rejected_message_id
    ORDER BY message_time DESC;
    ```
+
+## Running the application
+
+The recommended way to run the application is using a container. Pre-built images are available at
+[ghcr.io/fmidev/aviation-message-archiver](https://ghcr.io/fmidev/aviation-message-archiver). Spring Boot 
+automatically loads configuration from a `config/` subdirectory
+relative to the working directory. See
+[Externalized Configuration](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/features.html#features.external-config)
+for details. Since the container working directory is `/app`, mount your configuration files to `/app/config/`.
+
+The container image sets `JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"` by default. To pass additional JVM options
+without overriding this, you can use the `JAVA_OPTS_APPEND` environment variable.
+
+### Container image
+
+You can use the pre-built image from [ghcr.io/fmidev/aviation-message-archiver](https://ghcr.io/fmidev/aviation-message-archiver), 
+or build it yourself:
+
+```shell
+podman build --omit-history -t aviation-message-archiver .
+```
+
+### Podman / Docker run
+
+See the [Getting started](#getting-started) section for an example command.
+
+### Compose
+
+See [compose.yaml] for an example Compose configuration. The example mounts
+`config/` for [application configuration](#application-configuration) and
+`data/` for input/output files, relative to the Compose file location. To set up:
+
+1. Copy [compose.yaml] to your working directory.
+2. Create configuration and data directories, and add your `application.yml`:
+   ```shell
+   mkdir -p config data
+   cp your-application.yml config/application.yml
+   ```
+3. Start the service:
+   ```shell
+   podman compose up -d
+   ```
+
+### Podman Quadlet (systemd)
+
+See [aviation-message-archiver.container] for an example Podman Quadlet unit descriptor (rootless). The example mounts
+`~/.config/aviation-message-archiver/config/` for [application configuration](#application-configuration) and
+`~/.local/share/aviation-message-archiver/data/` for input/output files. To set up:
+
+1. Copy the file to `~/.config/containers/systemd/`
+2. Create configuration and data directories, and add your `application.yml`:
+   ```shell
+   mkdir -p ~/.config/aviation-message-archiver/config
+   mkdir -p ~/.local/share/aviation-message-archiver/data
+   cp your-application.yml ~/.config/aviation-message-archiver/config/application.yml
+   ```
+3. Reload and start:
+   ```shell
+   systemctl --user daemon-reload
+   systemctl --user start aviation-message-archiver
+   ```
+
+### Running from source
+
+Alternatively, you can build and run directly from source. Build
+with [Maven](https://maven.apache.org/), then run the JAR. Replace `$AVIDB_STATIONS_SQL` with a path to the file
+created in the [Getting started](#getting-started) step (or omit the `spring.sql.init.data-locations` property).
+
+```shell
+mvn package
+java \
+  -Dspring.profiles.active="postgresql,local,example" \
+  -Dspring.sql.init.data-locations="\${example.spring.sql.init.data-locations.postgresql},file://$AVIDB_STATIONS_SQL" \
+  -jar target/aviation-message-archiver-1.4.1-SNAPSHOT-bundle.jar
+```
+
 
 ## Logging
 
@@ -709,11 +780,11 @@ chain.
 ### Post-actions
 
 [Post-actions](src/main/java/fi/fmi/avi/archiver/message/processor/postaction/PostAction.java) are components that
-execute a single action after the message has been archived in the database. Post-actions are **not** applied on 
-messages that were _discarded_ or _failed_ in an earlier message processing phase 
+execute a single action after the message has been archived in the database. Post-actions are **not** applied on
+messages that were _discarded_ or _failed_ in an earlier message processing phase
 (e.g. [message population phase](#message-populators)). In other words, only messages that have been stored successfully
 in the database either as _archived_ or _rejected_ will be processed by post-actions. The input file is marked as
-finished only after all post-actions have finished (with success or failure) on all messages of the file. Post-actions 
+finished only after all post-actions have finished (with success or failure) on all messages of the file. Post-actions
 cannot change the final processing status (_archived_, _rejected_, _failed_) of an input file.
 
 The following characteristics are unspecified, and current implementation may change any time without a prior notice.
@@ -851,7 +922,7 @@ requirements.
           (re-)establishing the connection.
 
           The account used to connect to the broker must have privileges to create such topology elements. When
-          the value is set to `NONE`, no topology elements will be created. In this case the configured exchange must 
+          the value is set to `NONE`, no topology elements will be created. In this case the configured exchange must
           exist for publishing to succeed. The broker must also route the message to at least one queue, otherwise the
           broker will respond with [RELEASED status](https://www.rabbitmq.com/docs/amqp#outcomes), which is considered
           a publication failure leading to retries. An easy way to always have a queue to route to is to configure a
@@ -1336,8 +1407,39 @@ for more information on these. Some of related sections are:
     - [Timeout property](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase)
 - [Actuator Endpoints](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/actuator.html#actuator.endpoints)
 
+
+## Development
+
+### H2 database
+
+The application supports an in-memory [H2](https://h2database.com/) database for development purposes as an
+alternative to PostGIS. H2 requires no external database setup and is automatically initialized at application startup.
+
+To use H2, activate the `h2` Spring profile instead of `postgresql`. For example, when
+[running from source](#running-from-source):
+
+```shell
+java \
+  -Dspring.profiles.active="h2,local,example" \
+  -jar target/aviation-message-archiver-1.4.1-SNAPSHOT-bundle.jar
+```
+
+The H2 database console is available at <http://localhost:8080/h2-console/> with the following connection settings:
+
+- **JDBC URL:** `jdbc:h2:mem:archiver`
+- **User Name:** `sa`
+- **Password:** *(empty)*
+
+To populate the `avidb_stations` table with test data,
+see [schema-h2.sql](https://github.com/fmidev/avidb-schema/blob/avidb-schema-1.0.0/h2/schema-h2.sql)
+for the schema,
+and [h2-data/example/avidb_stations.sql](src/main/resources/h2-data/example/avidb_stations.sql) for an insertion
+template.
+
 ## License
 
 MIT License. See [LICENSE](LICENSE).
 
 [application.yml]: src/main/resources/application.yml
+[compose.yaml]: compose.yaml
+[aviation-message-archiver.container]: aviation-message-archiver.container
