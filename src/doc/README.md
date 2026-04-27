@@ -89,9 +89,24 @@ message files. Whenever new files appear, it scans for messages in files, parses
 
 ### Supported message types and formats
 
-All IWXXM versions starting from 2.1 are supported, including future versions, as long as the document structure 
-relevant for archiving does not significantly change. TAC format support is experimental. See the table below for
-details.
+All IWXXM versions from 2.1 onwards are supported for the message types listed in the table below. Future versions
+will work, as long as the document structure relevant for archiving does not change significantly. TAC format
+support is experimental.
+
+| Message type              | TAC | IWXXM 2.1 | IWXXM 3.0+ |
+|---------------------------|:---:|:---------:|:----------:|
+| METAR                     | 1\) |    \+     |     \+     |
+| SPECI                     | 1\) |    \+     |     \+     |
+| TAF                       | 1\) |    \+     |     \+     |
+| SIGMET                    | \-  |    \+     |     \+     |
+| AIRMET                    | \-  |    \+     |     \+     |
+| Volcanic Ash Advisory     | 1\) |    n/a    |     \+     |
+| Tropical Cyclone Advisory | \-  |    n/a    |     \+     |
+| Space Weather Advisory    | 1\) |    n/a    |     \+     |
+
+\+ Complete support  
+\- Unsupported  
+1\) Experimental
 
 Message parsing is provided by
 
@@ -103,21 +118,6 @@ Message parsing is provided by
   ([
   `IWXXM_STRING_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm/blob/${fmi-avi-messageconverter-iwxxm.branch-name}/src/main/java/fi/fmi/avi/converter/iwxxm/conf/IWXXMConverter.java))
   for IWXXM.
-
-| Message type              | TAC | IWXXM 2.1 | IWXXM 3.0 | IWXXM 2021-2+ |
-|---------------------------|:---:|:---------:|:---------:|:-------------:|
-| METAR                     | 1\) |    \+     |    \+     |      \+       |
-| SPECI                     | 1\) |    \+     |    \+     |      \+       |
-| TAF                       | 1\) |    \+     |    \+     |      \+       |
-| SIGMET                    | \-  |    \+     |    \+     |      \+       |
-| AIRMET                    | \-  |    \+     |    \+     |      \+       |
-| Volcanic Ash Advisory     | 1\) |    n/a    |    \+     |      \+       |
-| Tropical Cyclone Advisory | \-  |    n/a    |    \+     |      \+       |
-| Space Weather Advisory    | 1\) |    n/a    |    \+     |      \+       |
-
-\+ Complete support  
-\- Unsupported  
-1\) Experimental
 
 ## Getting started
 
