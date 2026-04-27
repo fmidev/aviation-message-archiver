@@ -89,40 +89,43 @@ message files. Whenever new files appear, it scans for messages in files, parses
 
 ### Supported message types and formats
 
-Supported message types and formats are listed in the table below. Generally, this application supports all
+All IWXXM versions from 2.1 onwards are supported for the message types listed in the table below. Future versions
+will work, as long as the document structure relevant for archiving does not change significantly. TAC format
+support is experimental.
 
-- TAC format message types that are supported
-  by [fmi-avi-messageconverter-tac](https://github.com/fmidev/fmi-avi-messageconverter-tac)
-  library [
-  `TAC_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-tac/blob/fmi-avi-messageconverter-tac-8.1.0/src/main/java/fi/fmi/avi/converter/tac/conf/TACConverter.java)
-  conversion and
-- IWXXM format message types that are supported
-  by [fmi-avi-messageconverter-iwxxm](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm)
-  library [
-  `IWXXM_STRING_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm/blob/fmi-avi-messageconverter-iwxxm-6.3.1/src/main/java/fi/fmi/avi/converter/iwxxm/conf/IWXXMConverter.java)
-  conversion.
-
-| Message type              | TAC | IWXXM 2.1 | IWXXM 3.0 | IWXXM 2023-1 |
-|---------------------------|:---:|:---------:|:---------:|:------------:|
-| METAR                     | 1\) |    \+     |    \+     |      1)      |
-| SPECI                     | 1\) |    \+     |    \+     |      1)      |
-| TAF                       | 1\) |    \+     |    \+     |      \-      |
-| SIGMET                    | \-  |    \+     |    \+     |      \+      |
-| AIRMET                    | \-  |    \+     |    \+     |      \+      |
-| Volcanic Ash Advisory     | 1\) |    n/a    |    \+     |      \-      |
-| Tropical Cyclone Advisory | \-  |    n/a    |    \+     |      \-      |
-| Space Weather Advisory    | 1\) |    n/a    |    \+     |      \-      |
+| Message type              | TAC | IWXXM 2.1 | IWXXM 3.0+ |
+|---------------------------|:---:|:---------:|:----------:|
+| METAR                     | 1\) |    \+     |     \+     |
+| SPECI                     | 1\) |    \+     |     \+     |
+| TAF                       | 1\) |    \+     |     \+     |
+| SIGMET                    | \-  |    \+     |     \+     |
+| AIRMET                    | \-  |    \+     |     \+     |
+| Volcanic Ash Advisory     | 1\) |    n/a    |     \+     |
+| Tropical Cyclone Advisory | \-  |    n/a    |     \+     |
+| Space Weather Advisory    | 1\) |    n/a    |     \+     |
 
 \+ Complete support  
 \- Unsupported  
 1\) Experimental
 
+Message parsing is provided by
+
+- [fmi-avi-messageconverter-tac](https://github.com/fmidev/fmi-avi-messageconverter-tac)
+  ([
+  `TAC_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-tac/blob/fmi-avi-messageconverter-tac-8.1.0/src/main/java/fi/fmi/avi/converter/tac/conf/TACConverter.java))
+  for TAC and
+- [fmi-avi-messageconverter-iwxxm](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm)
+  ([
+  `IWXXM_STRING_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm/blob/fmi-avi-messageconverter-iwxxm-6.3.1/src/main/java/fi/fmi/avi/converter/iwxxm/conf/IWXXMConverter.java))
+  for IWXXM.
+
 ## Getting started
 
-The next steps guide you to test the application using containers with example [configuration](#application-configuration)
+The next steps guide you to test the application using containers with
+example [configuration](#application-configuration)
 and a PostGIS database.
 
-1. Set up the database. Use credentials specified by `spring.datasource.*` properties in the [application.yml] 
+1. Set up the database. Use credentials specified by `spring.datasource.*` properties in the [application.yml]
    configuration for profile `local & postgresql & !openshift`.
 
    ```shell
@@ -196,7 +199,7 @@ and a PostGIS database.
 ## Running the application
 
 The recommended way to run the application is using a container. Pre-built images are available at
-[ghcr.io/fmidev/aviation-message-archiver](https://ghcr.io/fmidev/aviation-message-archiver). Spring Boot 
+[ghcr.io/fmidev/aviation-message-archiver](https://ghcr.io/fmidev/aviation-message-archiver). Spring Boot
 automatically loads configuration from a `config/` subdirectory
 relative to the working directory. See
 [Externalized Configuration](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/features.html#features.external-config)
@@ -207,7 +210,8 @@ without overriding this, you can use the `JAVA_OPTS_APPEND` environment variable
 
 ### Container image
 
-You can use the pre-built image from [ghcr.io/fmidev/aviation-message-archiver](https://ghcr.io/fmidev/aviation-message-archiver), 
+You can use the pre-built image
+from [ghcr.io/fmidev/aviation-message-archiver](https://ghcr.io/fmidev/aviation-message-archiver),
 or build it yourself:
 
 ```shell
@@ -267,7 +271,6 @@ java \
   -Dspring.sql.init.data-locations="\${example.spring.sql.init.data-locations.postgresql},file://$AVIDB_STATIONS_SQL" \
   -jar target/aviation-message-archiver-1.4.1-SNAPSHOT-bundle.jar
 ```
-
 
 ## Logging
 
@@ -1407,7 +1410,6 @@ for more information on these. Some of related sections are:
     - [Timeout property](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase)
 - [Actuator Endpoints](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/actuator.html#actuator.endpoints)
 
-
 ## Development
 
 ### H2 database
@@ -1441,5 +1443,7 @@ template.
 MIT License. See [LICENSE](LICENSE).
 
 [application.yml]: src/main/resources/application.yml
+
 [compose.yaml]: compose.yaml
+
 [aviation-message-archiver.container]: aviation-message-archiver.container
