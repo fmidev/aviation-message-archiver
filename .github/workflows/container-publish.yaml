@@ -3,7 +3,7 @@ name: Build and publish container image
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*' ]
+    tags: [ 'aviation-message-archiver-*' ]
 
 permissions:
   contents: read
@@ -37,6 +37,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: Resolve Maven artifactId
+        run: |
+          ARTIFACT_ID=$(./mvnw -B -q -DforceStdout -Dexpression=project.artifactId help:evaluate)
+          echo "ARTIFACT_ID=${ARTIFACT_ID}" >> "$GITHUB_ENV"
+
       - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v6
@@ -45,12 +50,13 @@ jobs:
           tags: |
             # Tag with branch name
             type=ref,event=branch
-            # Tag releases with 'latest'
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
-            # Tag with semantic version
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
+            # Tag with full semantic version, including any pre-release suffix
+            # (Maven release-plugin default tag format: <artifactId>-<semver>)
+            type=match,pattern=^${{ env.ARTIFACT_ID }}-(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$,group=1
+            # <major>.<minor> and <major> aliases plus 'latest' only for stable releases
+            type=match,pattern=^${{ env.ARTIFACT_ID }}-(\d+\.\d+)\.\d+$,group=1
+            type=match,pattern=^${{ env.ARTIFACT_ID }}-(\d+)\.\d+\.\d+$,group=1,enable=${{ !startsWith(github.ref_name, format('{0}-0.', env.ARTIFACT_ID)) }}
+            type=match,pattern=^${{ env.ARTIFACT_ID }}-\d+\.\d+\.\d+$,value=latest
             # Tag with short SHA
             type=sha,prefix=
 
