@@ -37,29 +37,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Resolve Maven artifact metadata
+      - name: Resolve release version
         env:
           REF_NAME: ${{ github.ref_name }}
         run: |
           ARTIFACT_ID=$(./mvnw -B -q -DforceStdout -Dexpression=project.artifactId help:evaluate)
-          echo "ARTIFACT_ID=${ARTIFACT_ID}" >> "$GITHUB_ENV"
 
-          # Extract version from tag
+          # Extract version from tag (e.g. aviation-message-archiver-1.2.3 -> 1.2.3)
           PREFIX="${ARTIFACT_ID}-"
           if [[ "$REF_NAME" == "${PREFIX}"* ]]; then
             VERSION="${REF_NAME#"$PREFIX"}"
             echo "RELEASE_VERSION=${VERSION}" >> "$GITHUB_ENV"
 
-            # Compute major.minor and major aliases for stable releases only
+            # Set stable version for alias tags (no pre-release/build metadata)
             if [[ "$VERSION" != *-* && "$VERSION" != *+* ]]; then
-              MAJOR="${VERSION%%.*}"
-              REST="${VERSION#*.}"
-              MINOR_PART="${REST%%.*}"
-              MINOR="${MAJOR}.${MINOR_PART}"
-              echo "RELEASE_MINOR=${MINOR}" >> "$GITHUB_ENV"
-              if [[ "$MAJOR" != "0" ]]; then
-                echo "RELEASE_MAJOR=${MAJOR}" >> "$GITHUB_ENV"
-              fi
+              echo "STABLE_VERSION=${VERSION}" >> "$GITHUB_ENV"
             fi
           fi
 
@@ -72,11 +64,11 @@ jobs:
             # Tag with branch name
             type=ref,event=branch
             # Tag stable releases with 'latest'
-            type=raw,value=latest,enable=${{ env.RELEASE_MINOR != '' }}
+            type=raw,value=latest,enable=${{ env.STABLE_VERSION != '' }}
             # Tag with semantic version
-            type=raw,value=${{ env.RELEASE_VERSION }},enable=${{ env.RELEASE_VERSION != '' }}
-            type=raw,value=${{ env.RELEASE_MINOR }},enable=${{ env.RELEASE_MINOR != '' }}
-            type=raw,value=${{ env.RELEASE_MAJOR }},enable=${{ env.RELEASE_MAJOR != '' }}
+            type=semver,pattern={{version}},value=${{ env.RELEASE_VERSION }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.RELEASE_VERSION }}
+            type=semver,pattern={{major}},value=${{ env.RELEASE_VERSION }},enable=${{ env.STABLE_VERSION != '' && !startsWith(env.STABLE_VERSION, '0.') }}
             # Tag with short SHA
             type=sha,prefix=
 
