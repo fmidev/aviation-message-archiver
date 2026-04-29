@@ -3,7 +3,7 @@ name: Build and publish container image
 on:
   push:
     branches: [ main ]
-    tags: [ 'aviation-message-archiver-*' ]
+    tags: [ 'aviation-message-archiver-[0-9]*' ]
 
 permissions:
   contents: read
