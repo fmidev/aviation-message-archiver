@@ -41,7 +41,13 @@ jobs:
         env:
           REF_NAME: ${{ github.ref_name }}
         run: |
-          ARTIFACT_ID=$(./mvnw -B -q -DforceStdout -Dexpression=project.artifactId help:evaluate)
+          set -euo pipefail
+
+          ARTIFACT_ID="$(./mvnw -B -q -DforceStdout -Dexpression=project.artifactId help:evaluate)"
+          if [[ -z "$ARTIFACT_ID" ]]; then
+            echo "::error::Failed to resolve Maven artifactId"
+            exit 1
+          fi
 
           # Extract version from tag (e.g. aviation-message-archiver-1.2.3 -> 1.2.3)
           PREFIX="${ARTIFACT_ID}-"
