@@ -60,6 +60,8 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
           tags: |
             # Tag with branch name
             type=ref,event=branch
@@ -68,7 +70,7 @@ jobs:
             # Tag with semantic version
             type=semver,pattern={{version}},value=${{ env.RELEASE_VERSION }}
             type=semver,pattern={{major}}.{{minor}},value=${{ env.RELEASE_VERSION }}
-            type=semver,pattern={{major}},value=${{ env.RELEASE_VERSION }},enable=${{ env.STABLE_VERSION != '' && !startsWith(env.STABLE_VERSION, '0.') }}
+            type=semver,pattern={{major}},value=${{ env.RELEASE_VERSION }},enable=${{ !startsWith(env.RELEASE_VERSION, '0.') }}
             # Tag with short SHA
             type=sha,prefix=
 
