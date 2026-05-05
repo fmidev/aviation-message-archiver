@@ -27,3 +27,31 @@ spring:
     # username:
     # password:
     driver-class-name: org.postgresql.Driver
+---
+spring.config.activate.on-profile: local & postgresql & !openshift
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/avidb
+    username: avidb_agent
+    password: secret
+---
+spring.config.activate.on-profile: (local | development) & postgresql
+
+spring:
+  sql:
+    init:
+      platform: postgresql
+      schema-locations: classpath:fi/fmi/avi/avidb/schema/postgresql/schema-postgresql.sql
+      data-locations: classpath:fi/fmi/avi/avidb/schema/postgresql/privileges-postgresql.sql
+      mode: always
+      # Treat the files as single SQL statements
+      separator: ^^^ END OF SCRIPT ^^^
+      continue-on-error: true
+---
+spring.config.activate.on-profile: (local | development) & postgresql & example
+
+spring:
+  sql:
+    init:
+      data-locations: ${example.spring.sql.init.data-locations.postgresql}

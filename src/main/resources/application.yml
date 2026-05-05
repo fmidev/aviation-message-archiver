@@ -31,12 +31,10 @@
 #  https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.profiles
 #
 ##############################################
-spring:
-  application:
-    name: '@project.artifactId@'
-  main:
-    banner-mode: off
----
+spring.application:
+  name: '@project.artifactId@'
+spring.main:
+  banner-mode: off
 
 ##############################################
 #
@@ -55,13 +53,13 @@ logging:
 
 ##############################################
 #
-#  Datasource properties
+#  Common datasource properties
 #
-# For details on spring.* properties, see Spring Boot documentation on
-# - Data: https://docs.spring.io/spring-boot/docs/current/reference/html/data.html
-# - Data properties: https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data
-# - Data Migration Properties:
-#     https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data-migration
+#  For details on spring.* properties, see Spring Boot documentation on
+#  - Data: https://docs.spring.io/spring-boot/docs/current/reference/html/data.html
+#  - Data properties: https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data
+#  - Data Migration Properties:
+#      https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data-migration
 #
 ##############################################
 example:
@@ -71,61 +69,24 @@ example:
         data-locations:
           h2: classpath:/h2-data/example/*.sql
           postgresql: classpath:fi/fmi/avi/avidb/schema/postgresql/privileges-postgresql.sql,classpath:/postgresql-data/example/*.sql
----
-spring.config.activate.on-profile: h2 & example
-spring:
-  sql:
-    init:
-      data-locations: ${example.spring.sql.init.data-locations.h2}
----
-spring.config.activate.on-profile: local & postgresql & !openshift
-
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/avidb
-    username: avidb_agent
-    password: secret
----
-spring.config.activate.on-profile: (local | development) & postgresql
-
-spring:
-  sql:
-    init:
-      platform: postgresql
-      schema-locations: classpath:fi/fmi/avi/avidb/schema/postgresql/schema-postgresql.sql
-      data-locations: classpath:fi/fmi/avi/avidb/schema/postgresql/privileges-postgresql.sql
-      mode: always
-      # Treat the files as single SQL statements
-      separator: ^^^ END OF SCRIPT ^^^
-      continue-on-error: true
----
-spring.config.activate.on-profile: (local | development) & postgresql & example
-
-spring:
-  sql:
-    init:
-      data-locations: ${example.spring.sql.init.data-locations.postgresql}
----
-spring:
-  datasource:
-    # com.zaxxer.hikari.HikariDataSource properties
-    hikari:
-      # Maximum time in seconds to wait while connecting to a database.
-      login-timeout: 40
-      # Maximum time in milliseconds to wait for a connection from the pool.
-      # Use zero to wait indefinitely (Integer.MAX_VALUE milliseconds in practice).
-      connection-timeout: 0
-      # Maximum time in milliseconds that the pool will wait for an alive connection.
-      validation-timeout: 5000
-      # Pool initialization failure timeout in milliseconds.
-      # Use zero to allow the application to start even if initial datasource connection fails.
-      initialization-fail-timeout: 0
-  jdbc:
-    template:
-      query-timeout: PT15S
-  transaction:
-    default-timeout: PT15S
----
+spring.datasource:
+  # com.zaxxer.hikari.HikariDataSource properties
+  hikari:
+    # Maximum time in seconds to wait while connecting to a database.
+    login-timeout: 40
+    # Maximum time in milliseconds to wait for a connection from the pool.
+    # Use zero to wait indefinitely (Integer.MAX_VALUE milliseconds in practice).
+    connection-timeout: 0
+    # Maximum time in milliseconds that the pool will wait for an alive connection.
+    validation-timeout: 5000
+    # Pool initialization failure timeout in milliseconds.
+    # Use zero to allow the application to start even if initial datasource connection fails.
+    initialization-fail-timeout: 0
+spring.jdbc:
+  template:
+    query-timeout: PT15S
+spring.transaction:
+  default-timeout: PT15S
 
 datasource:
   # Database schema to use
@@ -165,13 +126,10 @@ server:
   # Shutdown internal web server gracefully
   # https://docs.spring.io/spring-boot/docs/current/reference/html/web.html#web.graceful-shutdown
   shutdown: graceful
----
-spring:
-  lifecycle:
-    # Graceful shutdown timeout
-    # https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase
-    timeout-per-shutdown-phase: 20s
----
+spring.lifecycle:
+  # Graceful shutdown timeout
+  # https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase
+  timeout-per-shutdown-phase: 20s
 processing-flow:
   # When this application receives a shutdown signal, it stops new file reception and waits for ongoing file processing to finish before shutting down.
   # Following properties control this behavior.
