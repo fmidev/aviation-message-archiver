@@ -8,10 +8,10 @@
 #  Property values surrounded by '@' characters (e.g. '@pom.property@') are references to Maven POM properties,
 #  and will be replaced upon build with actual build-time property values.
 #
-#  Spring runtime profiles used in this configuration:
+#  Spring runtime profiles known in the application configuration:
 #  - Production line profiles:
 #    - <default>: Omitted; create your own.
-#    - example: production line provided as an example
+#    - example: an example production line
 #  - Runtime environment profiles:
 #    - local: local developer-specific development environment
 #    - development: common development environment
@@ -35,21 +35,6 @@ spring.application:
   name: '@project.artifactId@'
 spring.main:
   banner-mode: off
-
-##############################################
-#
-#  Logging properties
-#
-#  See Spring Boot reference documentation for details.
-#  https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.logging
-#
-#  Base logging configuration is in src/main/resources/logback-spring.xml
-#
-##############################################
-logging:
-  level:
-    fi.fmi.avi.archiver: INFO
-    org.springframework.integration.handler.LoggingHandler: INFO
 
 ##############################################
 #
