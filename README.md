@@ -363,8 +363,9 @@ java -Dspring.profiles.active=<other profiles...>,logstash ...
 
 ## Application configuration
 
-Default application configuration properties are collected in YAML files [application.yml] and Spring profile-specific
-`application-<profile>.yml` files under [src/main/resources](src/main/resources). Runtime behavior is controlled
+Default application configuration properties are collected in YAML files [application.yml] and the Spring
+profile-specific `application-<profile>.yml` files under [src/main/resources/config](src/main/resources/config). Runtime
+behavior is controlled
 using [Spring profiles](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/features.html#features.profiles)
 which are activated by the application launch command. Profiles known in the provided configuration are described in
 the [application.yml] file.
@@ -1450,11 +1451,11 @@ template.
 
 MIT License. See [LICENSE](LICENSE).
 
-[application.yml]: src/main/resources/application.yml
+[application.yml]: src/main/resources/config/application.yml
 
-[application-example.yml]: src/main/resources/application-example.yml
+[application-example.yml]: src/main/resources/config/application-example.yml
 
-[application-postgresql.yml]: src/main/resources/application-postgresql.yml
+[application-postgresql.yml]: src/main/resources/config/application-postgresql.yml
 
 [compose.yaml]: compose.yaml
 
