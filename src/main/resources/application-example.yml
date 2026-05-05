@@ -105,18 +105,18 @@ production-line:
       name: FixedProcessingResultPopulator
       activate-on:
         station:
-          matches: "^${config-helper.self-icao-prefix}..$"
+          matches: '^${config-helper.self-icao-prefix}..$'
         gts-or-collect-originator:
-          does-not-match: "^${config-helper.self-icao-prefix}..$"
+          does-not-match: '^${config-helper.self-icao-prefix}..$'
       config:
         result: FORBIDDEN_BULLETIN_LOCATION_INDICATOR
     - # Reject message from self to a station other than own
       name: FixedProcessingResultPopulator
       activate-on:
         gts-or-collect-originator:
-          matches: "^${config-helper.self-icao-prefix}..$"
+          matches: '^${config-helper.self-icao-prefix}..$'
         station:
-          does-not-match: "^${config-helper.self-icao-prefix}..$"
+          does-not-match: '^${config-helper.self-icao-prefix}..$'
       config:
         result: FORBIDDEN_MESSAGE_STATION_ICAO_CODE
     - # Reject message if message time is too far in the future.
