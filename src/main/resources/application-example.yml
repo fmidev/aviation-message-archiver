@@ -1,0 +1,163 @@
+##############################################
+#
+#  Aviation Message Archiver
+#  =========================
+#
+#  Example profile default configuration
+#
+#  Property values surrounded by '@' characters (e.g. '@pom.property@') are references to Maven POM properties,
+#  and will be replaced upon build with actual build-time property values.
+#
+##############################################
+
+##############################################
+#
+#  Production line configuration
+#
+##############################################
+production-line:
+  # Directory-related helper properties only used as reference within this configuration file.
+  directory:
+    # Base directory of all product directories.
+    root: ${user.home}/aviation-message-archiver
+    # Name of input directory.
+    input-name: input
+    # Name of archive directory.
+    archived-name: archived
+    # Name of fail directory.
+    failed-name: failed
+  # List of aviation message product specifications.
+  # At least one product must be specified.
+  # See fi.fmi.avi.archiver.config.model.AviationProduct for detailed documentation on properties.
+  products:
+    - # Identifier of this product. It must be non-empty and unique within all products.
+      id: example1
+      # Name of the route, through which the messages of this product definition arrive from.
+      # It must be one of specified in map property message-static-values.route-ids.
+      route: DEFAULT
+      # Input directory of incoming message files. It must not be equal to archive or fail directory of any product.
+      input-dir: ${production-line.directory.root}/example1/${production-line.directory.input-name}
+      # Directory for successfully archived / processed files. It must not be equal to input directory of any product.
+      # It may be equal to fail directory of this and other products, but only if all of involved products specify equal archive and fail directories.
+      archive-dir: ${production-line.directory.root}/example1/${production-line.directory.archived-name}
+      # Directory for files that were not processed successfully. It must not be equal to input directory of any product.
+      # It may be equal to archive directory of this and other products, but only if all of involved products specify equal archive and fail directories.
+      fail-dir: ${production-line.directory.root}/example1/${production-line.directory.failed-name}
+      # List of configurations on input files. At least one file configuration must be specified.
+      # See fi.fmi.avi.archiver.config.model.FileConfig for detailed documentation on properties.
+      files:
+        - # Regular expression pattern of file names that are considered as input files.
+          # It must be non-empty and unique within input dir path throughout all products.
+          pattern: '^.*\.txt$'
+          # Time zone of a possible timestamp in input file name.
+          # 'Z' should be used as default value, in case file name contains no timestamp.
+          name-time-zone: Z
+          # Format of messages in input file.
+          format: TAC
+        - pattern: '^.*\.xml$'
+          name-time-zone: Z
+          format: IWXXM
+    - id: example2
+      route: DEFAULT
+      input-dir: ${production-line.directory.root}/example2/${production-line.directory.input-name}
+      archive-dir: ${production-line.directory.root}/example2/${production-line.directory.archived-name}
+      fail-dir: ${production-line.directory.root}/example2/${production-line.directory.failed-name}
+      files:
+        - pattern: '^${config-helper.pattern.WMO_A_C}\.txt$'
+          name-time-zone: Z
+          format: TAC
+        - pattern: '^${config-helper.pattern.WMO_A_C}\.xml$'
+          name-time-zone: Z
+          format: IWXXM
+  # List of message populator instance specifications, that determine how parsed data is archived, in execution order.
+  # Message populator instance specification consists of
+  # - name: name of message populator to execute (mandatory)
+  # - activate-on: optional activation conditions. The specified populator is executed only when all of provided activation conditions are satisfied.
+  #   Omit to execute unconditionally.
+  # - config: map of populator-specific configuration options. Some of them may be mandatory. May be omitted, when no configuration options are given.
+  # For more info on message populator configuration in general, see README.md in the project root directory.
+  message-populators:
+    - # Populate properties available in input file metadata
+      name: FileMetadataPopulator
+    - # Populate properties parsed from file name.
+      name: FileNameDataPopulator
+    - # Populate properties parsed from input bulletin heading.
+      name: BulletinHeadingDataPopulator
+      config:
+        # Prefer parsed data in GTS bulletin heading over collectIdentifier
+        bulletin-heading-sources:
+          - GTS_BULLETIN_HEADING
+          - COLLECT_IDENTIFIER
+    - # Populate properties parsed from message content.
+      name: MessageDataPopulator
+    - # Set validity period to a fixed duration period starting from message time.
+      name: FixedDurationValidityPeriodPopulator
+      activate-on:
+        # Apply only to Space Weather Advisory messages
+        type:
+          is: SPACE_WEATHER_ADVISORY
+      config:
+        # Set validity period length to 24 hours
+        validity-end-offset: PT24H
+    - # Trim whitespaces around message content.
+      name: MessageContentTrimmer
+    - # Reject message for own station if originator is other than self
+      name: FixedProcessingResultPopulator
+      activate-on:
+        station:
+          matches: "^${config-helper.self-icao-prefix}..$"
+        gts-or-collect-originator:
+          does-not-match: "^${config-helper.self-icao-prefix}..$"
+      config:
+        result: FORBIDDEN_BULLETIN_LOCATION_INDICATOR
+    - # Reject message from self to a station other than own
+      name: FixedProcessingResultPopulator
+      activate-on:
+        gts-or-collect-originator:
+          matches: "^${config-helper.self-icao-prefix}..$"
+        station:
+          does-not-match: "^${config-helper.self-icao-prefix}..$"
+      config:
+        result: FORBIDDEN_MESSAGE_STATION_ICAO_CODE
+    - # Reject message if message time is too far in the future.
+      name: FixedProcessingResultPopulator
+      activate-on:
+        message-age:
+          # Accept messages less than 12 hours in the future. Do note the negative message age value.
+          is-less-than: -PT12H
+      config:
+        result: MESSAGE_TIME_IN_FUTURE
+  # List of post-action instance specifications, that determine what actions are run after message has been archived.
+  # Post-action instance specification consists of
+  # - name: name of post-action to run (mandatory)
+  # - activate-on: optional activation conditions. The specified action is run only when all of provided activation conditions are satisfied.
+  #   Omit to run unconditionally.
+  # - config: map of action-specific configuration options. Some of them may be mandatory. May be omitted, when no configuration options are given.
+  # For more info on post-action configuration in general, see README.md in the project root directory.
+  post-actions:
+    - name: ResultLogger
+      config:
+        message: Message archiving process finished.
+  # Map route name to numeric identifier.
+  # Name is preferably same as 'avidb_message_routes.name' value in the database.
+  # Numeric identifier must be equal to 'avidb_message_routes.route_id' in the database.
+  route-ids:
+    DEFAULT: 1
+  # Map message format name to numeric identifier.
+  # Name is the value of fi.fmi.avi.model.GenericAviationWeatherMessage.Format.name().
+  # Numeric identifier must be equal to 'avidb_message_format.format_id' in the database.
+  format-ids:
+    TAC: 1
+    IWXXM: 2
+  # Map message type name to numeric identifier.
+  # Name is the value of fi.fmi.avi.model.MessageType.name().
+  # Numeric identifier must be equal to 'avidb_message_types.type_id' in the database.
+  type-ids:
+    METAR: 1
+    SPECI: 2
+    TAF: 3
+    SIGMET: 4
+    AIRMET: 5
+    VOLCANIC_ASH_ADVISORY: 6
+    TROPICAL_CYCLONE_ADVISORY: 7
+    SPACE_WEATHER_ADVISORY: 8

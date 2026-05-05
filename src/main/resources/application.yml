@@ -3,7 +3,7 @@
 #  Aviation Message Archiver
 #  =========================
 #
-#  Application configuration
+#  Application default configuration
 #
 #  Property values surrounded by '@' characters (e.g. '@pom.property@') are references to Maven POM properties,
 #  and will be replaced upon build with actual build-time property values.
@@ -37,6 +37,7 @@ spring:
   main:
     banner-mode: off
 ---
+
 ##############################################
 #
 #  Logging properties
@@ -47,32 +48,10 @@ spring:
 #  Base logging configuration is in src/main/resources/logback-spring.xml
 #
 ##############################################
-# START SNIPPET: logging
-spring.config.activate.on-profile: local
-logging:
-  level:
-    fi.fmi.avi.archiver: DEBUG
-    org.springframework.integration.handler.LoggingHandler: DEBUG
----
-spring.config.activate.on-profile: development
-logging:
-  level:
-    fi.fmi.avi.archiver: DEBUG
-    org.springframework.integration.handler.LoggingHandler: DEBUG
----
-spring.config.activate.on-profile: testing
 logging:
   level:
     fi.fmi.avi.archiver: INFO
     org.springframework.integration.handler.LoggingHandler: INFO
----
-spring.config.activate.on-profile: production
-logging:
-  level:
-    fi.fmi.avi.archiver: INFO
-    org.springframework.integration.handler.LoggingHandler: INFO
----
-# END SNIPPET: logging
 
 ##############################################
 #
@@ -85,7 +64,6 @@ logging:
 #     https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data-migration
 #
 ##############################################
-# START SNIPPET: Datasource properties
 example:
   spring:
     sql:
@@ -94,35 +72,11 @@ example:
           h2: classpath:/h2-data/example/*.sql
           postgresql: classpath:fi/fmi/avi/avidb/schema/postgresql/privileges-postgresql.sql,classpath:/postgresql-data/example/*.sql
 ---
-spring.config.activate.on-profile: h2
-
-# H2 database connection configuration for development use
-spring:
-  datasource:
-    url: jdbc:h2:mem:archiver;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-  h2:
-    console:
-      enabled: true
-  sql:
-    init:
-      platform: h2
-      schema-locations: classpath:fi/fmi/avi/avidb/schema/h2/schema-h2.sql
----
 spring.config.activate.on-profile: h2 & example
 spring:
   sql:
     init:
       data-locations: ${example.spring.sql.init.data-locations.h2}
----
-spring.config.activate.on-profile: postgresql
-
-spring:
-  datasource:
-    # url: jdbc:postgresql://avidb:5432/avidb
-    # username:
-    # password:
-    driver-class-name: org.postgresql.Driver
 ---
 spring.config.activate.on-profile: local & postgresql & !openshift
 
@@ -131,7 +85,6 @@ spring:
     url: jdbc:postgresql://localhost:5432/avidb
     username: avidb_agent
     password: secret
-    driver-class-name: org.postgresql.Driver
 ---
 spring.config.activate.on-profile: (local | development) & postgresql
 
@@ -172,6 +125,7 @@ spring:
       query-timeout: PT15S
   transaction:
     default-timeout: PT15S
+---
 
 datasource:
   # Database schema to use
@@ -186,8 +140,6 @@ datasource:
     max-interval: PT1M
     # Set to zero to retry infinitely. Set a positive duration for time limited retries.
     timeout: PT0S
----
-# END SNIPPET: Datasource properties
 
 ##############################################
 #
@@ -198,30 +150,28 @@ datasource:
 #  See fi.fmi.avi.archiver.logging.model.ProcessingPhase for list of phases.
 #
 ##############################################
-# START SNIPPET: executor
 executor:
   # The size of each phase executor's task queue.
   # The queue is blocking, thus all incoming tasks are blocked while queue is full. The purpose of the size limit is to prevent incoming tasks accumulating in
   # memory, in case a phase is blocked due to temporary failure, e.g. database being down.
   queue-size: 20
----
-# END SNIPPET: executor
 
 ##############################################
 #
 #  Shutdown config
 #
 ##############################################
-# START SNIPPET: shutdown
 server:
   # Shutdown internal web server gracefully
   # https://docs.spring.io/spring-boot/docs/current/reference/html/web.html#web.graceful-shutdown
   shutdown: graceful
+---
 spring:
   lifecycle:
     # Graceful shutdown timeout
     # https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase
     timeout-per-shutdown-phase: 20s
+---
 processing-flow:
   # When this application receives a shutdown signal, it stops new file reception and waits for ongoing file processing to finish before shutting down.
   # Following properties control this behavior.
@@ -230,8 +180,6 @@ processing-flow:
     timeout: PT20S
     # Check every pollingInterval whether all ongoing tasks have finished.
     polling-interval: PT0.1S
----
-# END SNIPPET: shutdown
 
 ##############################################
 #
@@ -241,7 +189,6 @@ processing-flow:
 # https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.endpoints
 #
 ##############################################
-# START SNIPPET: actuators
 management:
   endpoint:
     health:
@@ -281,171 +228,23 @@ health-indicator:
   # fi.fmi.avi.archiver.spring.healthcontributor.BlockingExecutorHealthContributor
   blocking-executor:
     timeout: PT30S
----
-# END SNIPPET: actuators
 
 ##############################################
 #
 #  Production line configuration
 #
 ##############################################
-# START SNIPPET: production-line
 
 # Input file polling configuration (for org.springframework.integration.file.FileReadingMessageSource)
 polling:
   # Fixed delay between polls
   delay: PT1.000S
 
----
-spring.config.activate.on-profile: example
-
-production-line:
-  # Directory-related helper properties only used as reference within this configuration file.
-  directory:
-    # Base directory of all product directories.
-    root: ${user.home}/aviation-message-archiver
-    # Name of input directory.
-    input-name: input
-    # Name of archive directory.
-    archived-name: archived
-    # Name of fail directory.
-    failed-name: failed
-  # File pattern-related helper properties only used as reference within this configuration file.
-  pattern-template:
-    # Pattern matching <4-digit year><month><day>.
-    yyyyMMdd: '(?<yyyy>\d{4})(?<MM>\d{2})(?<dd>\d{2})'
-    # Pattern matching <hour><minute><second>.
-    hhmmss: '(?<hh>\d{2})(?<mm>\d{2})(?<ss>\d{2})'
-    # Pattern matching <4-digit year><month><day><hour><minute><second>.
-    yyyyMMddhhmmss: '${production-line.pattern-template.yyyyMMdd}${production-line.pattern-template.hhmmss}'
-    # Pattern matching WMO Doc. 386 general file naming conventions with pflag 'A' and oflag 'C'.
-    WMO_A_C: 'A_[A-Z0-9]{16,19}_C_[A-Z]{4}_${production-line.pattern-template.yyyyMMddhhmmss}'
-  # List of aviation message product specifications.
-  # At least one product must be specified.
-  # See fi.fmi.avi.archiver.config.model.AviationProduct for detailed documentation on properties.
-  products:
-    - # Identifier of this product. It must be non-empty and unique within all products.
-      id: example1
-      # Name of the route, through which the messages of this product definition arrive from.
-      # It must be one of specified in map property message-static-values.route-ids.
-      route: DEFAULT
-      # Input directory of incoming message files. It must not be equal to archive or fail directory of any product.
-      input-dir: ${production-line.directory.root}/example1/${production-line.directory.input-name}
-      # Directory for successfully archived / processed files. It must not be equal to input directory of any product.
-      # It may be equal to fail directory of this and other products, but only if all of involved products specify equal archive and fail directories.
-      archive-dir: ${production-line.directory.root}/example1/${production-line.directory.archived-name}
-      # Directory for files that were not processed successfully. It must not be equal to input directory of any product.
-      # It may be equal to archive directory of this and other products, but only if all of involved products specify equal archive and fail directories.
-      fail-dir: ${production-line.directory.root}/example1/${production-line.directory.failed-name}
-      # List of configurations on input files. At least one file configuration must be specified.
-      # See fi.fmi.avi.archiver.config.model.FileConfig for detailed documentation on properties.
-      files:
-        - # Regular expression pattern of file names that are considered as input files.
-          # It must be non-empty and unique within input dir path throughout all products.
-          pattern: '^.*\.txt$'
-          # Time zone of a possible timestamp in input file name.
-          # 'Z' should be used as default value, in case file name contains no timestamp.
-          name-time-zone: Z
-          # Format of messages in input file.
-          format: TAC
-        - pattern: '^.*\.xml$'
-          name-time-zone: Z
-          format: IWXXM
-    - id: example2
-      route: DEFAULT
-      input-dir: ${production-line.directory.root}/example2/${production-line.directory.input-name}
-      archive-dir: ${production-line.directory.root}/example2/${production-line.directory.archived-name}
-      fail-dir: ${production-line.directory.root}/example2/${production-line.directory.failed-name}
-      files:
-        - pattern: '^${production-line.pattern-template.WMO_A_C}\.txt$'
-          name-time-zone: Z
-          format: TAC
-        - pattern: '^${production-line.pattern-template.WMO_A_C}\.xml$'
-          name-time-zone: Z
-          format: IWXXM
-  # List of message populator instance specifications, that determine how parsed data is archived, in execution order.
-  # Message populator instance specification consists of
-  # - name: name of message populator to execute (mandatory)
-  # - activate-on: optional activation conditions. The specified populator is executed only when all of provided activation conditions are satisfied.
-  #   Omit to execute unconditionally.
-  # - config: map of populator-specific configuration options. Some of them may be mandatory. May be omitted, when no configuration options are given.
-  # For more info on message populator configuration in general, see README.md in the project root directory.
-  message-populators:
-    - # Populate properties available in input file metadata
-      name: FileMetadataPopulator
-    - # Populate properties parsed from file name.
-      name: FileNameDataPopulator
-    - # Populate properties parsed from input bulletin heading.
-      name: BulletinHeadingDataPopulator
-      config:
-        # Prefer parsed data in GTS bulletin heading over collectIdentifier
-        bulletin-heading-sources:
-          - GTS_BULLETIN_HEADING
-          - COLLECT_IDENTIFIER
-    - # Populate properties parsed from message content.
-      name: MessageDataPopulator
-    - # Set validity period to a fixed duration period starting from message time.
-      name: FixedDurationValidityPeriodPopulator
-      activate-on:
-        # Apply only to Space Weather Advisory messages
-        type:
-          is: SPACE_WEATHER_ADVISORY
-      config:
-        # Set validity period length to 24 hours
-        validity-end-offset: PT24H
-    - # Trim whitespaces around message content.
-      name: MessageContentTrimmer
-    - # Reject message if message time is too far in the future.
-      name: FixedProcessingResultPopulator
-      activate-on:
-        message-age:
-          # Accept messages at less than 12 hours in the future. Do note the negative message age value.
-          is-less-than: -PT12H
-      config:
-        result: MESSAGE_TIME_IN_FUTURE
-  # List of post-action instance specifications, that determine what actions are run after message has been archived.
-  # Post-action instance specification consists of
-  # - name: name of post-action to run (mandatory)
-  # - activate-on: optional activation conditions. The specified action is run only when all of provided activation conditions are satisfied.
-  #   Omit to run unconditionally.
-  # - config: map of action-specific configuration options. Some of them may be mandatory. May be omitted, when no configuration options are given.
-  # For more info on post-action configuration in general, see README.md in the project root directory.
-  post-actions:
-    - name: ResultLogger
-      config:
-        message: Message archiving process finished.
-  # Map route name to numeric identifier.
-  # Name is preferably same as 'avidb_message_routes.name' value in the database.
-  # Numeric identifier must be equal to 'avidb_message_routes.route_id' in the database.
-  route-ids:
-    DEFAULT: 1
-  # Map message format name to numeric identifier.
-  # Name is the value of fi.fmi.avi.model.GenericAviationWeatherMessage.Format.name().
-  # Numeric identifier must be equal to 'avidb_message_format.format_id' in the database.
-  format-ids:
-    TAC: 1
-    IWXXM: 2
-  # Map message type name to numeric identifier.
-  # Name is the value of fi.fmi.avi.model.MessageType.name().
-  # Numeric identifier must be equal to 'avidb_message_types.type_id' in the database.
-  type-ids:
-    METAR: 1
-    SPECI: 2
-    TAF: 3
-    SIGMET: 4
-    AIRMET: 5
-    VOLCANIC_ASH_ADVISORY: 6
-    TROPICAL_CYCLONE_ADVISORY: 7
-    SPACE_WEATHER_ADVISORY: 8
-# END SNIPPET: production-line
----
-
 ##############################################
 #
 #  File handling
 #
 ##############################################
-# START SNIPPET: File handling
 file-handler:
   # Charset of input files.
   charset: UTF-8
@@ -459,4 +258,26 @@ file-handler:
     max-interval: PT10S
     # Set to zero to retry infinitely. Set a positive duration for time limited retries.
     timeout: PT0S
-# END SNIPPET: File handling
+
+##############################################
+#
+#  Configuration helper properties
+#
+##############################################
+config-helper:
+  # Regex patterns of timestamps, filenames etc
+  pattern:
+    # Pattern matching <4-digit year><month><day>.
+    yyyyMMdd: '(?<yyyy>\d{4})(?<MM>\d{2})(?<dd>\d{2})'
+    # Pattern matching <hour><minute><second>.
+    hhmmss: '(?<hh>\d{2})(?<mm>\d{2})(?<ss>\d{2})'
+    # Pattern matching <4-digit year><month><day><hour><minute><second>.
+    yyyyMMddhhmmss: '${config-helper.pattern.yyyyMMdd}${config-helper.pattern.hhmmss}'
+    yyyyMMddThhmmssZ: '${config-helper.pattern.yyyyMMdd}T${config-helper.pattern.hhmmss}Z'
+    yyyyMMdd_hhmmss: '${config-helper.pattern.yyyyMMdd}_${config-helper.pattern.hhmmss}'
+    ddMMyy_hhmmss: '(?<dd>\d{2})(?<MM>\d{2})(?<yy>\d{2})_${config-helper.pattern.hhmmss}'
+    # Pattern matching WMO Doc. 386 general file naming conventions with pflag 'A' and oflag 'C'.
+    WMO_A_C: 'A_[A-Z0-9]{16,19}_C_[A-Z]{4}_${config-helper.pattern.yyyyMMddhhmmss}'
+  # 2-letter ICAO code prefix of my organization
+  # Override in your configuration. Use dot '.' for second letter on a single-letter prefix.
+  self-icao-prefix: XX

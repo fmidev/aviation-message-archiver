@@ -1,0 +1,35 @@
+##############################################
+#
+#  Aviation Message Archiver
+#  =========================
+#
+#  H2 profile configuration
+#
+#  Property values surrounded by '@' characters (e.g. '@pom.property@') are references to Maven POM properties,
+#  and will be replaced upon build with actual build-time property values.
+#
+##############################################
+
+##############################################
+#
+#  Datasource properties
+#
+# For details on spring.* properties, see Spring Boot documentation on
+# - Data: https://docs.spring.io/spring-boot/docs/current/reference/html/data.html
+# - Data properties: https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data
+# - Data Migration Properties:
+#     https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data-migration
+#
+##############################################
+# H2 database connection configuration for development use
+spring:
+  datasource:
+    url: jdbc:h2:mem:archiver;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+  sql:
+    init:
+      platform: h2
+      schema-locations: classpath:fi/fmi/avi/avidb/schema/h2/schema-h2.sql

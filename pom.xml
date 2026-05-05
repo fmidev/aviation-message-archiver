@@ -274,6 +274,7 @@
         <filtering>true</filtering>
         <includes>
           <include>application.yml</include>
+          <include>application-*.yml</include>
         </includes>
       </resource>
     </resources>
