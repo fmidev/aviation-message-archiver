@@ -43,7 +43,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          ARTIFACT_ID="$(./mvnw -B -q -DforceStdout -Dexpression=project.artifactId help:evaluate)"
+          ARTIFACT_ID="$(./mvnw -B -DforceStdout -Dexpression=project.artifactId help:evaluate)"
           if [[ -z "$ARTIFACT_ID" ]]; then
             echo "::error::Failed to resolve Maven artifactId"
             exit 1
