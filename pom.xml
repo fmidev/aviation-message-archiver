@@ -433,8 +433,8 @@
             Generate documentation and include it in SCM. Requires plugin version >=3.
             https://stackoverflow.com/a/68687685
           -->
-          <preparationGoals>validate resources:copy-resources@docs scm:add -Dincludes=README.md,compose.yaml,aviation-message-archiver.container</preparationGoals>
-          <completionGoals>validate resources:copy-resources@docs scm:add -Dincludes=README.md,compose.yaml,aviation-message-archiver.container</completionGoals>
+          <preparationGoals>validate resources:copy-resources@docs scm:add "-Dincludes=README.md,compose.yaml,aviation-message-archiver.container"</preparationGoals>
+          <completionGoals>validate resources:copy-resources@docs scm:add "-Dincludes=README.md,compose.yaml,aviation-message-archiver.container"</completionGoals>
         </configuration>
       </plugin>
 
