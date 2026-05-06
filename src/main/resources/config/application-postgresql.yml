@@ -1,0 +1,57 @@
+##############################################
+#
+#  Aviation Message Archiver
+#  =========================
+#
+#  Postgresql profile default configuration
+#
+#  Property values surrounded by '@' characters (e.g. '@pom.property@') are references to Maven POM properties,
+#  and will be replaced upon build with actual build-time property values.
+#
+##############################################
+
+##############################################
+#
+#  Datasource properties
+#
+# For details on spring.* properties, see Spring Boot documentation on
+# - Data: https://docs.spring.io/spring-boot/docs/current/reference/html/data.html
+# - Data properties: https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data
+# - Data Migration Properties:
+#     https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data-migration
+#
+##############################################
+spring:
+  datasource:
+    # url: jdbc:postgresql://avidb:5432/avidb
+    # username:
+    # password:
+    driver-class-name: org.postgresql.Driver
+---
+spring.config.activate.on-profile: local & !openshift
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/avidb
+    username: avidb_agent
+    password: secret
+---
+spring.config.activate.on-profile: (local | development)
+
+spring:
+  sql:
+    init:
+      platform: postgresql
+      schema-locations: classpath:fi/fmi/avi/avidb/schema/postgresql/schema-postgresql.sql
+      data-locations: classpath:fi/fmi/avi/avidb/schema/postgresql/privileges-postgresql.sql
+      mode: always
+      # Treat the files as single SQL statements
+      separator: ^^^ END OF SCRIPT ^^^
+      continue-on-error: true
+---
+spring.config.activate.on-profile: (local | development) & example
+
+spring:
+  sql:
+    init:
+      data-locations: ${example.spring.sql.init.data-locations.postgresql}

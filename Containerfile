@@ -35,6 +35,8 @@ USER 1001
 
 # Default JVM options for container environment
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
+# Default data directory root inside container
+ENV PRODUCTION_LINE_DIRECTORY_ROOT="/data"
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]

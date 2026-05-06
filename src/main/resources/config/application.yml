@@ -1,0 +1,247 @@
+##############################################
+#
+#  Aviation Message Archiver
+#  =========================
+#
+#  Application default configuration
+#
+#  Property values surrounded by '@' characters (e.g. '@pom.property@') are references to Maven POM properties,
+#  and will be replaced upon build with actual build-time property values.
+#
+#  Spring runtime profiles known in the application configuration:
+#  - Production line profiles:
+#    - <default>: Omitted; create your own.
+#    - example: an example production line
+#  - Runtime environment profiles:
+#    - local: local developer-specific development environment
+#    - development: common development environment
+#    - testing: testing / staging environment - as close as possible to the production environment
+#    - production: production environment
+#  - Runtime platform profiles:
+#    - <default>: host operating system
+#    - openshift: OpenShift/Kubernetes
+#  - Database profiles:
+#    - h2: use H2 database on development and tests
+#    - postgresql: Use PostgreSQL/PostGIS database for persistent storage
+#  - Logging profiles:
+#    - <default>: Use default console logging
+#    - logstash: Use structured JSON logging
+#
+#  See Spring Boot reference documentation for details on runtime profiles.
+#  https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.profiles
+#
+##############################################
+spring.application:
+  name: '@project.artifactId@'
+spring.main:
+  banner-mode: off
+
+##############################################
+#
+#  Common datasource properties
+#
+#  For details on spring.* properties, see Spring Boot documentation on
+#  - Data: https://docs.spring.io/spring-boot/docs/current/reference/html/data.html
+#  - Data properties: https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data
+#  - Data Migration Properties:
+#      https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data-migration
+#
+##############################################
+example:
+  spring:
+    sql:
+      init:
+        data-locations:
+          h2: classpath:/h2-data/example/*.sql
+          postgresql: classpath:fi/fmi/avi/avidb/schema/postgresql/privileges-postgresql.sql,classpath:/postgresql-data/example/*.sql
+spring.datasource:
+  # com.zaxxer.hikari.HikariDataSource properties
+  hikari:
+    # Maximum time in seconds to wait while connecting to a database.
+    login-timeout: 40
+    # Maximum time in milliseconds to wait for a connection from the pool.
+    # Use zero to wait indefinitely (Integer.MAX_VALUE milliseconds in practice).
+    connection-timeout: 0
+    # Maximum time in milliseconds that the pool will wait for an alive connection.
+    validation-timeout: 5000
+    # Pool initialization failure timeout in milliseconds.
+    # Use zero to allow the application to start even if initial datasource connection fails.
+    initialization-fail-timeout: 0
+spring.jdbc:
+  template:
+    query-timeout: PT15S
+spring.transaction:
+  default-timeout: PT15S
+
+datasource:
+  # Database schema to use
+  schema: public
+  # Retry configuration on database actions
+  retry:
+    # Duration to wait after initial failure.
+    initial-interval: PT0.5S
+    # Duration between retries is extended by this multiplier on subsequent retries.
+    multiplier: 2
+    # Maximum duration between retry attempts.
+    max-interval: PT1M
+    # Set to zero to retry infinitely. Set a positive duration for time limited retries.
+    timeout: PT0S
+
+##############################################
+#
+#  Executor config
+#
+#  Each phase in file processing (e.g. file read, parse etc.) is controlled by phase-specific single-thread executors.
+#  Following settings control behavior of these executors.
+#  See fi.fmi.avi.archiver.logging.model.ProcessingPhase for list of phases.
+#
+##############################################
+executor:
+  # The size of each phase executor's task queue.
+  # The queue is blocking, thus all incoming tasks are blocked while queue is full. The purpose of the size limit is to prevent incoming tasks accumulating in
+  # memory, in case a phase is blocked due to temporary failure, e.g. database being down.
+  queue-size: 20
+
+##############################################
+#
+#  Shutdown config
+#
+##############################################
+server:
+  # Shutdown internal web server gracefully
+  # https://docs.spring.io/spring-boot/docs/current/reference/html/web.html#web.graceful-shutdown
+  shutdown: graceful
+spring.lifecycle:
+  # Graceful shutdown timeout
+  # https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase
+  timeout-per-shutdown-phase: 20s
+processing-flow:
+  # When this application receives a shutdown signal, it stops new file reception and waits for ongoing file processing to finish before shutting down.
+  # Following properties control this behavior.
+  graceful-shutdown:
+    # Time to wait for all file processing to finish upon shutdown
+    timeout: PT20S
+    # Check every pollingInterval whether all ongoing tasks have finished.
+    polling-interval: PT0.1S
+
+##############################################
+#
+#  Actuator config
+#
+# See Spring Boot reference documentation for details on actuators.
+# https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.endpoints
+#
+##############################################
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  health:
+    diskspace:
+      enabled: true
+      path: ${production-line.directory.root}
+      threshold: 10MB
+  info:
+    build:
+      enabled: true
+    env:
+      enabled: true
+    java:
+      enabled: true
+
+# Custom info actuator environment properties
+info:
+  spring:
+    name: '${spring.application.name}'
+    profiles: '${spring.profiles.active}'
+
+# Custom health indicator configuration
+health-indicator:
+  # fi.fmi.avi.archiver.spring.healthcontributor.DirectoryPermissionHealthContributor
+  # Creates a temporary empty file in input, archive and fail directories of each product
+  directory-permission:
+    # Temporary file prefix
+    temp-file-prefix: .temp
+    # Temporary file suffix
+    temp-file-suffix: .healthindicator
+  # fi.fmi.avi.archiver.spring.healthcontributor.BlockingExecutorHealthContributor
+  blocking-executor:
+    timeout: PT30S
+
+##############################################
+#
+#  Production line configuration
+#
+##############################################
+
+# Input file polling configuration (for org.springframework.integration.file.FileReadingMessageSource)
+polling:
+  # Fixed delay between polls
+  delay: PT1.000S
+
+##############################################
+#
+#  File handling
+#
+##############################################
+file-handler:
+  # Charset of input files.
+  charset: UTF-8
+  # Retry configuration on file actions
+  retry:
+    # Duration to wait after initial failure.
+    initial-interval: PT0.5S
+    # Duration between retries is extended by this multiplier on subsequent retries.
+    multiplier: 2
+    # Maximum duration between retry attempts.
+    max-interval: PT10S
+    # Set to zero to retry infinitely. Set a positive duration for time limited retries.
+    timeout: PT0S
+
+##############################################
+#
+#  Configuration helper properties
+#
+##############################################
+config-helper:
+  # Regex patterns of timestamps, filenames etc
+  pattern:
+    # Pattern matching <4-digit year><month><day>.
+    yyyyMMdd: '(?<yyyy>\d{4})(?<MM>\d{2})(?<dd>\d{2})'
+    # Pattern matching <hour><minute><second>.
+    hhmmss: '(?<hh>\d{2})(?<mm>\d{2})(?<ss>\d{2})'
+    # Pattern matching <4-digit year><month><day><hour><minute><second>.
+    yyyyMMddhhmmss: '${config-helper.pattern.yyyyMMdd}${config-helper.pattern.hhmmss}'
+    yyyyMMddThhmmssZ: '${config-helper.pattern.yyyyMMdd}T${config-helper.pattern.hhmmss}Z'
+    yyyyMMdd_hhmmss: '${config-helper.pattern.yyyyMMdd}_${config-helper.pattern.hhmmss}'
+    ddMMyy_hhmmss: '(?<dd>\d{2})(?<MM>\d{2})(?<yy>\d{2})_${config-helper.pattern.hhmmss}'
+    # Pattern matching WMO Doc. 386 general file naming conventions with pflag 'A' and oflag 'C'.
+    WMO_A_C: 'A_[A-Z0-9]{16,19}_C_[A-Z]{4}_${config-helper.pattern.yyyyMMddhhmmss}'
+  # 2-letter ICAO code prefix of my organization
+  # Override in your configuration. Use dot '.' for second letter on a single-letter prefix.
+  self-icao-prefix: XX
+
+##############################################
+#
+#  Production line configuration
+#
+#  (Only helper properties provided here)
+#
+##############################################
+production-line:
+  # Directory-related helper properties only used as reference within this configuration file.
+  directory:
+    # Base directory of all product directories.
+    # In the container build this is overridden by PRODUCTION_LINE_DIRECTORY_ROOT environment variable, and
+    # overriding this property in a configuration file has no effect.
+    root: /data
+    # Name of input directory.
+    input-name: input
+    # Name of archive directory.
+    archived-name: archived
+    # Name of fail directory.
+    failed-name: failed

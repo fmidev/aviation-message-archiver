@@ -125,12 +125,12 @@ The next steps guide you to test the application using containers with
 example [configuration](#application-configuration)
 and a PostGIS database.
 
-1. Set up the database. Use credentials specified by `spring.datasource.*` properties in the [application.yml]
-   configuration for profile `local & postgresql & !openshift`.
+1. Set up the database. Use credentials specified by `spring.datasource.*` properties in
+   the [application-postgresql.yml] configuration for `local` profile.
 
    ```shell
    podman run \
-     -p 127.0.0.1:5432:5432 \
+     -p 5432:5432 \
      --env POSTGRES_USER=avidb_agent \
      --env POSTGRES_PASSWORD=secret \
      --env POSTGRES_DB=avidb \
@@ -155,10 +155,10 @@ and a PostGIS database.
    ```shell
    podman run \
      --name aviation-message-archiver \
+     --add-host=host.containers.internal:host-gateway \
      -p 8080:8080 \
      -e SPRING_PROFILES_ACTIVE="postgresql,local,example" \
-     -e SPRING_SQL_INIT_DATALOCATIONS="\${example.spring.sql.init.data-locations.postgresql},file:///app/sql/avidb_stations.sql" \
-     -v $AVIDB_STATIONS_SQL:/app/sql/avidb_stations.sql:ro,z \
+     -e SPRING_DATASOURCE_URL="jdbc:postgresql://host.containers.internal:5432/avidb" \
      -v ./config:/app/config:ro,z \
      -v ./data:/data:z \
      ghcr.io/fmidev/aviation-message-archiver:${application.image.tag}
@@ -175,11 +175,11 @@ and a PostGIS database.
     - health: <http://localhost:8080/actuator/health>
 
 5. Copy some message files in the input directories specified by the `production-line.products[n].input-dir` properties
-   in the [application.yml] configuration file.
+   in the [application-example.yml] configuration file.
 
 6. After an input file is processed, the application moves it to one of target directories specified by
    the `production-line.products[n].archive-dir` and `production-line.products[n].fail-dir` properties in
-   the [application.yml] configuration file. The processing identifier is appended to the file name.
+   the [application-example.yml] configuration file. The processing identifier is appended to the file name.
 
 7. Connect to the database using `psql` or any appropriate client with connection information provided in the database
    setup step. Look at the archived and rejected message tables in the database for any messages. E.g.
@@ -215,7 +215,13 @@ from [ghcr.io/fmidev/aviation-message-archiver](https://ghcr.io/fmidev/aviation-
 or build it yourself:
 
 ```shell
-podman build --omit-history -t aviation-message-archiver .
+podman build \
+    --pull=newer \
+    --omit-history \
+    --volume ~/.m2/repository:/root/.m2/repository:z \
+    --volume ~/.m2/wrapper:/root/.m2/wrapper:z \
+    -t aviation-message-archiver \
+    .
 ```
 
 ### Podman / Docker run
@@ -229,10 +235,11 @@ See [compose.yaml] for an example Compose configuration. The example mounts
 `data/` for input/output files, relative to the Compose file location. To set up:
 
 1. Copy [compose.yaml] to your working directory.
-2. Create configuration and data directories, and add your `application.yml`:
+2. Create directories for configuration and data, and add your `application.yml` and/or `application-<profile>.yml`
+   configuration files:
    ```shell
    mkdir -p config data
-   cp your-application.yml config/application.yml
+   cp application*.yml config/
    ```
 3. Start the service:
    ```shell
@@ -246,11 +253,12 @@ See [aviation-message-archiver.container] for an example Podman Quadlet unit des
 `~/.local/share/aviation-message-archiver/data/` for input/output files. To set up:
 
 1. Copy the file to `~/.config/containers/systemd/`
-2. Create configuration and data directories, and add your `application.yml`:
+2. Create directories for configuration and data, and add your `application.yml` and/or `application-<profile>.yml`
+   configuration files:
    ```shell
    mkdir -p ~/.config/aviation-message-archiver/config
    mkdir -p ~/.local/share/aviation-message-archiver/data
-   cp your-application.yml ~/.config/aviation-message-archiver/config/application.yml
+   cp application*.yml ~/.config/aviation-message-archiver/config/
    ```
 3. Reload and start:
    ```shell
@@ -361,20 +369,26 @@ java -Dspring.profiles.active=<other profiles...>,logstash ...
 
 ## Application configuration
 
-Application configuration properties are collected in a YAML file called [application.yml]. The provided configuration
-file is a base configuration, acting as an example. You can use it as a base for your own application configuration
-file. In your custom configuration file you need to add and/or override only changed or forced properties in your own
-configuration file, because the provided base configuration file is loaded as well.
-See [External Application Properties](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.external-config.files)
-in Spring Boot reference documentation for instructions on how to apply your custom configuration file.
-
-Runtime behavior is controlled
+Default application configuration properties are collected in YAML files [application.yml] and the Spring
+profile-specific `application-<profile>.yml` files under [src/main/resources/config](src/main/resources/config). Runtime
+behavior is controlled
 using [Spring profiles](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.profiles)
-which are activated by the application launch command. Profiles declared in the provided configuration are described in
+which are activated by the application launch command. Profiles known in the provided configuration are described in
 the [application.yml] file.
 
-The most relevant part of the configuration file is the production line configuration under `production-line` property.
-Its contents are described below.
+A simple layout for your own configuration files running with `postgresql`, `<entity>` and `production` profiles could
+be:
+
+- config/application-\<entity>.yml - _common properties, e.g. production line configuration, for your entity_
+- config/secrets/application-production.yml - _paths and credentials for your production environment_
+
+See [External Application Properties](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.external-config.files)
+in Spring Boot reference documentation for instructions on how to apply your custom configuration extending the default
+configuration.
+
+The most relevant part of the configuration is the production line configuration under `production-line` property.
+The [application-example.yml] contains an example configuration that can be used as a basis for your own production line
+configuration. The production line configuration properties are described below.
 
 **Note:** Invalid configuration does not necessarily raise an error on startup, but may be silently ignored.
 
@@ -399,7 +413,8 @@ production-line:
     - ...
 ```
 
-See [application.yml] file for a documented configuration example. More detailed documentation on individual properties
+See [application-example.yml] file for a documented configuration example. More detailed documentation on individual
+properties
 can be found in the [AviationProduct](src/main/java/fi/fmi/avi/archiver/config/model/AviationProduct.java) model class.
 
 ### Message processors
@@ -454,13 +469,13 @@ Message populator name is generally by convention the same as the class simple n
 of `fi.fmi.avi.archiver.message.processor.populator.MessageDataPopulator` class is `MessageDataPopulator` in the
 configuration.
 
-A base configuration is provided in the [application.yml] file as an example.
+A base configuration is provided in the [application-example.yml] file as an example.
 
 #### Bundled message populators
 
 This application comes with handful of bundled message populators. Some of them,
 like [MessageDataPopulator](#messagedatapopulator), play an essential role in the archival process. The
-provided [application.yml] has an example configuration of these. Others,
+provided [application-example.yml] has an example configuration of these. Others,
 like [FixedProcessingResultPopulator](#fixedprocessingresultpopulator)
 or [StationIcaoCodeReplacer](#stationicaocodereplacer), are provided for customized message handling, along with the
 possibility for [conditional activation](#conditional-message-processor-activation). One message
@@ -1393,7 +1408,7 @@ The following mappings must exist under `production-line` application configurat
   `MessageType.name()`](https://github.com/fmidev/fmi-avi-messageconverter/blob/${fmi-avi-messageconverter.branch-name}/src/main/java/fi/fmi/avi/model/MessageType.java)
   to database column `avidb_message_types.type_id`.
 
-See the provided [application.yml] for an example.
+See the provided [application-example.yml] for an example.
 
 ### Spring Boot configuration properties
 
@@ -1442,7 +1457,11 @@ template.
 
 MIT License. See [LICENSE](LICENSE).
 
-[application.yml]: src/main/resources/application.yml
+[application.yml]: src/main/resources/config/application.yml
+
+[application-example.yml]: src/main/resources/config/application-example.yml
+
+[application-postgresql.yml]: src/main/resources/config/application-postgresql.yml
 
 [compose.yaml]: compose.yaml
 
