@@ -16,16 +16,9 @@
 #
 ##############################################
 production-line:
-  # Directory-related helper properties only used as reference within this configuration file.
-  directory:
-    # Base directory of all product directories.
-    root: ${user.home}/aviation-message-archiver
-    # Name of input directory.
-    input-name: input
-    # Name of archive directory.
-    archived-name: archived
-    # Name of fail directory.
-    failed-name: failed
+  # See production-line.directory in application.yml for directory-related helper properties used only as reference
+  # within the production line configuration.
+  #
   # List of aviation message product specifications.
   # At least one product must be specified.
   # See fi.fmi.avi.archiver.config.model.AviationProduct for detailed documentation on properties.

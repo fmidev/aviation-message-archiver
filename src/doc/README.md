@@ -130,7 +130,7 @@ and a PostGIS database.
 
    ```shell
    podman run \
-     -p 127.0.0.1:5432:5432 \
+     -p 5432:5432 \
      --env POSTGRES_USER=avidb_agent \
      --env POSTGRES_PASSWORD=secret \
      --env POSTGRES_DB=avidb \
@@ -155,10 +155,10 @@ and a PostGIS database.
    ```shell
    podman run \
      --name aviation-message-archiver \
+     --add-host=host.containers.internal:host-gateway \
      -p 8080:8080 \
      -e SPRING_PROFILES_ACTIVE="postgresql,local,example" \
-     -e SPRING_SQL_INIT_DATALOCATIONS="\${example.spring.sql.init.data-locations.postgresql},file:///app/sql/avidb_stations.sql" \
-     -v $AVIDB_STATIONS_SQL:/app/sql/avidb_stations.sql:ro,z \
+     -e SPRING_DATASOURCE_URL="jdbc:postgresql://host.containers.internal:5432/avidb" \
      -v ./config:/app/config:ro,z \
      -v ./data:/data:z \
      ghcr.io/fmidev/aviation-message-archiver:${application.image.tag}
@@ -215,7 +215,13 @@ from [ghcr.io/fmidev/aviation-message-archiver](https://ghcr.io/fmidev/aviation-
 or build it yourself:
 
 ```shell
-podman build --omit-history -t aviation-message-archiver .
+podman build \
+    --pull=newer \
+    --omit-history \
+    --volume ~/.m2/repository:/root/.m2/repository:z \
+    --volume ~/.m2/wrapper:/root/.m2/wrapper:z \
+    -t aviation-message-archiver \
+    .
 ```
 
 ### Podman / Docker run

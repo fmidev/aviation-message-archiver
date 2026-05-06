@@ -224,3 +224,24 @@ config-helper:
   # 2-letter ICAO code prefix of my organization
   # Override in your configuration. Use dot '.' for second letter on a single-letter prefix.
   self-icao-prefix: XX
+
+##############################################
+#
+#  Production line configuration
+#
+#  (Only helper properties provided here)
+#
+##############################################
+production-line:
+  # Directory-related helper properties only used as reference within this configuration file.
+  directory:
+    # Base directory of all product directories.
+    # In the container build this is overridden by PRODUCTION_LINE_DIRECTORY_ROOT environment variable, and
+    # overriding this property in a configuration file has no effect.
+    root: /data
+    # Name of input directory.
+    input-name: input
+    # Name of archive directory.
+    archived-name: archived
+    # Name of fail directory.
+    failed-name: failed

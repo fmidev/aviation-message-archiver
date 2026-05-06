@@ -1,0 +1,26 @@
+##############################################
+#
+#  Aviation Message Archiver
+#  =========================
+#
+#  Local profile default configuration
+#
+#  Property values surrounded by '@' characters (e.g. '@pom.property@') are references to Maven POM properties,
+#  and will be replaced upon build with actual build-time property values.
+#
+##############################################
+
+##############################################
+#
+#  Production line configuration
+#
+#  (Only helper properties provided here)
+#
+##############################################
+production-line:
+  # Directory-related helper properties only used as reference within this configuration file.
+  directory:
+    # Base directory of all product directories.
+    # In the container build this is overridden by PRODUCTION_LINE_DIRECTORY_ROOT environment variable, and
+    # overriding this property in a configuration file has no effect.
+    root: ${user.home}/aviation-message-archiver/data
