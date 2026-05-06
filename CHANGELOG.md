@@ -31,6 +31,18 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - ...
 
+## [v1.4.1] - 2026-05-06
+
+### Added
+
+- Containerization support with pre-built images and instructions on deployment [#167], [#168] 
+
+### Changed
+
+- Retry all exceptions in AMQP message publication [#163]
+- Set HikariCP connection timeout to zero (wait indefinitely) [#164]
+- Restructured default configuration into profile-specific files [#171]
+
 ## [v1.4.0] - 2026-02-13
 
 ### Added
@@ -100,7 +112,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Initial release.
 
-[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.4.0...HEAD
+[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.4.1...HEAD
+
+[v1.4.1]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.4.0...aviation-message-archiver-1.4.1
 
 [v1.4.0]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.4.0
 
@@ -143,3 +157,15 @@ Initial release.
 [#161]: https://github.com/fmidev/aviation-message-archiver/pull/161
 
 [#162]: https://github.com/fmidev/aviation-message-archiver/pull/162
+
+[#163]: https://github.com/fmidev/aviation-message-archiver/pull/163
+
+[#164]: https://github.com/fmidev/aviation-message-archiver/pull/164
+
+[#167]: https://github.com/fmidev/aviation-message-archiver/pull/167
+
+[#168]: https://github.com/fmidev/aviation-message-archiver/pull/168
+
+[#171]: https://github.com/fmidev/aviation-message-archiver/pull/171
+
+
