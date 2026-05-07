@@ -3,7 +3,7 @@
 #  Aviation Message Archiver
 #  =========================
 #
-#  Example profile default configuration
+#  Default configuration for the 'example' profile
 #
 #  Property values surrounded by '@' characters (e.g. '@pom.property@') are references to Maven POM properties,
 #  and will be replaced upon build with actual build-time property values.

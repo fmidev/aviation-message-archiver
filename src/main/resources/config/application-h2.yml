@@ -3,7 +3,7 @@
 #  Aviation Message Archiver
 #  =========================
 #
-#  H2 profile configuration
+#  Default configuration for the 'h2' profile
 #
 #  Property values surrounded by '@' characters (e.g. '@pom.property@') are references to Maven POM properties,
 #  and will be replaced upon build with actual build-time property values.
