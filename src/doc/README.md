@@ -157,8 +157,10 @@ and a PostGIS database.
      --name aviation-message-archiver \
      --add-host=host.containers.internal:host-gateway \
      -p 8080:8080 \
-     -e SPRING_PROFILES_ACTIVE="postgresql,local,example" \
+     -e SPRING_PROFILES_ACTIVE="postgresql,example,local" \
      -e SPRING_DATASOURCE_URL="jdbc:postgresql://host.containers.internal:5432/avidb" \
+     -e SPRING_SQL_INIT_DATALOCATIONS="\${example.spring.sql.init.data-locations.postgresql},file:///app/sql/avidb_stations.sql" \
+     -v "$AVIDB_STATIONS_SQL":/app/sql/avidb_stations.sql:ro,z \
      -v ./config:/app/config:ro,z \
      -v ./data:/data:z \
      ghcr.io/fmidev/aviation-message-archiver:${application.image.tag}
@@ -275,7 +277,7 @@ created in the [Getting started](#getting-started) step (or omit the `spring.sql
 ```shell
 mvn package
 java \
-  -Dspring.profiles.active="postgresql,local,example" \
+  -Dspring.profiles.active="postgresql,example,local" \
   -Dspring.sql.init.data-locations="\${example.spring.sql.init.data-locations.postgresql},file://$AVIDB_STATIONS_SQL" \
   -jar target/${project.build.finalName}-${spring-boot.repackage.classifier}.jar
 ```
@@ -1437,7 +1439,7 @@ To use H2, activate the `h2` Spring profile instead of `postgresql`. For example
 
 ```shell
 java \
-  -Dspring.profiles.active="h2,local,example" \
+  -Dspring.profiles.active="h2,example,local" \
   -jar target/${project.build.finalName}-${spring-boot.repackage.classifier}.jar
 ```
 
