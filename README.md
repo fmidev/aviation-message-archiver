@@ -159,6 +159,8 @@ and a PostGIS database.
      -p 8080:8080 \
      -e SPRING_PROFILES_ACTIVE="postgresql,local,example" \
      -e SPRING_DATASOURCE_URL="jdbc:postgresql://host.containers.internal:5432/avidb" \
+     -e SPRING_SQL_INIT_DATALOCATIONS="\${example.spring.sql.init.data-locations.postgresql},file:///app/sql/avidb_stations.sql" \
+     -v "$AVIDB_STATIONS_SQL":/app/sql/avidb_stations.sql:ro,z \
      -v ./config:/app/config:ro,z \
      -v ./data:/data:z \
      ghcr.io/fmidev/aviation-message-archiver:main
