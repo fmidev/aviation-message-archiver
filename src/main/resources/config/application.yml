@@ -221,9 +221,6 @@ config-helper:
     ddMMyy_hhmmss: '(?<dd>\d{2})(?<MM>\d{2})(?<yy>\d{2})_${config-helper.pattern.hhmmss}'
     # Pattern matching WMO Doc. 386 general file naming conventions with pflag 'A' and oflag 'C'.
     WMO_A_C: 'A_[A-Z0-9]{16,19}_C_[A-Z]{4}_${config-helper.pattern.yyyyMMddhhmmss}'
-  # 2-letter ICAO code prefix of my organization
-  # Override in your configuration. Use dot '.' for second letter on a single-letter prefix.
-  self-icao-prefix: XX
 
 ##############################################
 #

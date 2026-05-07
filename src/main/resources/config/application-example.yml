@@ -12,6 +12,16 @@
 
 ##############################################
 #
+#  Configuration helper properties
+#
+##############################################
+# 2-letter ICAO code prefix of my organization
+# Use dot '.' for second letter on a single-letter prefix (e.g. 'X.').
+config-helper:
+  self-icao-prefix: XX
+
+##############################################
+#
 #  Production line configuration
 #
 ##############################################
