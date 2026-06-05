@@ -68,7 +68,6 @@
         <!-- The spring-boot.version property is used in documentation links in README.md -->
         <spring-boot.version>${project.parent.version}</spring-boot.version>
         <auto-value.version>1.9</auto-value.version>
-        <guava.version>33.5.0-jre</guava.version>
         <avidb-schema.version>1.0.0</avidb-schema.version>
         <netty4.version>4.2.17.Final</netty4.version>
         <assertj.version>3.27.7</assertj.version>
@@ -88,6 +87,13 @@
                 <groupId>fi.fmi.avi.converter</groupId>
                 <artifactId>fmi-avi-messageconverter-bom</artifactId>
                 <version>4.1.2-SNAPSHOT</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava-bom</artifactId>
+                <version>33.6.0-jre</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -160,7 +166,6 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
         </dependency>
         <dependency>
             <groupId>fi.fmi.avi.converter</groupId>
@@ -250,7 +255,6 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava-testlib</artifactId>
-            <version>${guava.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
