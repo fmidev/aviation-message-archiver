@@ -1,6 +1,5 @@
 package fi.fmi.avi.archiver.config;
 
-import com.google.common.collect.ImmutableList;
 import fi.fmi.avi.archiver.DefaultProcessingServiceContext;
 import fi.fmi.avi.archiver.ProcessingServiceContext;
 import fi.fmi.avi.archiver.ProcessingState;
@@ -87,7 +86,7 @@ public class IntegrationFlowConfig {
     private static final GenericStructuredLoggable<Boolean> PROCESSING_ERRORS_TRUE = loggable(PROCESSING_ERRORS_LOGGABLE, true, "with errors");
     private static final GenericStructuredLoggable<Boolean> PROCESSING_ERRORS_FALSE = loggable(PROCESSING_ERRORS_LOGGABLE, false, "successfully");
 
-    private static final List<String> LOGGING_ENV_MDC_KEYS = ImmutableList.of(//
+    private static final List<String> LOGGING_ENV_MDC_KEYS = List.of(//
             FileProcessingIdentifier.newInstance().getStructureName(), //
             ProcessingPhase.START.getStructureName());
 
@@ -265,12 +264,12 @@ public class IntegrationFlowConfig {
 
     @Bean
     List<Advice> archiveAdviceChain(final Advice exceptionTrapAdvice, final Advice archiveRetryAdvice) {
-        return ImmutableList.of(exceptionTrapAdvice, archiveRetryAdvice);
+        return List.of(exceptionTrapAdvice, archiveRetryAdvice);
     }
 
     @Bean
     List<Advice> failAdviceChain(final Advice exceptionTrapAdvice, final Advice failRetryAdvice) {
-        return ImmutableList.of(exceptionTrapAdvice, failRetryAdvice);
+        return List.of(exceptionTrapAdvice, failRetryAdvice);
     }
 
     @Bean

@@ -1,12 +1,9 @@
 package fi.fmi.avi.archiver.message.processor.populator;
 
-import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 @SuppressFBWarnings(value = "MS_EXPOSE_REP", justification = "Is immutable")
@@ -34,13 +31,13 @@ public enum BulletinHeadingSource {
         }
     };
 
-    public static final List<BulletinHeadingSource> DEFAULT_SOURCES = Collections.unmodifiableList(Arrays.asList(values()));
+    public static final List<BulletinHeadingSource> DEFAULT_SOURCES = List.of(values());
 
-    private static final List<List<BulletinHeadingSource>> PERMUTATIONS = ImmutableList.of(//
-            ImmutableList.of(BulletinHeadingSource.GTS_BULLETIN_HEADING), //
-            ImmutableList.of(BulletinHeadingSource.COLLECT_IDENTIFIER), //
-            ImmutableList.of(BulletinHeadingSource.GTS_BULLETIN_HEADING, BulletinHeadingSource.COLLECT_IDENTIFIER), //
-            ImmutableList.of(BulletinHeadingSource.COLLECT_IDENTIFIER, BulletinHeadingSource.GTS_BULLETIN_HEADING));
+    private static final List<List<BulletinHeadingSource>> PERMUTATIONS = List.of(//
+            List.of(BulletinHeadingSource.GTS_BULLETIN_HEADING), //
+            List.of(BulletinHeadingSource.COLLECT_IDENTIFIER), //
+            List.of(BulletinHeadingSource.GTS_BULLETIN_HEADING, BulletinHeadingSource.COLLECT_IDENTIFIER), //
+            List.of(BulletinHeadingSource.COLLECT_IDENTIFIER, BulletinHeadingSource.GTS_BULLETIN_HEADING));
 
     public static List<List<BulletinHeadingSource>> getPermutations() {
         return PERMUTATIONS;

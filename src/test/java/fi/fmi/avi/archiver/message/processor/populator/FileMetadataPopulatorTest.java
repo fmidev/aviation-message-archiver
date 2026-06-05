@@ -1,6 +1,5 @@
 package fi.fmi.avi.archiver.message.processor.populator;
 
-import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.FileConfig;
@@ -20,6 +19,7 @@ import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,7 +53,7 @@ class FileMetadataPopulatorTest {
                             .setRouteId(MessageProcessorTestHelper.RouteId.TEST2.getId())//
                             .addFileConfigs(FILE_CONFIG_2)//
                             .buildPartial())//
-            .collect(ImmutableMap.toImmutableMap(AviationProduct::getId, Function.identity()));
+            .collect(Collectors.toUnmodifiableMap(AviationProduct::getId, Function.identity()));
     private static final InputAviationMessage INPUT_MESSAGE_TEMPLATE = InputAviationMessage.builder()//
             .setFileMetadata(FileMetadata.builder()//
                     .setFileReference(FileReference.create(PRODUCT_ID_1, "taf.txt"))//

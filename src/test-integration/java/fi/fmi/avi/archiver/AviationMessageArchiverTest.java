@@ -1,6 +1,5 @@
 package fi.fmi.avi.archiver;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
 import fi.fmi.avi.archiver.config.ConversionConfig;
@@ -65,7 +64,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 class AviationMessageArchiverTest {
 
     private static final String TEMP_FILE_SUFFIX = ".tmp";
-    private static final Set<String> INCLUDE_INPUT_FILES = ImmutableSet.of();
+    private static final Set<String> INCLUDE_INPUT_FILES = Set.of();
 
     private final RecursiveComparisonConfiguration archiveMessageComparisonConfiguration = RecursiveComparisonConfiguration.builder()
             .withEqualsForFields(MessageContentPredicate.INSTANCE, "message")

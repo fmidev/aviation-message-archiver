@@ -1,7 +1,5 @@
 package fi.fmi.avi.archiver.message.processor.populator;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.NullPointerTester;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
@@ -21,6 +19,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.*;
@@ -37,11 +36,13 @@ public class ProductMessageTypesValidatorTest {
                     AviationProduct.builder()//
                             .setId(TAF_PRODUCT)//
                             .buildPartial())//
-            .collect(ImmutableMap.toImmutableMap(AviationProduct::getId, Function.identity()));
-    private static final Set<MessageType> METAR_TYPES = ImmutableSet.of(MessageProcessorTestHelper.TypeId.SPECI.getType(),
+            .collect(Collectors.toUnmodifiableMap(AviationProduct::getId, Function.identity()));
+    private static final Set<MessageType> METAR_TYPES = Set.of(MessageProcessorTestHelper.TypeId.SPECI.getType(),
             MessageProcessorTestHelper.TypeId.METAR.getType());
     private static final Set<MessageType> TAF_TYPE = Collections.singleton(MessageType.TAF);
-    private static final Map<String, Set<MessageType>> PRODUCT_MESSAGE_TYPES = ImmutableMap.of(METAR_PRODUCT, METAR_TYPES, TAF_PRODUCT, TAF_TYPE);
+    private static final Map<String, Set<MessageType>> PRODUCT_MESSAGE_TYPES = Map.of(
+            METAR_PRODUCT, METAR_TYPES,
+            TAF_PRODUCT, TAF_TYPE);
     private static final FileMetadata METAR_METADATA = FileMetadata.builder()//
             .setFileReference(FileReference.create(METAR_PRODUCT, "anyfile"))//
             .buildPartial();
@@ -129,7 +130,7 @@ public class ProductMessageTypesValidatorTest {
     void misconfigured_message_type() {
         assertThatIllegalArgumentException().isThrownBy(() -> //
                 new ProductMessageTypesValidator(MessageProcessorTestHelper.TYPE_IDS, PRODUCTS,
-                        ImmutableMap.of(TAF_PRODUCT, Collections.singleton(new MessageType("test")))));
+                        Map.of(TAF_PRODUCT, Collections.singleton(new MessageType("test")))));
 
     }
 
@@ -137,7 +138,7 @@ public class ProductMessageTypesValidatorTest {
     void misconfigured_product() {
         assertThatIllegalArgumentException().isThrownBy(() -> //
                 new ProductMessageTypesValidator(MessageProcessorTestHelper.TYPE_IDS, PRODUCTS,
-                        ImmutableMap.of(OTHER_PRODUCT, Collections.singleton(MessageType.METAR))));
+                        Map.of(OTHER_PRODUCT, Collections.singleton(MessageType.METAR))));
     }
 
     // Test nulls apart from constructor
