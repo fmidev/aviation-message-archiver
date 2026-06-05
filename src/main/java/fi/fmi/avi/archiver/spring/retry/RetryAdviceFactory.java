@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.spring.retry;
 
 import fi.fmi.avi.archiver.config.util.SpringProcessingServiceContextHelper;
 import fi.fmi.avi.archiver.logging.model.LoggingContext;
+import org.aopalliance.intercept.MethodInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.handler.advice.RequestHandlerRetryAdvice;
@@ -9,8 +10,8 @@ import org.springframework.integration.support.ErrorMessageUtils;
 import org.springframework.messaging.Message;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
+import org.springframework.retry.RetryListener;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
-import org.springframework.retry.listener.RetryListenerSupport;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.retry.support.RetryTemplateBuilder;
 
@@ -35,8 +36,8 @@ public class RetryAdviceFactory {
         this.timeout = requireNonNull(timeout, "timeout");
     }
 
-    public static RequestHandlerRetryAdvice create(final String description, final Duration initialInterval, final Duration maxInterval,
-                                                   final int retryMultiplier, final Duration timeout) {
+    public static MethodInterceptor create(final String description, final Duration initialInterval, final Duration maxInterval,
+                                           final int retryMultiplier, final Duration timeout) {
         requireNonNull(description, "description");
         requireNonNull(initialInterval, "initialInterval");
         requireNonNull(maxInterval, "maxInterval");
@@ -44,8 +45,10 @@ public class RetryAdviceFactory {
 
         final RequestHandlerRetryAdvice retryAdvice = new RequestHandlerRetryAdvice();
         final ExponentialBackOffPolicy backOffPolicy = createBackOffPolicy(initialInterval, maxInterval, retryMultiplier);
-        final RetryTemplate retryTemplate = createRetryTemplate(description, timeout, retryAdvice, backOffPolicy);
-        retryAdvice.setRetryTemplate(retryTemplate);
+        final RetryTemplate retryTemplate = createRetryTemplate(description, timeout, backOffPolicy);
+        // retryAdvice must be the first listener for Message to be available in RetryContext.
+        // Using RegisterListenerToHeadRetryTemplate to achieve this.
+        retryAdvice.setRetryTemplate(new RegisterListenerToHeadRetryTemplate(retryTemplate));
         return retryAdvice;
     }
 
@@ -57,70 +60,77 @@ public class RetryAdviceFactory {
         return backOffPolicy;
     }
 
-    private static RetryTemplate createRetryTemplate(final String description, final Duration timeout, final RequestHandlerRetryAdvice retryAdvice,
-                                                     final ExponentialBackOffPolicy backOffPolicy) {
+    private static RetryTemplate createRetryTemplate(
+            final String description, final Duration timeout, final ExponentialBackOffPolicy backOffPolicy) {
         final RetryTemplateBuilder retryTemplateBuilder = new RetryTemplateBuilder();
 
         if (timeout.isZero()) {
             retryTemplateBuilder.infiniteRetry();
         } else {
-            retryTemplateBuilder.withinMillis(timeout.toMillis());
+            retryTemplateBuilder.withTimeout(timeout);
         }
         retryTemplateBuilder.customBackoff(backOffPolicy);
 
-        // retryAdvice must be the first listener for Message to be available in RetryContext.
-        retryTemplateBuilder.withListener(retryAdvice);
         retryTemplateBuilder.withListener(new RetryLogger(description));
 
         return retryTemplateBuilder.build();
     }
 
-    public RequestHandlerRetryAdvice create(final String description) {
+    public MethodInterceptor create(final String description) {
         return create(description, initialInterval, maxInterval, retryMultiplier, timeout);
     }
 
-    private static final class RetryLogger extends RetryListenerSupport {
-        // When making changes to this class, check if equivalent changes are also needed in
-        // fi.fmi.avi.archiver.config.DataSourceConfig.RetryLogger
+    private static final class RegisterListenerToHeadRetryTemplate extends ForwardingRetryTemplate {
+        private final RetryTemplate delegate;
 
-        private static final Logger LOGGER = LoggerFactory.getLogger(RetryLogger.class);
-
-        private final String description;
-
-        public RetryLogger(final String description) {
-            this.description = description;
+        public RegisterListenerToHeadRetryTemplate(final RetryTemplate delegate) {
+            this.delegate = requireNonNull(delegate, "delegate");
         }
 
         @Override
-        public <T, E extends Throwable> boolean open(final RetryContext context, final RetryCallback<T, E> callback) {
-            final boolean returnValue = super.open(context, callback);
-            if (context.getAttribute(ErrorMessageUtils.FAILED_MESSAGE_CONTEXT_KEY) instanceof final Message<?> message) {
-                final LoggingContext loggingContext = SpringProcessingServiceContextHelper.getProcessingServiceContext(message).getLoggingContext();
-                LOGGING_CONTEXT.set(context, loggingContext);
-            }
-            return returnValue;
+        protected RetryTemplate delegate() {
+            return delegate;
         }
 
         @Override
-        public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, @Nullable final Throwable throwable) {
-            super.close(context, callback, throwable);
-            final int retryCount = context.getRetryCount();
-            if (retryCount > 0) {
-                if (throwable == null) {
-                    LOGGER.info("{} attempt {} succeeded with <{}>.", description, loggableValue(RETRY_COUNT_LOGNAME, retryCount + 1),
-                            LOGGING_CONTEXT.get(context));
-                } else {
-                    LOGGER.error("{} attempts (total {}) exhausted with <{}>.", description, loggableValue(RETRY_COUNT_LOGNAME, retryCount),
-                            LOGGING_CONTEXT.get(context));
-                }
-            }
-        }
-
-        @Override
-        public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
-            super.onError(context, callback, throwable);
-            LOGGER.warn("{} failed on attempt {} with <{}>. Retrying.", description, loggableValue(RETRY_COUNT_LOGNAME, context.getRetryCount()),
-                    LOGGING_CONTEXT.get(context), throwable);
+        public void registerListener(final RetryListener listener) {
+            registerListener(listener, 0);
         }
     }
+
+    private record RetryLogger(String description) implements RetryListener {
+            // When making changes to this class, check if equivalent changes are also needed in
+            // fi.fmi.avi.archiver.config.DataSourceConfig.RetryLogger
+
+            private static final Logger LOGGER = LoggerFactory.getLogger(RetryLogger.class);
+
+        @Override
+            public <T, E extends Throwable> boolean open(final RetryContext context, final RetryCallback<T, E> callback) {
+                if (context.getAttribute(ErrorMessageUtils.FAILED_MESSAGE_CONTEXT_KEY) instanceof final Message<?> message) {
+                    final LoggingContext loggingContext = SpringProcessingServiceContextHelper.getProcessingServiceContext(message).getLoggingContext();
+                    LOGGING_CONTEXT.set(context, loggingContext);
+                }
+                return true;
+            }
+
+            @Override
+            public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, @Nullable final Throwable throwable) {
+                final int retryCount = context.getRetryCount();
+                if (retryCount > 0) {
+                    if (throwable == null) {
+                        LOGGER.info("{} attempt {} succeeded with <{}>.", description, loggableValue(RETRY_COUNT_LOGNAME, retryCount + 1),
+                                LOGGING_CONTEXT.get(context));
+                    } else {
+                        LOGGER.error("{} attempts (total {}) exhausted with <{}>.", description, loggableValue(RETRY_COUNT_LOGNAME, retryCount),
+                                LOGGING_CONTEXT.get(context));
+                    }
+                }
+            }
+
+            @Override
+            public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
+                LOGGER.warn("{} failed on attempt {} with <{}>. Retrying.", description, loggableValue(RETRY_COUNT_LOGNAME, context.getRetryCount()),
+                        LOGGING_CONTEXT.get(context), throwable);
+            }
+        }
 }

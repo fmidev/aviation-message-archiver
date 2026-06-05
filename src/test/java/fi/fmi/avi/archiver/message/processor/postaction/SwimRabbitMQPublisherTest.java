@@ -12,6 +12,7 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ProcessingResult;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
 import fi.fmi.avi.archiver.message.processor.TestMessageProcessorContext;
+import fi.fmi.avi.archiver.util.testing.MockitoAnswers;
 import fi.fmi.avi.model.AviationWeatherMessage;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
@@ -24,7 +25,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -92,13 +92,12 @@ class SwimRabbitMQPublisherTest {
 
     @Mock
     private Publisher publisher;
-    @Mock(answer = Answers.RETURNS_SELF)
-    private Message amqpMessage;
-    @Mock(answer = Answers.RETURNS_SELF)
-    private Message.MessageAddressBuilder addressBuilder;
     @Mock
     private Publisher.Context publisherContext;
+
     private AutoCloseable openMocks;
+    private Message amqpMessage;
+    private Message.MessageAddressBuilder addressBuilder;
 
     static Stream<Arguments> ignores_message_cases() {
         return Stream.of(
@@ -347,6 +346,8 @@ class SwimRabbitMQPublisherTest {
     @BeforeEach
     void setUp() {
         openMocks = MockitoAnnotations.openMocks(this);
+        amqpMessage = mock(Message.class, MockitoAnswers.returnsSelf());
+        addressBuilder = mock(Message.MessageAddressBuilder.class, MockitoAnswers.returnsSelf());
         when(publisher.message(any())).thenReturn(amqpMessage);
         when(publisherContext.status()).thenReturn(Publisher.Status.ACCEPTED);
         when(publisherContext.failureCause()).thenReturn(null);

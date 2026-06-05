@@ -170,7 +170,7 @@ and a PostGIS database.
    [Compose](#compose) and [Podman Quadlet (systemd)](#podman-quadlet-systemd).
 
 4. Check
-   the [actuator endpoints](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/actuator.html#actuator.endpoints)
+   the [actuator endpoints](https://docs.spring.io/spring-boot/${spring-boot.version}/reference/actuator/endpoints.html)
    to verify the application is running and healthy.
 
     - info: <http://localhost:8080/actuator/info>
@@ -204,7 +204,7 @@ The recommended way to run the application is using a container. Pre-built image
 [ghcr.io/fmidev/aviation-message-archiver](https://ghcr.io/fmidev/aviation-message-archiver). Spring Boot
 automatically loads configuration from a `config/` subdirectory
 relative to the working directory. See
-[Externalized Configuration](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.external-config)
+[Externalized Configuration](https://docs.spring.io/spring-boot/${spring-boot.version}/reference/features/external-config.html)
 for details. Since the container working directory is `/app`, mount your configuration files to `/app/config/`.
 
 The container image sets `JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"` by default. To pass additional JVM options
@@ -374,7 +374,7 @@ java -Dspring.profiles.active=<other profiles...>,logstash ...
 Default application configuration properties are collected in YAML files [application.yml] and the Spring
 profile-specific `application-<profile>.yml` files under [src/main/resources/config](src/main/resources/config). Runtime
 behavior is controlled
-using [Spring profiles](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.profiles)
+using [Spring profiles](https://docs.spring.io/spring-boot/${spring-boot.version}/reference/features/profiles.html)
 which are activated by the application launch command. Profiles known in the provided configuration are described in
 the [application.yml] file.
 
@@ -384,7 +384,7 @@ be:
 - config/application-\<entity>.yml - _common properties, e.g. production line configuration, for your entity_
 - config/secrets/application-production.yml - _paths and credentials for your production environment_
 
-See [External Application Properties](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.external-config.files)
+See [Externalized Configuration](https://docs.spring.io/spring-boot/${spring-boot.version}/reference/features/external-config.html)
 in Spring Boot reference documentation for instructions on how to apply your custom configuration extending the default
 configuration.
 
@@ -1415,17 +1415,17 @@ See the provided [application-example.yml] for an example.
 ### Spring Boot configuration properties
 
 Many of the properties in [application.yml] configuration file control the behavior of Spring Boot features. Look at
-the [Spring Boot Reference Documentation](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/)
+the [Spring Boot Reference Documentation](https://docs.spring.io/spring-boot/${spring-boot.version}/index.html)
 for more information on these. Some of related sections are:
 
-- [Profiles](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.profiles)
-- [Logging](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/features.html#features.logging)
-- [Data](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/data.html)
-    - [Data Properties](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/application-properties.html#appendix.application-properties.data)
-    - [Data Migration Properties](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/application-properties.html#appendix.application-properties.data-migration)
-- [Graceful Shutdown](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/web.html#web.graceful-shutdown)
-    - [Timeout property](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase)
-- [Actuator Endpoints](https://docs.spring.io/spring-boot/docs/${spring-boot.version}/reference/html/actuator.html#actuator.endpoints)
+- [Profiles](https://docs.spring.io/spring-boot/${spring-boot.version}/reference/features/profiles.html)
+- [Logging](https://docs.spring.io/spring-boot/${spring-boot.version}/reference/features/logging.html)
+- [Data](https://docs.spring.io/spring-boot/${spring-boot.version}/reference/data/index.html)
+    - [Data Properties](https://docs.spring.io/spring-boot/${spring-boot.version}/appendix/application-properties/index.html#appendix.application-properties.data)
+    - [Data Migration Properties](https://docs.spring.io/spring-boot/${spring-boot.version}/appendix/application-properties/index.html#appendix.application-properties.data-migration)
+- [Graceful Shutdown](https://docs.spring.io/spring-boot/${spring-boot.version}/reference/web/graceful-shutdown.html)
+    - [Timeout property](https://docs.spring.io/spring-boot/${spring-boot.version}/appendix/application-properties/index.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase)
+- [Actuator Endpoints](https://docs.spring.io/spring-boot/${spring-boot.version}/reference/actuator/endpoints.html)
 
 ## Development
 

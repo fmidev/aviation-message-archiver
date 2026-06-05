@@ -1,17 +1,15 @@
 package fi.fmi.avi.archiver;
 
-import static java.util.Objects.requireNonNull;
-
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.integration.config.EnableIntegration;
 
-@EnableIntegration
-@ComponentScan
+import static java.util.Objects.requireNonNull;
+
+@SpringBootApplication(scanBasePackages = "fi.fmi.avi.archiver")
 @ConfigurationPropertiesScan
-@EnableAutoConfiguration
+@EnableIntegration
 public class AviationMessageArchiver {
     public static void main(final String[] args) {
         requireNonNull(args, "args");

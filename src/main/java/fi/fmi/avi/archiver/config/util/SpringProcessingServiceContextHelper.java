@@ -8,7 +8,7 @@ import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
 import fi.fmi.avi.archiver.spring.messaging.MessageHeaderReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.integration.handler.GenericHandler;
+import org.springframework.integration.core.GenericHandler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 

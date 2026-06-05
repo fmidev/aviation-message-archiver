@@ -8,7 +8,6 @@ import fi.fmi.avi.archiver.config.model.PostActionInstanceSpec;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.context.annotation.Bean;
 
 import javax.annotation.Nullable;
@@ -30,19 +29,18 @@ public class ProductionLineConfig {
     private final Map<GenericAviationWeatherMessage.Format, Integer> formatIds;
     private final Map<MessageType, Integer> typeIds;
 
-    @ConstructorBinding
     ProductionLineConfig(final List<AviationProduct.Builder> products,
                          final List<MessagePopulatorInstanceSpec.Builder> messagePopulators,
                          @Nullable final List<PostActionInstanceSpec.Builder> postActions,
-                         final Map<String, Integer> routeIds,
-                         final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
-                         final Map<MessageType, Integer> typeIds) {
+                         @Nullable final Map<String, Integer> routeIds,
+                         @Nullable final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
+                         @Nullable final Map<MessageType, Integer> typeIds) {
         this.aviationProductBuilders = requireNonNull(products, "products");
         this.messagePopulatorSpecBuilders = requireNonNull(messagePopulators, "messagePopulators");
         this.postActionInstanceSpecBuilders = postActions == null ? List.of() : postActions;
-        this.routeIds = requireNonNull(routeIds, "routeIds");
-        this.formatIds = requireNonNull(formatIds, "formatIds");
-        this.typeIds = requireNonNull(typeIds, "typeIds");
+        this.routeIds = routeIds == null ? Map.of() : routeIds;
+        this.formatIds = formatIds == null ? Map.of() : formatIds;
+        this.typeIds = typeIds == null ? Map.of() : typeIds;
     }
 
     private static <E> void iterate(final String description, final List<E> elements, final Consumer<? super E> elementConsumer) {
@@ -151,19 +149,19 @@ public class ProductionLineConfig {
 
     @Bean
     BiMap<String, Integer> messageRouteIds() {
-        checkState(!routeIds.isEmpty(), "Invalid configuration: routeIds is empty");
+        checkState(!routeIds.isEmpty(), "Invalid configuration: routeIds is missing or empty");
         return ImmutableBiMap.copyOf(routeIds);
     }
 
     @Bean
     BiMap<GenericAviationWeatherMessage.Format, Integer> messageFormatIds() {
-        checkState(!formatIds.isEmpty(), "Invalid configuration: formatIds is empty");
+        checkState(!formatIds.isEmpty(), "Invalid configuration: formatIds is missing or empty");
         return ImmutableBiMap.copyOf(formatIds);
     }
 
     @Bean
     BiMap<MessageType, Integer> messageTypeIds() {
-        checkState(!typeIds.isEmpty(), "Invalid configuration: typeIds is empty");
+        checkState(!typeIds.isEmpty(), "Invalid configuration: typeIds is missing or empty");
         return ImmutableBiMap.copyOf(typeIds);
     }
 }

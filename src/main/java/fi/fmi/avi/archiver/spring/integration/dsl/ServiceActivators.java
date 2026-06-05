@@ -1,7 +1,7 @@
 package fi.fmi.avi.archiver.spring.integration.dsl;
 
 import fi.fmi.avi.archiver.spring.messaging.MessageHeaderReference;
-import org.springframework.integration.handler.GenericHandler;
+import org.springframework.integration.core.GenericHandler;
 import org.springframework.messaging.support.MessageBuilder;
 
 import java.util.Optional;

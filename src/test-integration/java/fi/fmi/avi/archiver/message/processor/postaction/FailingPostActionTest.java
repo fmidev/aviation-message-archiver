@@ -19,7 +19,6 @@ import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -27,6 +26,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
@@ -37,13 +37,20 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.processor.postaction.FailingPostActionTest"})
 @Sql(scripts = {"classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},//
+@ContextConfiguration(
+        classes = {
+                AviationMessageArchiver.class,
+                TestConfig.class,
+                ConversionConfig.class,
+                FailingPostActionTest.FailingPostActionConfig.class,
+        },//
         loader = AnnotationConfigContextLoader.class,//
         initializers = {ConfigDataApplicationContextInitializer.class})
 @ActiveProfiles({"integration-test", "FailingPostActionTest"})
@@ -53,10 +60,10 @@ class FailingPostActionTest {
     private static final String PRODUCT = "test_taf";
     private static final String POST_ACTION_ID = "failing";
 
-    @SpyBean(name = "successChannel")
+    @MockitoSpyBean(name = "successChannel")
     private MessageChannel successChannel;
 
-    @SpyBean(name = "failChannel")
+    @MockitoSpyBean(name = "failChannel")
     private MessageChannel failChannel;
 
     @Captor
@@ -85,7 +92,7 @@ class FailingPostActionTest {
                 .containsExactly("EFYY", "EFXX");
 
         verify(failChannel, never()).send(any(Message.class));
-        verify(successChannel).send(successChannelCaptor.capture());
+        verify(successChannel).send(successChannelCaptor.capture(), anyLong());
         final ProcessingServiceContext processingServiceContext = SpringProcessingServiceContextHelper.getProcessingServiceContext(successChannelCaptor.getValue().getHeaders());
         assertThat(processingServiceContext.isProcessingErrors()).isFalse();
     }

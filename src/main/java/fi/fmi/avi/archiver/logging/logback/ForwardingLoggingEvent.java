@@ -1,13 +1,15 @@
 package fi.fmi.avi.archiver.logging.logback;
 
-import java.util.Map;
-
-import org.slf4j.Marker;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.LoggerContextVO;
+import org.slf4j.Marker;
+import org.slf4j.event.KeyValuePair;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 
 public abstract class ForwardingLoggingEvent implements ILoggingEvent {
     protected abstract ILoggingEvent delegate();
@@ -62,9 +64,16 @@ public abstract class ForwardingLoggingEvent implements ILoggingEvent {
         return delegate().hasCallerData();
     }
 
+    @SuppressWarnings("deprecation")
+    @Deprecated
     @Override
     public Marker getMarker() {
         return delegate().getMarker();
+    }
+
+    @Override
+    public List<Marker> getMarkerList() {
+        return delegate().getMarkerList();
     }
 
     @Override
@@ -81,6 +90,26 @@ public abstract class ForwardingLoggingEvent implements ILoggingEvent {
     @Override
     public long getTimeStamp() {
         return delegate().getTimeStamp();
+    }
+
+    @Override
+    public int getNanoseconds() {
+        return delegate().getNanoseconds();
+    }
+
+    @Override
+    public Instant getInstant() {
+        return delegate().getInstant();
+    }
+
+    @Override
+    public long getSequenceNumber() {
+        return delegate().getSequenceNumber();
+    }
+
+    @Override
+    public List<KeyValuePair> getKeyValuePairs() {
+        return delegate().getKeyValuePairs();
     }
 
     @Override

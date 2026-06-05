@@ -112,11 +112,11 @@ Message parsing is provided by
 
 - [fmi-avi-messageconverter-tac](https://github.com/fmidev/fmi-avi-messageconverter-tac)
   ([
-  `TAC_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-tac/blob/fmi-avi-messageconverter-tac-8.1.0/src/main/java/fi/fmi/avi/converter/tac/conf/TACConverter.java))
+  `TAC_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-tac/blob/main/src/main/java/fi/fmi/avi/converter/tac/conf/TACConverter.java))
   for TAC and
 - [fmi-avi-messageconverter-iwxxm](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm)
   ([
-  `IWXXM_STRING_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm/blob/fmi-avi-messageconverter-iwxxm-6.3.1/src/main/java/fi/fmi/avi/converter/iwxxm/conf/IWXXMConverter.java))
+  `IWXXM_STRING_TO_GENERIC_AVIATION_WEATHER_MESSAGE_POJO`](https://github.com/fmidev/fmi-avi-messageconverter-iwxxm/blob/main/src/main/java/fi/fmi/avi/converter/iwxxm/conf/IWXXMConverter.java))
   for IWXXM.
 
 ## Getting started
@@ -170,7 +170,7 @@ and a PostGIS database.
    [Compose](#compose) and [Podman Quadlet (systemd)](#podman-quadlet-systemd).
 
 4. Check
-   the [actuator endpoints](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/actuator.html#actuator.endpoints)
+   the [actuator endpoints](https://docs.spring.io/spring-boot/3.5.14/reference/actuator/endpoints.html)
    to verify the application is running and healthy.
 
     - info: <http://localhost:8080/actuator/info>
@@ -204,7 +204,7 @@ The recommended way to run the application is using a container. Pre-built image
 [ghcr.io/fmidev/aviation-message-archiver](https://ghcr.io/fmidev/aviation-message-archiver). Spring Boot
 automatically loads configuration from a `config/` subdirectory
 relative to the working directory. See
-[Externalized Configuration](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/features.html#features.external-config)
+[Externalized Configuration](https://docs.spring.io/spring-boot/3.5.14/reference/features/external-config.html)
 for details. Since the container working directory is `/app`, mount your configuration files to `/app/config/`.
 
 The container image sets `JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"` by default. To pass additional JVM options
@@ -374,7 +374,7 @@ java -Dspring.profiles.active=<other profiles...>,logstash ...
 Default application configuration properties are collected in YAML files [application.yml] and the Spring
 profile-specific `application-<profile>.yml` files under [src/main/resources/config](src/main/resources/config). Runtime
 behavior is controlled
-using [Spring profiles](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/features.html#features.profiles)
+using [Spring profiles](https://docs.spring.io/spring-boot/3.5.14/reference/features/profiles.html)
 which are activated by the application launch command. Profiles known in the provided configuration are described in
 the [application.yml] file.
 
@@ -384,7 +384,7 @@ be:
 - config/application-\<entity>.yml - _common properties, e.g. production line configuration, for your entity_
 - config/secrets/application-production.yml - _paths and credentials for your production environment_
 
-See [External Application Properties](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/features.html#features.external-config.files)
+See [Externalized Configuration](https://docs.spring.io/spring-boot/3.5.14/reference/features/external-config.html)
 in Spring Boot reference documentation for instructions on how to apply your custom configuration extending the default
 configuration.
 
@@ -619,7 +619,7 @@ Populate properties parsed from message content.
 
       Available message types are specified in the map property `production-line.type-ids`. Available location indicator
       types are specified
-      in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-8.3.0/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
+      in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/main/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
       enum.
 
       Example:
@@ -645,7 +645,7 @@ Populate properties parsed from message content.
       for reading the station ICAO code.
 
       Only used when the message type-specific list is not configured. Available location indicator types are specified
-      in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-8.3.0/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
+      in [GenericAviationWeatherMessage.LocationIndicatorType](https://github.com/fmidev/fmi-avi-messageconverter/blob/main/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
       enum.
 
       Example:
@@ -1403,11 +1403,11 @@ The following mappings must exist under `production-line` application configurat
   column `avidb_message_routes.route_id`.
 - `format-ids`:
   Map [
-  `GenericAviationWeatherMessage.Format.name()`](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-8.3.0/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
+  `GenericAviationWeatherMessage.Format.name()`](https://github.com/fmidev/fmi-avi-messageconverter/blob/main/src/main/java/fi/fmi/avi/model/GenericAviationWeatherMessage.java)
   to database column `avidb_message_format.format_id`.
 - `type-ids`:
   Map [
-  `MessageType.name()`](https://github.com/fmidev/fmi-avi-messageconverter/blob/fmi-avi-messageconverter-8.3.0/src/main/java/fi/fmi/avi/model/MessageType.java)
+  `MessageType.name()`](https://github.com/fmidev/fmi-avi-messageconverter/blob/main/src/main/java/fi/fmi/avi/model/MessageType.java)
   to database column `avidb_message_types.type_id`.
 
 See the provided [application-example.yml] for an example.
@@ -1415,17 +1415,17 @@ See the provided [application-example.yml] for an example.
 ### Spring Boot configuration properties
 
 Many of the properties in [application.yml] configuration file control the behavior of Spring Boot features. Look at
-the [Spring Boot Reference Documentation](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/)
+the [Spring Boot Reference Documentation](https://docs.spring.io/spring-boot/3.5.14/index.html)
 for more information on these. Some of related sections are:
 
-- [Profiles](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/features.html#features.profiles)
-- [Logging](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/features.html#features.logging)
-- [Data](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/data.html)
-    - [Data Properties](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/application-properties.html#appendix.application-properties.data)
-    - [Data Migration Properties](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/application-properties.html#appendix.application-properties.data-migration)
-- [Graceful Shutdown](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/web.html#web.graceful-shutdown)
-    - [Timeout property](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/application-properties.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase)
-- [Actuator Endpoints](https://docs.spring.io/spring-boot/docs/2.7.18/reference/html/actuator.html#actuator.endpoints)
+- [Profiles](https://docs.spring.io/spring-boot/3.5.14/reference/features/profiles.html)
+- [Logging](https://docs.spring.io/spring-boot/3.5.14/reference/features/logging.html)
+- [Data](https://docs.spring.io/spring-boot/3.5.14/reference/data/index.html)
+    - [Data Properties](https://docs.spring.io/spring-boot/3.5.14/appendix/application-properties/index.html#appendix.application-properties.data)
+    - [Data Migration Properties](https://docs.spring.io/spring-boot/3.5.14/appendix/application-properties/index.html#appendix.application-properties.data-migration)
+- [Graceful Shutdown](https://docs.spring.io/spring-boot/3.5.14/reference/web/graceful-shutdown.html)
+    - [Timeout property](https://docs.spring.io/spring-boot/3.5.14/appendix/application-properties/index.html#application-properties.core.spring.lifecycle.timeout-per-shutdown-phase)
+- [Actuator Endpoints](https://docs.spring.io/spring-boot/3.5.14/reference/actuator/endpoints.html)
 
 ## Development
 

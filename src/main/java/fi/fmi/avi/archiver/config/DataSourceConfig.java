@@ -1,15 +1,7 @@
 package fi.fmi.avi.archiver.config;
 
-import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
-import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.DATABASE_OPERATION;
-import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.LOGGING_CONTEXT;
-import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.RETRY_COUNT_LOGNAME;
-
-import java.time.Clock;
-import java.time.Duration;
-
-import javax.annotation.Nullable;
-
+import fi.fmi.avi.archiver.database.DatabaseAccess;
+import fi.fmi.avi.archiver.database.DatabaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,19 +12,23 @@ import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
+import org.springframework.retry.RetryListener;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
-import org.springframework.retry.listener.RetryListenerSupport;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.retry.support.RetryTemplateBuilder;
 
-import fi.fmi.avi.archiver.database.DatabaseAccess;
-import fi.fmi.avi.archiver.database.DatabaseService;
+import javax.annotation.Nullable;
+import java.time.Clock;
+import java.time.Duration;
+
+import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
+import static fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts.*;
 
 @Configuration
 public class DataSourceConfig {
     @Bean
     DatabaseAccess databaseAccess(final NamedParameterJdbcTemplate jdbcTemplate, final Clock clock, final RetryTemplate databaseAccessRetryTemplate,
-            @Value("${datasource.schema}") final String schema) {
+                                  @Value("${datasource.schema}") final String schema) {
         return new DatabaseAccess(jdbcTemplate, clock, databaseAccessRetryTemplate, schema);
     }
 
@@ -55,7 +51,8 @@ public class DataSourceConfig {
      * @return retry template for database access
      */
     @Bean
-    RetryTemplate databaseAccessRetryTemplate(@Value("${datasource.retry.initial-interval:PT0.5S}") final Duration initialInterval, //
+    RetryTemplate databaseAccessRetryTemplate(
+            @Value("${datasource.retry.initial-interval:PT0.5S}") final Duration initialInterval, //
             @Value("${datasource.retry.multiplier:2}") final int multiplier, //
             @Value("${datasource.retry.max-interval:PT1M}") final Duration maxInterval, //
             @Value("${datasource.retry.timeout:PT0S}") final Duration timeout) {
@@ -68,7 +65,7 @@ public class DataSourceConfig {
         if (timeout.isZero()) {
             retryTemplateBuilder.infiniteRetry();
         } else {
-            retryTemplateBuilder.withinMillis(timeout.toMillis());
+            retryTemplateBuilder.withTimeout(timeout);
         }
         retryTemplateBuilder.customBackoff(backOffPolicy);
         retryTemplateBuilder.notRetryOn(NonTransientDataAccessException.class);
@@ -78,7 +75,7 @@ public class DataSourceConfig {
         return retryTemplateBuilder.build();
     }
 
-    private static final class RetryLogger extends RetryListenerSupport {
+    private static final class RetryLogger implements RetryListener {
         // When making changes to this class, check if equivalent changes are also needed in
         // fi.fmi.avi.archiver.spring.retry.RetryAdviceFactory.RetryLogger
 
@@ -86,7 +83,6 @@ public class DataSourceConfig {
 
         @Override
         public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, @Nullable final Throwable throwable) {
-            super.close(context, callback, throwable);
             final int retryCount = context.getRetryCount();
             if (retryCount > 0) {
                 if (throwable == null) {
@@ -101,7 +97,6 @@ public class DataSourceConfig {
 
         @Override
         public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
-            super.onError(context, callback, throwable);
             if (throwable instanceof NonTransientDataAccessException) {
                 if (throwable instanceof EmptyResultDataAccessException) {
                     LOGGER.debug("Database operation '{}' returned empty result with <{}>: {};  Not retrying.", DATABASE_OPERATION.get(context),
