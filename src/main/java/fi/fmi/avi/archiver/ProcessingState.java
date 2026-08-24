@@ -1,20 +1,17 @@
 package fi.fmi.avi.archiver;
 
-import static java.util.Objects.requireNonNull;
+import com.google.auto.value.AutoValue;
+import fi.fmi.avi.archiver.file.FileReference;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.auto.value.AutoValue;
-
-import fi.fmi.avi.archiver.file.FileReference;
+import static java.util.Objects.requireNonNull;
 
 public class ProcessingState {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessingState.class);
@@ -43,7 +40,6 @@ public class ProcessingState {
     public void finish(final FileReference file) {
         requireNonNull(file, "file");
         if (filesUnderProcessing.containsKey(file)) {
-            @Nullable
             final Status newStatus = filesUnderProcessing.computeIfPresent(file, (fileReference, status) -> status.decreaseProcessingCount());
             final int processingCount = newStatus == null ? 0 : newStatus.getProcessingCount();
             LOGGER.debug("Finished processing of file '{}'. Remaining concurrent processes: {}", file, processingCount);
@@ -87,8 +83,7 @@ public class ProcessingState {
             return new AutoValue_ProcessingState_Status(getStart(), getProcessingCount() + 1);
         }
 
-        @Nullable
-        public Status decreaseProcessingCount() {
+        public @Nullable Status decreaseProcessingCount() {
             final int processingCount = getProcessingCount();
             return processingCount <= 1 ? null : new AutoValue_ProcessingState_Status(getStart(), processingCount - 1);
         }

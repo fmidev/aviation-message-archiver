@@ -1,23 +1,17 @@
 package fi.fmi.avi.archiver.logging.logback.logstash;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.function.Consumer;
-
-import javax.annotation.Nullable;
-
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.spi.AppenderAttachableImpl;
+import com.google.auto.value.AutoValue;
+import com.google.common.testing.EqualsTester;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.logging.AbstractLoggable;
+import fi.fmi.avi.archiver.logging.AbstractNoOpLoggable;
+import fi.fmi.avi.archiver.logging.StructuredLoggable;
+import fi.fmi.avi.archiver.logging.logback.ForwardingAppenderBaseTester;
+import fi.fmi.avi.archiver.logging.logback.ForwardingLoggingEvent;
 import net.logstash.logback.argument.StructuredArguments;
-
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -25,31 +19,27 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.google.auto.value.AutoValue;
-import com.google.common.testing.EqualsTester;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.function.Consumer;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.spi.AppenderAttachableImpl;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.logging.AbstractLoggable;
-import fi.fmi.avi.archiver.logging.AbstractNoOpLoggable;
-import fi.fmi.avi.archiver.logging.StructuredLoggable;
-import fi.fmi.avi.archiver.logging.logback.ForwardingAppenderBaseTester;
-import fi.fmi.avi.archiver.logging.logback.ForwardingLoggingEvent;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-@SuppressFBWarnings({ "SIC_INNER_SHOULD_BE_STATIC", "UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" })
+@SuppressFBWarnings({"SIC_INNER_SHOULD_BE_STATIC", "UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"})
 final class StructuredLoggableLogstashAppenderTest {
     private static TestStructuredLoggable structured(final String name, final String value) {
         return TestStructuredLoggable.create(name, value);
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> Consumer<T>[] sameElementsAs(@Nullable final T[] expected) {
+    private static <T> Consumer<T>[] sameElementsAs(final T @Nullable [] expected) {
         if (expected == null) {
             return (Consumer<T>[]) new Consumer[0];
         }
         return Arrays.stream(expected)//
-                .<Consumer<T>> map(expectedElement -> elementUnderTest -> assertThat(elementUnderTest).isSameAs(expectedElement))//
+                .<Consumer<T>>map(expectedElement -> elementUnderTest -> assertThat(elementUnderTest).isSameAs(expectedElement))//
                 .toArray(Consumer[]::new);
     }
 
@@ -96,7 +86,7 @@ final class StructuredLoggableLogstashAppenderTest {
     final class AppenderTest {
         @Mock
         private AppenderAttachableImpl<ILoggingEvent> appenderAttachable;
-        private AutoCloseable mocks;
+        private @Nullable AutoCloseable mocks;
 
         private StructuredLoggableLogstashAppender appender;
 
@@ -144,7 +134,7 @@ final class StructuredLoggableLogstashAppenderTest {
         @Test
         void append_wraps_event_and_delegates_to_AppenderAttachable() {
             final ILoggingEvent loggingEvent = mock(ILoggingEvent.class);
-            final Object[] argumentArray = new Object[] { "string arg" };
+            final Object[] argumentArray = new Object[]{"string arg"};
             when(loggingEvent.getArgumentArray()).thenReturn(argumentArray);
 
             appender.append(loggingEvent);
@@ -171,7 +161,7 @@ final class StructuredLoggableLogstashAppenderTest {
     final class LoggingEventTest {
         @Mock
         private ILoggingEvent delegate;
-        private AutoCloseable mocks;
+        private @Nullable AutoCloseable mocks;
 
         private StructuredLoggableLogstashAppender.LoggingEvent loggingEvent;
         private TestStructuredLoggable structured1;
@@ -184,7 +174,7 @@ final class StructuredLoggableLogstashAppenderTest {
 
             structured1 = structured("struct1", "structured value 1");
             structured2 = structured("struct2", "structured value 2");
-            initialArgs = new Object[] { //
+            initialArgs = new Object[]{ //
                     "string arg", //
                     structured1, //
                     structured2, //
@@ -223,7 +213,7 @@ final class StructuredLoggableLogstashAppenderTest {
 
         @Test
         void getArgumentArray_returns_argumentArray_equal_to_delegates_when_it_contains_no_StructuredLoggables() {
-            final Object[] args = new Object[] { "string arg", 17, new Object(), StructuredArguments.keyValue("test", new Object()) };
+            final Object[] args = new Object[]{"string arg", 17, new Object(), StructuredArguments.keyValue("test", new Object())};
             when(delegate.getArgumentArray()).thenReturn(args);
 
             assertThat(loggingEvent.getArgumentArray()).isEqualTo(args);
@@ -235,7 +225,7 @@ final class StructuredLoggableLogstashAppenderTest {
 
             final Object[] result = loggingEvent.getArgumentArray();
 
-            final Object[] expectedArgs = new Object[] { //
+            final Object[] expectedArgs = new Object[]{ //
                     "string arg", //
                     StructuredArguments.keyValue("struct1", structured1), //
                     StructuredArguments.keyValue("struct2", structured2), //
@@ -247,7 +237,7 @@ final class StructuredLoggableLogstashAppenderTest {
         @Test
         void getArgumentArray_returns_argumentArray_with_StructuredLoggables_implementing_NoOpLoggable_not_wrapped() {
             final StructuredLoggable structuredNoOp = TestStructuredNoOpLoggable.create("structNoOp", "structured value no-op");
-            initialArgs = new Object[] { //
+            initialArgs = new Object[]{ //
                     "string arg", //
                     structured1, //
                     structuredNoOp, //
@@ -258,7 +248,7 @@ final class StructuredLoggableLogstashAppenderTest {
 
             final Object[] result = loggingEvent.getArgumentArray();
 
-            final Object[] expectedArgs = new Object[] { //
+            final Object[] expectedArgs = new Object[]{ //
                     "string arg", //
                     StructuredArguments.keyValue("struct1", structured1), //
                     structuredNoOp, //
@@ -275,7 +265,7 @@ final class StructuredLoggableLogstashAppenderTest {
             loggingEvent.prepareForDeferredProcessing();
             final Object[] result = loggingEvent.getArgumentArray();
 
-            final Object[] expectedArgs = new Object[] { //
+            final Object[] expectedArgs = new Object[]{ //
                     "string arg", //
                     StructuredArguments.keyValue("struct1", structured1.readableCopy()), //
                     StructuredArguments.keyValue("struct2", structured2.readableCopy()), //
@@ -289,7 +279,7 @@ final class StructuredLoggableLogstashAppenderTest {
             when(delegate.getArgumentArray()).thenReturn(initialArgs);
 
             final Object[] resultBeforeDefer = loggingEvent.getArgumentArray();
-            final Object[] expectedArgsBeforeDefer = new Object[] { //
+            final Object[] expectedArgsBeforeDefer = new Object[]{ //
                     "string arg", //
                     StructuredArguments.keyValue("struct1", structured1), //
                     StructuredArguments.keyValue("struct2", structured2), //
@@ -300,7 +290,7 @@ final class StructuredLoggableLogstashAppenderTest {
             loggingEvent.prepareForDeferredProcessing();
             final Object[] resultAfterDefer = loggingEvent.getArgumentArray();
 
-            final Object[] expectedArgsAfterDefer = new Object[] { //
+            final Object[] expectedArgsAfterDefer = new Object[]{ //
                     "string arg", //
                     StructuredArguments.keyValue("struct1", structured1.readableCopy()), //
                     StructuredArguments.keyValue("struct2", structured2.readableCopy()), //
@@ -360,7 +350,6 @@ final class StructuredLoggableLogstashAppenderTest {
 
     @Nested
     final class TestStructuredLoggableTest {
-        @SuppressWarnings("UnstableApiUsage")
         @Test
         void testEquals() {
             final TestStructuredLoggable structured = structured("structured", "structured value");

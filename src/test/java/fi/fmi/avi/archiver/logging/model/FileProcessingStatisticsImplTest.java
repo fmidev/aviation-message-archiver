@@ -1,26 +1,20 @@
 package fi.fmi.avi.archiver.logging.model;
 
-import static fi.fmi.avi.archiver.logging.LoggableTests.assertDecentLengthEstimate;
-import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.ARCHIVED;
-import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.DISCARDED;
-import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.FAILED;
-import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.NOTHING;
-import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.REJECTED;
-import static org.assertj.core.api.Assertions.assertThat;
+import fi.fmi.avi.archiver.logging.StructuredLoggable;
+import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult;
+import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ResultStatistics;
+import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-import javax.annotation.Nullable;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import fi.fmi.avi.archiver.logging.StructuredLoggable;
-import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult;
-import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ResultStatistics;
+import static fi.fmi.avi.archiver.logging.LoggableTests.assertDecentLengthEstimate;
+import static fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class FileProcessingStatisticsImplTest {
     private FileProcessingStatisticsImpl statistics;
@@ -29,8 +23,8 @@ class FileProcessingStatisticsImplTest {
         return assertSameInstanceOnSubsequentInvocationsAfterChange(null, resultStatisticsSupplier, toEquatable);
     }
 
-    private static <T, E> T assertSameInstanceOnSubsequentInvocationsAfterChange(@Nullable final T oldResultStatistics,
-            final Supplier<T> resultStatisticsSupplier, final Function<T, E> toEquatable) {
+    private static <T, E> T assertSameInstanceOnSubsequentInvocationsAfterChange(
+            final @Nullable T oldResultStatistics, final Supplier<T> resultStatisticsSupplier, final Function<T, E> toEquatable) {
         final T newResultStatistics = resultStatisticsSupplier.get();
         if (oldResultStatistics != null) {
             assertThat(toEquatable.apply(newResultStatistics)).isNotEqualTo(toEquatable.apply(oldResultStatistics));

@@ -1,15 +1,14 @@
 package fi.fmi.avi.archiver.logging.model;
 
-import static java.util.Objects.requireNonNull;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.message.MessagePositionInFile;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
-import javax.annotation.Nullable;
-
-import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.message.MessagePositionInFile;
+import static java.util.Objects.requireNonNull;
 
 public final class SynchronizedLoggingContext implements LoggingContext {
     private final Object mutex = new Object();
@@ -90,7 +89,7 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public void enterFile(@Nullable final FileReference file) {
+    public void enterFile(final @Nullable FileReference file) {
         synchronized (mutex) {
             delegate.enterFile(file);
         }
@@ -104,7 +103,7 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public void enterBulletin(@Nullable final BulletinLogReference bulletin) {
+    public void enterBulletin(final @Nullable BulletinLogReference bulletin) {
         synchronized (mutex) {
             delegate.enterBulletin(bulletin);
         }
@@ -139,7 +138,7 @@ public final class SynchronizedLoggingContext implements LoggingContext {
     }
 
     @Override
-    public void enterMessage(@Nullable final MessageLogReference message) {
+    public void enterMessage(final @Nullable MessageLogReference message) {
         synchronized (mutex) {
             delegate.enterMessage(message);
         }

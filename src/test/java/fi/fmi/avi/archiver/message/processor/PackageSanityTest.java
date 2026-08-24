@@ -5,7 +5,6 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.util.GeneratedClasses;
 
-@SuppressWarnings("UnstableApiUsage")
 public class PackageSanityTest extends AbstractPackageSanityTests {
 
     @Override

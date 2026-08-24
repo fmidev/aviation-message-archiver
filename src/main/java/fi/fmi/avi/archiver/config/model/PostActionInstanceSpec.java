@@ -2,8 +2,8 @@ package fi.fmi.avi.archiver.config.model;
 
 import fi.fmi.avi.archiver.message.processor.conditional.GeneralPropertyPredicate;
 import org.inferred.freebuilder.FreeBuilder;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Map;
 
@@ -31,12 +31,12 @@ public abstract class PostActionInstanceSpec implements MessageProcessorInstance
             return super.setName(name);
         }
 
-        public Builder setActivateOn(@Nullable final Map<? extends String, ? extends GeneralPropertyPredicate.Builder<?>> map) {
+        public Builder setActivateOn(final @Nullable Map<? extends String, ? extends GeneralPropertyPredicate.Builder<?>> map) {
             return clearActivateOn()//
                     .putAllActivateOn(map == null ? Collections.emptyMap() : map);
         }
 
-        public Builder setConfig(@Nullable final Map<? extends String, ?> map) {
+        public Builder setConfig(final @Nullable Map<? extends String, ?> map) {
             return clearConfig()//
                     .putAllConfig(map == null ? Collections.emptyMap() : map);
         }

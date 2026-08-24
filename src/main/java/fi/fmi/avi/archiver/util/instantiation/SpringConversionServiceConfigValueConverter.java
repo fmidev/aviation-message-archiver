@@ -1,11 +1,11 @@
 package fi.fmi.avi.archiver.util.instantiation;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.Executable;
 import java.util.Collection;
 import java.util.Map;
@@ -22,9 +22,8 @@ public class SpringConversionServiceConfigValueConverter implements ConfigValueC
         this.conversionService = requireNonNull(conversionService, "conversionService");
     }
 
-    @Nullable
     @Override
-    public Object toParameterType(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
+    public @Nullable Object toParameterType(final @Nullable Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
         requireNonNull(targetExecutable, "targetExecutable");
         if (parameterIndex < 0) {
             throw new IllegalArgumentException("parameterIndex must not be negative; was: " + parameterIndex);
@@ -32,15 +31,13 @@ public class SpringConversionServiceConfigValueConverter implements ConfigValueC
         return convert(propertyConfigValue, targetExecutable, parameterIndex);
     }
 
-    @Nullable
     @Override
-    public Object toReturnValueType(@Nullable final Object propertyConfigValue, final Executable targetExecutable) {
+    public @Nullable Object toReturnValueType(final @Nullable Object propertyConfigValue, final Executable targetExecutable) {
         requireNonNull(targetExecutable, "targetExecutable");
         return convert(propertyConfigValue, targetExecutable, -1);
     }
 
-    @Nullable
-    private Object convert(final @Nullable Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
+    private @Nullable Object convert(final @Nullable Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
         try {
             return propertyConfigValue == null
                     ? null
@@ -51,8 +48,7 @@ public class SpringConversionServiceConfigValueConverter implements ConfigValueC
         }
     }
 
-    @Nullable
-    private TypeDescriptor typeDescriptorForObject(@Nullable final Object object) {
+    private @Nullable TypeDescriptor typeDescriptorForObject(final @Nullable Object object) {
         if (object instanceof final Collection<?> collection && !collection.isEmpty()) {
             return TypeDescriptor.collection(collection.getClass(), typeDescriptorForObject(collection.iterator().next()));
         } else if (object instanceof final Map<?, ?> map && !map.isEmpty()) {

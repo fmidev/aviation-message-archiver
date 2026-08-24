@@ -5,9 +5,9 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
 import fi.fmi.avi.archiver.message.processor.populator.MessagePopulator;
 import fi.fmi.avi.archiver.util.instantiation.ReflectionObjectFactory.Builder;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +19,6 @@ class ReflectionObjectFactoryTest {
         return ReflectionObjectFactory.builder(TestPopulator.class, TestConfigValueConverter.INSTANCE);
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     @Test
     public void testNulls() {
         final NullPointerTester tester = new NullPointerTester();
@@ -232,10 +231,8 @@ class ReflectionObjectFactoryTest {
         private static final String CONSTRUCTOR_FAILURE_MESSAGE = "TestPopulator failing on request";
         private final int instantiation1;
         private final int instantiation2;
-        @Nullable
-        private final String dependency1;
-        @Nullable
-        private final Number dependency2;
+        private final @Nullable String dependency1;
+        private final @Nullable Number dependency2;
 
         private String configString = "";
         private int configInt = 0;
@@ -253,7 +250,9 @@ class ReflectionObjectFactoryTest {
             this(null, instantiation1, null, instantiation2);
         }
 
-        public TestPopulator(@Nullable final String dependency1, final int instantiation1, @Nullable final Number dependency2, final int instantiation2) {
+        public TestPopulator(
+                final @Nullable String dependency1, final int instantiation1,
+                final @Nullable Number dependency2, final int instantiation2) {
             this.instantiation1 = instantiation1;
             this.dependency1 = dependency1;
             this.instantiation2 = instantiation2;
@@ -288,13 +287,11 @@ class ReflectionObjectFactoryTest {
             return instantiation2;
         }
 
-        @Nullable
-        public String getDependency1() {
+        public @Nullable String getDependency1() {
             return dependency1;
         }
 
-        @Nullable
-        public Number getDependency2() {
+        public @Nullable Number getDependency2() {
             return dependency2;
         }
 

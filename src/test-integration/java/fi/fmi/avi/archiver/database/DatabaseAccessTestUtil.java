@@ -4,9 +4,9 @@ import fi.fmi.avi.archiver.message.ArchivalStatus;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
 import fi.fmi.avi.archiver.message.ProcessingResult;
+import org.jspecify.annotations.Nullable;
 import org.springframework.jdbc.core.RowMapper;
 
-import javax.annotation.Nullable;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Collections;
@@ -153,8 +153,7 @@ public class DatabaseAccessTestUtil {
         assertThat(count).isZero();
     }
 
-    @Nullable
-    public Instant toInstant(@Nullable final OffsetDateTime offsetDateTime) {
+    public @Nullable Instant toInstant(final @Nullable OffsetDateTime offsetDateTime) {
         return offsetDateTime == null ? null : offsetDateTime.toInstant();
     }
 

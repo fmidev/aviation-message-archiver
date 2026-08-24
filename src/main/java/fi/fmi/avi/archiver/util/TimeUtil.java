@@ -2,8 +2,8 @@ package fi.fmi.avi.archiver.util;
 
 import fi.fmi.avi.model.PartialDateTime;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
@@ -64,7 +64,7 @@ public final class TimeUtil {
      * @param zoneId              zone id or {@code null}
      * @return constructed {@code PartialDateTime} or empty if value cannot be constructed
      */
-    public static Optional<PartialDateTime> toPartialDateTime(final Map<ChronoField, Integer> temporalFieldValues, @Nullable final ZoneId zoneId) {
+    public static Optional<PartialDateTime> toPartialDateTime(final Map<ChronoField, Integer> temporalFieldValues, final @Nullable ZoneId zoneId) {
         requireNonNull(temporalFieldValues, "temporalFieldValues");
         final int day = getPartialFieldValue(temporalFieldValues, PartialDateTime.PartialField.DAY);
         final int hour = getPartialFieldValue(temporalFieldValues, PartialDateTime.PartialField.HOUR);
@@ -88,8 +88,8 @@ public final class TimeUtil {
      * @param zoneId              zone id or {@code null}
      * @return constructed {@code PartialOrCompleteTimeInstant} or empty if value cannot be constructed
      */
-    public static Optional<PartialOrCompleteTimeInstant> toPartialOrCompleteTimeInstant(final Map<ChronoField, Integer> temporalFieldValues,
-                                                                                        @Nullable final ZoneId zoneId) {
+    public static Optional<PartialOrCompleteTimeInstant> toPartialOrCompleteTimeInstant(
+            final Map<ChronoField, Integer> temporalFieldValues, final @Nullable ZoneId zoneId) {
         requireNonNull(temporalFieldValues, "temporalFieldValues");
         final PartialOrCompleteTimeInstant.Builder builder = PartialOrCompleteTimeInstant.builder()//
                 .setPartialTime(toPartialDateTime(temporalFieldValues, zoneId));
@@ -111,7 +111,7 @@ public final class TimeUtil {
      * @param times times for completion
      * @return the complete time if resolved, otherwise empty
      */
-    public static Optional<ZonedDateTime> toCompleteTime(final Iterable<PartialOrCompleteTimeInstant> times) {
+    public static Optional<ZonedDateTime> toCompleteTime(final Iterable<@Nullable PartialOrCompleteTimeInstant> times) {
         requireNonNull(times, "times");
         return toCompleteTime(times.iterator());
     }
@@ -125,13 +125,13 @@ public final class TimeUtil {
      * @param referenceTimes reference times for completion
      * @return the complete time if resolved, otherwise empty
      */
-    public static Optional<ZonedDateTime> toCompleteTime(final PartialDateTime partial, final Iterable<PartialOrCompleteTimeInstant> referenceTimes) {
+    public static Optional<ZonedDateTime> toCompleteTime(final PartialDateTime partial, final Iterable<@Nullable PartialOrCompleteTimeInstant> referenceTimes) {
         requireNonNull(partial, "partial");
         requireNonNull(referenceTimes, "times");
         return toCompleteTime(partial, referenceTimes.iterator());
     }
 
-    private static Optional<ZonedDateTime> toCompleteTime(final Iterator<PartialOrCompleteTimeInstant> times) {
+    private static Optional<ZonedDateTime> toCompleteTime(final Iterator<@Nullable PartialOrCompleteTimeInstant> times) {
         requireNonNull(times, "times");
         final PartialOrCompleteTimeInstant toResolve = nextNonNullOrNull(times);
         if (toResolve == null) {
@@ -144,12 +144,11 @@ public final class TimeUtil {
         return toResolve.getPartialTime().flatMap(partial -> toCompleteTime(partial, times));
     }
 
-    private static Optional<ZonedDateTime> toCompleteTime(final PartialDateTime partial, final Iterator<PartialOrCompleteTimeInstant> times) {
+    private static Optional<ZonedDateTime> toCompleteTime(final PartialDateTime partial, final Iterator<@Nullable PartialOrCompleteTimeInstant> times) {
         return toCompleteTime(times).map(partial::toZonedDateTimeNear);
     }
 
-    @Nullable
-    private static <E> E nextNonNullOrNull(final Iterator<E> iterator) {
+    private static <E> @Nullable E nextNonNullOrNull(final Iterator<@Nullable E> iterator) {
         while (iterator.hasNext()) {
             final E next = iterator.next();
             if (next != null) {

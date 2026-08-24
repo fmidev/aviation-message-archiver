@@ -4,8 +4,7 @@ import com.google.common.collect.BiMap;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorHelper;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import static java.util.Objects.requireNonNull;
 
@@ -16,9 +15,8 @@ public class RoutePropertyReader extends AbstractConditionPropertyReader<String>
         this.messageRouteIds = requireNonNull(messageRouteIds, "messageRouteIds");
     }
 
-    @Nullable
     @Override
-    public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
+    public @Nullable String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
         requireNonNull(input, "input");
         requireNonNull(target, "target");
         final int routeId = MessageProcessorHelper.tryGetInt(target, ArchiveAviationMessageOrBuilder::getRoute).orElse(Integer.MIN_VALUE);

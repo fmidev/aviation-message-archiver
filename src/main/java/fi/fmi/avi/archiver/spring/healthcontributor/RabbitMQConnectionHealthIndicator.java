@@ -2,10 +2,10 @@ package fi.fmi.avi.archiver.spring.healthcontributor;
 
 import com.rabbitmq.client.amqp.Connection;
 import com.rabbitmq.client.amqp.Resource;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 
-import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -58,9 +58,10 @@ public class RabbitMQConnectionHealthIndicator implements HealthIndicator, Conne
         UNINITIALIZED, CONNECTED, RECOVERING, DISCONNECTED
     }
 
-    private record ConnectionState(Status status,
-                                   @Nullable Throwable failureCause,
-                                   Instant timestamp) {
+    private record ConnectionState(
+            Status status,
+            @Nullable Throwable failureCause,
+            Instant timestamp) {
 
         public ConnectionState {
             requireNonNull(status, "status");

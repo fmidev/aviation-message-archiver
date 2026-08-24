@@ -1,13 +1,16 @@
 package fi.fmi.avi.archiver.logging.logback;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.Context;
+import ch.qos.logback.core.spi.AppenderAttachable;
+import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -17,27 +20,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
-
-import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.Context;
-import ch.qos.logback.core.spi.AppenderAttachable;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 public abstract class ForwardingAppenderBaseTester<E, A extends AppenderAttachable<E>> {
     private A delegateAppender;
     private ForwardingAppenderBase<E> appender;
 
     @SuppressWarnings("unchecked")
-    @Nullable
-    static <T> T dummyValue(final Class<T> cls) {
+    static <T> @Nullable T dummyValue(final Class<T> cls) {
         if (void.class.isAssignableFrom(cls)) {
             return null;
         } else if (boolean.class.isAssignableFrom(cls)) {
@@ -82,8 +74,7 @@ public abstract class ForwardingAppenderBaseTester<E, A extends AppenderAttachab
 
     @Test
     protected void start_invokes_start_on_each_attached_appender_only_when_it_is_not_started() {
-        @SuppressWarnings("unchecked")
-        final List<Appender<E>> attachedAppenders = Arrays.asList(mock(Appender.class), mock(Appender.class), mock(Appender.class));
+        @SuppressWarnings("unchecked") final List<Appender<E>> attachedAppenders = Arrays.asList(mock(Appender.class), mock(Appender.class), mock(Appender.class));
         when(attachedAppenders.get(0).isStarted()).thenReturn(false);
         when(attachedAppenders.get(1).isStarted()).thenReturn(true);
         when(attachedAppenders.get(2).isStarted()).thenReturn(false);
@@ -104,8 +95,7 @@ public abstract class ForwardingAppenderBaseTester<E, A extends AppenderAttachab
         final Context appenderContext = mock(Context.class);
         appender.setContext(appenderContext);
         final Context attachedContext1 = mock(Context.class);
-        @SuppressWarnings("unchecked")
-        final List<Appender<E>> attachedAppenders = Arrays.asList(mock(Appender.class), mock(Appender.class), mock(Appender.class));
+        @SuppressWarnings("unchecked") final List<Appender<E>> attachedAppenders = Arrays.asList(mock(Appender.class), mock(Appender.class), mock(Appender.class));
         when(attachedAppenders.get(0).getContext()).thenReturn(null);
         when(attachedAppenders.get(1).getContext()).thenReturn(attachedContext1);
         when(attachedAppenders.get(2).getContext()).thenReturn(null);
@@ -130,8 +120,7 @@ public abstract class ForwardingAppenderBaseTester<E, A extends AppenderAttachab
 
     @Test
     protected void stop_invokes_stop_on_each_attached_appender_only_when_it_is_started() {
-        @SuppressWarnings("unchecked")
-        final List<Appender<E>> attachedAppenders = Arrays.asList(mock(Appender.class), mock(Appender.class), mock(Appender.class));
+        @SuppressWarnings("unchecked") final List<Appender<E>> attachedAppenders = Arrays.asList(mock(Appender.class), mock(Appender.class), mock(Appender.class));
         when(attachedAppenders.get(0).isStarted()).thenReturn(true);
         when(attachedAppenders.get(1).isStarted()).thenReturn(false);
         when(attachedAppenders.get(2).isStarted()).thenReturn(true);
@@ -149,8 +138,7 @@ public abstract class ForwardingAppenderBaseTester<E, A extends AppenderAttachab
 
     @Test
     protected void append_does_nothing_when_stopped() {
-        @SuppressWarnings("unchecked")
-        final List<Appender<E>> attachedAppenders = Arrays.asList(mock(Appender.class), mock(Appender.class), mock(Appender.class));
+        @SuppressWarnings("unchecked") final List<Appender<E>> attachedAppenders = Arrays.asList(mock(Appender.class), mock(Appender.class), mock(Appender.class));
         when(delegateAppender.iteratorForAppenders()).thenAnswer(invocation -> attachedAppenders.iterator());
         final E loggingEvent = mock(eventType());
 
@@ -162,8 +150,7 @@ public abstract class ForwardingAppenderBaseTester<E, A extends AppenderAttachab
 
     @Test
     protected void append_given_null_does_nothing() {
-        @SuppressWarnings("unchecked")
-        final List<Appender<E>> attachedAppenders = Arrays.asList(mock(Appender.class), mock(Appender.class), mock(Appender.class));
+        @SuppressWarnings("unchecked") final List<Appender<E>> attachedAppenders = Arrays.asList(mock(Appender.class), mock(Appender.class), mock(Appender.class));
         when(delegateAppender.iteratorForAppenders()).thenAnswer(invocation -> attachedAppenders.iterator());
 
         appender.append(null);
@@ -173,8 +160,7 @@ public abstract class ForwardingAppenderBaseTester<E, A extends AppenderAttachab
 
     @Test
     protected void append_delegates_to_appenders() {
-        @SuppressWarnings("unchecked")
-        final List<Appender<E>> attachedAppenders = Arrays.asList(mock(Appender.class), mock(Appender.class), mock(Appender.class));
+        @SuppressWarnings("unchecked") final List<Appender<E>> attachedAppenders = Arrays.asList(mock(Appender.class), mock(Appender.class), mock(Appender.class));
         when(delegateAppender.iteratorForAppenders()).thenAnswer(invocation -> attachedAppenders.iterator());
         final E loggingEvent = mock(eventType());
 

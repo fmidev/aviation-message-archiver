@@ -1,25 +1,18 @@
 package fi.fmi.avi.archiver.spring.integration.file.filters;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
-
+import org.jspecify.annotations.Nullable;
 import org.springframework.integration.file.filters.CompositeFileListFilter;
 import org.springframework.integration.file.filters.FileListFilter;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A composite file list filter that accepts files that <strong>any</strong> of the configured {@code FileListFilter}s accept.
  *
- * @param <F>
- *         the type that will be filtered
+ * @param <F> the type that will be filtered
  */
 public class AnyAcceptFileListFilter<F> extends CompositeFileListFilter<F> {
     public AnyAcceptFileListFilter() {
@@ -30,7 +23,7 @@ public class AnyAcceptFileListFilter<F> extends CompositeFileListFilter<F> {
     }
 
     @Override
-    public List<F> filterFiles(@Nullable final F[] files) {
+    public List<F> filterFiles(final F @Nullable [] files) {
         if (files == null) {
             return new ArrayList<>(0);
         }

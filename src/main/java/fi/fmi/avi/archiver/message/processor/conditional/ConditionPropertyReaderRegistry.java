@@ -1,6 +1,5 @@
 package fi.fmi.avi.archiver.message.processor.conditional;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,7 +11,7 @@ public class ConditionPropertyReaderRegistry implements ConditionPropertyReaderF
     @Override
     public ConditionPropertyReader<?> getInstance(final String propertyName) {
         requireNonNull(propertyName, "propertyName");
-        @Nullable final ConditionPropertyReader<?> conditionPropertyReader = propertyReaders.get(propertyName);
+        final ConditionPropertyReader<?> conditionPropertyReader = propertyReaders.get(propertyName);
         if (conditionPropertyReader == null) {
             throw new IllegalArgumentException("Unknown property: " + propertyName);
         }

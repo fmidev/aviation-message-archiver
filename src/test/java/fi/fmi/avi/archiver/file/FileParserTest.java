@@ -9,6 +9,7 @@ import fi.fmi.avi.converter.AviMessageConverter;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,7 +75,7 @@ public class FileParserTest {
         }
     }
 
-    private static OffsetDateTime getObservationTime(final InputAviationMessage message) {
+    private static @Nullable OffsetDateTime getObservationTime(final InputAviationMessage message) {
         return message.getMessage().getObservationTime()
                 .flatMap(PartialOrCompleteTimeInstant::getCompleteTime)
                 .map(ZonedDateTime::toOffsetDateTime)

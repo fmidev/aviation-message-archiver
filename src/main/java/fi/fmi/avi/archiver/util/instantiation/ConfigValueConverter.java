@@ -1,6 +1,7 @@
 package fi.fmi.avi.archiver.util.instantiation;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
+
 import java.lang.reflect.Executable;
 
 public interface ConfigValueConverter {
@@ -14,8 +15,7 @@ public interface ConfigValueConverter {
      * @return converted value
      * @throws ConfigValueConversionException if conversion fails
      */
-    @Nullable
-    Object toParameterType(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex);
+    @Nullable Object toParameterType(final @Nullable Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex);
 
     /**
      * Convert provided {@code propertyConfigValue} to type of {@code targetExecutable} return value.
@@ -26,6 +26,5 @@ public interface ConfigValueConverter {
      * @return converted value
      * @throws ConfigValueConversionException if conversion fails
      */
-    @Nullable
-    Object toReturnValueType(@Nullable final Object propertyConfigValue, final Executable targetExecutable);
+    @Nullable Object toReturnValueType(final @Nullable Object propertyConfigValue, final Executable targetExecutable);
 }

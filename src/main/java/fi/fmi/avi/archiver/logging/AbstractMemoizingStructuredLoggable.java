@@ -1,7 +1,9 @@
 package fi.fmi.avi.archiver.logging;
 
+import org.jspecify.annotations.Nullable;
+
 public abstract class AbstractMemoizingStructuredLoggable extends AbstractLoggable implements StructuredLoggable {
-    private String string;
+    private @Nullable String string;
 
     protected abstract void appendOnceTo(final StringBuilder builder);
 

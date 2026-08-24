@@ -1,6 +1,7 @@
 package fi.fmi.avi.archiver.config.factory.postaction;
 
 import fi.fmi.avi.archiver.message.processor.postaction.AbstractRetryingPostAction;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.retry.RetryCallback;
@@ -10,7 +11,6 @@ import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.retry.support.RetryTemplateBuilder;
 
-import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -86,36 +86,36 @@ public class DefaultRetryParamsFactory implements RetryingPostActionFactories.Re
     }
 
     private record RetryLogger(String actionName) implements RetryListener {
-            private static final Logger LOGGER = LoggerFactory.getLogger(RetryLogger.class);
+        private static final Logger LOGGER = LoggerFactory.getLogger(RetryLogger.class);
 
-            private RetryLogger(final String actionName) {
-                this.actionName = requireNonNull(actionName, "actionName");
-            }
+        private RetryLogger(final String actionName) {
+            this.actionName = requireNonNull(actionName, "actionName");
+        }
 
-            @Override
-            public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, @Nullable final Throwable throwable) {
-                final int retryCount = context.getRetryCount();
-                if (retryCount > 0) {
-                    if (throwable == null) {
-                        LOGGER.info("{} attempt {} succeeded for <{}>.",
-                                loggableValue(RETRY_ACTION, actionName),
-                                loggableValue(RETRY_COUNT_LOGNAME, retryCount + 1),
-                                LOGGING_CONTEXT.get(context));
-                    } else {
-                        LOGGER.error("{} attempts (total {}) exhausted for <{}>.",
-                                loggableValue(RETRY_ACTION, actionName),
-                                loggableValue(RETRY_COUNT_LOGNAME, retryCount),
-                                LOGGING_CONTEXT.get(context));
-                    }
+        @Override
+        public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, final @Nullable Throwable throwable) {
+            final int retryCount = context.getRetryCount();
+            if (retryCount > 0) {
+                if (throwable == null) {
+                    LOGGER.info("{} attempt {} succeeded for <{}>.",
+                            loggableValue(RETRY_ACTION, actionName),
+                            loggableValue(RETRY_COUNT_LOGNAME, retryCount + 1),
+                            LOGGING_CONTEXT.get(context));
+                } else {
+                    LOGGER.error("{} attempts (total {}) exhausted for <{}>.",
+                            loggableValue(RETRY_ACTION, actionName),
+                            loggableValue(RETRY_COUNT_LOGNAME, retryCount),
+                            LOGGING_CONTEXT.get(context));
                 }
             }
-
-            @Override
-            public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
-                LOGGER.warn("{} failed on attempt {} for <{}>. Retrying.",
-                        loggableValue(RETRY_ACTION, actionName),
-                        loggableValue(RETRY_COUNT_LOGNAME, context.getRetryCount()),
-                        LOGGING_CONTEXT.get(context), throwable);
-            }
         }
+
+        @Override
+        public <T, E extends Throwable> void onError(final RetryContext context, final RetryCallback<T, E> callback, final Throwable throwable) {
+            LOGGER.warn("{} failed on attempt {} for <{}>. Retrying.",
+                    loggableValue(RETRY_ACTION, actionName),
+                    loggableValue(RETRY_COUNT_LOGNAME, context.getRetryCount()),
+                    LOGGING_CONTEXT.get(context), throwable);
+        }
+    }
 }

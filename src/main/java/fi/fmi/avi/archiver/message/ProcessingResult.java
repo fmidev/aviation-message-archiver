@@ -71,4 +71,10 @@ public enum ProcessingResult implements StructuredLoggable {
     public String getStructureName() {
         return "rejectReason";
     }
+
+    // Override to make toString() @NullMarked satisfying Loggable contract
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

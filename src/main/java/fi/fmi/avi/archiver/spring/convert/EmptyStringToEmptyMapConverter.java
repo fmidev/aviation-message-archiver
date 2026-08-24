@@ -1,6 +1,7 @@
 package fi.fmi.avi.archiver.spring.convert;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -24,9 +25,8 @@ public class EmptyStringToEmptyMapConverter extends AbstractNonEmptyStringConver
     public EmptyStringToEmptyMapConverter() {
     }
 
-    @Nullable
     @Override
-    protected Map<String, String> getEmptyValue() {
+    protected @Nullable Map<String, String> getEmptyValue() {
         return new LinkedHashMap<>();
     }
 

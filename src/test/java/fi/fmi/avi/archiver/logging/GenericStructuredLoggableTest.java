@@ -1,18 +1,7 @@
 package fi.fmi.avi.archiver.logging;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.SoftAssertions.assertSoftly;
-import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-
-import java.util.function.Supplier;
-
-import javax.annotation.Nullable;
-
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -20,7 +9,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.function.Supplier;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
+import static org.mockito.Mockito.*;
 
 @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR")
 class GenericStructuredLoggableTest {
@@ -30,14 +23,14 @@ class GenericStructuredLoggableTest {
     private static final int STRING_INVOCTIONS = 3;
 
     @Mock
-    private Supplier<Object> valueSupplier;
+    private Supplier<@Nullable Object> valueSupplier;
     @Mock
     private Supplier<String> stringSupplier;
-    private AutoCloseable mocks;
+    private @Nullable AutoCloseable mocks;
     private Object value;
 
-    private static GenericStructuredLoggable<Object> lazyLoggable(final String name, final Supplier<Object> valueSupplier,
-            final Supplier<String> stringSupplier) {
+    private static GenericStructuredLoggable<Object> lazyLoggable(final String name, final Supplier<@Nullable Object> valueSupplier,
+                                                                  final Supplier<String> stringSupplier) {
         return GenericStructuredLoggable.loggable(name, valueSupplier, stringSupplier);
     }
 
@@ -61,7 +54,7 @@ class GenericStructuredLoggableTest {
         }
     }
 
-    <T> void assertLazyLoggable(final GenericStructuredLoggable<T> loggable, @Nullable final T value, final String string) {
+    <T> void assertLazyLoggable(final GenericStructuredLoggable<T> loggable, final @Nullable T value, final String string) {
         assertSoftly(softly -> {
             softly.assertThat(loggable.getStructureName()).as("getStructureName").isEqualTo(NAME);
             softly.assertThat(loggable.estimateLogStringLength()).as("estimateLogStringLength").isEqualTo(0);
@@ -73,7 +66,7 @@ class GenericStructuredLoggableTest {
         assertThat(loggable.toString()).as("toString 3").isEqualTo(string);
     }
 
-    <T> void assertImmutableLoggable(final GenericStructuredLoggable<T> loggable, @Nullable final T value, final String string) {
+    <T> void assertImmutableLoggable(final GenericStructuredLoggable<T> loggable, final @Nullable T value, final String string) {
         assertSoftly(softly -> {
             softly.assertThat(loggable.getStructureName()).as("getStructureName").isEqualTo(NAME);
             softly.assertThat(loggable.getValue()).as("getValue").isEqualTo(value);

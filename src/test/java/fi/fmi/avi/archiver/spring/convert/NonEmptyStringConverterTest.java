@@ -1,10 +1,10 @@
 package fi.fmi.avi.archiver.spring.convert;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -64,18 +64,16 @@ class NonEmptyStringConverterTest {
     }
 
     static class TestConverterWithCustomEmptyValue extends TestConverter {
-        @Nullable
-        private final String emptyValue;
+        private final @Nullable String emptyValue;
         private int emptyInvocations = 0;
 
-        TestConverterWithCustomEmptyValue(@Nullable final String emptyValue) {
+        TestConverterWithCustomEmptyValue(final @Nullable String emptyValue) {
             super();
             this.emptyValue = emptyValue;
         }
 
-        @Nullable
         @Override
-        protected String getEmptyValue() {
+        protected @Nullable String getEmptyValue() {
             emptyInvocations += 1;
             return emptyValue;
         }

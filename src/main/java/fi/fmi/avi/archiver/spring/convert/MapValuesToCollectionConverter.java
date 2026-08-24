@@ -1,5 +1,6 @@
 package fi.fmi.avi.archiver.spring.convert;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalGenericConverter;
@@ -58,8 +59,10 @@ public class MapValuesToCollectionConverter implements ConditionalGenericConvert
     }
 
     @Override
-    public Object convert(final Object source, final TypeDescriptor sourceType, final TypeDescriptor targetType) {
-        return conversionService.convert(((Map<?, ?>) source).values(), mapValuesTypeDescriptor(sourceType), targetType);
+    public @Nullable Object convert(final @Nullable Object source, final TypeDescriptor sourceType, final TypeDescriptor targetType) {
+        return source == null
+                ? null
+                : conversionService.convert(((Map<?, ?>) source).values(), mapValuesTypeDescriptor(sourceType), targetType);
     }
 
     @Override

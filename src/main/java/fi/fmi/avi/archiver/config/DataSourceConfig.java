@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.config;
 
 import fi.fmi.avi.archiver.database.DatabaseAccess;
 import fi.fmi.avi.archiver.database.DatabaseService;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +18,6 @@ import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.retry.support.RetryTemplateBuilder;
 
-import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Duration;
 
@@ -82,7 +82,7 @@ public class DataSourceConfig {
         private static final Logger LOGGER = LoggerFactory.getLogger(RetryLogger.class);
 
         @Override
-        public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, @Nullable final Throwable throwable) {
+        public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, final @Nullable Throwable throwable) {
             final int retryCount = context.getRetryCount();
             if (retryCount > 0) {
                 if (throwable == null) {

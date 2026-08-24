@@ -1,34 +1,26 @@
 package fi.fmi.avi.archiver.util;
 
-import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
-
+import fi.fmi.avi.model.PartialDateTime;
+import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import fi.fmi.avi.model.PartialDateTime;
-import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class TimeUtilTest {
     static Stream<Arguments> testToCompleteTime_Iterable() {
@@ -50,23 +42,25 @@ class TimeUtilTest {
                 .filter(arguments -> {
                     final List<PartialOrCompleteTimeInstant> times = (List<PartialOrCompleteTimeInstant>) arguments.get()[0];
                     return times.stream().findFirst()//
-                            .map(time -> time.getPartialTime().isPresent() && !time.getCompleteTime().isPresent())//
+                            .map(time -> time.getPartialTime().isPresent() && time.getCompleteTime().isEmpty())//
                             .orElse(false);
                 })//
                 .map(arguments -> {
                     final List<PartialOrCompleteTimeInstant> times = (List<PartialOrCompleteTimeInstant>) arguments.get()[0];
                     final ZonedDateTime expected = (ZonedDateTime) arguments.get()[1];
                     return Arguments.of(//
-                            times.get(0).getPartialTime().orElseThrow(IllegalStateException::new), //
+                            times.getFirst().getPartialTime().orElseThrow(IllegalStateException::new), //
                             times.subList(1, times.size()), //
                             expected);
                 });
     }
 
-    private static List<PartialOrCompleteTimeInstant> partialOrCompleteInstants(final String... source) {
+    private static List<@Nullable PartialOrCompleteTimeInstant> partialOrCompleteInstants(final String... source) {
         return Arrays.stream(source)//
                 .map(ZonedChronoFieldValues::parse)//
-                .map(values -> TimeUtil.toPartialOrCompleteTimeInstant(values.getChronoFieldValues(), values.getZoneId().orElse(null)).orElse(null))//
+                .map(values ->
+                        TimeUtil.toPartialOrCompleteTimeInstant(values.getChronoFieldValues(), values.getZoneId().orElse(null))
+                                .orElse(null))//
                 .collect(Collectors.toList());
     }
 
@@ -86,7 +80,7 @@ class TimeUtilTest {
             "2003-03-04T05:06:07.012345678Z, 2003-03-04T05:06:07.012345678Z", //
             "2003-03-04T05:06:07.012345678+01:00, 2003-03-04T05:06:07.012345678+01:00", //
     })
-    void testToZonedDateTime(final ZonedChronoFieldValues input, @Nullable final ZonedDateTime expectedResult) {
+    void testToZonedDateTime(final ZonedChronoFieldValues input, final @Nullable ZonedDateTime expectedResult) {
         final Optional<ZonedDateTime> actual = TimeUtil.toZonedDateTime(input.getChronoFieldValues(), input.getZoneId().orElseThrow(NullPointerException::new));
         assertThat(actual).isEqualTo(Optional.ofNullable(expectedResult));
     }
@@ -103,7 +97,7 @@ class TimeUtilTest {
             "--02T03:04:Z, --02T03:04:Z", //
             "2000-01-02T03:04:05.123456789Z, --02T03:04:Z", //
     })
-    void testToPartialDateTime(final ZonedChronoFieldValues input, @Nullable final PartialDateTime expectedResult) {
+    void testToPartialDateTime(final ZonedChronoFieldValues input, final @Nullable PartialDateTime expectedResult) {
         final Optional<PartialDateTime> actual = TimeUtil.toPartialDateTime(input.getChronoFieldValues(), input.getZoneId().orElse(null));
         assertThat(actual).isEqualTo(Optional.ofNullable(expectedResult));
     }
@@ -121,8 +115,10 @@ class TimeUtilTest {
             "2000-01-T03::Z, --T03::Z, ", //
             "2000-01-02T03:04:05.123456789, --02T03:04:, ", //
     })
-    void toPartialOrCompleteTimeInstant_populates_complete_and_or_partial_time_when_available(final ZonedChronoFieldValues input,
-            @Nullable final PartialDateTime expectedPartialTime, @Nullable final ZonedDateTime expectedCompleteTime) {
+    void toPartialOrCompleteTimeInstant_populates_complete_and_or_partial_time_when_available(
+            final ZonedChronoFieldValues input,
+            final @Nullable PartialDateTime expectedPartialTime,
+            final @Nullable ZonedDateTime expectedCompleteTime) {
         final PartialOrCompleteTimeInstant actual = TimeUtil.toPartialOrCompleteTimeInstant(input.getChronoFieldValues(), input.getZoneId().orElse(null))
                 .orElse(null);
         assertThat(actual).isNotNull();
@@ -132,14 +128,16 @@ class TimeUtilTest {
 
     @ParameterizedTest
     @MethodSource
-    void testToCompleteTime_Iterable(final List<PartialOrCompleteTimeInstant> times, @Nullable final ZonedDateTime expectedResult) {
+    void testToCompleteTime_Iterable(final List<PartialOrCompleteTimeInstant> times, final @Nullable ZonedDateTime expectedResult) {
         assertThat(TimeUtil.toCompleteTime(times)).isEqualTo(Optional.ofNullable(expectedResult));
     }
 
     @ParameterizedTest
     @MethodSource
-    void testToCompleteTime_PartialDateTime_Iterable(final PartialDateTime partial, final List<PartialOrCompleteTimeInstant> times,
-            @Nullable final ZonedDateTime expectedResult) {
+    void testToCompleteTime_PartialDateTime_Iterable(
+            final PartialDateTime partial,
+            final List<PartialOrCompleteTimeInstant> times,
+            final @Nullable ZonedDateTime expectedResult) {
         assertThat(TimeUtil.toCompleteTime(partial, times)).isEqualTo(Optional.ofNullable(expectedResult));
     }
 
@@ -153,10 +151,9 @@ class TimeUtilTest {
         private static final Map<ChronoField, String> GROUP_NAMES = createGroupNames();
 
         private final Map<ChronoField, Integer> chronoFieldValues;
-        @Nullable
-        private final ZoneId zoneId;
+        private final @Nullable ZoneId zoneId;
 
-        private ZonedChronoFieldValues(final Map<ChronoField, Integer> chronoFieldValues, @Nullable final ZoneId zoneId) {
+        private ZonedChronoFieldValues(final Map<ChronoField, Integer> chronoFieldValues, final @Nullable ZoneId zoneId) {
             this.chronoFieldValues = requireNonNull(chronoFieldValues, "chronoFieldValues");
             this.zoneId = zoneId;
         }
@@ -181,7 +178,6 @@ class TimeUtilTest {
             final EnumMap<ChronoField, Integer> builder = new EnumMap<>(ChronoField.class);
             CHRONO_FIELDS.forEach(field -> putValue(builder, matcher, field));
             final Map<ChronoField, Integer> chronoFieldValues = Collections.unmodifiableMap(builder);
-            @Nullable
             final ZoneId zoneId = Optional.ofNullable(matcher.group("ZONE")).map(ZoneId::of).orElse(null);
             return new ZonedChronoFieldValues(chronoFieldValues, zoneId);
         }

@@ -29,7 +29,6 @@ class ForwardingPostActionFactoryTest {
         verifyNoMoreInteractions(delegate, closeableDelegate);
     }
 
-    @SuppressWarnings("rawtypes")
     @Test
     void testForwarding() {
         new ForwardingWrapperTester().testForwarding(PostActionFactory.class, ForwardingPostActionFactory::create);

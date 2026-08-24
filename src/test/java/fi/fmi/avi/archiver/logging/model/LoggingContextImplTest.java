@@ -1,29 +1,23 @@
 package fi.fmi.avi.archiver.logging.model;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.SoftAssertions.assertSoftly;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atMostOnce;
-import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-
-import java.util.List;
-
-import javax.annotation.Nullable;
-
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.logging.LoggableTests;
+import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult;
+import fi.fmi.avi.archiver.message.MessagePositionInFile;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.logging.LoggableTests;
-import fi.fmi.avi.archiver.logging.model.ReadableFileProcessingStatistics.ProcessingResult;
-import fi.fmi.avi.archiver.message.MessagePositionInFile;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 class LoggingContextImplTest {
     private static final FileReference FILE_REFERENCE = FileReference.create("productId", "test_file.txt");
@@ -31,7 +25,7 @@ class LoggingContextImplTest {
 
     private LoggingContextImpl loggingContext;
 
-    private AutoCloseable mocksCloseable;
+    private @Nullable AutoCloseable mocksCloseable;
     @Mock
     private FileProcessingStatistics statistics;
 
@@ -47,7 +41,8 @@ class LoggingContextImplTest {
                 .build();
     }
 
-    private static void assertState(final ReadableLoggingContext loggingContext, final @Nullable FileReference expectedFileReference,
+    private static void assertState(
+            final ReadableLoggingContext loggingContext, final @Nullable FileReference expectedFileReference,
             final @Nullable BulletinLogReference expectedBulletinLogReference, final @Nullable MessageLogReference expectedMessageLogReference) {
         final int expectedBulletinIndex = expectedBulletinLogReference == null ? -1 : expectedBulletinLogReference.getIndex();
         final int expectedMessageIndex = expectedMessageLogReference == null ? -1 : expectedMessageLogReference.getIndex();
@@ -87,7 +82,8 @@ class LoggingContextImplTest {
         assertState(null, null, null);
     }
 
-    private void assertState(@Nullable final FileReference expectedFileReference, final @Nullable BulletinLogReference expectedBulletinLogReference,
+    private void assertState(
+            final @Nullable FileReference expectedFileReference, final @Nullable BulletinLogReference expectedBulletinLogReference,
             final @Nullable MessageLogReference expectedMessageLogReference) {
         assertState(loggingContext, expectedFileReference, expectedBulletinLogReference, expectedMessageLogReference);
     }

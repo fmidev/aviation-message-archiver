@@ -17,6 +17,7 @@ import fi.fmi.avi.archiver.message.processor.postaction.TestPostActionRegistry;
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.inferred.freebuilder.FreeBuilder;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,7 +32,6 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import org.xml.sax.SAXException;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -1101,18 +1101,18 @@ class AviationMessageArchiverTest {
                     .hasBinaryContent(expectedContent);
         }
 
-        @Nullable
-        private Path waitUntilFileExists(final Path expectedOutputDir, final String expectedFileBaseName) throws InterruptedException, IOException {
+        private @Nullable Path waitUntilFileExists(final Path expectedOutputDir, final String expectedFileBaseName) throws InterruptedException, IOException {
             final String expectedFileBaseNameWithSeparator = expectedFileBaseName + ".";
             long totalWaitTime = 0;
             final BiPredicate<Path, BasicFileAttributes> matcher = (path, basicFileAttributes) -> basicFileAttributes.isRegularFile() //
                     && Optional.ofNullable(path.getFileName())//
                     .map(fileName -> fileName.toString().startsWith(expectedFileBaseNameWithSeparator))//
                     .orElse(false);
-            @Nullable
             Path concretePath = null;
             while (totalWaitTime < TIMEOUT_MILLIS && concretePath == null) {
-                concretePath = Files.find(expectedOutputDir, 1, matcher).findAny().orElse(null);
+                try (final Stream<Path> pathStream = Files.find(expectedOutputDir, 1, matcher)) {
+                    concretePath = pathStream.findAny().orElse(null);
+                }
                 Thread.sleep(WAIT_MILLIS);
                 totalWaitTime += WAIT_MILLIS;
             }

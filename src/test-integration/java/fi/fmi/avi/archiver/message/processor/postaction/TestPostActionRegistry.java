@@ -1,6 +1,5 @@
 package fi.fmi.avi.archiver.message.processor.postaction;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,7 +12,7 @@ public class TestPostActionRegistry {
 
     public void register(final TestPostAction postAction) {
         requireNonNull(postAction, "postAction");
-        @Nullable final TestPostAction previouslyRegistered = postActions.putIfAbsent(postAction.getId(), postAction);
+        final TestPostAction previouslyRegistered = postActions.putIfAbsent(postAction.getId(), postAction);
         if (previouslyRegistered != null) {
             throw new IllegalArgumentException("Duplicate TestPostAction id: <" + postAction.getId() + ">");
         }

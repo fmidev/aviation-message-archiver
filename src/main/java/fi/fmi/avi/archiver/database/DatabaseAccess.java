@@ -1,6 +1,19 @@
 package fi.fmi.avi.archiver.database;
 
-import static java.util.Objects.requireNonNull;
+import com.google.common.annotations.VisibleForTesting;
+import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
+import fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.support.RetryTemplate;
 
 import java.sql.Types;
 import java.time.Clock;
@@ -8,22 +21,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.springframework.retry.RetryContext;
-import org.springframework.retry.support.RetryTemplate;
-
-import com.google.common.annotations.VisibleForTesting;
-
-import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
-import fi.fmi.avi.archiver.message.ArchiveAviationMessageIWXXMDetails;
-import fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Database access operations.
@@ -64,7 +62,7 @@ public class DatabaseAccess {
         this.stationIdQuery = "select station_id from " + schema + ".avidb_stations where icao_code = :icao_code";
     }
 
-    private static void addTimestampWithTimezone(final MapSqlParameterSource parameters, final String name, @Nullable final Instant timestamp) {
+    private static void addTimestampWithTimezone(final MapSqlParameterSource parameters, final String name, final @Nullable Instant timestamp) {
         parameters.addValue(name, timestamp == null ? null : timestamp.atOffset(ZoneOffset.UTC), Types.TIMESTAMP_WITH_TIMEZONE);
     }
 
@@ -76,11 +74,8 @@ public class DatabaseAccess {
     /**
      * Insert aviation message into the main message table. Returns the generated id.
      *
-     * @param archiveAviationMessage
-     *         aviation message to archive
-     * @param loggingContext
-     *         logging context
-     *
+     * @param archiveAviationMessage aviation message to archive
+     * @param loggingContext         logging context
      * @return the generated id
      */
     public Number insertAviationMessage(final ArchiveAviationMessage archiveAviationMessage, final ReadableLoggingContext loggingContext) {
@@ -106,11 +101,8 @@ public class DatabaseAccess {
     /**
      * Insert aviation message into the rejected messages table. Returns the generated id.
      *
-     * @param archiveAviationMessage
-     *         aviation message to archive in the rejected messages table
-     * @param loggingContext
-     *         logging context
-     *
+     * @param archiveAviationMessage aviation message to archive in the rejected messages table
+     * @param loggingContext         logging context
      * @return the generated id
      */
     public Number insertRejectedAviationMessage(final ArchiveAviationMessage archiveAviationMessage, final ReadableLoggingContext loggingContext) {
@@ -158,11 +150,8 @@ public class DatabaseAccess {
     /**
      * Return the station id matching provided {@code stationIcaoCode}, if exists.
      *
-     * @param stationIcaoCode
-     *         ICAO code to look for
-     * @param loggingContext
-     *         logging context
-     *
+     * @param stationIcaoCode ICAO code to look for
+     * @param loggingContext  logging context
      * @return station id or empty if database does not contain provided {@code stationIcaoCode} or in case of an error
      */
     public Optional<Integer> queryStationId(final String stationIcaoCode, final ReadableLoggingContext loggingContext) {
@@ -171,9 +160,12 @@ public class DatabaseAccess {
         final MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("icao_code", stationIcaoCode);
         try {
-            final Integer stationId = retryTemplate.execute(context -> {
-                initRetryContext(context, "query station id: " + stationIcaoCode, loggingContext);
-                return jdbcTemplate.queryForObject(stationIdQuery, parameters, Integer.class);
+            final Integer stationId = retryTemplate.execute(new RetryCallback<>() {
+                @Override
+                public @Nullable Integer doWithRetry(final RetryContext context) throws RuntimeException {
+                    DatabaseAccess.this.initRetryContext(context, "query station id: " + stationIcaoCode, loggingContext);
+                    return jdbcTemplate.queryForObject(stationIdQuery, parameters, Integer.class);
+                }
             });
             return Optional.ofNullable(stationId);
         } catch (final RuntimeException e) {

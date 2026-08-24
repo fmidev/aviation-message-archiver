@@ -1,6 +1,8 @@
 package fi.fmi.avi.archiver.logging.model;
 
-import static java.util.Objects.requireNonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.file.FileReference;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,10 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.IntFunction;
 
-import javax.annotation.Nullable;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.file.FileReference;
+import static java.util.Objects.requireNonNull;
 
 public class LoggingContextImpl extends AbstractLoggingContext implements LoggingContext {
 
@@ -19,8 +18,7 @@ public class LoggingContextImpl extends AbstractLoggingContext implements Loggin
     private final ArrayList<BulletinLogReference> bulletins = new ArrayList<>(0);
     private final ArrayList<ArrayList<MessageLogReference>> bulletinMessages = new ArrayList<>(0);
 
-    @Nullable
-    private FileReference file;
+    private @Nullable FileReference file;
     private int bulletinIndex = -1;
     private int messageIndex = -1;
 
@@ -36,7 +34,7 @@ public class LoggingContextImpl extends AbstractLoggingContext implements Loggin
     }
 
     @Override
-    public void enterFile(@Nullable final FileReference file) {
+    public void enterFile(final @Nullable FileReference file) {
         leaveBulletin();
         if (file == null || !file.equals(this.file)) {
             clearLogReferenceCachesAndStatistics();
@@ -58,7 +56,7 @@ public class LoggingContextImpl extends AbstractLoggingContext implements Loggin
     }
 
     @Override
-    public void enterBulletin(@Nullable final BulletinLogReference bulletin) {
+    public void enterBulletin(final @Nullable BulletinLogReference bulletin) {
         leaveMessage();
         if (bulletin == null) {
             bulletinIndex = -1;
@@ -101,7 +99,7 @@ public class LoggingContextImpl extends AbstractLoggingContext implements Loggin
     }
 
     @Override
-    public void enterMessage(@Nullable final MessageLogReference message) {
+    public void enterMessage(final @Nullable MessageLogReference message) {
         if (message == null) {
             messageIndex = -1;
             return;

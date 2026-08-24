@@ -6,10 +6,10 @@ import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
 import fi.fmi.avi.model.PartialDateTime;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
-import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -29,7 +29,7 @@ class MessagePopulatorHelperTest {
             .buildPartial();
 
     private static Optional<PartialOrCompleteTimeInstant> partialOrCompleteTimeInstant(
-            @Nullable final PartialDateTime partialTime, @Nullable final ZonedDateTime completeTime) {
+            final @Nullable PartialDateTime partialTime, final @Nullable ZonedDateTime completeTime) {
         if (partialTime == null && completeTime == null) {
             return Optional.empty();
         }
@@ -42,8 +42,8 @@ class MessagePopulatorHelperTest {
     @ParameterizedTest
     @CsvFileSource(resources = "MessagePopulatorHelperTest_testResolveCompleteTime.csv", numLinesToSkip = 1)
     void testResolveCompleteTime(
-            @Nullable final PartialDateTime partialTime, @Nullable final ZonedDateTime completeTime, final String filename,
-            @Nullable final Instant fileModified, final ZonedDateTime clock, @Nullable final ZonedDateTime expectedTime) {
+            final @Nullable PartialDateTime partialTime, final @Nullable ZonedDateTime completeTime, final String filename,
+            final @Nullable Instant fileModified, final ZonedDateTime clock, final @Nullable ZonedDateTime expectedTime) {
         final MessagePopulatorHelper helper = new MessagePopulatorHelper(Clock.fixed(clock.toInstant(), clock.getZone()));
         final FileMetadata fileMetadata = FILE_METADATA_TEMPLATE.toBuilder()//
                 .mutateFileReference(ref -> ref.setFilename(filename))//
@@ -54,24 +54,24 @@ class MessagePopulatorHelperTest {
                 .setNullableCompleteTime(completeTime)//
                 .build();
 
-        @Nullable final ZonedDateTime result = helper.resolveCompleteTime(partialOrCompleteTime, fileMetadata).orElse(null);
+        final ZonedDateTime result = helper.resolveCompleteTime(partialOrCompleteTime, fileMetadata).orElse(null);
         assertThat(result).isEqualTo(expectedTime);
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "MessagePopulatorHelperTest_testTryCompletePeriod.csv", numLinesToSkip = 1)
     void testTryCompletePeriod(
-            @Nullable final PartialDateTime partialStartTime, @Nullable final ZonedDateTime completeStartTime, //
-            @Nullable final PartialDateTime partialEndTime, @Nullable final ZonedDateTime completeEndTime, //
-            @Nullable final PartialDateTime partialPrimaryReference, @Nullable final ZonedDateTime completePrimaryReference, //
-            final String filename, @Nullable final Instant fileModified, final ZonedDateTime clock, //
-            @Nullable final PartialDateTime expectedPartialStartTime, @Nullable final ZonedDateTime expectedCompleteStartTime, //
-            @Nullable final PartialDateTime expectedPartialEndTime, @Nullable final ZonedDateTime expectedCompleteEndTime) {
+            final @Nullable PartialDateTime partialStartTime, final @Nullable ZonedDateTime completeStartTime, //
+            final @Nullable PartialDateTime partialEndTime, final @Nullable ZonedDateTime completeEndTime, //
+            final @Nullable PartialDateTime partialPrimaryReference, final @Nullable ZonedDateTime completePrimaryReference, //
+            final String filename, final @Nullable Instant fileModified, final ZonedDateTime clock, //
+            final @Nullable PartialDateTime expectedPartialStartTime, final @Nullable ZonedDateTime expectedCompleteStartTime, //
+            final @Nullable PartialDateTime expectedPartialEndTime, final @Nullable ZonedDateTime expectedCompleteEndTime) {
         final PartialOrCompleteTimePeriod period = PartialOrCompleteTimePeriod.builder()//
                 .setStartTime(partialOrCompleteTimeInstant(partialStartTime, completeStartTime))//
                 .setEndTime(partialOrCompleteTimeInstant(partialEndTime, completeEndTime))//
                 .build();
-        @Nullable final PartialOrCompleteTimeInstant primaryReference = partialOrCompleteTimeInstant(partialPrimaryReference, completePrimaryReference).orElse(null);
+        final PartialOrCompleteTimeInstant primaryReference = partialOrCompleteTimeInstant(partialPrimaryReference, completePrimaryReference).orElse(null);
         final PartialOrCompleteTimePeriod expectedPeriod = PartialOrCompleteTimePeriod.builder()//
                 .setStartTime(partialOrCompleteTimeInstant(expectedPartialStartTime, expectedCompleteStartTime))//
                 .setEndTime(partialOrCompleteTimeInstant(expectedPartialEndTime, expectedCompleteEndTime))//
@@ -82,7 +82,7 @@ class MessagePopulatorHelperTest {
                 .setNullableFileModified(fileModified)//
                 .build();
 
-        @Nullable final PartialOrCompleteTimePeriod result = helper.tryCompletePeriod(period, primaryReference, fileMetadata);
+        final PartialOrCompleteTimePeriod result = helper.tryCompletePeriod(period, primaryReference, fileMetadata);
         assertThat(result).isEqualTo(expectedPeriod);
     }
 }

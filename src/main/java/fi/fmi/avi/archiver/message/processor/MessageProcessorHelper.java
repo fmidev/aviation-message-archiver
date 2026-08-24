@@ -3,6 +3,7 @@ package fi.fmi.avi.archiver.message.processor;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
 import fi.fmi.avi.archiver.message.processor.populator.BulletinHeadingSource;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -28,7 +29,7 @@ public final class MessageProcessorHelper {
      * @param <T>    return value type
      * @return value returned by {@code reader} or {@link Optional#empty()} if value could not be read
      */
-    public static <F, T> Optional<T> tryGet(final F input, final Function<F, T> reader) {
+    public static <F, T> Optional<T> tryGet(final F input, final Function<F, @Nullable T> reader) {
         try {
             return Optional.ofNullable(reader.apply(input));
         } catch (final IllegalStateException ignored) {

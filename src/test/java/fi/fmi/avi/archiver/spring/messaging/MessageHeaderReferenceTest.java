@@ -1,20 +1,18 @@
 package fi.fmi.avi.archiver.spring.messaging;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNullPointerException;
-import static org.assertj.core.api.SoftAssertions.assertSoftly;
-import static org.mockito.Mockito.when;
-
-import java.util.Optional;
-
-import javax.annotation.Nullable;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.messaging.MessageHeaders;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
+import static org.mockito.Mockito.when;
 
 class MessageHeaderReferenceTest {
     private static final String NAME = "testHeaderName";
@@ -89,7 +87,6 @@ class MessageHeaderReferenceTest {
     void getNullable_returns_null_if_header_is_null() {
         when(headers.get(NAME, TYPE)).thenReturn(null);
 
-        @Nullable
         final Integer result = headerRef.getNullable(headers);
 
         assertThat(result).isNull();
@@ -99,7 +96,6 @@ class MessageHeaderReferenceTest {
     void getNullable_returns_value_when_not_null() {
         when(headers.get(NAME, TYPE)).thenReturn(VALUE);
 
-        @Nullable
         final Integer result = headerRef.getNullable(headers);
 
         assertThat(result).isEqualTo(VALUE);

@@ -5,16 +5,12 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.util.GeneratedClasses;
 import org.springframework.retry.support.RetryTemplate;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import static org.mockito.Mockito.mock;
 
-import java.time.Clock;
-
-import static org.mockito.Mockito.mock;
-
-@SuppressWarnings("UnstableApiUsage")
 public class PackageSanityTest extends AbstractPackageSanityTests {
 
     @Override

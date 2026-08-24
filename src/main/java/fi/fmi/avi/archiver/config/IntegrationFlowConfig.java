@@ -27,6 +27,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -57,7 +58,6 @@ import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -128,7 +128,7 @@ public class IntegrationFlowConfig {
                 .handle(loggingEnvCleaner())
                 .channel(parserChannel)
                 .handle(loggingEnvSetter(ProcessingPhase.PARSE))
-                .<String>filter(content -> content != null && !content.isEmpty(), discards -> discards.discardChannel(failChannel))
+                .<@Nullable String>filter(content -> content != null && !content.isEmpty(), discards -> discards.discardChannel(failChannel))
                 .handle(fileParserIntegrationService::parse)
                 .handle(peekLoggingContext(this::loggingActionsAfterParse))
                 .<List<InputAviationMessage>>filter(messages -> !messages.isEmpty(), discards -> discards.discardChannel(failChannel))
@@ -192,8 +192,8 @@ public class IntegrationFlowConfig {
     @Bean
     IntegrationFlow errorMessageFlow(
             final MessageChannel errorMessageChannel, final MessageChannel failChannel,
-            @SuppressWarnings("rawtypes") final GenericTransformer<Message, File> headerToFileTransformer,
-            @SuppressWarnings("rawtypes") final GenericTransformer<Message, Message> errorMessageToOriginalTransformer) {
+            @SuppressWarnings("rawtypes") final GenericTransformer<Message, @Nullable File> headerToFileTransformer,
+            @SuppressWarnings("rawtypes") final GenericTransformer<Message, @Nullable Message> errorMessageToOriginalTransformer) {
         return IntegrationFlow.from(errorMessageChannel)//
                 .handle(loggingEnvSetter(ProcessingPhase.FAIL))//
                 .transform(Message.class, errorMessageToOriginalTransformer)//
@@ -207,7 +207,7 @@ public class IntegrationFlowConfig {
     @Bean
     IntegrationFlow errorLoggingFlow(
             final MessageChannel errorLoggingChannel, final MessageChannel finishChannel,
-            @SuppressWarnings("rawtypes") final GenericTransformer<Message, Message> errorMessageToOriginalTransformer) {
+            @SuppressWarnings("rawtypes") final GenericTransformer<Message, @Nullable Message> errorMessageToOriginalTransformer) {
         return IntegrationFlow.from(errorLoggingChannel)//
                 .handle(loggingEnvSetter(ProcessingPhase.FAIL))//
                 .transform(Message.class, errorMessageToOriginalTransformer)//
@@ -274,13 +274,13 @@ public class IntegrationFlowConfig {
 
     @Bean
     @SuppressWarnings("rawtypes")
-    GenericTransformer<Message, File> headerToFileTransformer() {
+    GenericTransformer<Message, @Nullable File> headerToFileTransformer() {
         return message -> ORIGINAL_FILE.getNullable(message.getHeaders());
     }
 
     @Bean
     @SuppressWarnings("rawtypes")
-    GenericTransformer<Message, Message> errorMessageToOriginalTransformer() {
+    GenericTransformer<Message, @Nullable Message> errorMessageToOriginalTransformer() {
         return message -> {
             if (!(message instanceof final ErrorMessage errorMessage)) {
                 return message;
@@ -304,7 +304,7 @@ public class IntegrationFlowConfig {
                 setLoggingEnv(failedMessage.getHeaders(), ProcessingPhase.FAIL);
             }
             final LoggingContext loggingContext = getProcessingServiceContext(failedMessage).getLoggingContext();
-            @Nullable final Throwable errorToLog = throwable instanceof MessagingException ? throwable.getCause() : throwable;
+            final Throwable errorToLog = throwable instanceof MessagingException ? throwable.getCause() : throwable;
             LOGGER.error("Error while processing <{}>: {}", loggingContext, errorToLog == null ? "" : errorToLog.getMessage(), errorToLog);
             loggingContext.recordProcessingResult(FileProcessingStatistics.ProcessingResult.FAILED);
             return failedMessage;
@@ -325,7 +325,7 @@ public class IntegrationFlowConfig {
         private final List<Advice> failAdviceChain;
         private final FileNameGenerator fileProcessingIdAppender;
         @SuppressWarnings("rawtypes")
-        private final GenericTransformer<Message, File> headerToFileTransformer;
+        private final GenericTransformer<Message, @Nullable File> headerToFileTransformer;
         private final Duration pollingDelay;
         private final MessageChannel processingChannel;
         private final MessageChannel errorMessageChannel;
@@ -342,7 +342,7 @@ public class IntegrationFlowConfig {
                 final List<Advice> archiveAdviceChain,
                 final List<Advice> failAdviceChain,
                 final FileNameGenerator fileProcessingIdAppender,
-                @SuppressWarnings("rawtypes") final GenericTransformer<Message, File> headerToFileTransformer,
+                @SuppressWarnings("rawtypes") final GenericTransformer<Message, @Nullable File> headerToFileTransformer,
                 @Value("${polling.delay}") final Duration pollingDelay,
                 final MessageChannel processingChannel,
                 final MessageChannel errorMessageChannel,

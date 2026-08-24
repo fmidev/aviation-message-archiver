@@ -12,7 +12,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import static org.mockito.Mockito.mock;
 
-@SuppressWarnings("UnstableApiUsage")
 public class PackageSanityTest extends AbstractPackageSanityTests {
     @Override
     public void setUp() throws Exception {

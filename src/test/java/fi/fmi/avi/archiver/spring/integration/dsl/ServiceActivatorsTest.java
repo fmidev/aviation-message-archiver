@@ -1,6 +1,7 @@
 package fi.fmi.avi.archiver.spring.integration.dsl;
 
 import fi.fmi.avi.archiver.spring.messaging.MessageHeaderReference;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.integration.core.GenericHandler;
 import org.springframework.integration.support.MutableMessageHeaders;
@@ -14,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ServiceActivatorsTest {
     @Test
     void peekPayloadAndHeaderIfExists_handler_runs_provided_action_on_payload_and_existing_header_and_returns_payload() {
-        final AtomicReference<PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final MutableMessageHeaders headers = new MutableMessageHeaders(new HashMap<>());
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
@@ -35,10 +36,10 @@ class ServiceActivatorsTest {
 
     @Test
     void peekPayloadAndHeaderIfExists_handler_skips_provided_action_when_header_is_null_and_returns_payload() {
-        final AtomicReference<PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
-        final HashMap<String, Object> map = new HashMap<>();
+        final HashMap<String, @Nullable Object> map = new HashMap<>();
         map.put(headerRef.getName(), null);
         final MutableMessageHeaders headers = new MutableMessageHeaders(map);
 
@@ -52,7 +53,7 @@ class ServiceActivatorsTest {
 
     @Test
     void peekPayloadAndHeaderIfExists_handler_skips_provided_action_when_header_is_missing_and_returns_payload() {
-        final AtomicReference<PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final MutableMessageHeaders headers = new MutableMessageHeaders(new HashMap<>());
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
@@ -67,7 +68,7 @@ class ServiceActivatorsTest {
 
     @Test
     void peekPayloadAndHeader_handler_runs_provided_action_on_payload_and_existing_header_and_returns_payload() {
-        final AtomicReference<PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final MutableMessageHeaders headers = new MutableMessageHeaders(new HashMap<>());
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
@@ -92,11 +93,11 @@ class ServiceActivatorsTest {
 
     @Test
     void peekPayloadAndHeader_handler_uses_fallback_header_value_when_header_is_null_and_returns_payload() {
-        final AtomicReference<PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
         final String fallbackHeaderValue = "fallbackHeaderValue";
-        final HashMap<String, Object> map = new HashMap<>();
+        final HashMap<String, @Nullable Object> map = new HashMap<>();
         map.put(headerRef.getName(), null);
         final MutableMessageHeaders headers = new MutableMessageHeaders(map);
 
@@ -117,7 +118,7 @@ class ServiceActivatorsTest {
 
     @Test
     void peekPayloadAndHeader_handler_uses_fallback_header_value_when_header_is_missing_and_returns_payload() {
-        final AtomicReference<PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final MutableMessageHeaders headers = new MutableMessageHeaders(new HashMap<>());
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
@@ -140,7 +141,7 @@ class ServiceActivatorsTest {
 
     @Test
     void mapPayloadWithHeaderIfExists_handler_runs_provided_action_on_payload_and_existing_header_and_returns_payload() {
-        final AtomicReference<PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final Object outputPayload = "outputPayload";
         final MutableMessageHeaders headers = new MutableMessageHeaders(new HashMap<>());
@@ -165,11 +166,11 @@ class ServiceActivatorsTest {
 
     @Test
     void mapPayloadWithHeaderIfExists_handler_skips_provided_action_when_header_is_null_and_returns_payload() {
-        final AtomicReference<PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final Object outputPayload = "outputPayload";
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
-        final HashMap<String, Object> map = new HashMap<>();
+        final HashMap<String, @Nullable Object> map = new HashMap<>();
         map.put(headerRef.getName(), null);
         final MutableMessageHeaders headers = new MutableMessageHeaders(map);
 
@@ -186,7 +187,7 @@ class ServiceActivatorsTest {
 
     @Test
     void mapPayloadWithHeaderIfExists_handler_skips_provided_action_when_header_is_missing_and_returns_payload() {
-        final AtomicReference<PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final Object outputPayload = "outputPayload";
         final MutableMessageHeaders headers = new MutableMessageHeaders(new HashMap<>());
@@ -205,7 +206,7 @@ class ServiceActivatorsTest {
 
     @Test
     void mapPayloadWithHeader_handler_runs_provided_action_on_payload_and_existing_header_and_returns_payload() {
-        final AtomicReference<PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final Object outputPayload = "outputPayload";
         final MutableMessageHeaders headers = new MutableMessageHeaders(new HashMap<>());
@@ -234,12 +235,12 @@ class ServiceActivatorsTest {
 
     @Test
     void mapPayloadWithHeader_handler_uses_fallback_header_value_when_header_is_null_and_returns_payload() {
-        final AtomicReference<PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final Object outputPayload = "outputPayload";
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
         final String fallbackHeaderValue = "fallbackHeaderValue";
-        final HashMap<String, Object> map = new HashMap<>();
+        final HashMap<String, @Nullable Object> map = new HashMap<>();
         map.put(headerRef.getName(), null);
         final MutableMessageHeaders headers = new MutableMessageHeaders(map);
 
@@ -263,7 +264,7 @@ class ServiceActivatorsTest {
 
     @Test
     void mapPayloadWithHeader_handler_uses_fallback_header_value_when_header_is_missing_and_returns_payload() {
-        final AtomicReference<PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable PayloadAndHeader<Object, String>> seenPayloadAndHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final Object outputPayload = "outputPayload";
         final MutableMessageHeaders headers = new MutableMessageHeaders(new HashMap<>());
@@ -290,7 +291,7 @@ class ServiceActivatorsTest {
 
     @Test
     void peekHeaderIfExists_handler_runs_provided_action_on_existing_header_and_returns_payload() {
-        final AtomicReference<String> seenHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable String> seenHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final MutableMessageHeaders headers = new MutableMessageHeaders(new HashMap<>());
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
@@ -306,10 +307,10 @@ class ServiceActivatorsTest {
 
     @Test
     void peekHeaderIfExists_handler_skips_provided_action_when_header_is_null_and_returns_payload() {
-        final AtomicReference<String> seenHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable String> seenHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
-        final HashMap<String, Object> map = new HashMap<>();
+        final HashMap<String, @Nullable Object> map = new HashMap<>();
         map.put(headerRef.getName(), null);
         final MutableMessageHeaders headers = new MutableMessageHeaders(map);
 
@@ -322,7 +323,7 @@ class ServiceActivatorsTest {
 
     @Test
     void peekHeaderIfExists_handler_skips_provided_action_when_header_is_missing_and_returns_payload() {
-        final AtomicReference<String> seenHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable String> seenHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final MutableMessageHeaders headers = new MutableMessageHeaders(new HashMap<>());
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
@@ -336,7 +337,7 @@ class ServiceActivatorsTest {
 
     @Test
     void peekHeader_handler_runs_provided_action_on_payload_and_existing_header_and_returns_payload() {
-        final AtomicReference<String> seenHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable String> seenHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final MutableMessageHeaders headers = new MutableMessageHeaders(new HashMap<>());
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
@@ -361,11 +362,11 @@ class ServiceActivatorsTest {
 
     @Test
     void peekHeader_handler_uses_fallback_header_value_when_header_is_null_and_returns_payload() {
-        final AtomicReference<String> seenHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable String> seenHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
         final String fallbackHeaderValue = "fallbackHeaderValue";
-        final HashMap<String, Object> map = new HashMap<>();
+        final HashMap<String, @Nullable Object> map = new HashMap<>();
         map.put(headerRef.getName(), null);
         final MutableMessageHeaders headers = new MutableMessageHeaders(map);
 
@@ -386,7 +387,7 @@ class ServiceActivatorsTest {
 
     @Test
     void peekHeader_handler_uses_fallback_header_value_when_header_is_missing_and_returns_payload() {
-        final AtomicReference<String> seenHeader = new AtomicReference<>();
+        final AtomicReference<@Nullable String> seenHeader = new AtomicReference<>();
         final Object inputPayload = "inputPayload";
         final MutableMessageHeaders headers = new MutableMessageHeaders(new HashMap<>());
         final MessageHeaderReference<String> headerRef = MessageHeaderReference.of("myString", String.class);
@@ -409,7 +410,7 @@ class ServiceActivatorsTest {
 
     private record PayloadAndHeader<P, H>(
             P payload,
-            H header
+            @Nullable H header
     ) {
         public static <P, H> PayloadAndHeader<P, H> from(final Message<P> message, final MessageHeaderReference<H> headerRef) {
             return new PayloadAndHeader<>(message.getPayload(), headerRef.getNullable(message.getHeaders()));

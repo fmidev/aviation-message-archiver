@@ -2,9 +2,9 @@ package fi.fmi.avi.archiver.message.processor.conditional;
 
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.Comparator;
 
@@ -24,9 +24,8 @@ class AbstractConditionPropertyReaderTest {
     @Test
     void getValueGetterForType_throws_exception_if_readValue_returns_Object() {
         final class ObjectReader extends AbstractConditionPropertyReader<Object> {
-            @Nullable
             @Override
-            public Object readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
+            public @Nullable Object readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
                 return null;
             }
         }
@@ -93,17 +92,15 @@ class AbstractConditionPropertyReaderTest {
     }
 
     private static class TestConditionPropertyReader extends AbstractConditionPropertyReader<String> {
-        @Nullable
         @Override
-        public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
+        public @Nullable String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
             return "";
         }
     }
 
     private static class UncomparablePropertyReader extends AbstractConditionPropertyReader<UncomparableType> {
-        @Nullable
         @Override
-        public UncomparableType readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder message) {
+        public @Nullable UncomparableType readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder message) {
             return new UncomparableType();
         }
     }

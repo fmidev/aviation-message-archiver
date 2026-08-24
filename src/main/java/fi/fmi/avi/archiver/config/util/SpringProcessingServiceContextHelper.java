@@ -6,13 +6,13 @@ import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import fi.fmi.avi.archiver.logging.model.NoOpLoggingContext;
 import fi.fmi.avi.archiver.spring.integration.dsl.ServiceActivators;
 import fi.fmi.avi.archiver.spring.messaging.MessageHeaderReference;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.core.GenericHandler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 
-import javax.annotation.Nullable;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -34,7 +34,7 @@ public final class SpringProcessingServiceContextHelper {
         return new DefaultProcessingServiceContext(NoOpLoggingContext.getInstance());
     }
 
-    public static ProcessingServiceContext getProcessingServiceContext(@Nullable final Message<?> message) {
+    public static ProcessingServiceContext getProcessingServiceContext(final @Nullable Message<?> message) {
         if (message == null) {
             return logAndCreateFallbackContext();
         }
