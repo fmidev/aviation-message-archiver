@@ -101,12 +101,13 @@
     </dependencyManagement>
 
     <dependencies>
-        <!--TODO: Once you’re done with the migration, please make sure to remove this module from your project’s dependencies.-->
+        <!-- Once you’re done with the migration, please make sure to remove this module from your project’s dependencies.
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-properties-migrator</artifactId>
             <scope>runtime</scope>
         </dependency>
+        -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-integration</artifactId>
