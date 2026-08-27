@@ -61,6 +61,15 @@
         <tag>HEAD</tag>
     </scm>
 
+    <!-- Two-phase release to GitHub as defined at http://stackoverflow.com/questions/14013644/hosting-a-maven-repository-on-github-->
+    <distributionManagement>
+        <repository>
+            <id>internal.repo</id>
+            <name>Temporary Staging Repository</name>
+            <url>file://${project.build.directory}/mvn-repo</url>
+        </repository>
+    </distributionManagement>
+
     <properties>
         <java.version>21</java.version>
         <argLine/>
