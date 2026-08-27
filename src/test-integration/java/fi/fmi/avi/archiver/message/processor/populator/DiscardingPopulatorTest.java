@@ -42,7 +42,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.processor.populator.DiscardingPopulatorTest"})
@@ -92,13 +92,14 @@ public class DiscardingPopulatorTest {
         assertThat(successes).hasSize(1);
         assertThat(successes.getFirst().archiveMessage().getStationIcaoCode()).isEqualTo("EFXX");
 
-        verify(failChannel, times(0)).send(any(Message.class));
+        verify(failChannel, never()).send(any(Message.class));
+        verify(failChannel, never()).send(any(Message.class), anyLong());
         final ProcessingServiceContext processingServiceContext = SpringProcessingServiceContextHelper.getProcessingServiceContext(messageCaptor.getValue().getHeaders());
         assertThat(processingServiceContext.isProcessingErrors()).isFalse();
 
         verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture(), any());
         assertThat(databaseMessageCaptor.getValue().getStationIcaoCode()).isEqualTo("EFXX");
-        verify(databaseAccess, times(0)).insertRejectedAviationMessage(any(), any());
+        verify(databaseAccess, never()).insertRejectedAviationMessage(any(), any());
     }
 
     public static class DiscardingPopulator implements MessagePopulator {

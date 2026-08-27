@@ -39,7 +39,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.processor.populator.FailingPopulatorTest"})
@@ -84,14 +84,15 @@ class FailingPopulatorTest {
         Files.copy(TestFileUtil.getResourcePath(getClass(), FILENAME), product.getInputDir().resolve(FILENAME));
         TestFileUtil.waitUntilFileExists(product.getFailDir().resolve(FILENAME));
 
-        verify(successChannel, times(0)).send(any(Message.class));
+        verify(successChannel, never()).send(any(Message.class));
+        verify(successChannel, never()).send(any(Message.class), anyLong());
         verify(failChannel).send(failChannelCaptor.capture(), anyLong());
         final ProcessingServiceContext processingServiceContext = SpringProcessingServiceContextHelper.getProcessingServiceContext(failChannelCaptor.getValue().getHeaders());
         assertThat(processingServiceContext.isProcessingErrors()).isTrue();
 
         verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture(), any());
         assertThat(databaseMessageCaptor.getValue().getStationIcaoCode()).isEqualTo("EFXX");
-        verify(databaseAccess, times(0)).insertRejectedAviationMessage(any(), any());
+        verify(databaseAccess, never()).insertRejectedAviationMessage(any(), any());
     }
 
     public static class FailingPopulator implements MessagePopulator {

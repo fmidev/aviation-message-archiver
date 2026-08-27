@@ -92,6 +92,7 @@ class FailingPostActionTest {
                 .containsExactly("EFYY", "EFXX");
 
         verify(failChannel, never()).send(any(Message.class));
+        verify(failChannel, never()).send(any(Message.class), anyLong());
         verify(successChannel).send(successChannelCaptor.capture(), anyLong());
         final ProcessingServiceContext processingServiceContext = SpringProcessingServiceContextHelper.getProcessingServiceContext(successChannelCaptor.getValue().getHeaders());
         assertThat(processingServiceContext.isProcessingErrors()).isFalse();

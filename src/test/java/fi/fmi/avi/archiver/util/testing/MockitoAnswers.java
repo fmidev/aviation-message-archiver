@@ -21,8 +21,8 @@ public final class MockitoAnswers {
      * </p>
      *
      * <p>
-     * This answer is similar to {@link org.mockito.Mockito#RETURNS_SELF}, but the Mockitos default implementation always
-     * returns default values for methods with {@code Object} as the raw return type after type erasure.
+     * This answer is similar to {@link org.mockito.Mockito#RETURNS_SELF}, but the Mockito's default implementation
+     * always returns default values for methods with {@code Object} as the raw return type after type erasure.
      * </p>
      *
      * @return answer returning the mock itself, with default fallback

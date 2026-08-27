@@ -95,7 +95,7 @@ class DataDesignatorPropertyReaderTest {
 
     @Test
     public void testNulls() {
-        final Class<?> classUnderTest = DataDesignatorPropertyReaderTest.class;
+        final Class<?> classUnderTest = DataDesignatorPropertyReader.class;
         final DataDesignatorPropertyReader instance = new DataDesignatorPropertyReader(BulletinHeadingSource.DEFAULT_SOURCES);
         final NullPointerTester tester = new NullPointerTester();
         final NullPointerTester.Visibility minimalVisibility = NullPointerTester.Visibility.PACKAGE;
