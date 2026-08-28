@@ -78,6 +78,7 @@
         <github-repo-owner>fmidev</github-repo-owner>
         <github-mvn-release-repo>fmi-os-mvn-repo</github-mvn-release-repo>
         <github-mvn-snapshot-repo>fmi-os-mvn-snapshot-repo</github-mvn-snapshot-repo>
+        <github-site-maven-plugin.version>0.12</github-site-maven-plugin.version>
 
         <!-- The spring-boot.version property is used in documentation links in README.md -->
         <spring-boot.version>${project.parent.version}</spring-boot.version>
@@ -292,6 +293,16 @@
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>com.github.github</groupId>
+                    <artifactId>site-maven-plugin</artifactId>
+                    <version>${github-site-maven-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
             <plugin>
                 <groupId>io.github.git-commit-id</groupId>
