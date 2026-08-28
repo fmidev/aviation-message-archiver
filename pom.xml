@@ -74,6 +74,11 @@
         <java.version>21</java.version>
         <argLine/>
 
+        <!-- Custom Maven release repository properties -->
+        <github-repo-owner>fmidev</github-repo-owner>
+        <github-mvn-release-repo>fmi-os-mvn-repo</github-mvn-release-repo>
+        <github-mvn-snapshot-repo>fmi-os-mvn-snapshot-repo</github-mvn-snapshot-repo>
+
         <!-- The spring-boot.version property is used in documentation links in README.md -->
         <spring-boot.version>${project.parent.version}</spring-boot.version>
         <auto-value.version>1.11.1</auto-value.version>
@@ -556,4 +561,70 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>fmi-os-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.github</groupId>
+                        <artifactId>site-maven-plugin</artifactId>
+                        <configuration>
+                            <message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
+                            <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
+                            <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> <!-- matches distribution management repository url above -->
+                            <branch>refs/heads/master</branch>                       <!-- remote branch name -->
+                            <includes>
+                                <include>**/*</include>
+                            </includes>
+                            <repositoryName>${github-mvn-release-repo}</repositoryName>      <!-- github repo name -->
+                            <repositoryOwner>${github-repo-owner}</repositoryOwner>    <!-- github username  -->
+                            <merge>true</merge>
+                        </configuration>
+                        <executions>
+                            <!-- run site-maven-plugin's 'site' target as part of the build's normal 'release' phase -->
+                            <execution>
+                                <goals>
+                                    <goal>site</goal>
+                                </goals>
+                                <phase>deploy</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>fmi-os-snapshot</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.github</groupId>
+                        <artifactId>site-maven-plugin</artifactId>
+                        <configuration>
+                            <message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
+                            <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
+                            <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> <!-- matches distribution management repository url above -->
+                            <branch>refs/heads/master</branch>                       <!-- remote branch name -->
+                            <includes>
+                                <include>**/*</include>
+                            </includes>
+                            <repositoryName>${github-mvn-snapshot-repo}</repositoryName>      <!-- github repo name -->
+                            <repositoryOwner>${github-repo-owner}</repositoryOwner>    <!-- github username  -->
+                            <merge>true</merge>
+                        </configuration>
+                        <executions>
+                            <!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
+                            <execution>
+                                <goals>
+                                    <goal>site</goal>
+                                </goals>
+                                <phase>deploy</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
