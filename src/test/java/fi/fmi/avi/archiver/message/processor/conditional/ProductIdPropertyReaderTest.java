@@ -1,7 +1,6 @@
 package fi.fmi.avi.archiver.message.processor.conditional;
 
 import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.config.model.FileConfig;
@@ -21,12 +20,13 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ProductIdPropertyReaderTest {
-    private static final Map<FormatId, String> TEST_PRODUCT_FILENAMES = Maps.immutableEnumMap(ImmutableMap.of(//
+    private static final Map<FormatId, String> TEST_PRODUCT_FILENAMES = Maps.immutableEnumMap(Map.of(//
             FormatId.TAC, "message.txt", //
             FormatId.IWXXM, "message.xml"));
 
@@ -101,7 +101,7 @@ class ProductIdPropertyReaderTest {
 
         private static final Map<String, AviationProduct> PRODUCTS = Arrays.stream(values())//
                 .map(TestProduct::getProduct)//
-                .collect(ImmutableMap.toImmutableMap(AviationProduct::getId, Function.identity()));
+                .collect(Collectors.toUnmodifiableMap(AviationProduct::getId, Function.identity()));
 
         private final AviationProduct product;
 

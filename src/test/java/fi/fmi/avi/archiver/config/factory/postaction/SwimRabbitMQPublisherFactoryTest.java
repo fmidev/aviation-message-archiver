@@ -12,13 +12,17 @@ import fi.fmi.avi.archiver.spring.healthcontributor.RabbitMQConnectionHealthIndi
 import fi.fmi.avi.archiver.spring.healthcontributor.RabbitMQPublisherHealthIndicator;
 import fi.fmi.avi.archiver.spring.healthcontributor.SwimRabbitMQConnectionHealthContributor;
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfigFactory;
+import fi.fmi.avi.archiver.util.testing.MockitoAnswers;
 import fi.fmi.avi.model.AviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import org.inferred.freebuilder.FreeBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
 import org.springframework.retry.support.RetryTemplate;
 
@@ -135,9 +139,13 @@ class SwimRabbitMQPublisherFactoryTest {
         verify(factory.connectionBuilder, times(numberOfInvocations)).uri(MINIMAL_CONFIG.connection().uri());
         verify(factory.connectionBuilder, times(numberOfInvocations)).username(MINIMAL_CONFIG.connection().username());
         verify(factory.connectionBuilder, times(numberOfInvocations)).password(MINIMAL_CONFIG.connection().password());
-        final ArgumentCaptor<Resource.StateListener> stateListenersCaptor = ArgumentCaptor.forClass(Resource.StateListener.class);
+        final ArgumentCaptor<Resource.StateListener[]> stateListenersCaptor = ArgumentCaptor.forClass(Resource.StateListener[].class);
         verify(factory.connectionBuilder, times(numberOfInvocations)).listeners(stateListenersCaptor.capture());
-        assertThat(stateListenersCaptor.getAllValues()).contains(factory.connectionHealthIndicator);
+        assertThat(stateListenersCaptor.getAllValues())
+                .isNotEmpty()
+                .allSatisfy(listeners -> assertThat(listeners)
+                        .contains(factory.connectionHealthIndicator)
+                );
         verify(factory.connectionBuilder, times(numberOfInvocations)).build();
     }
 
@@ -634,8 +642,6 @@ class SwimRabbitMQPublisherFactoryTest {
 
         private final AutoCloseable openMocks;
 
-        @Mock(answer = Answers.RETURNS_SELF)
-        AmqpEnvironmentBuilder amqpEnvironmentBuilder;
         @Mock
         Environment environment;
         @Mock
@@ -644,26 +650,28 @@ class SwimRabbitMQPublisherFactoryTest {
         Connection connection2;
         @Mock
         Management management;
-        @Mock(answer = Answers.RETURNS_SELF)
-        Management.ExchangeSpecification exchangeSpecification;
-        @Mock(answer = Answers.RETURNS_SELF)
-        Management.QueueSpecification queueSpecification;
-        @Mock(answer = Answers.RETURNS_SELF)
-        Management.BindingSpecification bindingSpecification;
-        @Mock(answer = Answers.RETURNS_SELF)
-        PublisherBuilder publisherBuilder;
         @Mock
         Publisher publisher;
         @Mock
         Publisher publisher2;
-        @Mock(answer = Answers.RETURNS_SELF)
-        ConnectionBuilder connectionBuilder;
         @Mock
         RabbitMQConnectionHealthIndicator connectionHealthIndicator;
         @Mock
         RabbitMQPublisherHealthIndicator publisherHealthIndicator;
         @Mock
         SwimRabbitMQPublisherFactory delegateMock;
+
+        AmqpEnvironmentBuilder amqpEnvironmentBuilder = mock(AmqpEnvironmentBuilder.class, MockitoAnswers.returnsSelf());
+        Management.ExchangeSpecification exchangeSpecification = mock(
+                Management.ExchangeSpecification.class, MockitoAnswers.returnsSelf());
+        Management.QueueSpecification queueSpecification = mock(
+                Management.QueueSpecification.class, MockitoAnswers.returnsSelf());
+        Management.BindingSpecification bindingSpecification = mock(
+                Management.BindingSpecification.class, MockitoAnswers.returnsSelf());
+        PublisherBuilder publisherBuilder = mock(PublisherBuilder.class, MockitoAnswers.returnsSelf());
+        ConnectionBuilder connectionBuilder = mock(ConnectionBuilder.class, MockitoAnswers.returnsSelf());
+        ConnectionBuilder.RecoveryConfiguration recoveryConfiguration = mock(
+                ConnectionBuilder.RecoveryConfiguration.class, MockitoAnswers.returnsSelf());
 
         public TestSwimRabbitMQPublisherFactory(
                 final ObjectFactoryConfigFactory configFactory,
@@ -676,7 +684,9 @@ class SwimRabbitMQPublisherFactoryTest {
             this.openMocks = MockitoAnnotations.openMocks(this);
             when(amqpEnvironmentBuilder.build()).thenReturn(environment);
             when(environment.connectionBuilder()).thenReturn(connectionBuilder);
+            when(connectionBuilder.recovery()).thenReturn(recoveryConfiguration);
             when(connectionBuilder.build()).thenReturn(connection, connection2);
+            when(recoveryConfiguration.connectionBuilder()).thenReturn(connectionBuilder);
             Arrays.asList(connection, connection2).forEach(connectionMock -> {
                 when(connectionMock.publisherBuilder()).thenReturn(publisherBuilder);
                 when(connectionMock.management()).thenReturn(management);

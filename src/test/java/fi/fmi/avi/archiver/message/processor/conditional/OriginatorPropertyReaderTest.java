@@ -1,6 +1,5 @@
 package fi.fmi.avi.archiver.message.processor.conditional;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.testing.NullPointerTester;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -30,7 +29,7 @@ class OriginatorPropertyReaderTest {
             .setGtsBulletinHeading(inputBulletinHeading(GTS_ORIGINATOR))//
             .setCollectIdentifier(inputBulletinHeading(COLLECT_ORIGINATOR))//
             .buildPartial();
-    private static final Map<BulletinHeadingSource, String> EXPECTED_RESULTS = Maps.immutableEnumMap(ImmutableMap.of(//
+    private static final Map<BulletinHeadingSource, String> EXPECTED_RESULTS = Maps.immutableEnumMap(Map.of(//
             BulletinHeadingSource.GTS_BULLETIN_HEADING, GTS_ORIGINATOR, //
             BulletinHeadingSource.COLLECT_IDENTIFIER, COLLECT_ORIGINATOR//
     ));
@@ -87,7 +86,6 @@ class OriginatorPropertyReaderTest {
         assertThat(propertyReader.toString()).isEqualTo(propertyReader.getPropertyName());
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     @Test
     public void testNulls() {
         final Class<?> classUnderTest = OriginatorPropertyReader.class;

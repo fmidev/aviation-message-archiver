@@ -2,8 +2,6 @@ package fi.fmi.avi.archiver.config.factory.postaction;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.BiMap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.amqp.*;
 import com.rabbitmq.client.amqp.impl.AmqpEnvironmentBuilder;
 import fi.fmi.avi.archiver.config.model.PostActionFactory;
@@ -30,6 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static fi.fmi.avi.archiver.logging.GenericStructuredLoggable.loggableValue;
@@ -42,7 +41,7 @@ public class SwimRabbitMQPublisherFactory
     private static final Logger LOGGER = LoggerFactory.getLogger(SwimRabbitMQPublisherFactory.class);
 
     private static final List<SwimRabbitMQPublisher.StaticApplicationProperties> APPLICATION_PROPERTY_DESCRIPTORS =
-            ImmutableList.of(
+            List.of(
                     new SwimRabbitMQPublisher.StaticApplicationProperties(
                             MessageType.METAR,
                             "weather.aviation.metar",
@@ -97,7 +96,7 @@ public class SwimRabbitMQPublisherFactory
 
         this.staticAppPropsByTypeId = APPLICATION_PROPERTY_DESCRIPTORS.stream()
                 .filter(applicationProperties -> messageTypeIds.containsKey(applicationProperties.type()))
-                .collect(ImmutableMap.toImmutableMap(
+                .collect(Collectors.toUnmodifiableMap(
                         applicationProperties -> requireNonNull(messageTypeIds.get(requireNonNull(applicationProperties).type())),
                         Function.identity()
                 ));

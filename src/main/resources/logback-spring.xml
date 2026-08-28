@@ -34,5 +34,6 @@
     <springProfile name="local | development">
         <logger name="fi.fmi.avi.archiver" level="debug"/>
         <logger name="org.springframework.integration.handler.LoggingHandler" level="debug"/>
+        <logger name="org.springframework.jdbc.datasource.init" level="debug"/>
     </springProfile>
 </configuration>

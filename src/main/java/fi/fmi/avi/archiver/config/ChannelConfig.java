@@ -35,8 +35,8 @@ public class ChannelConfig {
     }
 
     @Bean
-    MessageChannel processingChannel() {
-        return new PublishSubscribeChannel(processingExecutor());
+    MessageChannel processingChannel(final ExecutorService processingExecutor) {
+        return new PublishSubscribeChannel(processingExecutor);
     }
 
     @Bean
@@ -45,8 +45,8 @@ public class ChannelConfig {
     }
 
     @Bean
-    MessageChannel archiveChannel() {
-        return new PublishSubscribeChannel(archiveExecutor());
+    MessageChannel archiveChannel(final ExecutorService archiveExecutor) {
+        return new PublishSubscribeChannel(archiveExecutor);
     }
 
     @Bean
@@ -55,8 +55,8 @@ public class ChannelConfig {
     }
 
     @Bean
-    MessageChannel successChannel() {
-        return new PublishSubscribeChannel(successExecutor());
+    MessageChannel successChannel(final ExecutorService successExecutor) {
+        return new PublishSubscribeChannel(successExecutor);
     }
 
     @Bean
@@ -65,8 +65,8 @@ public class ChannelConfig {
     }
 
     @Bean
-    MessageChannel failChannel() {
-        return new PublishSubscribeChannel(failExecutor());
+    MessageChannel failChannel(final ExecutorService failExecutor) {
+        return new PublishSubscribeChannel(failExecutor);
     }
 
     @Bean
@@ -75,8 +75,8 @@ public class ChannelConfig {
     }
 
     @Bean
-    MessageChannel parserChannel() {
-        return new PublishSubscribeChannel(parserExecutor());
+    MessageChannel parserChannel(final ExecutorService parserExecutor) {
+        return new PublishSubscribeChannel(parserExecutor);
     }
 
     @Bean
@@ -85,8 +85,8 @@ public class ChannelConfig {
     }
 
     @Bean
-    MessageChannel populatorChannel() {
-        return new PublishSubscribeChannel(populatorExecutor());
+    MessageChannel populatorChannel(final ExecutorService populatorExecutor) {
+        return new PublishSubscribeChannel(populatorExecutor);
     }
 
     @Bean
@@ -95,8 +95,8 @@ public class ChannelConfig {
     }
 
     @Bean
-    MessageChannel databaseChannel() {
-        return new PublishSubscribeChannel(databaseExecutor());
+    MessageChannel databaseChannel(final ExecutorService databaseExecutor) {
+        return new PublishSubscribeChannel(databaseExecutor);
     }
 
     @Bean
@@ -105,8 +105,8 @@ public class ChannelConfig {
     }
 
     @Bean
-    MessageChannel postActionChannel() {
-        return new PublishSubscribeChannel(postActionExecutor());
+    MessageChannel postActionChannel(final ExecutorService postActionExecutor) {
+        return new PublishSubscribeChannel(postActionExecutor);
     }
 
     @Bean
@@ -115,8 +115,8 @@ public class ChannelConfig {
     }
 
     @Bean
-    MessageChannel finishChannel() {
-        return new PublishSubscribeChannel(finishExecutor());
+    MessageChannel finishChannel(final ExecutorService finishExecutor) {
+        return new PublishSubscribeChannel(finishExecutor);
     }
 
     @Bean
@@ -125,8 +125,8 @@ public class ChannelConfig {
     }
 
     @Bean
-    MessageChannel errorMessageChannel() {
-        return new PublishSubscribeChannel(errorMessageExecutor());
+    MessageChannel errorMessageChannel(final ExecutorService errorMessageExecutor) {
+        return new PublishSubscribeChannel(errorMessageExecutor);
     }
 
     @Bean
@@ -135,8 +135,8 @@ public class ChannelConfig {
     }
 
     @Bean
-    MessageChannel errorLoggingChannel() {
-        return new PublishSubscribeChannel(errorLoggingExecutor());
+    MessageChannel errorLoggingChannel(final ExecutorService errorLoggingExecutor) {
+        return new PublishSubscribeChannel(errorLoggingExecutor);
     }
 
     @Bean(destroyMethod = "destroy")

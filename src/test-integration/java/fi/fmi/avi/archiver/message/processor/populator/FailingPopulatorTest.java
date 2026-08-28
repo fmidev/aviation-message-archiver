@@ -20,7 +20,6 @@ import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -28,6 +27,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
@@ -38,13 +38,20 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.message.processor.populator.FailingPopulatorTest"})
 @Sql(scripts = {"classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql", "classpath:/h2-data/avidb_test_content.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "classpath:/h2-data/avidb_cleanup_test.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},//
+@ContextConfiguration(
+        classes = {
+                AviationMessageArchiver.class,
+                TestConfig.class,
+                ConversionConfig.class,
+                FailingPopulatorTest.FailingPopulatorConfig.class,
+        },//
         loader = AnnotationConfigContextLoader.class,//
         initializers = {ConfigDataApplicationContextInitializer.class})
 @ActiveProfiles({"integration-test", "FailingPopulatorTest"})
@@ -53,13 +60,13 @@ class FailingPopulatorTest {
     private static final String FILENAME = "populator_test_bulletin.txt";
     private static final String PRODUCT = "test_taf";
 
-    @SpyBean(name = "successChannel")
+    @MockitoSpyBean(name = "successChannel")
     private MessageChannel successChannel;
 
-    @SpyBean(name = "failChannel")
+    @MockitoSpyBean(name = "failChannel")
     private MessageChannel failChannel;
 
-    @SpyBean
+    @MockitoSpyBean
     private DatabaseAccess databaseAccess;
 
     @Captor
@@ -77,14 +84,15 @@ class FailingPopulatorTest {
         Files.copy(TestFileUtil.getResourcePath(getClass(), FILENAME), product.getInputDir().resolve(FILENAME));
         TestFileUtil.waitUntilFileExists(product.getFailDir().resolve(FILENAME));
 
-        verify(successChannel, times(0)).send(any(Message.class));
-        verify(failChannel).send(failChannelCaptor.capture());
+        verify(successChannel, never()).send(any(Message.class));
+        verify(successChannel, never()).send(any(Message.class), anyLong());
+        verify(failChannel).send(failChannelCaptor.capture(), anyLong());
         final ProcessingServiceContext processingServiceContext = SpringProcessingServiceContextHelper.getProcessingServiceContext(failChannelCaptor.getValue().getHeaders());
         assertThat(processingServiceContext.isProcessingErrors()).isTrue();
 
         verify(databaseAccess).insertAviationMessage(databaseMessageCaptor.capture(), any());
         assertThat(databaseMessageCaptor.getValue().getStationIcaoCode()).isEqualTo("EFXX");
-        verify(databaseAccess, times(0)).insertRejectedAviationMessage(any(), any());
+        verify(databaseAccess, never()).insertRejectedAviationMessage(any(), any());
     }
 
     public static class FailingPopulator implements MessagePopulator {

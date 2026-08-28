@@ -1,6 +1,5 @@
 package fi.fmi.avi.archiver.message.processor.conditional;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.testing.NullPointerTester;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -32,7 +31,7 @@ class DataDesignatorPropertyReaderTest {
             .setGtsBulletinHeading(inputBulletinHeading(GTS_DATA_DESIGNATOR))//
             .setCollectIdentifier(inputBulletinHeading(COLLECT_DATA_DESIGNATOR))//
             .buildPartial();
-    private static final Map<BulletinHeadingSource, String> EXPECTED_RESULTS = Maps.immutableEnumMap(ImmutableMap.of(//
+    private static final Map<BulletinHeadingSource, String> EXPECTED_RESULTS = Maps.immutableEnumMap(Map.of(//
             BulletinHeadingSource.GTS_BULLETIN_HEADING, GTS_DATA_DESIGNATOR, //
             BulletinHeadingSource.COLLECT_IDENTIFIER, COLLECT_DATA_DESIGNATOR//
     ));
@@ -94,10 +93,9 @@ class DataDesignatorPropertyReaderTest {
         assertThat(propertyReader.toString()).isEqualTo(propertyReader.getPropertyName());
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     @Test
     public void testNulls() {
-        final Class<?> classUnderTest = DataDesignatorPropertyReaderTest.class;
+        final Class<?> classUnderTest = DataDesignatorPropertyReader.class;
         final DataDesignatorPropertyReader instance = new DataDesignatorPropertyReader(BulletinHeadingSource.DEFAULT_SOURCES);
         final NullPointerTester tester = new NullPointerTester();
         final NullPointerTester.Visibility minimalVisibility = NullPointerTester.Visibility.PACKAGE;

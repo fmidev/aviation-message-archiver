@@ -1,6 +1,5 @@
 package fi.fmi.avi.archiver.message.processor.populator;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import fi.fmi.avi.archiver.file.FileMetadata;
 import fi.fmi.avi.archiver.file.FileReference;
@@ -316,7 +315,7 @@ class MessageDataPopulatorTest {
         ALL_LOCATION_INDICATOR_TYPES_AS_GLOBAL_DEFAULTS {
             @Override
             public void accept(final MessageDataPopulator populator) {
-                populator.setDefaultLocationIndicatorTypes(Collections.unmodifiableList(Arrays.asList(LocationIndicatorType.values())));
+                populator.setDefaultLocationIndicatorTypes(List.of(LocationIndicatorType.values()));
             }
         }, //
         ONLY_GLOBAL_LOCATION_INDICATORS {
@@ -335,14 +334,14 @@ class MessageDataPopulatorTest {
         ;
 
         private static final Map<MessageType, List<LocationIndicatorType>> ALT_MESSAGE_TYPE_LOCATION_INDICATOR_TYPES = ImmutableMap.<MessageType, List<LocationIndicatorType>>builder()//
-                .put(MessageType.AIRMET, ImmutableList.of(LocationIndicatorType.ORIGINATING_METEOROLOGICAL_WATCH_OFFICE,
+                .put(MessageType.AIRMET, List.of(LocationIndicatorType.ORIGINATING_METEOROLOGICAL_WATCH_OFFICE,
                         LocationIndicatorType.ISSUING_AIR_TRAFFIC_SERVICES_UNIT))//
-                .put(MessageType.SIGMET, ImmutableList.of())//
-                .put(MessageType.TROPICAL_CYCLONE_ADVISORY, ImmutableList.of())//
-                .put(MessageType.VOLCANIC_ASH_ADVISORY, ImmutableList.of(LocationIndicatorType.ORIGINATING_METEOROLOGICAL_WATCH_OFFICE,
+                .put(MessageType.SIGMET, List.of())//
+                .put(MessageType.TROPICAL_CYCLONE_ADVISORY, List.of())//
+                .put(MessageType.VOLCANIC_ASH_ADVISORY, List.of(LocationIndicatorType.ORIGINATING_METEOROLOGICAL_WATCH_OFFICE,
                         LocationIndicatorType.ISSUING_AIR_TRAFFIC_SERVICES_UNIT))//
                 .build();
-        private static final List<LocationIndicatorType> ALT_DEFAULT_LOCATION_INDICATORS = Arrays.asList(//
+        private static final List<LocationIndicatorType> ALT_DEFAULT_LOCATION_INDICATORS = List.of(//
                 LocationIndicatorType.AERODROME, //
                 LocationIndicatorType.ORIGINATING_METEOROLOGICAL_WATCH_OFFICE, //
                 LocationIndicatorType.ISSUING_CENTRE);

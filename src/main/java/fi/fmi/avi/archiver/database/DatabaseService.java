@@ -1,6 +1,5 @@
 package fi.fmi.avi.archiver.database;
 
-import com.google.common.collect.ImmutableList;
 import fi.fmi.avi.archiver.ProcessingServiceContext;
 import fi.fmi.avi.archiver.logging.model.FileProcessingStatistics;
 import fi.fmi.avi.archiver.logging.model.LoggingContext;
@@ -8,6 +7,7 @@ import fi.fmi.avi.archiver.message.ArchivalStatus;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.InputAndArchiveAviationMessage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
@@ -20,13 +20,15 @@ public class DatabaseService {
         this.databaseAccess = requireNonNull(databaseAccess, "databaseAccess");
     }
 
-    public List<InputAndArchiveAviationMessage> insertMessages(final List<InputAndArchiveAviationMessage> messages, final ProcessingServiceContext context) {
+    public List<InputAndArchiveAviationMessage> insertMessages(
+            final List<InputAndArchiveAviationMessage> messages,
+            final ProcessingServiceContext context) {
         requireNonNull(messages, "messages");
         requireNonNull(context, "context");
 
         final LoggingContext loggingContext = context.getLoggingContext();
         RuntimeException databaseInsertionException = null;
-        final ImmutableList.Builder<InputAndArchiveAviationMessage> updatedMessages = ImmutableList.builder();
+        final List<InputAndArchiveAviationMessage> updatedMessages = new ArrayList<>(messages.size());
         for (final InputAndArchiveAviationMessage inputAndArchiveMessage : messages) {
             final ArchiveAviationMessage message = inputAndArchiveMessage.archiveMessage();
             ArchivalStatus archivalStatus = message.getArchivalStatus();
@@ -55,7 +57,7 @@ public class DatabaseService {
         if (databaseInsertionException != null) {
             throw databaseInsertionException;
         }
-        return updatedMessages.build();
+        return List.copyOf(updatedMessages);
     }
 
 }

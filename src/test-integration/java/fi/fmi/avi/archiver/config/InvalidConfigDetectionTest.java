@@ -3,7 +3,6 @@ package fi.fmi.avi.archiver.config;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.time.DateTimeException;
 import java.util.regex.PatternSyntaxException;
 
 public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
@@ -180,7 +179,7 @@ public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
     @Test
     void testEmptyProductFileNameTimeZone() {
         assertThatExceptionIsThrownByProfile("testEmptyProductFileNameTimeZone")//
-                .isInstanceOf(DateTimeException.class)//
+                .isInstanceOf(IllegalArgumentException.class)//
                 .withMessageContaining("Zone")//
                 .withMessageContaining("Invalid ID")//
         ;
@@ -214,7 +213,7 @@ public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
     @Test
     void testInvalidProductFileNameTimeZone() {
         assertThatExceptionIsThrownByProfile("testInvalidProductFileNameTimeZone")//
-                .isInstanceOf(DateTimeException.class)//
+                .isInstanceOf(IllegalArgumentException.class)//
                 .withMessageContaining("INVALID_ZONE")//
         ;
     }
@@ -462,7 +461,8 @@ public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
     @Test
     void testMissingStaticRouteIds() {
         assertThatExceptionIsThrownByProfile("testMissingStaticRouteIds")//
-                .isInstanceOf(NullPointerException.class)//
+                .isInstanceOf(IllegalStateException.class)//
+                .withMessageMatching(containsWord("is missing or empty"))//
                 .withMessageMatching(containsWord("routeIds"))//
         ;
     }
@@ -470,7 +470,8 @@ public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
     @Test
     void testMissingStaticFormatIds() {
         assertThatExceptionIsThrownByProfile("testMissingStaticFormatIds")//
-                .isInstanceOf(NullPointerException.class)//
+                .isInstanceOf(IllegalStateException.class)//
+                .withMessageMatching(containsWord("is missing or empty"))//
                 .withMessageMatching(containsWord("formatIds"))//
         ;
     }
@@ -478,7 +479,8 @@ public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
     @Test
     void testMissingStaticTypeIds() {
         assertThatExceptionIsThrownByProfile("testMissingStaticTypeIds")//
-                .isInstanceOf(NullPointerException.class)//
+                .isInstanceOf(IllegalStateException.class)//
+                .withMessageMatching(containsWord("is missing or empty"))//
                 .withMessageMatching(containsWord("typeIds"))//
         ;
     }
@@ -488,7 +490,7 @@ public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
         assertThatExceptionIsThrownByProfile("testEmptyStaticRouteIds")//
                 .isInstanceOf(IllegalStateException.class)//
                 .withMessageContaining("Invalid configuration:")//
-                .withMessageMatching(containsWord("is empty"))//
+                .withMessageMatching(containsWord("is missing or empty"))//
                 .withMessageMatching(containsWord("routeIds"))//
         ;
     }
@@ -498,7 +500,7 @@ public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
         assertThatExceptionIsThrownByProfile("testEmptyStaticFormatIds")//
                 .isInstanceOf(IllegalStateException.class)//
                 .withMessageContaining("Invalid configuration:")//
-                .withMessageMatching(containsWord("is empty"))//
+                .withMessageMatching(containsWord("is missing or empty"))//
                 .withMessageMatching(containsWord("formatIds"))//
         ;
     }
@@ -508,7 +510,7 @@ public class InvalidConfigDetectionTest extends AbstractConfigValidityTest {
         assertThatExceptionIsThrownByProfile("testEmptyStaticTypeIds")//
                 .isInstanceOf(IllegalStateException.class)//
                 .withMessageContaining("Invalid configuration:")//
-                .withMessageMatching(containsWord("is empty"))//
+                .withMessageMatching(containsWord("is missing or empty"))//
                 .withMessageMatching(containsWord("typeIds"))//
         ;
     }

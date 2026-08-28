@@ -6,13 +6,13 @@ import fi.fmi.avi.archiver.message.processor.conditional.*;
 import fi.fmi.avi.archiver.message.processor.populator.BulletinHeadingSource;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.PostConstruct;
 import java.time.Clock;
 import java.util.Map;
 

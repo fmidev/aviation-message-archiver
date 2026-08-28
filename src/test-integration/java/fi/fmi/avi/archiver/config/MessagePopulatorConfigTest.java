@@ -37,7 +37,13 @@ import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest({"auto.startup=false", "testclass.name=fi.fmi.avi.archiver.config.MessagePopulatorConfigTest"})
-@ContextConfiguration(classes = {AviationMessageArchiver.class, TestConfig.class, ConversionConfig.class},//
+@ContextConfiguration(
+        classes = {
+                AviationMessageArchiver.class,
+                TestConfig.class,
+                ConversionConfig.class,
+                MessagePopulatorConfigTest.MessagePopulatorTestConfig.class,
+        },//
         loader = AnnotationConfigContextLoader.class,//
         initializers = {ConfigDataApplicationContextInitializer.class})
 @Sql(scripts = {"classpath:/fi/fmi/avi/avidb/schema/h2/schema-h2.sql",

@@ -3,10 +3,9 @@ package fi.fmi.avi.archiver.config;
 import fi.fmi.avi.archiver.spring.convert.MapToObjectFactoryConfigConverter;
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfigFactory;
 import fi.fmi.avi.archiver.util.instantiation.PropertyRenamingObjectFactoryConfigFactory;
+import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.support.ConfigurableConversionService;
-
-import javax.annotation.PostConstruct;
 
 /**
  * Adds converters to {@link ConversionConfig#conversionService() conversionService} that would cause circular
