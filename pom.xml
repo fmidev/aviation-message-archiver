@@ -292,21 +292,6 @@
     </dependencies>
 
     <build>
-        <resources>
-            <resource>
-                <filtering>false</filtering>
-                <directory>src/main/resources</directory>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>application.yml</include>
-                    <include>application-*.yml</include>
-                </includes>
-            </resource>
-        </resources>
-
         <plugins>
             <plugin>
                 <groupId>io.github.git-commit-id</groupId>
@@ -571,8 +556,10 @@
                         <artifactId>site-maven-plugin</artifactId>
                         <configuration>
                             <message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
-                            <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
-                            <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> <!-- matches distribution management repository url above -->
+                            <noJekyll>true
+                            </noJekyll>                                  <!-- disable webpage processing -->
+                            <outputDirectory>${project.build.directory}/mvn-repo
+                            </outputDirectory> <!-- matches distribution management repository url above -->
                             <branch>refs/heads/master</branch>                       <!-- remote branch name -->
                             <includes>
                                 <include>**/*</include>
@@ -603,8 +590,10 @@
                         <artifactId>site-maven-plugin</artifactId>
                         <configuration>
                             <message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
-                            <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
-                            <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> <!-- matches distribution management repository url above -->
+                            <noJekyll>true
+                            </noJekyll>                                  <!-- disable webpage processing -->
+                            <outputDirectory>${project.build.directory}/mvn-repo
+                            </outputDirectory> <!-- matches distribution management repository url above -->
                             <branch>refs/heads/master</branch>                       <!-- remote branch name -->
                             <includes>
                                 <include>**/*</include>
