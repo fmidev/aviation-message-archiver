@@ -150,6 +150,9 @@ management:
       enabled: true
     env:
       enabled: true
+    git:
+      enabled: true
+      mode: simple
     java:
       enabled: true
 
