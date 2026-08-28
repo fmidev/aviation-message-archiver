@@ -7,7 +7,8 @@ WORKDIR /app
 # Tests are skipped because we assume they have succeeded in a CI pipeline before this build.
 # Maven caches (repository, wrapper) can be provided via --volume at build time.
 COPY mvnw pom.xml ./
-RUN --mount=type=bind,source=.m2/settings.xml,target=/root/.m2/settings.xml \
+RUN --mount=type=bind,source=.git,target=./.git \
+    --mount=type=bind,source=.m2/settings.xml,target=/root/.m2/settings.xml \
     --mount=type=bind,source=.mvn,target=./.mvn \
     --mount=type=bind,source=src,target=./src \
     ./mvnw package -DskipTests -B
