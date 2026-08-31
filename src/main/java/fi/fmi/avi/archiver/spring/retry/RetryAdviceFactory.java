@@ -3,6 +3,7 @@ package fi.fmi.avi.archiver.spring.retry;
 import fi.fmi.avi.archiver.config.util.SpringProcessingServiceContextHelper;
 import fi.fmi.avi.archiver.logging.model.LoggingContext;
 import org.aopalliance.intercept.MethodInterceptor;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.handler.advice.RequestHandlerRetryAdvice;
@@ -15,7 +16,6 @@ import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.retry.support.RetryTemplateBuilder;
 
-import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -142,7 +142,7 @@ public class RetryAdviceFactory {
         }
 
         @Override
-        public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, @Nullable final Throwable throwable) {
+        public <T, E extends Throwable> void close(final RetryContext context, final RetryCallback<T, E> callback, final @Nullable Throwable throwable) {
             final int retryCount = context.getRetryCount();
             if (retryCount > 0) {
                 if (throwable == null) {

@@ -1,10 +1,10 @@
 package fi.fmi.avi.archiver.spring.healthcontributor;
 
 import com.rabbitmq.client.amqp.Publisher;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 
-import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -57,9 +57,11 @@ public class RabbitMQPublisherHealthIndicator implements HealthIndicator, Consum
         UNINITIALIZED, UP, DOWN
     }
 
-    private record PublisherState(State state, @Nullable Publisher.Status publisherStatus,
-                                  @Nullable Throwable failureCause,
-                                  Instant timestamp) {
+    private record PublisherState(
+            State state,
+            Publisher.@Nullable Status publisherStatus,
+            @Nullable Throwable failureCause,
+            Instant timestamp) {
         public PublisherState {
             requireNonNull(state, "state");
             requireNonNull(timestamp, "timestamp");

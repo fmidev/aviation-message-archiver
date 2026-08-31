@@ -1,17 +1,14 @@
 package fi.fmi.avi.archiver.database;
 
-import static org.mockito.Mockito.mock;
-
-import java.time.Clock;
-
+import com.google.common.testing.AbstractPackageSanityTests;
+import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DelegatingDataSource;
 
-import com.google.common.testing.AbstractPackageSanityTests;
+import java.time.Clock;
 
-import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
+import static org.mockito.Mockito.mock;
 
-@SuppressWarnings("UnstableApiUsage")
 public class PackageSanityTest extends AbstractPackageSanityTests {
 
     @Override

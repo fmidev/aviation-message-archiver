@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.spring.convert;
 
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfig;
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfigFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalGenericConverter;
 
@@ -33,7 +34,7 @@ public class MapToObjectFactoryConfigConverter implements ConditionalGenericConv
 
     @SuppressWarnings("unchecked")
     @Override
-    public Object convert(final Object source, final TypeDescriptor sourceType, final TypeDescriptor targetType) {
+    public @Nullable Object convert(final @Nullable Object source, final TypeDescriptor sourceType, final TypeDescriptor targetType) {
         if (source == null) {
             return null;
         }

@@ -74,7 +74,11 @@ public class MessageProcessorsHelper {
                         final ConditionPropertyReader<V> conditionPropertyReader = (ConditionPropertyReader<V>) conditionPropertyReaderFactory.getInstance(propertyName);
                         final GeneralPropertyPredicate<V> propertyPredicate = entry.getValue()
                                 .transform(
-                                        element -> (V) configValueConverter.toReturnValueType(element, conditionPropertyReader.getValueGetterForType()),
+                                        element -> Optional.ofNullable(
+                                                        (V) configValueConverter.toReturnValueType(element, conditionPropertyReader.getValueGetterForType()))
+                                                .orElseThrow(() -> new IllegalArgumentException(
+                                                        "Transforming property '%s' value '%s' to %s resulted null"
+                                                                .formatted(propertyName, element, conditionPropertyReader.getValueGetterForType().getReturnType()))),
                                         conditionPropertyReader.getComparator().orElse(null))
                                 .validate(conditionPropertyReader::validate)//
                                 .build();

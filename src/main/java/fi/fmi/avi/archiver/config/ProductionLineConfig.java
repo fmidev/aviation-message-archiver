@@ -7,10 +7,10 @@ import fi.fmi.avi.archiver.config.model.MessagePopulatorInstanceSpec;
 import fi.fmi.avi.archiver.config.model.PostActionInstanceSpec;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
-import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -32,10 +32,10 @@ public class ProductionLineConfig {
 
     ProductionLineConfig(final List<AviationProduct.Builder> products,
                          final List<MessagePopulatorInstanceSpec.Builder> messagePopulators,
-                         @Nullable final List<PostActionInstanceSpec.Builder> postActions,
-                         @Nullable final Map<String, Integer> routeIds,
-                         @Nullable final Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
-                         @Nullable final Map<MessageType, Integer> typeIds) {
+                         final @Nullable List<PostActionInstanceSpec.Builder> postActions,
+                         final @Nullable Map<String, Integer> routeIds,
+                         final @Nullable Map<GenericAviationWeatherMessage.Format, Integer> formatIds,
+                         final @Nullable Map<MessageType, Integer> typeIds) {
         this.aviationProductBuilders = requireNonNull(products, "products");
         this.messagePopulatorSpecBuilders = requireNonNull(messagePopulators, "messagePopulators");
         this.postActionInstanceSpecBuilders = postActions == null ? List.of() : postActions;
@@ -62,9 +62,9 @@ public class ProductionLineConfig {
     }
 
     private static void validateInputDirs(final List<AviationProduct.Builder> productBuilders) {
-        final SetMultimap<Path, String> productInputDirs = HashMultimap.create();
-        final SetMultimap<Path, String> productArchiveDirs = HashMultimap.create();
-        final SetMultimap<Path, String> productFailDirs = HashMultimap.create();
+        @SuppressWarnings("NullableProblems") final SetMultimap<Path, String> productInputDirs = HashMultimap.create();
+        @SuppressWarnings("NullableProblems") final SetMultimap<Path, String> productArchiveDirs = HashMultimap.create();
+        @SuppressWarnings("NullableProblems") final SetMultimap<Path, String> productFailDirs = HashMultimap.create();
         iterateProducts(productBuilders, builder -> {
             productInputDirs.put(builder.getInputDir(), builder.getId());
             productArchiveDirs.put(builder.getArchiveDir(), builder.getId());
@@ -94,7 +94,7 @@ public class ProductionLineConfig {
     }
 
     private static void validateInputDirPatterns(final List<AviationProduct.Builder> productBuilders) {
-        final SetMultimap<Path, String> inputPatterns = HashMultimap.create();
+        @SuppressWarnings("NullableProblems") final SetMultimap<Path, String> inputPatterns = HashMultimap.create();
         iterateProducts(productBuilders, builder -> builder.getFiles().forEach(fileConfig -> {
             final Path inputDir = builder.getInputDir();
             final String pattern = fileConfig.getPattern().pattern();

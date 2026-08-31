@@ -1,19 +1,18 @@
 package fi.fmi.avi.archiver.logging.model;
 
-import static java.util.Objects.requireNonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.logging.AbstractNoOpLoggable;
+import fi.fmi.avi.archiver.message.MessagePositionInFile;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
-import javax.annotation.Nullable;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
-import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.logging.AbstractNoOpLoggable;
-import fi.fmi.avi.archiver.message.MessagePositionInFile;
+import static java.util.Objects.requireNonNull;
 
 public final class NoOpLoggingContext extends AbstractNoOpLoggable implements LoggingContext {
     private static final NoOpLoggingContext INSTANCE = new NoOpLoggingContext();
@@ -58,7 +57,7 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public void enterFile(@Nullable final FileReference file) {
+    public void enterFile(final @Nullable FileReference file) {
     }
 
     @Override
@@ -66,7 +65,7 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public void enterBulletin(@Nullable final BulletinLogReference bulletin) {
+    public void enterBulletin(final @Nullable BulletinLogReference bulletin) {
     }
 
     @Override
@@ -88,7 +87,7 @@ public final class NoOpLoggingContext extends AbstractNoOpLoggable implements Lo
     }
 
     @Override
-    public void enterMessage(@Nullable final MessageLogReference message) {
+    public void enterMessage(final @Nullable MessageLogReference message) {
     }
 
     @Override

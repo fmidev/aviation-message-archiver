@@ -7,6 +7,7 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
 import fi.fmi.avi.archiver.message.processor.TestMessageProcessorContext;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -38,7 +39,7 @@ class FileNameDataPopulatorTest {
             "msg-20020227-1608.txt, 2002-02-27T06:08:00Z", //
     })
     @ParameterizedTest
-    void populates_messageTime_when_exists(final String fileName, final String expectedMessageTime) {
+    void populates_messageTime_when_exists(final String fileName, final @Nullable String expectedMessageTime) {
         final Clock clock = Clock.fixed(Instant.parse("2011-03-05T15:17:19.021Z"), ZoneOffset.UTC);
         final MessagePopulatorHelper helper = new MessagePopulatorHelper(clock);
         final FileNameDataPopulator populator = new FileNameDataPopulator(helper, clock);

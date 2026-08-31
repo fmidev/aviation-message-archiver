@@ -4,8 +4,8 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 import fi.fmi.avi.archiver.message.processor.populator.BulletinHeadingSource;
 import fi.fmi.avi.model.bulletin.BulletinHeading;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -26,9 +26,8 @@ public class OriginatorPropertyReader extends AbstractBulletinHeadingConditionPr
         return bulletinHeadingSources;
     }
 
-    @Nullable
     @Override
-    public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
+    public @Nullable String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
         requireNonNull(input, "input");
         requireNonNull(target, "target");
         return getFirstNonNullFromBulletinHeading(input, heading -> heading.getBulletinHeading()//

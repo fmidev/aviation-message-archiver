@@ -6,7 +6,6 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 
 import java.time.Clock;
 
-@SuppressWarnings("UnstableApiUsage")
 public class PackageSanityTest extends AbstractPackageSanityTests {
     @Override
     protected void setUp() throws Exception {

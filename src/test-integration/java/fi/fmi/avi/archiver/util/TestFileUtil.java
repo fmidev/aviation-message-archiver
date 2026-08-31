@@ -1,6 +1,5 @@
 package fi.fmi.avi.archiver.util;
 
-import javax.annotation.Nullable;
 import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -22,7 +21,7 @@ public final class TestFileUtil {
     public static Path getResourcePath(final Class<?> resourceClass, final String fileName) throws URISyntaxException, FileNotFoundException {
         requireNonNull(resourceClass, "resourceClass");
         requireNonNull(fileName, "fileName");
-        @Nullable final URL resource = resourceClass.getResource(fileName);
+        final URL resource = resourceClass.getResource(fileName);
         if (resource == null) {
             throw new FileNotFoundException("Resource " + resourceClass.getPackageName().replace('.', '/') + "/" + fileName + " not found");
         }

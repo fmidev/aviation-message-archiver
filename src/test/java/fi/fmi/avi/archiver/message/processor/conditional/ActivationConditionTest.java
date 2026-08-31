@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -63,7 +62,7 @@ class ActivationConditionTest {
         when(condition2.test(any(), any())).thenReturn(true);
         when(condition3.test(any(), any())).thenReturn(true);
 
-        @Nullable final ActivationCondition resultCondition = ActivationCondition.and(Arrays.asList(condition1, condition2, condition3)).orElse(null);
+        final ActivationCondition resultCondition = ActivationCondition.and(Arrays.asList(condition1, condition2, condition3)).orElse(null);
         assertThat(resultCondition).isNotNull();
         final boolean testResult = resultCondition.test(input, target);
         assertThat(testResult).isTrue();
@@ -75,7 +74,7 @@ class ActivationConditionTest {
         when(condition2.test(any(), any())).thenReturn(false);
         when(condition3.test(any(), any())).thenReturn(true);
 
-        @Nullable final ActivationCondition resultCondition = ActivationCondition.and(Arrays.asList(condition1, condition2, condition3)).orElse(null);
+        final ActivationCondition resultCondition = ActivationCondition.and(Arrays.asList(condition1, condition2, condition3)).orElse(null);
         assertThat(resultCondition).isNotNull();
         final boolean testResult = resultCondition.test(input, target);
         assertThat(testResult).isFalse();
@@ -87,7 +86,7 @@ class ActivationConditionTest {
         when(condition2.test(any(), any())).thenReturn(false);
         when(condition3.test(any(), any())).thenReturn(false);
 
-        @Nullable final ActivationCondition resultCondition = ActivationCondition.and(Arrays.asList(condition1, condition2, condition3)).orElse(null);
+        final ActivationCondition resultCondition = ActivationCondition.and(Arrays.asList(condition1, condition2, condition3)).orElse(null);
         assertThat(resultCondition).isNotNull();
         final boolean testResult = resultCondition.test(input, target);
         assertThat(testResult).isFalse();
@@ -99,7 +98,7 @@ class ActivationConditionTest {
         when(condition2.toString()).thenReturn("condition2String");
         when(condition3.toString()).thenReturn("condition3String");
 
-        @Nullable final ActivationCondition resultCondition = ActivationCondition.and(Arrays.asList(condition1, condition2, condition3)).orElse(null);
+        final ActivationCondition resultCondition = ActivationCondition.and(Arrays.asList(condition1, condition2, condition3)).orElse(null);
         assertThat(resultCondition).isNotNull();
 
         assertThat(resultCondition.toString()).isEqualTo("[condition1String & condition2String & condition3String]");
@@ -125,7 +124,7 @@ class ActivationConditionTest {
         when(condition2.test(any(), any())).thenReturn(true);
         when(condition3.test(any(), any())).thenReturn(true);
 
-        @Nullable final ActivationCondition resultCondition = ActivationCondition.or(Arrays.asList(condition1, condition2, condition3)).orElse(null);
+        final ActivationCondition resultCondition = ActivationCondition.or(Arrays.asList(condition1, condition2, condition3)).orElse(null);
         assertThat(resultCondition).isNotNull();
         final boolean testResult = resultCondition.test(input, target);
         assertThat(testResult).isTrue();
@@ -137,7 +136,7 @@ class ActivationConditionTest {
         when(condition2.test(any(), any())).thenReturn(true);
         when(condition3.test(any(), any())).thenReturn(false);
 
-        @Nullable final ActivationCondition resultCondition = ActivationCondition.or(Arrays.asList(condition1, condition2, condition3)).orElse(null);
+        final ActivationCondition resultCondition = ActivationCondition.or(Arrays.asList(condition1, condition2, condition3)).orElse(null);
         assertThat(resultCondition).isNotNull();
         final boolean testResult = resultCondition.test(input, target);
         assertThat(testResult).isTrue();
@@ -149,7 +148,7 @@ class ActivationConditionTest {
         when(condition2.test(any(), any())).thenReturn(false);
         when(condition3.test(any(), any())).thenReturn(false);
 
-        @Nullable final ActivationCondition resultCondition = ActivationCondition.or(Arrays.asList(condition1, condition2, condition3)).orElse(null);
+        final ActivationCondition resultCondition = ActivationCondition.or(Arrays.asList(condition1, condition2, condition3)).orElse(null);
         assertThat(resultCondition).isNotNull();
         final boolean testResult = resultCondition.test(input, target);
         assertThat(testResult).isFalse();
@@ -161,7 +160,7 @@ class ActivationConditionTest {
         when(condition2.toString()).thenReturn("condition2String");
         when(condition3.toString()).thenReturn("condition3String");
 
-        @Nullable final ActivationCondition resultCondition = ActivationCondition.or(Arrays.asList(condition1, condition2, condition3)).orElse(null);
+        final ActivationCondition resultCondition = ActivationCondition.or(Arrays.asList(condition1, condition2, condition3)).orElse(null);
         assertThat(resultCondition).isNotNull();
 
         assertThat(resultCondition.toString()).isEqualTo("[condition1String | condition2String | condition3String]");

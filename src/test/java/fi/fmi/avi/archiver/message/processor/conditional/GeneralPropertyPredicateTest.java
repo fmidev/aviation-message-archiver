@@ -472,7 +472,7 @@ class GeneralPropertyPredicateTest {
         final GeneralPropertyPredicate.Builder<Integer> builder = GeneralPropertyPredicate.<Integer>builder()
                 .addIsAnyOf(1, 2);
 
-        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Object::toString, null);
+        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Objects::toString, null);
 
         //noinspection AssertBetweenInconvertibleTypes
         assertThat(result).isNotSameAs(builder);
@@ -484,7 +484,7 @@ class GeneralPropertyPredicateTest {
         final GeneralPropertyPredicate.Builder<Integer> builder = GeneralPropertyPredicate.<Integer>builder()
                 .addIsNoneOf(1, 2);
 
-        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Object::toString, null);
+        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Objects::toString, null);
 
         //noinspection AssertBetweenInconvertibleTypes
         assertThat(result).isNotSameAs(builder);
@@ -497,7 +497,7 @@ class GeneralPropertyPredicateTest {
         final GeneralPropertyPredicate.Builder<?> builder = GeneralPropertyPredicate.builder()
                 .setMatches(pattern);
 
-        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Object::toString, null);
+        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Objects::toString, null);
 
         assertThat(result).isNotSameAs(builder);
         assertThat(result.getMatches()).isEqualTo(pattern);
@@ -509,7 +509,7 @@ class GeneralPropertyPredicateTest {
         final GeneralPropertyPredicate.Builder<?> builder = GeneralPropertyPredicate.builder()
                 .setDoesNotMatch(pattern);
 
-        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Object::toString, null);
+        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Objects::toString, null);
 
         assertThat(result).isNotSameAs(builder);
         assertThat(result.getDoesNotMatch()).isEqualTo(pattern);
@@ -521,7 +521,7 @@ class GeneralPropertyPredicateTest {
         final GeneralPropertyPredicate.Builder<?> builder = GeneralPropertyPredicate.builder()
                 .setPresence(presencePolicy);
 
-        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Object::toString, null);
+        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Objects::toString, null);
 
         assertThat(result).isNotSameAs(builder);
         assertThat(result.getPresence()).isEqualTo(presencePolicy);
@@ -533,7 +533,7 @@ class GeneralPropertyPredicateTest {
                 .setIsLessThan(20)
                 .setIsGreaterThan(10);
 
-        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Object::toString, null);
+        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Objects::toString, null);
 
         assertThat(result.getIsLessThan()).hasValue("20");
         assertThat(result.getIsGreaterThan()).hasValue("10");
@@ -546,7 +546,7 @@ class GeneralPropertyPredicateTest {
                 .setIsLessOrEqualTo(20)
                 .setIsGreaterOrEqualTo(10);
 
-        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Object::toString, null);
+        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Objects::toString, null);
 
         assertThat(result.getIsLessOrEqualTo()).hasValue("20");
         assertThat(result.getIsGreaterOrEqualTo()).hasValue("10");
@@ -558,7 +558,7 @@ class GeneralPropertyPredicateTest {
         final GeneralPropertyPredicate.Builder<Integer> builder = GeneralPropertyPredicate.builder();
         final Comparator<Object> comparator = Comparator.comparing(Object::toString);
 
-        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Object::toString, comparator);
+        final GeneralPropertyPredicate.Builder<String> result = builder.transform(Objects::toString, comparator);
 
         assertThat(result.getComparator()).hasValue(comparator);
     }
@@ -657,7 +657,7 @@ class GeneralPropertyPredicateTest {
                 .setIsGreaterOrEqualTo(1)
                 .setIsLessThan(100);
 
-        builder.validate(v -> v != null && v > 0);
+        builder.validate(v -> v > 0);
     }
 
     @Test
@@ -666,7 +666,7 @@ class GeneralPropertyPredicateTest {
                 .setIsLessOrEqualTo(-1);
 
         assertThatIllegalStateException()
-                .isThrownBy(() -> builder.validate(v -> v != null && v >= 0))
+                .isThrownBy(() -> builder.validate(v -> v >= 0))
                 .withMessageContaining("isLessOrEqualTo")
                 .withMessageContaining("-1");
     }

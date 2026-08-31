@@ -1,10 +1,8 @@
 package fi.fmi.avi.archiver.logging.model;
 
+import com.google.common.testing.ForwardingWrapperTester;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.testing.ForwardingWrapperTester;
-
-@SuppressWarnings("UnstableApiUsage")
 class SynchronizedLoggingContextTest {
     @Test
     void testForwarding() {

@@ -3,8 +3,8 @@ package fi.fmi.avi.archiver.message.processor.conditional;
 import fi.fmi.avi.archiver.config.model.AviationProduct;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,9 +17,8 @@ public class ProductIdPropertyReader extends AbstractConditionPropertyReader<Str
         this.productIds = requireNonNull(aviationProducts, "aviationProducts").keySet();
     }
 
-    @Nullable
     @Override
-    public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
+    public @Nullable String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
         requireNonNull(input, "input");
         requireNonNull(target, "target");
         return input.getFileMetadata().getFileReference().getProductId();

@@ -1,12 +1,11 @@
 package fi.fmi.avi.archiver.logging;
 
-import static fi.fmi.avi.archiver.logging.StructuredLoggable.defaultStructureName;
-import static org.assertj.core.api.Assertions.assertThat;
-
+import com.google.auto.value.AutoValue;
 import org.inferred.freebuilder.FreeBuilder;
 import org.junit.jupiter.api.Test;
 
-import com.google.auto.value.AutoValue;
+import static fi.fmi.avi.archiver.logging.StructuredLoggable.defaultStructureName;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class StructuredLoggableTest {
     @Test
@@ -62,6 +61,12 @@ class StructuredLoggableTest {
         @Override
         public String getStructureName() {
             return "defaultStructureName";
+        }
+
+        // Override to make toString() @NullMarked satisfying Loggable contract
+        @Override
+        public String toString() {
+            return super.toString();
         }
     }
 

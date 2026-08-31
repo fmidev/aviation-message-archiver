@@ -3,11 +3,11 @@ package fi.fmi.avi.archiver.message.processor.conditional;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 import fi.fmi.avi.archiver.message.processor.populator.BulletinHeadingSource;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -17,9 +17,8 @@ public final class ConditionPropertyReaderTests {
     }
 
     public abstract static class AbstractTestStringConditionPropertyReader extends AbstractConditionPropertyReader<String> {
-        @Nullable
         @Override
-        public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
+        public @Nullable String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
             return null;
         }
     }
@@ -41,9 +40,8 @@ public final class ConditionPropertyReaderTests {
             return bulletinHeadingSources;
         }
 
-        @Nullable
         @Override
-        public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
+        public @Nullable String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
             return null;
         }
     }

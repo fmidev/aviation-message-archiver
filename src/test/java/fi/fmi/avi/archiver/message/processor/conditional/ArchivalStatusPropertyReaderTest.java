@@ -4,11 +4,10 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchivalStatus;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-
-import javax.annotation.Nullable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,9 +49,8 @@ class ArchivalStatusPropertyReaderTest {
     @Test
     void testGetValueGetterForType() {
         final class TestReader extends AbstractConditionPropertyReader<ArchivalStatus> {
-            @Nullable
             @Override
-            public ArchivalStatus readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder message) {
+            public @Nullable ArchivalStatus readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder message) {
                 return null;
             }
         }

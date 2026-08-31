@@ -11,13 +11,13 @@ import fi.fmi.avi.archiver.message.processor.populator.BulletinHeadingSourceSens
 import fi.fmi.avi.model.bulletin.DataTypeDesignatorT1;
 import fi.fmi.avi.model.bulletin.DataTypeDesignatorT2;
 import fi.fmi.avi.model.bulletin.immutable.BulletinHeadingImpl;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 
@@ -119,9 +119,8 @@ class DataDesignatorPropertyReaderTest {
             return EXPECTED_RESULTS;
         }
 
-        @Nullable
         @Override
-        protected String invoke(final InputAviationMessage input, final List<BulletinHeadingSource> bulletinHeadingSources) {
+        protected @Nullable String invoke(final InputAviationMessage input, final List<BulletinHeadingSource> bulletinHeadingSources) {
             final DataDesignatorPropertyReader reader = new DataDesignatorPropertyReader(bulletinHeadingSources);
             return reader.readValue(input, ArchiveAviationMessage.builder());
         }

@@ -24,7 +24,7 @@ public class MonitorableCallerBlocksPolicy implements RejectedExecutionHandler {
      * @param clock   clock
      * @param maxWait the maximum time to wait for a queue slot to be available, in milliseconds.
      */
-    public MonitorableCallerBlocksPolicy(final Clock clock, long maxWait) {
+    public MonitorableCallerBlocksPolicy(final Clock clock, final long maxWait) {
         this.clock = requireNonNull(clock, "clock");
         this.maxWait = maxWait;
     }

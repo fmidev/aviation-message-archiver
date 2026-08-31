@@ -30,4 +30,10 @@ public enum ProcessingPhase implements StructuredLoggable {
     public String getStructureName() {
         return STRUCTURE_NAME;
     }
+
+    // Override to make toString() @NullMarked satisfying Loggable contract
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

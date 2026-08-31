@@ -5,8 +5,8 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorHelper;
 import fi.fmi.avi.model.MessageType;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.OptionalInt;
 
 import static java.util.Objects.requireNonNull;
@@ -18,9 +18,8 @@ public class TestTargetMessageTypePropertyReader extends AbstractConditionProper
         this.messageTypeIds = requireNonNull(messageTypeIds, "messageTypeIds");
     }
 
-    @Nullable
     @Override
-    public MessageType readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
+    public @Nullable MessageType readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
         requireNonNull(input, "input");
         requireNonNull(target, "target");
         final OptionalInt messageTypeId = MessageProcessorHelper.tryGetInt(target, ArchiveAviationMessageOrBuilder::getType);

@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.LoggerContextVO;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Marker;
 import org.slf4j.event.KeyValuePair;
 
@@ -30,7 +31,7 @@ public abstract class ForwardingLoggingEvent implements ILoggingEvent {
     }
 
     @Override
-    public Object[] getArgumentArray() {
+    public Object @Nullable [] getArgumentArray() {
         return delegate().getArgumentArray();
     }
 

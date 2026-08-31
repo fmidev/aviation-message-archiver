@@ -1,20 +1,19 @@
 package fi.fmi.avi.archiver.logging.logback;
 
-import static java.util.Objects.requireNonNull;
-
-import java.util.Iterator;
-
-import javax.annotation.Nullable;
-
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Iterator;
+
+import static java.util.Objects.requireNonNull;
 
 public abstract class ForwardingAppenderBase<E> extends AppenderBase<E> implements AppenderAttachable<E> {
     protected abstract AppenderAttachable<E> appenders();
 
     @Override
-    protected void append(@Nullable final E eventObject) {
+    protected void append(final @Nullable E eventObject) {
         if (!isStarted() || eventObject == null) {
             return;
         }
@@ -66,14 +65,13 @@ public abstract class ForwardingAppenderBase<E> extends AppenderBase<E> implemen
         return appenders().iteratorForAppenders();
     }
 
-    @Nullable
     @Override
-    public Appender<E> getAppender(@Nullable final String name) {
+    public @Nullable Appender<E> getAppender(final @Nullable String name) {
         return appenders().getAppender(name);
     }
 
     @Override
-    public boolean isAttached(@Nullable final Appender<E> appender) {
+    public boolean isAttached(final @Nullable Appender<E> appender) {
         return appenders().isAttached(appender);
     }
 
@@ -83,12 +81,12 @@ public abstract class ForwardingAppenderBase<E> extends AppenderBase<E> implemen
     }
 
     @Override
-    public boolean detachAppender(@Nullable final Appender<E> appender) {
+    public boolean detachAppender(final @Nullable Appender<E> appender) {
         return appenders().detachAppender(appender);
     }
 
     @Override
-    public boolean detachAppender(@Nullable final String name) {
+    public boolean detachAppender(final @Nullable String name) {
         return appenders().detachAppender(name);
     }
 }

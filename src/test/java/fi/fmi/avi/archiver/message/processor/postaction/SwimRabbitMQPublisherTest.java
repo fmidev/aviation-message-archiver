@@ -18,6 +18,7 @@ import fi.fmi.avi.model.GenericAviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import org.inferred.freebuilder.FreeBuilder;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 
-import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -313,8 +313,8 @@ class SwimRabbitMQPublisherTest {
                 .buildPartial();
     }
 
-    private static MessageProcessorContext newContext(final AviationWeatherMessage.ReportStatus reportStatus,
-                                                      @Nullable final OffsetDateTime observationTime) {
+    private static MessageProcessorContext newContext(
+            final AviationWeatherMessage.ReportStatus reportStatus, final @Nullable OffsetDateTime observationTime) {
         final GenericAviationWeatherMessage message = mock(GenericAviationWeatherMessage.class);
         when(message.getReportStatus()).thenReturn(reportStatus);
         when(message.getObservationTime()).thenReturn(
@@ -689,7 +689,9 @@ class SwimRabbitMQPublisherTest {
         }
     }
 
-    record TestPublisherContext(Message message, Publisher.Status status,
-                                @Nullable Throwable failureCause) implements Publisher.Context {
+    record TestPublisherContext(
+            Message message, Publisher.Status status,
+            @Nullable Throwable failureCause
+    ) implements Publisher.Context {
     }
 }

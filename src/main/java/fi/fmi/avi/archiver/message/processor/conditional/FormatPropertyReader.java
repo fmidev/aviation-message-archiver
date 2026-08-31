@@ -5,8 +5,7 @@ import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorHelper;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import static java.util.Objects.requireNonNull;
 
@@ -17,9 +16,8 @@ public class FormatPropertyReader extends AbstractConditionPropertyReader<Generi
         this.messageFormatIds = requireNonNull(messageFormatIds, "messageFormatIds");
     }
 
-    @Nullable
     @Override
-    public GenericAviationWeatherMessage.Format readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
+    public GenericAviationWeatherMessage.@Nullable Format readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
         requireNonNull(input, "input");
         requireNonNull(target, "target");
         final int formatId = MessageProcessorHelper.tryGetInt(target, ArchiveAviationMessageOrBuilder::getFormat).orElse(Integer.MIN_VALUE);

@@ -1,13 +1,7 @@
 package fi.fmi.avi.archiver.logging.model;
 
-import static fi.fmi.avi.archiver.logging.model.MessageLogReference.builder;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-
-import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
-
+import fi.fmi.avi.archiver.logging.LoggableTests;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,7 +9,11 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
-import fi.fmi.avi.archiver.logging.LoggableTests;
+import java.util.stream.Stream;
+
+import static fi.fmi.avi.archiver.logging.model.MessageLogReference.builder;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 final class MessageLogReferenceTest {
     @Test
@@ -46,16 +44,16 @@ final class MessageLogReferenceTest {
 
     @ArgumentsSource(TestValuesProvider.class)
     @ParameterizedTest
-    void toString_returns_expected_value(final String expectedStringTemplate, @Nullable final String expectedExcerpt,
-            final MessageLogReference messageLogReference) {
+    void toString_returns_expected_value(
+            final String expectedStringTemplate, final @Nullable String expectedExcerpt, final MessageLogReference messageLogReference) {
         final String expectedString = expectedExcerpt == null ? expectedStringTemplate : expectedStringTemplate.replace("%s", expectedExcerpt);
         assertThat(messageLogReference.toString()).isEqualTo(expectedString);
     }
 
     @ArgumentsSource(TestValuesProvider.class)
     @ParameterizedTest
-    void messageExcerpt_is_expected(final String expectedStringTemplate, @Nullable final String expectedExcerpt,
-            final MessageLogReference messageLogReference) {
+    void messageExcerpt_is_expected(
+            final String expectedStringTemplate, final @Nullable String expectedExcerpt, final MessageLogReference messageLogReference) {
         assertThat(messageLogReference.getExcerpt().orElse(null)).isEqualTo(expectedExcerpt);
     }
 
@@ -68,7 +66,8 @@ final class MessageLogReferenceTest {
     }
 
     static class TestValuesProvider implements ArgumentsProvider {
-        private static Arguments args(final String expectedStringTemplate, @Nullable final String expectedExcerpt,
+        private static Arguments args(
+                final String expectedStringTemplate, final @Nullable String expectedExcerpt,
                 final MessageLogReference messageLogReference) {
             return Arguments.of(expectedStringTemplate, expectedExcerpt, messageLogReference);
         }

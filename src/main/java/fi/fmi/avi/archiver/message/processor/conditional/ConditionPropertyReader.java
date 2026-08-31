@@ -2,8 +2,8 @@ package fi.fmi.avi.archiver.message.processor.conditional;
 
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.Optional;
@@ -48,8 +48,7 @@ public interface ConditionPropertyReader<T> {
      * @param message archive aviation message or builder
      * @return property value
      */
-    @Nullable
-    T readValue(InputAviationMessage input, ArchiveAviationMessageOrBuilder message);
+    @Nullable T readValue(InputAviationMessage input, ArchiveAviationMessageOrBuilder message);
 
     /**
      * Validate a property value.

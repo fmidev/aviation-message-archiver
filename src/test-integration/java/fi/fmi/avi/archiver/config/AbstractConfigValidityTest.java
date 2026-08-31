@@ -3,6 +3,7 @@ package fi.fmi.avi.archiver.config;
 import com.google.common.base.Preconditions;
 import fi.fmi.avi.archiver.AviationMessageArchiver;
 import org.assertj.core.api.ThrowableAssertAlternative;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 
 public abstract class AbstractConfigValidityTest {
 
+    @Nullable
     private ConfigurableApplicationContext applicationContext;
 
     protected AbstractConfigValidityTest() {
@@ -74,6 +76,7 @@ public abstract class AbstractConfigValidityTest {
     protected <T> T bean(final String name, final Class<T> beanType) {
         requireNonNull(name, "name");
         requireNonNull(beanType, "beanType");
+        requireNonNull(applicationContext, "applicationContext");
         return applicationContext.getBean(name, beanType);
     }
 }

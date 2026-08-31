@@ -1,7 +1,7 @@
 package fi.fmi.avi.archiver.util.instantiation;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
+
 import java.lang.reflect.Executable;
 import java.lang.reflect.Type;
 import java.util.Optional;
@@ -12,9 +12,8 @@ import java.util.OptionalLong;
 public enum TestConfigValueConverter implements ConfigValueConverter {
     INSTANCE;
 
-    @Nullable
     @Override
-    public Object toParameterType(@Nullable final Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
+    public @Nullable Object toParameterType(final @Nullable Object propertyConfigValue, final Executable targetExecutable, final int parameterIndex) {
         if (propertyConfigValue == null) {
             return null;
         }
@@ -22,9 +21,9 @@ public enum TestConfigValueConverter implements ConfigValueConverter {
         return convert(propertyConfigValue, parameterType);
     }
 
-    @Nullable
+
     @Override
-    public Object toReturnValueType(@Nullable final Object propertyConfigValue, final Executable targetExecutable) {
+    public @Nullable Object toReturnValueType(final @Nullable Object propertyConfigValue, final Executable targetExecutable) {
         if (propertyConfigValue == null) {
             return null;
         }
@@ -32,7 +31,7 @@ public enum TestConfigValueConverter implements ConfigValueConverter {
         return convert(propertyConfigValue, parameterType);
     }
 
-    private Object convert(final @Nonnull Object propertyConfigValue, final Type parameterType) {
+    private Object convert(final Object propertyConfigValue, final Type parameterType) {
         try {
             if (parameterType instanceof final Class<?> parameterClass
                     && parameterClass.isInstance(propertyConfigValue)) {

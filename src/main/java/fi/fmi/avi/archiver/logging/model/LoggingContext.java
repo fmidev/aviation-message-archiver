@@ -1,16 +1,14 @@
 package fi.fmi.avi.archiver.logging.model;
 
-import static java.util.Objects.requireNonNull;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import fi.fmi.avi.archiver.file.FileReference;
+import fi.fmi.avi.archiver.message.MessagePositionInFile;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import javax.annotation.Nullable;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import fi.fmi.avi.archiver.file.FileReference;
-import fi.fmi.avi.archiver.message.MessagePositionInFile;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Loggable context information on processing a file of aviation messages with methods to update current state and statistics.
@@ -27,9 +25,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * This makes the returned object thread-safe in terms of <em>serial</em> invocations from different threads and logging output. But it does
      * <strong>not</strong> guarantee safe <em>parallel</em> processing of different messages within a file.
      *
-     * @param loggingContext
-     *         the logging context to be wrapped
-     *
+     * @param loggingContext the logging context to be wrapped
      * @return a {@code LoggingContext} that synchronizes each method call backed by provided {@code loggingContext} instance
      */
     @SuppressWarnings("ClassReferencesSubclass")
@@ -46,8 +42,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * See method description for details.
      * </p>
      *
-     * @param file
-     *         reference to the file currently under processing, or {@code null} to indicate end of processing
+     * @param file reference to the file currently under processing, or {@code null} to indicate end of processing
      */
     void enterFile(@Nullable FileReference file);
 
@@ -80,8 +75,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * readability. See method description for details.
      * </p>
      *
-     * @param bulletin
-     *         reference to the bulletin currently under processing, or {@code null} to indicate end of processing
+     * @param bulletin reference to the bulletin currently under processing, or {@code null} to indicate end of processing
      */
     void enterBulletin(@Nullable BulletinLogReference bulletin);
 
@@ -97,8 +91,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * readability. See method description for details.
      * </p>
      *
-     * @param index
-     *         index of a bulletin within a file starting from {@code 0} currently under processing, or {@code -1} to indicate end of processing
+     * @param index index of a bulletin within a file starting from {@code 0} currently under processing, or {@code -1} to indicate end of processing
      */
     void enterBulletin(int index);
 
@@ -150,11 +143,8 @@ public interface LoggingContext extends ReadableLoggingContext {
      * It is also the default implementation.
      * </p>
      *
-     * @param operator
-     *         operator to apply on the {@code BulletinLogReference} referring to the bulletin currently under processing
-     *
-     * @throws NullPointerException
-     *         if {@code operator} is {@code null}
+     * @param operator operator to apply on the {@code BulletinLogReference} referring to the bulletin currently under processing
+     * @throws NullPointerException if {@code operator} is {@code null}
      */
     default void modifyBulletin(final UnaryOperator<BulletinLogReference> operator) {
         getBulletin()//
@@ -174,8 +164,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * readability. See method description for details.
      * </p>
      *
-     * @param message
-     *         reference to message being currently under processing, or {@code null} to indicate end of processing
+     * @param message reference to message being currently under processing, or {@code null} to indicate end of processing
      */
     void enterMessage(@Nullable MessageLogReference message);
 
@@ -192,8 +181,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * See method description for details.
      * </p>
      *
-     * @param index
-     *         index of message within bulletin starting from {@code 0} being currently under processing, or {@code -1} to indicate end of processing
+     * @param index index of message within bulletin starting from {@code 0} being currently under processing, or {@code -1} to indicate end of processing
      */
     void enterMessage(int index);
 
@@ -209,11 +197,8 @@ public interface LoggingContext extends ReadableLoggingContext {
      * The default implementation invokes {@link #enterBulletin(int)} and {@link #enterMessage(int)} with indices in provided {@code messagePositionInFile}.
      * </p>
      *
-     * @param messagePositionInFile
-     *         message position in file being currently under processing
-     *
-     * @throws NullPointerException
-     *         if {@code messagePositionInFile} is {@code null}
+     * @param messagePositionInFile message position in file being currently under processing
+     * @throws NullPointerException if {@code messagePositionInFile} is {@code null}
      */
     default void enterBulletinMessage(final MessagePositionInFile messagePositionInFile) {
         requireNonNull(messagePositionInFile, "messagePositionInFile");
@@ -268,11 +253,8 @@ public interface LoggingContext extends ReadableLoggingContext {
      * It is also the default implementation.
      * </p>
      *
-     * @param operator
-     *         operator to apply on the {@code MessageLogReference} referring to message being currently under processing
-     *
-     * @throws NullPointerException
-     *         if {@code operator} is {@code null}
+     * @param operator operator to apply on the {@code MessageLogReference} referring to message being currently under processing
+     * @throws NullPointerException if {@code operator} is {@code null}
      */
     default void modifyMessage(final UnaryOperator<MessageLogReference> operator) {
         getMessage()//
@@ -307,8 +289,7 @@ public interface LoggingContext extends ReadableLoggingContext {
      * The default implementation tests the current state of a bulletin and a message invoking {@link #getBulletinIndex()} and {@link #getMessageIndex()}.
      * </p>
      *
-     * @param processingResult
-     *         processing result to record on current state
+     * @param processingResult processing result to record on current state
      */
     default void recordProcessingResult(final FileProcessingStatistics.ProcessingResult processingResult) {
         requireNonNull(processingResult, "processingResult");

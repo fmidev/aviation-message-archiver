@@ -1,10 +1,10 @@
 package fi.fmi.avi.archiver.spring.healthcontributor;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.actuate.health.CompositeHealthContributor;
 import org.springframework.boot.actuate.health.HealthContributor;
 import org.springframework.boot.actuate.health.NamedContributor;
 
-import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -15,9 +15,8 @@ import static java.util.Objects.requireNonNull;
 public abstract class AbstractMapCompositeHealthContributor implements CompositeHealthContributor {
     protected abstract Map<String, NamedContributor<HealthContributor>> contributors();
 
-    @Nullable
     @Override
-    public HealthContributor getContributor(final String name) {
+    public @Nullable HealthContributor getContributor(final String name) {
         requireNonNull(name, "name");
         return Optional.ofNullable(contributors().get(name))
                 .map(NamedContributor::getContributor)

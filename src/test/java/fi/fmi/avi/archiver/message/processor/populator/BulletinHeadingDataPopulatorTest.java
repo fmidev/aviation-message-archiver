@@ -11,12 +11,12 @@ import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.bulletin.BulletinHeading;
 import fi.fmi.avi.model.bulletin.DataTypeDesignatorT2;
 import fi.fmi.avi.model.bulletin.immutable.BulletinHeadingImpl;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -73,8 +73,9 @@ class BulletinHeadingDataPopulatorTest {
             "XML_AERODROME_VT_LONG, XML_AERODROME_VT_LONG, IWXXM", //
             "XML_AERODROME_VT_LONG, FCT_AERODROME_VT_LONG, IWXXM", //
     })
-    void populates_format_when_exists(@Nullable final T2 gtsDesignatorT2, @Nullable final T2 collectDesignatorT2,
-                                      final MessageProcessorTestHelper.FormatId expectedFormat) {
+    void populates_format_when_exists(
+            final @Nullable T2 gtsDesignatorT2, final @Nullable T2 collectDesignatorT2,
+            final MessageProcessorTestHelper.FormatId expectedFormat) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder();
         if (gtsDesignatorT2 != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(
@@ -111,8 +112,9 @@ class BulletinHeadingDataPopulatorTest {
             "WRN_AIRMET, FCT_SPACE_WEATHER, AIRMET", //
             "FCT_SPACE_WEATHER, WRN_AIRMET, SWX", //
     })
-    void populates_type_when_exists(@Nullable final T2 gtsDesignatorT2, @Nullable final T2 collectDesignatorT2,
-                                    final MessageProcessorTestHelper.TypeId expectedType) {
+    void populates_type_when_exists(
+            final @Nullable T2 gtsDesignatorT2, final @Nullable T2 collectDesignatorT2,
+            final MessageProcessorTestHelper.TypeId expectedType) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder();
         if (gtsDesignatorT2 != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(
@@ -142,8 +144,9 @@ class BulletinHeadingDataPopulatorTest {
             // Return resolved partial time from preferred source, even when secondary source offers native complete time:
             "--02T03:04Z, 2000-01-02T03:04:01Z, taf_2000-01-02T03:05.txt, 2005-01-02T03:05:06Z, 2000-01-02T03:04:00Z", //
     })
-    void populates_messageTime_when_exists(@Nullable final PartialDateTime gtsIssueTime, @Nullable final ZonedDateTime collectIssueTime, final String filename,
-                                           final Instant fileModified, final Instant expectedTime) {
+    void populates_messageTime_when_exists(
+            final @Nullable PartialDateTime gtsIssueTime, final @Nullable ZonedDateTime collectIssueTime, final String filename,
+            final Instant fileModified, final Instant expectedTime) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(filedata -> filedata.mutateFileReference(ref -> ref.setFilename(filename))//
                         .setFileModified(fileModified));
@@ -168,8 +171,9 @@ class BulletinHeadingDataPopulatorTest {
             ", YUDO, YUDO", //
             "YUDO, XXXX, YUDO", //
     })
-    void populates_stationIcaoCode_when_exists(@Nullable final String gtsLocationIndicator, @Nullable final String collectLocationIndicator,
-                                               final String expectedStationIcaoCode) {
+    void populates_stationIcaoCode_when_exists(
+            final @Nullable String gtsLocationIndicator, final @Nullable String collectLocationIndicator,
+            final String expectedStationIcaoCode) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder();
         if (gtsLocationIndicator != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(
@@ -193,8 +197,9 @@ class BulletinHeadingDataPopulatorTest {
             ", collect_identifier.xml, ", //
             "GTS HEADING, collect_identifier.xml, GTS HEADING", //
     })
-    void populates_heading_when_exists(@Nullable final String gtsBulletinHeadingString, @Nullable final String collectIdentifierString,
-                                       @Nullable final String expectedHeading) {
+    void populates_heading_when_exists(
+            final @Nullable String gtsBulletinHeadingString, final @Nullable String collectIdentifierString,
+            final @Nullable String expectedHeading) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder();
         if (gtsBulletinHeadingString != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(builder -> builder.setBulletinHeadingString(gtsBulletinHeadingString));
@@ -231,9 +236,10 @@ class BulletinHeadingDataPopulatorTest {
             "CORRECTED, 2, CORRECTED, 1, CCB", //
             "CORRECTED, 26, , , CCZ", //
     })
-    void populates_version_when_exists(@Nullable final BulletinHeading.Type gtsBulletinType, @Nullable final Integer gtsAugmentationNumber,
-                                       @Nullable final BulletinHeading.Type collectBulletinType, @Nullable final Integer collectAugmentationNumber,
-                                       @Nullable final String expectedVersion) {
+    void populates_version_when_exists(
+            final BulletinHeading.@Nullable Type gtsBulletinType, final @Nullable Integer gtsAugmentationNumber,
+            final BulletinHeading.@Nullable Type collectBulletinType, final @Nullable Integer collectAugmentationNumber,
+            final @Nullable String expectedVersion) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder();
         if (gtsBulletinType != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(builder -> builder.setBulletinHeading(BULLETIN_HEADING_TEMPLATE.toBuilder()//
@@ -261,8 +267,9 @@ class BulletinHeadingDataPopulatorTest {
             ", collect_identifier.xml, collect_identifier.xml", //
             "GTS HEADING, collect_identifier.xml, collect_identifier.xml", //
     })
-    void populates_collectIdentifier_when_exists(@Nullable final String gtsBulletinHeadingString, @Nullable final String collectIdentifierString,
-                                                 @Nullable final String expectedCollectIdentifier) {
+    void populates_collectIdentifier_when_exists(
+            final @Nullable String gtsBulletinHeadingString, final @Nullable String collectIdentifierString,
+            final @Nullable String expectedCollectIdentifier) {
         final InputAviationMessage.Builder inputMessageBuilder = INPUT_MESSAGE_TEMPLATE.toBuilder();
         if (gtsBulletinHeadingString != null) {
             inputMessageBuilder.mutateGtsBulletinHeading(builder -> builder.setBulletinHeadingString(gtsBulletinHeadingString));

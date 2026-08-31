@@ -7,11 +7,10 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper.FormatId;
 import fi.fmi.avi.model.GenericAviationWeatherMessage;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-
-import javax.annotation.Nullable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -61,9 +60,8 @@ class FormatPropertyReaderTest {
     @Test
     void testGetValueGetterForType() {
         final class TestReader extends AbstractConditionPropertyReader<GenericAviationWeatherMessage.Format> {
-            @Nullable
             @Override
-            public GenericAviationWeatherMessage.Format readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
+            public GenericAviationWeatherMessage.@Nullable Format readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
                 return null;
             }
         }

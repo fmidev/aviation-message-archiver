@@ -10,11 +10,11 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper.FormatId;
 import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import javax.annotation.Nullable;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Map;
@@ -67,9 +67,8 @@ class ProductIdPropertyReaderTest {
     @Test
     void testGetValueGetterForType() {
         final class TestReader extends AbstractConditionPropertyReader<String> {
-            @Nullable
             @Override
-            public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
+            public @Nullable String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
                 return null;
             }
         }

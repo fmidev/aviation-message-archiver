@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.message.processor.populator;
 
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.file.InputBulletinHeading;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,7 +10,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +25,7 @@ public abstract class BulletinHeadingSourceSensitiveTester<T> {
 
     protected abstract Map<BulletinHeadingSource, T> getExpectedResults();
 
-    @Nullable
-    protected abstract T invoke(InputAviationMessage input, List<BulletinHeadingSource> bulletinHeadingSources);
+    protected abstract @Nullable T invoke(InputAviationMessage input, List<BulletinHeadingSource> bulletinHeadingSources);
 
     @ParameterizedTest
     @ArgumentsSource(ActualIndexAndBulletinHeadingSourcesProvider.class)

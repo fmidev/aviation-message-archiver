@@ -1,22 +1,19 @@
 package fi.fmi.avi.archiver.logging.logback.logstash;
 
-import static java.util.Objects.requireNonNull;
-
-import javax.annotation.Nullable;
-
-import net.logstash.logback.argument.StructuredArgument;
-import net.logstash.logback.argument.StructuredArguments;
-
-import com.google.common.annotations.VisibleForTesting;
-
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
+import com.google.common.annotations.VisibleForTesting;
 import fi.fmi.avi.archiver.logging.NoOpLoggable;
 import fi.fmi.avi.archiver.logging.StructuredLoggable;
 import fi.fmi.avi.archiver.logging.logback.ForwardingAppenderBase;
 import fi.fmi.avi.archiver.logging.logback.ForwardingLoggingEvent;
+import net.logstash.logback.argument.StructuredArgument;
+import net.logstash.logback.argument.StructuredArguments;
+import org.jspecify.annotations.Nullable;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * An {@link Appender} that wraps received logging events, transforming any {@link StructuredLoggable} in event
@@ -43,7 +40,7 @@ public class StructuredLoggableLogstashAppender extends ForwardingAppenderBase<I
     }
 
     @Override
-    protected void append(@Nullable final ILoggingEvent eventObject) {
+    protected void append(final @Nullable ILoggingEvent eventObject) {
         if (!isStarted() || eventObject == null) {
             return;
         }
@@ -55,8 +52,7 @@ public class StructuredLoggableLogstashAppender extends ForwardingAppenderBase<I
     static final class LoggingEvent extends ForwardingLoggingEvent {
         private final ILoggingEvent delegate;
 
-        @Nullable
-        private transient Object[] argumentArray;
+        private transient Object @Nullable [] argumentArray;
         private transient boolean argumentArrayPreparedForDeferredProcessing;
 
         LoggingEvent(final ILoggingEvent delegate) {
@@ -68,14 +64,12 @@ public class StructuredLoggableLogstashAppender extends ForwardingAppenderBase<I
             return delegate;
         }
 
-        @Nullable
         @Override
-        public Object[] getArgumentArray() {
+        public Object @Nullable [] getArgumentArray() {
             return getArgumentArray(false);
         }
 
-        @Nullable
-        private Object[] getArgumentArray(final boolean prepareForDeferredProcessing) {
+        private Object @Nullable [] getArgumentArray(final boolean prepareForDeferredProcessing) {
             if (!argumentArrayPreparedForDeferredProcessing && (prepareForDeferredProcessing || argumentArray == null)) {
                 // Above condition ensures this is invoked at maximum twice:
                 // 1. first time when prepareForDeferredProcessing == false and
@@ -86,7 +80,6 @@ public class StructuredLoggableLogstashAppender extends ForwardingAppenderBase<I
         }
 
         private void initArgumentArray(final boolean copyStructuredLoggables) {
-            @Nullable
             final Object[] delegateArgumentArray = delegate().getArgumentArray();
             if (delegateArgumentArray == null) {
                 argumentArray = null;

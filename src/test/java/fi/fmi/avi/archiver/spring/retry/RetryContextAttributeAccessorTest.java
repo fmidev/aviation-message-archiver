@@ -1,19 +1,20 @@
 package fi.fmi.avi.archiver.spring.retry;
 
-import static fi.fmi.avi.archiver.spring.retry.RetryContextAttributeAccessor.builder;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.concurrent.atomic.AtomicReference;
-
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.retry.RetryContext;
+
+import java.util.concurrent.atomic.AtomicReference;
+
+import static fi.fmi.avi.archiver.spring.retry.RetryContextAttributeAccessor.builder;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class RetryContextAttributeAccessorTest {
     private static final int DEFAULT_VALUE = 17;
@@ -22,7 +23,7 @@ class RetryContextAttributeAccessorTest {
 
     @Mock
     private RetryContext context;
-    private AutoCloseable mocks;
+    private @Nullable AutoCloseable mocks;
 
     @BeforeEach
     void setUp() {
@@ -90,7 +91,7 @@ class RetryContextAttributeAccessorTest {
     @Test
     void get_passes_attribute_value_to_doOnGet() {
         final int modifiedValue = 45;
-        final AtomicReference<Integer> readValue = new AtomicReference<>();
+        final AtomicReference<@Nullable Integer> readValue = new AtomicReference<>();
         final RetryContextAttributeAccessor<Integer> accessor = builder(Integer.class)//
                 .setName(ATTRIBUTE_NAME)//
                 .setDefaultValue(DEFAULT_VALUE)//
@@ -122,7 +123,7 @@ class RetryContextAttributeAccessorTest {
     @Test
     void set_passes_attribute_value_to_doOnSet() {
         final int modifiedValue = 45;
-        final AtomicReference<Integer> readValue = new AtomicReference<>();
+        final AtomicReference<@Nullable Integer> readValue = new AtomicReference<>();
         final RetryContextAttributeAccessor<Integer> accessor = builder(Integer.class)//
                 .setName(ATTRIBUTE_NAME)//
                 .setDefaultValue(DEFAULT_VALUE)//

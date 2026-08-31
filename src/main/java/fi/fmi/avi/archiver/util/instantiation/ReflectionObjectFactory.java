@@ -1,6 +1,7 @@
 package fi.fmi.avi.archiver.util.instantiation;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -30,16 +31,14 @@ public class ReflectionObjectFactory<T> extends AbstractReflectionObjectFactory<
     private final Object[] constructorArgsTemplate;
     private final Map<String, Integer> configConstructorArgIndicesByName;
     private final Constructor<T> constructor;
-    @Nullable
-    private final String name;
+    private final @Nullable String name;
 
     private ReflectionObjectFactory(final Builder<T> builder) {
         this.configValueConverter = requireNonNull(builder.configValueConverter, "configValueConverter");
         this.type = requireNonNull(builder.type, "type");
         this.name = builder.name;
         this.constructorArgsTemplate = requireNonNull(builder.constructorArgsTemplate, "constructorArgsTemplate").toArray();
-        this.configConstructorArgIndicesByName = Collections.unmodifiableMap(
-                new HashMap<>(requireNonNull(builder.configConstructorArgIndicesByName, "configConstructorArgIndicesByName")));
+        this.configConstructorArgIndicesByName = Map.copyOf(requireNonNull(builder.configConstructorArgIndicesByName, "configConstructorArgIndicesByName"));
         this.constructor = requireNonNull(builder.constructor, "constructor");
 
     }
@@ -80,7 +79,7 @@ public class ReflectionObjectFactory<T> extends AbstractReflectionObjectFactory<
     @Override
     protected T createInstance(final Map<String, ?> instantiationConfig) {
         requireNonNull(instantiationConfig, "instantiationConfig");
-        final Object[] constructorArgs = constructorArgs(instantiationConfig);
+        final @Nullable Object[] constructorArgs = constructorArgs(instantiationConfig);
         try {
             return constructor.newInstance(constructorArgs);
         } catch (final InstantiationException | IllegalAccessException e) {
@@ -90,8 +89,8 @@ public class ReflectionObjectFactory<T> extends AbstractReflectionObjectFactory<
         }
     }
 
-    private Object[] constructorArgs(final Map<String, ?> config) {
-        final Object[] args = constructorArgsTemplate.clone();
+    private @Nullable Object[] constructorArgs(final Map<String, ?> config) {
+        final @Nullable Object[] args = constructorArgsTemplate.clone();
         configConstructorArgIndicesByName.forEach((configOptionName, constructorArgIndex) -> {
             final Object configValue = config.get(configOptionName);
             if (configValue == null && !config.containsKey(configOptionName)) {
@@ -112,20 +111,20 @@ public class ReflectionObjectFactory<T> extends AbstractReflectionObjectFactory<
         private final Class<T> type;
         private final ConfigValueConverter configValueConverter;
 
-        private final ArrayList<Object> constructorArgsTemplate = new ArrayList<>();
-        private final ArrayList<Class<?>> constructorParameterTypes = new ArrayList<>();
+        private final ArrayList<@Nullable Object> constructorArgsTemplate = new ArrayList<>();
+        private final ArrayList<@Nullable Class<?>> constructorParameterTypes = new ArrayList<>();
         private final Map<String, Integer> configConstructorArgIndicesByName = new HashMap<>();
-        private Constructor<T> constructor;
 
-        @Nullable
-        private String name;
+        private @Nullable Constructor<T> constructor;
+
+        private @Nullable String name;
 
         private Builder(final Class<T> type, final ConfigValueConverter configValueConverter) {
             this.type = requireNonNull(type, "type");
             this.configValueConverter = requireNonNull(configValueConverter, "configValueConverter");
         }
 
-        private static String listOfClassNames(final List<Class<?>> classes) {
+        private static String listOfClassNames(final List<@Nullable Class<?>> classes) {
             return classes.stream()//
                     .map(cls -> cls == null ? "null" : cls.getName())//
                     .collect(Collectors.joining(", ", "[", "]"));
@@ -159,7 +158,7 @@ public class ReflectionObjectFactory<T> extends AbstractReflectionObjectFactory<
                 return false;
             }
             for (int i = 0; i < classes.length; i++) {
-                @Nullable final Class<?> parameterType = constructorParameterTypes.get(i);
+                final Class<?> parameterType = constructorParameterTypes.get(i);
                 if (parameterType != null && !classes[i].isAssignableFrom(parameterType)) {
                     return false;
                 }
@@ -194,16 +193,16 @@ public class ReflectionObjectFactory<T> extends AbstractReflectionObjectFactory<
         }
 
         @SuppressWarnings("unchecked")
-        public <D> Builder<T> addDependencyArg(@Nullable final D dependency) {
+        public <D> Builder<T> addDependencyArg(final @Nullable D dependency) {
             return addDependencyArgOfNullableType(dependency, dependency == null ? null : (Class<? super D>) dependency.getClass());
         }
 
-        public <D> Builder<T> addDependencyArg(@Nullable final D dependency, final Class<? super D> type) {
+        public <D> Builder<T> addDependencyArg(final @Nullable D dependency, final Class<? super D> type) {
             requireNonNull(type, "type");
             return addDependencyArgOfNullableType(dependency, type);
         }
 
-        private <D> Builder<T> addDependencyArgOfNullableType(@Nullable final D dependency, @Nullable final Class<? super D> type) {
+        private <D> Builder<T> addDependencyArgOfNullableType(final @Nullable D dependency, final @Nullable Class<? super D> type) {
             clearConstructor();
             constructorArgsTemplate.add(dependency);
             constructorParameterTypes.add(type);
@@ -233,7 +232,7 @@ public class ReflectionObjectFactory<T> extends AbstractReflectionObjectFactory<
             return setNullableName(requireNonNull(name, "name"));
         }
 
-        public Builder<T> setNullableName(@Nullable final String name) {
+        public Builder<T> setNullableName(final @Nullable String name) {
             this.name = name;
             return this;
         }

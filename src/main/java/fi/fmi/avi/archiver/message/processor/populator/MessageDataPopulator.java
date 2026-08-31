@@ -11,8 +11,8 @@ import fi.fmi.avi.model.GenericAviationWeatherMessage.LocationIndicatorType;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import fi.fmi.avi.model.PartialOrCompleteTimePeriod;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.time.ZoneOffset;
 import java.time.chrono.ChronoZonedDateTime;
 import java.util.*;
@@ -123,8 +123,7 @@ public class MessageDataPopulator implements MessagePopulator {
         target.setMessage(inputMessage.getOriginalMessage());
     }
 
-    @Nullable
-    private PartialOrCompleteTimeInstant getNullablePartialOrCompleteMessageTime(final Builder builder, final GenericAviationWeatherMessage inputMessage) {
+    private @Nullable PartialOrCompleteTimeInstant getNullablePartialOrCompleteMessageTime(final Builder builder, final GenericAviationWeatherMessage inputMessage) {
         return tryGet(builder, Builder::getMessageTime)//
                 .map(messageTime -> PartialOrCompleteTimeInstant.of(messageTime.atZone(ZoneOffset.UTC)))//
                 .orElse(inputMessage.getIssueTime().orElse(null));

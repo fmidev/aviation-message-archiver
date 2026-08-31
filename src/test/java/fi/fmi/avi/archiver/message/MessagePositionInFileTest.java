@@ -1,12 +1,10 @@
 package fi.fmi.avi.archiver.message;
 
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-
+import com.google.common.testing.EqualsTester;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.testing.EqualsTester;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
-@SuppressWarnings("UnstableApiUsage")
 class MessagePositionInFileTest {
     @Test
     void getInstance_fails_if_bulletinIndex_is_negative() {

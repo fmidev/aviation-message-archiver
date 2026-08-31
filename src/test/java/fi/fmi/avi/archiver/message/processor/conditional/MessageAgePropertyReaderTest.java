@@ -3,11 +3,11 @@ package fi.fmi.avi.archiver.message.processor.conditional;
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -90,9 +90,8 @@ class MessageAgePropertyReaderTest {
     @Test
     void testGetValueGetterForType() {
         final class TestReader extends AbstractConditionPropertyReader<Duration> {
-            @Nullable
             @Override
-            public Duration readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder message) {
+            public @Nullable Duration readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder message) {
                 return null;
             }
         }

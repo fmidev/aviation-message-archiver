@@ -2,6 +2,7 @@ package fi.fmi.avi.archiver.message.processor.conditional;
 
 import fi.fmi.avi.archiver.file.InputAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Predicate;
 
@@ -9,9 +10,9 @@ import static java.util.Objects.requireNonNull;
 
 public class PropertyActivationCondition<T> implements ActivationCondition {
     private final ConditionPropertyReader<T> conditionPropertyReader;
-    private final Predicate<T> propertyPredicate;
+    private final Predicate<@Nullable T> propertyPredicate;
 
-    public PropertyActivationCondition(final ConditionPropertyReader<T> conditionPropertyReader, final Predicate<T> propertyPredicate) {
+    public PropertyActivationCondition(final ConditionPropertyReader<T> conditionPropertyReader, final Predicate<@Nullable T> propertyPredicate) {
         this.conditionPropertyReader = requireNonNull(conditionPropertyReader, "conditionPropertyReader");
         this.propertyPredicate = requireNonNull(propertyPredicate, "propertyPredicate");
     }

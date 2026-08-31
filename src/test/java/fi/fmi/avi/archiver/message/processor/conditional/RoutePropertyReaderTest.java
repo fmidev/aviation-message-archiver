@@ -6,11 +6,10 @@ import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessageOrBuilder;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorTestHelper.RouteId;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-
-import javax.annotation.Nullable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,9 +59,8 @@ class RoutePropertyReaderTest {
     @Test
     void testGetValueGetterForType() {
         final class TestReader extends AbstractConditionPropertyReader<String> {
-            @Nullable
             @Override
-            public String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
+            public @Nullable String readValue(final InputAviationMessage input, final ArchiveAviationMessageOrBuilder target) {
                 return null;
             }
         }

@@ -1,6 +1,7 @@
 package fi.fmi.avi.archiver.util.instantiation;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -136,7 +137,7 @@ public class ProxyObjectFactoryConfigFactory implements ObjectFactoryConfigFacto
                 ));
     }
 
-    private Object convertToMethodReturnType(final Object propertyName, final Method method, final Object value, final Context<Class<?>> context) {
+    private @Nullable Object convertToMethodReturnType(final Object propertyName, final Method method, final Object value, final Context<Class<?>> context) {
         if (enableNestedConfig) {
             final Class<?> unwrappedReturnType = OptionalType.getAnyValueType(method.getGenericReturnType())
                     .orElse(method.getReturnType());
@@ -228,7 +229,7 @@ public class ProxyObjectFactoryConfigFactory implements ObjectFactoryConfigFacto
         public static final String STRING_ENTRY_SEPARATOR = ", ";
 
         @Override
-        public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+        public @Nullable Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
             if (isConfigPropertyMethod(method)) {
                 return configMap.get(method.getName());
             } else if (method.isDefault()) {
@@ -261,7 +262,7 @@ public class ProxyObjectFactoryConfigFactory implements ObjectFactoryConfigFacto
             return builder.toString();
         }
 
-        private boolean proxyEquals(final Object proxy, final Object other) {
+        private boolean proxyEquals(final Object proxy, final @Nullable Object other) {
             return proxy == other || (
                     other != null
                             && Proxy.isProxyClass(other.getClass())

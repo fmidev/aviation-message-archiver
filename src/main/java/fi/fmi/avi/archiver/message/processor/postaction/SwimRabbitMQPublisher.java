@@ -11,10 +11,10 @@ import fi.fmi.avi.model.AviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
 import fi.fmi.avi.model.PartialOrCompleteTimeInstant;
 import org.inferred.freebuilder.FreeBuilder;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -201,7 +201,7 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
     }
 
     @Override
-    public void checkResult(@Nullable final Publisher.Context result, final ReadableLoggingContext loggingContext) throws Exception {
+    public void checkResult(final Publisher.@Nullable Context result, final ReadableLoggingContext loggingContext) throws Exception {
         requireNonNull(loggingContext, "loggingContext");
         if (result == null) {
             return;
@@ -245,7 +245,7 @@ public class SwimRabbitMQPublisher extends AbstractRetryingPostAction<Publisher.
         }
 
         public void set(final Message message,
-                        @Nullable final String value,
+                        final @Nullable String value,
                         final MessageType messageType,
                         final ReadableLoggingContext loggingContext) {
             final boolean required = category == Category.MANDATORY || (category == Category.CONDITIONAL && requiredForTypes.contains(messageType));

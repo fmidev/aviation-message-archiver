@@ -8,7 +8,6 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.regex.Pattern;
 
-@SuppressWarnings("UnstableApiUsage")
 public class PackageSanityTest extends AbstractPackageSanityTests {
 
     @Override

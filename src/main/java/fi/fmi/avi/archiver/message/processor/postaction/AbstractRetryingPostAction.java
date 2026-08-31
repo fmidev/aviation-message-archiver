@@ -4,14 +4,17 @@ import fi.fmi.avi.archiver.logging.model.ReadableLoggingContext;
 import fi.fmi.avi.archiver.message.ArchiveAviationMessage;
 import fi.fmi.avi.archiver.message.processor.MessageProcessorContext;
 import fi.fmi.avi.archiver.spring.retry.ArchiverRetryContexts;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.support.RetryTemplate;
 
-import javax.annotation.Nullable;
 import java.time.Duration;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.requireNonNull;
 
@@ -119,7 +122,7 @@ public abstract class AbstractRetryingPostAction<T> implements PostAction, AutoC
             }
         }
 
-        private RetryCallback<Void, Exception> retryCallback() {
+        private RetryCallback<@Nullable Void, Exception> retryCallback() {
             return context -> {
                 final Future<T> future = runAsynchronously(messageProcessorContext, message);
                 final T result;

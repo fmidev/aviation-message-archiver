@@ -2,8 +2,8 @@ package fi.fmi.avi.archiver.message.processor.conditional;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.inferred.freebuilder.FreeBuilder;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -33,7 +33,7 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
     }
 
     @Override
-    public boolean test(@Nullable final T value) {
+    public boolean test(final @Nullable T value) {
         return getPresence().test(value)
                 && (value == null || PresencePolicy.EMPTY.test(value) || satisfiesConditionsOnPresentValue(value));
     }
@@ -109,25 +109,24 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
     public enum PresencePolicy {
         PRESENT {
             @Override
-            public boolean test(@Nullable final Object object) {
+            public boolean test(final @Nullable Object object) {
                 return toNullable(object) != null;
             }
         },
         EMPTY {
             @Override
-            public boolean test(@Nullable final Object object) {
+            public boolean test(final @Nullable Object object) {
                 return toNullable(object) == null;
             }
         },
         OPTIONAL {
             @Override
-            public boolean test(@Nullable final Object object) {
+            public boolean test(final @Nullable Object object) {
                 return true;
             }
         };
 
-        @Nullable
-        static Object toNullable(@Nullable final Object object) {
+        static @Nullable Object toNullable(final @Nullable Object object) {
             if (object instanceof Optional) {
                 return ((Optional<?>) object).orElse(null);
             } else {
@@ -135,7 +134,7 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
             }
         }
 
-        abstract boolean test(@Nullable final Object object);
+        abstract boolean test(final @Nullable Object object);
     }
 
     public static class Builder<T> extends GeneralPropertyPredicate_Builder<T> {
@@ -204,7 +203,7 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
             return clearIsNoneOf().addAllIsNoneOf(elements);
         }
 
-        public <T2> Builder<T2> transform(final Function<T, T2> valueFunction, @Nullable final Comparator<? super T2> comparator) {
+        public <T2> Builder<T2> transform(final Function<T, T2> valueFunction, final @Nullable Comparator<? super T2> comparator) {
             requireNonNull(valueFunction, "valueFunction");
             return GeneralPropertyPredicate.<T2>builder()
                     .addAllIsAnyOf(getIsAnyOf().stream().map(valueFunction))
@@ -295,11 +294,10 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
                                     Collections::unmodifiableSet)));
 
             private final Category category;
-            @Nullable
-            private final Predicate<Builder<?>> isSet;
+            private final @Nullable Predicate<Builder<?>> isSet;
             private final Function<GeneralPropertyPredicate<?>, Optional<?>> getValueForString;
 
-            Property(final Category category, @Nullable final Predicate<Builder<?>> isSet, final Function<GeneralPropertyPredicate<?>, Optional<?>> getValueForString) {
+            Property(final Category category, final @Nullable Predicate<Builder<?>> isSet, final Function<GeneralPropertyPredicate<?>, Optional<?>> getValueForString) {
                 this.category = requireNonNull(category, "category");
                 this.isSet = isSet;
                 this.getValueForString = requireNonNull(getValueForString, "getValueForString");
@@ -374,7 +372,7 @@ public abstract class GeneralPropertyPredicate<T> implements Predicate<T> {
                 return toStringWithValue(getValueForString.apply(generalPropertyPredicate).orElse(null));
             }
 
-            public String toStringWithValue(@Nullable final Object value) {
+            public String toStringWithValue(final @Nullable Object value) {
                 return value == null ? "" : name() + '{' + value + '}';
             }
 

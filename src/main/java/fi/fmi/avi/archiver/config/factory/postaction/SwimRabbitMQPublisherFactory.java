@@ -15,10 +15,10 @@ import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfig;
 import fi.fmi.avi.archiver.util.instantiation.ObjectFactoryConfigFactory;
 import fi.fmi.avi.model.AviationWeatherMessage;
 import fi.fmi.avi.model.MessageType;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.time.Clock;
@@ -105,7 +105,7 @@ public class SwimRabbitMQPublisherFactory
     private static <T extends AutoCloseable> T createLazyForwardingProxy(
             final Class<T> type,
             final Supplier<T> factory,
-            final AtomicReference<T> instanceRef) {
+            final AtomicReference<@Nullable T> instanceRef) {
         return type.cast(Proxy.newProxyInstance(
                 type.getClassLoader(),
                 new Class<?>[]{type},
@@ -206,8 +206,8 @@ public class SwimRabbitMQPublisherFactory
         final RabbitMQPublisherHealthIndicator publisherHealthIndicator = newPublisherHealthIndicator(clock);
         final Environment environment = registerCloseable(newAmqpEnvironmentBuilder().build());
 
-        final AtomicReference<Connection> connectionRef = new AtomicReference<>();
-        final AtomicReference<Publisher> publisherRef = new AtomicReference<>();
+        final AtomicReference<@Nullable Connection> connectionRef = new AtomicReference<>();
+        final AtomicReference<@Nullable Publisher> publisherRef = new AtomicReference<>();
 
         final Connection connection = createLazyForwardingProxy(Connection.class, () -> registerCloseable(environment
                 .connectionBuilder()
@@ -249,7 +249,7 @@ public class SwimRabbitMQPublisherFactory
     }
 
     private SwimRabbitMQPublisher.MessageConfig toPublisherMessageConfig(
-            final String configId, final String exchangeName, @Nullable final Config.MessageConfig factoryConfig) {
+            final String configId, final String exchangeName, final Config.@Nullable MessageConfig factoryConfig) {
         final SwimRabbitMQPublisher.MessageConfig.Builder builder = SwimRabbitMQPublisher.MessageConfig.builder()
                 .setExchange(exchangeName);
         if (factoryConfig == null) {
@@ -327,7 +327,7 @@ public class SwimRabbitMQPublisherFactory
         return closeableResource;
     }
 
-    private void unregisterAndClose(final AtomicReference<? extends AutoCloseable> reference, final String resourceType) {
+    private void unregisterAndClose(final AtomicReference<? extends @Nullable AutoCloseable> reference, final String resourceType) {
         final AutoCloseable resource = reference.getAndSet(null);
         if (resource != null) {
             try {
@@ -435,12 +435,12 @@ public class SwimRabbitMQPublisherFactory
     }
 
     private record ImmutablePriorityDescriptor(
-            MessageType nullableType,
-            AviationWeatherMessage.ReportStatus nullableStatus,
+            @Nullable MessageType nullableType,
+            AviationWeatherMessage.@Nullable ReportStatus nullableStatus,
             int priority)
             implements Config.PriorityDescriptor {
 
-        ImmutablePriorityDescriptor(final MessageType type, final int priority) {
+        ImmutablePriorityDescriptor(final @Nullable MessageType type, final int priority) {
             this(type, null, priority);
         }
 

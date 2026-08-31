@@ -11,6 +11,7 @@ import fi.fmi.avi.archiver.message.processor.TestMessageProcessorContext;
 import fi.fmi.avi.model.*;
 import fi.fmi.avi.model.GenericAviationWeatherMessage.LocationIndicatorType;
 import fi.fmi.avi.model.immutable.GenericAviationWeatherMessageImpl;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,7 +21,6 @@ import org.junit.jupiter.params.converter.SimpleArgumentConverter;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -54,7 +54,7 @@ class MessageDataPopulatorTest {
     private MessageDataPopulator populator;
 
     private static Optional<PartialOrCompleteTimeInstant> partialOrCompleteTimeInstant(
-            @Nullable final PartialDateTime partialTime, @Nullable final ZonedDateTime completeTime) {
+            final @Nullable PartialDateTime partialTime, final @Nullable ZonedDateTime completeTime) {
         if (partialTime == null && completeTime == null) {
             return Optional.empty();
         }
@@ -123,8 +123,8 @@ class MessageDataPopulatorTest {
     @ParameterizedTest
     @CsvFileSource(resources = "MessageDataPopulatorTest_populates_messageTime_when_exists.csv", numLinesToSkip = 1)
     void populates_messageTime_when_exists(
-            @Nullable final PartialDateTime partialIssueTime, @Nullable final ZonedDateTime completeIssueTime,
-            final String filename, @Nullable final Instant fileModified, final ZonedDateTime clock, final Instant expectedTime) {
+            final @Nullable PartialDateTime partialIssueTime, final @Nullable ZonedDateTime completeIssueTime,
+            final String filename, final @Nullable Instant fileModified, final ZonedDateTime clock, final Instant expectedTime) {
         populator = newPopulator(Clock.fixed(clock.toInstant(), clock.getZone()));
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(filedata -> filedata.mutateFileReference(ref -> ref.setFilename(filename))//
@@ -148,7 +148,7 @@ class MessageDataPopulatorTest {
     void populates_stationIcaoCode_when_exists(
             final PopulatorConfig populatorConfig, final MessageProcessorTestHelper.TypeId messageType,
             @ConvertWith(ToLocationIndicatorMap.class) final Map<LocationIndicatorType, String> locationIndicators,
-            @Nullable final String expectedStationIcaoCode) {
+            final @Nullable String expectedStationIcaoCode) {
         populatorConfig.accept(populator);
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
@@ -171,7 +171,7 @@ class MessageDataPopulatorTest {
             final PopulatorConfig populatorConfig,
             final MessageProcessorTestHelper.TypeId messageType,
             @ConvertWith(ToLocationIndicatorMap.class) final Map<LocationIndicatorType, String> locationIndicators,
-            @Nullable final String expectedStationIcaoCode) {
+            final @Nullable String expectedStationIcaoCode) {
         populatorConfig.accept(populator);
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mapMessage(message -> GenericAviationWeatherMessageImpl.Builder.from(message)//
@@ -192,11 +192,11 @@ class MessageDataPopulatorTest {
     @ParameterizedTest
     @CsvFileSource(resources = "MessageDataPopulatorTest_populates_validFrom_and_validTo_when_exists.csv", numLinesToSkip = 1)
     void populates_validFrom_and_validTo_when_exists(
-            @Nullable final PartialDateTime partialStartTime, @Nullable final ZonedDateTime completeStartTime, //
-            @Nullable final PartialDateTime partialEndTime, @Nullable final ZonedDateTime completeEndTime, //
-            @Nullable final PartialDateTime partialPrimaryReference, @Nullable final ZonedDateTime completePrimaryReference, //
-            final String filename, @Nullable final Instant fileModified, final ZonedDateTime clock, //
-            @Nullable final Instant expectedValidFrom, @Nullable final Instant expectedValidTo) {
+            final @Nullable PartialDateTime partialStartTime, final @Nullable ZonedDateTime completeStartTime, //
+            final @Nullable PartialDateTime partialEndTime, final @Nullable ZonedDateTime completeEndTime, //
+            final @Nullable PartialDateTime partialPrimaryReference, final @Nullable ZonedDateTime completePrimaryReference, //
+            final String filename, final @Nullable Instant fileModified, final ZonedDateTime clock, //
+            final @Nullable Instant expectedValidFrom, final @Nullable Instant expectedValidTo) {
         populator = newPopulator(Clock.fixed(clock.toInstant(), clock.getZone()));
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
                 .mutateFileMetadata(fileData -> fileData.mutateFileReference(ref -> ref.setFilename(filename))//
@@ -226,11 +226,11 @@ class MessageDataPopulatorTest {
     @ParameterizedTest
     @CsvFileSource(resources = "MessageDataPopulatorTest_populates_validFrom_and_validTo_when_exists.csv", numLinesToSkip = 1)
     void populates_validFrom_and_validTo_when_exists_referencing_already_set_message_time(
-            @Nullable final PartialDateTime partialStartTime, @Nullable final ZonedDateTime completeStartTime, //
-            @Nullable final PartialDateTime partialEndTime, @Nullable final ZonedDateTime completeEndTime, //
-            @Nullable final PartialDateTime partialPrimaryReference, @Nullable final ZonedDateTime completePrimaryReference, //
-            final String filename, @Nullable final Instant fileModified, final ZonedDateTime clock, //
-            @Nullable final Instant expectedValidFrom, @Nullable final Instant expectedValidTo) {
+            final @Nullable PartialDateTime partialStartTime, final @Nullable ZonedDateTime completeStartTime, //
+            final @Nullable PartialDateTime partialEndTime, final @Nullable ZonedDateTime completeEndTime, //
+            final @Nullable PartialDateTime partialPrimaryReference, final @Nullable ZonedDateTime completePrimaryReference, //
+            final String filename, final @Nullable Instant fileModified, final ZonedDateTime clock, //
+            final @Nullable Instant expectedValidFrom, final @Nullable Instant expectedValidTo) {
         final MessagePopulatorHelper helper = new MessagePopulatorHelper(Clock.fixed(clock.toInstant(), clock.getZone()));
         populator = newPopulator(helper);
         final InputAviationMessage inputMessage = INPUT_MESSAGE_TEMPLATE.toBuilder()//
@@ -248,7 +248,7 @@ class MessageDataPopulatorTest {
 
         final Instant initialValidFrom = Instant.EPOCH;
         final Instant initialValidTo = initialValidFrom.plus(1, ChronoUnit.DAYS);
-        @Nullable final ZonedDateTime initialMessageTime = partialOrCompleteTimeInstant(partialPrimaryReference, completePrimaryReference)//
+        final ZonedDateTime initialMessageTime = partialOrCompleteTimeInstant(partialPrimaryReference, completePrimaryReference)//
                 .flatMap(time -> helper.resolveCompleteTime(time, inputMessage.getFileMetadata()))//
                 .orElse(null);
         final ArchiveAviationMessage.Builder builder = EMPTY_ARCHIVE_MESSAGE.toBuilder()//

@@ -1,14 +1,12 @@
 package fi.fmi.avi.archiver.spring.messaging;
 
-import static java.util.Objects.requireNonNull;
+import com.google.auto.value.AutoValue;
+import org.jspecify.annotations.Nullable;
+import org.springframework.messaging.MessageHeaders;
 
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
-import org.springframework.messaging.MessageHeaders;
-
-import com.google.auto.value.AutoValue;
+import static java.util.Objects.requireNonNull;
 
 @AutoValue
 public abstract class MessageHeaderReference<T> {
@@ -31,8 +29,8 @@ public abstract class MessageHeaderReference<T> {
         return requireNonNull(getNullable(headers), getName());
     }
 
-    @Nullable
-    public T getNullable(final MessageHeaders headers) {
+
+    public @Nullable T getNullable(final MessageHeaders headers) {
         requireNonNull(headers, "headers");
         return headers.get(getName(), getType());
     }
