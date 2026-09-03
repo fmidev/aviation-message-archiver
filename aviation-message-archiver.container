@@ -7,7 +7,7 @@
 Description=Aviation Message Archiver
 
 [Container]
-Image=ghcr.io/fmidev/aviation-message-archiver:1.4.2
+Image=ghcr.io/fmidev/aviation-message-archiver:main
 ContainerName=aviation-message-archiver
 
 # Spring profiles
