@@ -31,11 +31,21 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - ...
 
+## [v1.4.2] - 2026-09-03
+
+### Changed
+
+- Replace javax.annotation with org.jspecify.annotations. [#185]
+
+### Security
+
+- Upgrade to Spring Boot 3 + other library upgrades [#183]
+
 ## [v1.4.1] - 2026-05-06
 
 ### Added
 
-- Containerization support with pre-built images and instructions on deployment [#167], [#168] 
+- Containerization support with pre-built images and instructions on deployment [#167], [#168]
 
 ### Changed
 
@@ -47,7 +57,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Added support for archiving all IWXXM versions starting from 2.1.0. This enables support for future versions too, 
+- Added support for archiving all IWXXM versions starting from 2.1.0. This enables support for future versions too,
   unless there are significant schema changes.
 
 ### Changed
@@ -112,9 +122,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Initial release.
 
-[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.4.1...HEAD
+[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.4.2...HEAD
 
-[v1.4.1]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.4.0...aviation-message-archiver-1.4.1
+[v1.4.2]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.4.2
+
+[v1.4.1]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.4.1
 
 [v1.4.0]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.4.0
 
@@ -168,4 +180,6 @@ Initial release.
 
 [#171]: https://github.com/fmidev/aviation-message-archiver/pull/171
 
+[#183]: https://github.com/fmidev/aviation-message-archiver/pull/183
 
+[#185]: https://github.com/fmidev/aviation-message-archiver/pull/185
