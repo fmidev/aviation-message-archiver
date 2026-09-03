@@ -75,7 +75,9 @@
         <argLine/>
 
         <!-- Custom Maven release repository properties -->
+        <project.scm.id>github</project.scm.id>
         <github-repo-owner>fmidev</github-repo-owner>
+        <github.global.server>github</github.global.server>
         <github-mvn-release-repo>fmi-os-mvn-repo</github-mvn-release-repo>
         <github-mvn-snapshot-repo>fmi-os-mvn-snapshot-repo</github-mvn-snapshot-repo>
         <github-site-maven-plugin.version>0.12</github-site-maven-plugin.version>
