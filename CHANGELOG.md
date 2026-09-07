@@ -25,7 +25,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- ...
+- Fix Netty dependencies. [#187]
 
 ### Security
 
@@ -183,3 +183,5 @@ Initial release.
 [#183]: https://github.com/fmidev/aviation-message-archiver/pull/183
 
 [#185]: https://github.com/fmidev/aviation-message-archiver/pull/185
+
+[#187]: https://github.com/fmidev/aviation-message-archiver/pull/187
