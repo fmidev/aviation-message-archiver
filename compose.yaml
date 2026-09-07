@@ -5,7 +5,7 @@
 
 services:
   aviation-message-archiver:
-    image: ghcr.io/fmidev/aviation-message-archiver:1.4.3
+    image: ghcr.io/fmidev/aviation-message-archiver:main
     container_name: aviation-message-archiver
     restart: unless-stopped
     ports:

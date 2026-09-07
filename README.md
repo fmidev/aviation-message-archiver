@@ -163,7 +163,7 @@ and a PostGIS database.
      -v "$AVIDB_STATIONS_SQL":/app/sql/avidb_stations.sql:ro,z \
      -v ./config:/app/config:ro,z \
      -v ./data:/data:z \
-     ghcr.io/fmidev/aviation-message-archiver:1.4.3
+     ghcr.io/fmidev/aviation-message-archiver:main
    ```
 
    See [Running the application](#running-the-application) below for other deployment methods, including
@@ -279,7 +279,7 @@ mvn package
 java \
   -Dspring.profiles.active="postgresql,example,local" \
   -Dspring.sql.init.data-locations="\${example.spring.sql.init.data-locations.postgresql},file://$AVIDB_STATIONS_SQL" \
-  -jar target/aviation-message-archiver-1.4.3-bundle.jar
+  -jar target/aviation-message-archiver-1.4.4-SNAPSHOT-bundle.jar
 ```
 
 ## Logging
@@ -1440,7 +1440,7 @@ To use H2, activate the `h2` Spring profile instead of `postgresql`. For example
 ```shell
 java \
   -Dspring.profiles.active="h2,example,local" \
-  -jar target/aviation-message-archiver-1.4.3-bundle.jar
+  -jar target/aviation-message-archiver-1.4.4-SNAPSHOT-bundle.jar
 ```
 
 The H2 database console is available at <http://localhost:8080/h2-console/> with the following connection settings:
