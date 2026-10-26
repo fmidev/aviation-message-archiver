@@ -495,7 +495,14 @@ public class IntegrationFlowConfig {
 
         private FileWritingMessageHandler createArchiveHandler(final Path destinationDir) {
             final FileWritingMessageHandler archiveHandler = new FileWritingMessageHandler(destinationDir.toFile());
-            archiveHandler.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
+            // NFS can report a failed move even after the file reached its destination.
+            // Retries keep the processing id in the destination name, so an existing file
+            // at that exact path is treated as an already-completed move.
+            archiveHandler.setFileExistsMode(FileExistsMode.IGNORE);
+            // File payloads with deleteSourceFiles=true are moved directly to the final name.
+            // IGNORE also accepts "<destination>.writing" by default,
+            // so disable that temporary suffix to require the final file for retry completion.
+            archiveHandler.setTemporaryFileSuffix("");
             archiveHandler.setDeleteSourceFiles(true);
             archiveHandler.setAdviceChain(archiveAdviceChain);
             archiveHandler.setFileNameGenerator(fileProcessingIdAppender);
@@ -504,7 +511,14 @@ public class IntegrationFlowConfig {
 
         private FileWritingMessageHandler createFailHandler(final Path destinationDir) {
             final FileWritingMessageHandler failHandler = new FileWritingMessageHandler(destinationDir.toFile());
-            failHandler.setFileExistsMode(FileExistsMode.REPLACE_IF_MODIFIED);
+            // NFS can report a failed move even after the file reached its destination.
+            // Retries keep the processing id in the destination name, so an existing file
+            // at that exact path is treated as an already-completed move.
+            failHandler.setFileExistsMode(FileExistsMode.IGNORE);
+            // File payloads with deleteSourceFiles=true are moved directly to the final name.
+            // IGNORE also accepts "<destination>.writing" by default,
+            // so disable that temporary suffix to require the final file for retry completion.
+            failHandler.setTemporaryFileSuffix("");
             failHandler.setDeleteSourceFiles(true);
             failHandler.setAdviceChain(failAdviceChain);
             failHandler.setFileNameGenerator(fileProcessingIdAppender);
