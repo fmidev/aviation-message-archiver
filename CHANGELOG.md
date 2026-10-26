@@ -25,7 +25,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- Recover archive and failed-file moves when the destination already exists after a filesystem error.
+- Fix endless retries when an archive or failed-file move completes but reports an error, leaving the source file missing.
 
 ### Security
 
