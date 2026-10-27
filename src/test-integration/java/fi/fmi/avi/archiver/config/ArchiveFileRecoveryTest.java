@@ -4,7 +4,6 @@ import fi.fmi.avi.archiver.ProcessingState;
 import fi.fmi.avi.archiver.config.IntegrationFlowConfig.ProductFlowsInitializer;
 import fi.fmi.avi.archiver.file.FileProcessingIdentifier;
 import fi.fmi.avi.archiver.spring.context.CompoundLifecycle;
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Named;
@@ -30,6 +29,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -51,7 +51,7 @@ class ArchiveFileRecoveryTest {
 
     private FileNameGenerator fileNameGenerator;
     private ProductFlowsInitializer initializer;
-    private @Nullable FileWritingMessageHandler handler;
+    private final List<FileWritingMessageHandler> handlers = new ArrayList<>();
 
     @FunctionalInterface
     private interface HandlerFactory {
@@ -98,7 +98,7 @@ class ArchiveFileRecoveryTest {
     private FileWritingMessageHandler createHandler(
             final HandlerFactory handlerFactory, final Path destinationDir) {
         final FileWritingMessageHandler handler = handlerFactory.create(initializer, destinationDir);
-        this.handler = handler;
+        handlers.add(handler);
         handler.setBeanFactory(new DefaultListableBeanFactory());
         handler.setOutputChannel(new NullChannel());
         handler.afterPropertiesSet();
@@ -107,9 +107,7 @@ class ArchiveFileRecoveryTest {
 
     @AfterEach
     void tearDown() {
-        if (handler != null) {
-            handler.destroy();
-        }
+        handlers.forEach(FileWritingMessageHandler::destroy);
     }
 
     @ParameterizedTest
