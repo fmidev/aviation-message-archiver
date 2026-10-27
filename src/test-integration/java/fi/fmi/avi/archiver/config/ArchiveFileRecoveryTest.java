@@ -64,11 +64,11 @@ class ArchiveFileRecoveryTest {
                 .map(modified -> Arguments.of(factory, modified)));
     }
 
-    private static Message<File> messageFor(final Path source, final FileProcessingIdentifier processingIdentifier) {
+    private static Message<File> messageFor(final Path source) {
         return MessageBuilder.withPayload(source.toFile())
                 .setHeader(FILENAME.getName(), source.getFileName().toString())
                 .setHeader(ORIGINAL_FILE.getName(), source.toFile())
-                .setHeader(PROCESSING_IDENTIFIER.getName(), processingIdentifier)
+                .setHeader(PROCESSING_IDENTIFIER.getName(), FileProcessingIdentifier.newInstance())
                 .build();
     }
 
@@ -111,8 +111,7 @@ class ArchiveFileRecoveryTest {
         final Path source = Files.writeString(workDir.resolve(SOURCE_FILENAME), content);
         Files.setLastModifiedTime(source, FILE_MODIFIED);
         final Path destinationDir = Files.createDirectory(workDir.resolve("destination"));
-        final FileProcessingIdentifier processingIdentifier = FileProcessingIdentifier.newInstance();
-        final Message<File> message = messageFor(source, processingIdentifier);
+        final Message<File> message = messageFor(source);
         final Path destination = destinationDir.resolve(fileNameGenerator.generateFileName(message));
         final FileWritingMessageHandler handler = createHandler(handlerFactory, destinationDir);
         handler.handleMessage(message);
@@ -134,7 +133,7 @@ class ArchiveFileRecoveryTest {
     void missing_source_and_destination_are_not_reported_as_a_completed_move(
             final BiFunction<ProductFlowsInitializer, Path, FileWritingMessageHandler> handlerFactory, @TempDir final Path workDir) {
         final Path source = workDir.resolve(SOURCE_FILENAME);
-        final Message<File> message = messageFor(source, FileProcessingIdentifier.newInstance());
+        final Message<File> message = messageFor(source);
         final FileWritingMessageHandler handler = createHandler(handlerFactory, workDir);
         assertThatThrownBy(() -> handler.handleMessage(message))
                 .hasRootCauseInstanceOf(NoSuchFileException.class);
@@ -146,8 +145,7 @@ class ArchiveFileRecoveryTest {
             final BiFunction<ProductFlowsInitializer, Path, FileWritingMessageHandler> handlerFactory, @TempDir final Path workDir) throws Exception {
         final String partialContent = "partial content";
         final Path source = workDir.resolve(SOURCE_FILENAME);
-        final FileProcessingIdentifier processingIdentifier = FileProcessingIdentifier.newInstance();
-        final Message<File> message = messageFor(source, processingIdentifier);
+        final Message<File> message = messageFor(source);
         final String destinationFilename = fileNameGenerator.generateFileName(message);
         final Path destination = workDir.resolve(destinationFilename);
         final Path temporaryFile = Files.writeString(workDir.resolve(destinationFilename + ".writing"), partialContent);
@@ -164,9 +162,9 @@ class ArchiveFileRecoveryTest {
             final BiFunction<ProductFlowsInitializer, Path, FileWritingMessageHandler> handlerFactory, @TempDir final Path workDir) throws Exception {
         final String previousContent = "previous message";
         final Path source = workDir.resolve(SOURCE_FILENAME);
-        final Message<File> previousMessage = messageFor(source, FileProcessingIdentifier.newInstance());
+        final Message<File> previousMessage = messageFor(source);
         final Path previousDestination = Files.writeString(workDir.resolve(fileNameGenerator.generateFileName(previousMessage)), previousContent);
-        final Message<File> message = messageFor(source, FileProcessingIdentifier.newInstance());
+        final Message<File> message = messageFor(source);
         final FileWritingMessageHandler handler = createHandler(handlerFactory, workDir);
         assertThatThrownBy(() -> handler.handleMessage(message))
                 .hasRootCauseInstanceOf(NoSuchFileException.class);
@@ -182,8 +180,7 @@ class ArchiveFileRecoveryTest {
         final String newContent = "new message";
         final Path source = Files.writeString(workDir.resolve(SOURCE_FILENAME), originalContent);
         Files.setLastModifiedTime(source, FILE_MODIFIED);
-        final FileProcessingIdentifier processingIdentifier = FileProcessingIdentifier.newInstance();
-        final Message<File> message = messageFor(source, processingIdentifier);
+        final Message<File> message = messageFor(source);
         final Path destination = workDir.resolve(fileNameGenerator.generateFileName(message));
         final FileWritingMessageHandler handler = createHandler(handlerFactory, workDir);
         handler.handleMessage(message);
