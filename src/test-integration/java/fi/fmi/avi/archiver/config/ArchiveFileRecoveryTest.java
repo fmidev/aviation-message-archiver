@@ -32,7 +32,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static fi.fmi.avi.archiver.config.IntegrationFlowConfig.FILENAME;
@@ -46,11 +45,20 @@ class ArchiveFileRecoveryTest {
     private static final String HANDLER_FACTORIES_SOURCE = "handlerFactories";
     private static final FileTime FILE_MODIFIED = FileTime.from(Instant.parse("2026-10-16T20:53:00Z"));
 
+    @TempDir
+    private Path workDir;
+    private Path source;
+
     private FileNameGenerator fileNameGenerator;
     private ProductFlowsInitializer initializer;
     private @Nullable FileWritingMessageHandler handler;
 
-    private static Stream<Named<BiFunction<ProductFlowsInitializer, Path, FileWritingMessageHandler>>> handlerFactories() {
+    @FunctionalInterface
+    private interface HandlerFactory {
+        FileWritingMessageHandler create(ProductFlowsInitializer initializer, Path destinationDir);
+    }
+
+    private static Stream<Named<HandlerFactory>> handlerFactories() {
         return Stream.of(
                 Named.of("archive", ProductFlowsInitializer::createArchiveHandler),
                 Named.of("fail", ProductFlowsInitializer::createFailHandler));
@@ -74,6 +82,7 @@ class ArchiveFileRecoveryTest {
 
     @BeforeEach
     void setUp() {
+        source = workDir.resolve(SOURCE_FILENAME);
         final IntegrationFlowConfig config = new IntegrationFlowConfig();
         fileNameGenerator = config.fileProcessingIdAppender();
         final RequestHandlerRetryAdvice retryAdvice = new RequestHandlerRetryAdvice();
@@ -87,8 +96,8 @@ class ArchiveFileRecoveryTest {
     }
 
     private FileWritingMessageHandler createHandler(
-            final BiFunction<ProductFlowsInitializer, Path, FileWritingMessageHandler> handlerFactory, final Path destinationDir) {
-        final FileWritingMessageHandler handler = handlerFactory.apply(initializer, destinationDir);
+            final HandlerFactory handlerFactory, final Path destinationDir) {
+        final FileWritingMessageHandler handler = handlerFactory.create(initializer, destinationDir);
         this.handler = handler;
         handler.setBeanFactory(new DefaultListableBeanFactory());
         handler.setOutputChannel(new NullChannel());
@@ -106,9 +115,9 @@ class ArchiveFileRecoveryTest {
     @ParameterizedTest
     @MethodSource(HANDLER_FACTORIES_SOURCE)
     void retrying_a_completed_move_succeeds_when_the_source_is_missing(
-            final BiFunction<ProductFlowsInitializer, Path, FileWritingMessageHandler> handlerFactory, @TempDir final Path workDir) throws Exception {
+            final HandlerFactory handlerFactory) throws Exception {
         final String content = "<METAR>test message</METAR>";
-        final Path source = Files.writeString(workDir.resolve(SOURCE_FILENAME), content);
+        Files.writeString(source, content);
         Files.setLastModifiedTime(source, FILE_MODIFIED);
         final Path destinationDir = Files.createDirectory(workDir.resolve("destination"));
         final Message<File> message = messageFor(source);
@@ -131,8 +140,7 @@ class ArchiveFileRecoveryTest {
     @ParameterizedTest
     @MethodSource(HANDLER_FACTORIES_SOURCE)
     void missing_source_and_destination_are_not_reported_as_a_completed_move(
-            final BiFunction<ProductFlowsInitializer, Path, FileWritingMessageHandler> handlerFactory, @TempDir final Path workDir) {
-        final Path source = workDir.resolve(SOURCE_FILENAME);
+            final HandlerFactory handlerFactory) {
         final Message<File> message = messageFor(source);
         final FileWritingMessageHandler handler = createHandler(handlerFactory, workDir);
         assertThatThrownBy(() -> handler.handleMessage(message))
@@ -142,9 +150,8 @@ class ArchiveFileRecoveryTest {
     @ParameterizedTest
     @MethodSource(HANDLER_FACTORIES_SOURCE)
     void a_temporary_file_does_not_count_as_a_completed_move(
-            final BiFunction<ProductFlowsInitializer, Path, FileWritingMessageHandler> handlerFactory, @TempDir final Path workDir) throws Exception {
+            final HandlerFactory handlerFactory) throws Exception {
         final String partialContent = "partial content";
-        final Path source = workDir.resolve(SOURCE_FILENAME);
         final Message<File> message = messageFor(source);
         final String destinationFilename = fileNameGenerator.generateFileName(message);
         final Path destination = workDir.resolve(destinationFilename);
@@ -159,9 +166,8 @@ class ArchiveFileRecoveryTest {
     @ParameterizedTest
     @MethodSource(HANDLER_FACTORIES_SOURCE)
     void a_file_from_another_processing_attempt_does_not_count_as_a_completed_move(
-            final BiFunction<ProductFlowsInitializer, Path, FileWritingMessageHandler> handlerFactory, @TempDir final Path workDir) throws Exception {
+            final HandlerFactory handlerFactory) throws Exception {
         final String previousContent = "previous message";
-        final Path source = workDir.resolve(SOURCE_FILENAME);
         final Message<File> previousMessage = messageFor(source);
         final Path previousDestination = Files.writeString(workDir.resolve(fileNameGenerator.generateFileName(previousMessage)), previousContent);
         final Message<File> message = messageFor(source);
@@ -174,11 +180,11 @@ class ArchiveFileRecoveryTest {
     @ParameterizedTest
     @MethodSource("handlerFactoriesAndModificationTimes")
     void retrying_a_completed_move_preserves_a_new_input_file_with_the_same_name(
-            final BiFunction<ProductFlowsInitializer, Path, FileWritingMessageHandler> handlerFactory,
-            final FileTime newFileModified, @TempDir final Path workDir) throws Exception {
+            final HandlerFactory handlerFactory,
+            final FileTime newFileModified) throws Exception {
         final String originalContent = "original message";
         final String newContent = "new message";
-        final Path source = Files.writeString(workDir.resolve(SOURCE_FILENAME), originalContent);
+        Files.writeString(source, originalContent);
         Files.setLastModifiedTime(source, FILE_MODIFIED);
         final Message<File> message = messageFor(source);
         final Path destination = workDir.resolve(fileNameGenerator.generateFileName(message));
