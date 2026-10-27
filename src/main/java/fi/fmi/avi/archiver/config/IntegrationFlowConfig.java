@@ -493,11 +493,11 @@ public class IntegrationFlowConfig {
                     new AcceptUnchangedFileListFilter()));
         }
 
-        private FileWritingMessageHandler createArchiveHandler(final Path destinationDir) {
+        FileWritingMessageHandler createArchiveHandler(final Path destinationDir) {
             return createFileMoveHandler(destinationDir, archiveAdviceChain);
         }
 
-        private FileWritingMessageHandler createFailHandler(final Path destinationDir) {
+        FileWritingMessageHandler createFailHandler(final Path destinationDir) {
             return createFileMoveHandler(destinationDir, failAdviceChain);
         }
 
