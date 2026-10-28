@@ -25,7 +25,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- ...
+- Fix endless retries when an archive or failed-file move completes but reports an error, leaving the source file missing.
 
 ### Security
 
