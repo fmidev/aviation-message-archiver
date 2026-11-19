@@ -1,5 +1,5 @@
 # Build stage
-FROM ghcr.io/bell-sw/liberica-runtime-container:jdk-21-stream-musl@sha256:c7b193f579e52069d68aab0159c93a304c59183e37cf4ba4b95092e7ff90c2d4 AS build
+FROM ghcr.io/bell-sw/liberica-runtime-container:jdk-21-stream-musl@sha256:107c450eb81981175a0198d92bb226797743a4cf1d54dab4f07b1b00d8f21c7d AS build
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ RUN --mount=type=bind,source=.git,target=./.git \
     ./mvnw package -DskipTests -B
 
 # Runtime stage
-FROM ghcr.io/bell-sw/liberica-runtime-container:jre-21-stream-musl@sha256:7088f7488269c3355fcd77b3ed0f08e1cbd156fb6621b289219dacd71cab987d
+FROM ghcr.io/bell-sw/liberica-runtime-container:jre-21-stream-musl@sha256:d65e84088e3feb84238ecf05408c9afb0ee814871b246d33ed4c367d030a2478
 
 LABEL org.opencontainers.image.title="Aviation Message Archiver" \
       org.opencontainers.image.description="A service application for operationally archiving aviation weather messages into database" \
