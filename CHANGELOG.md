@@ -25,11 +25,26 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- Fix endless retries when an archive or failed-file move completes but reports an error, leaving the source file missing.
+- ...
 
 ### Security
 
 - ...
+
+## [v1.4.4] - 2026-11-23
+
+### Changed
+
+- Pin container base images by digest and keep them up to date with Dependabot. [#189]
+
+### Fixed
+
+- Fix endless retries when an archive or failed-file move completes but reports an error, leaving the source file
+  missing. [#188]
+
+### Security
+
+- Update container base image to Liberica JDK 21.0.13.1 (CVE-2026-114938). [#190]
 
 ## [v1.4.3] - 2026-09-07
 
@@ -128,7 +143,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Initial release.
 
-[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.4.3...HEAD
+[Unreleased]: https://github.com/fmidev/aviation-message-archiver/compare/aviation-message-archiver-1.4.4...HEAD
+
+[v1.4.4]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.4.4
 
 [v1.4.3]: https://github.com/fmidev/aviation-message-archiver/releases/tag/aviation-message-archiver-1.4.3
 
@@ -193,3 +210,9 @@ Initial release.
 [#185]: https://github.com/fmidev/aviation-message-archiver/pull/185
 
 [#187]: https://github.com/fmidev/aviation-message-archiver/pull/187
+
+[#188]: https://github.com/fmidev/aviation-message-archiver/pull/188
+
+[#189]: https://github.com/fmidev/aviation-message-archiver/pull/189
+
+[#190]: https://github.com/fmidev/aviation-message-archiver/pull/190
